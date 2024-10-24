@@ -8,6 +8,10 @@ lint.select = [
     "C90",  # flake8-comprehensions
 ]
 
+line-length = 120
+indent-width = 4
+target-version = "py37"
+
 # Exclude specific rules if needed
 lint.ignore = [
     "E501",  # Ignore line length (similar to flake8's max-line-length)

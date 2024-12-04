@@ -17,10 +17,8 @@ async def get_relevant(
     keywords: Optional[list[str]] = Query(None, description="List of keywords to search for"),
     db: AsyncSession = Depends(get_db),
 ):
-
-    # This is obviously not enough
-    keyword = keywords[0] if keywords else "security"
     release_note_id = f"RHEL_{major}.{minor}"
+    keyword = keywords or ["security"]
 
     try:
         paragraphs = await get_paragraphs(db, release_note_id, keyword)

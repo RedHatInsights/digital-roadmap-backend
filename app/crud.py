@@ -15,7 +15,7 @@ async def get_paragraphs(db: AsyncSession, release_note_id: str, keywords: list[
     rows = result.fetchall()
 
     paragraphs = [
-        {"section_id": row.section_id, "raw_text": row.raw_text, "relevant": row.relevant, "metadata": row.metadata}
+        {"section_id": row.section_id, "raw_text": row.raw_text, "metadata": row.metadata}
         for row in rows
     ]
     return paragraphs

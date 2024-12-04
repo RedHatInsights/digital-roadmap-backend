@@ -10,4 +10,3 @@ class TaggedParagraph(BaseModel):
     title: str = Field(..., description="The paragraph title")
     text: str = Field(..., description="The paragraph text")
     tag: str = Field(..., description="The paragraph htmltag")
-    relevant: bool = Field(..., description="Whether the paragraph is relevant to the search query")

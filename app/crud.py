@@ -17,11 +17,8 @@ async def get_paragraphs(db: AsyncSession, release_note_id: str, keywords: list[
         ;
     """)
 
-    result = await db.execute(query, {"release_note_id": release_note_id, "keyword": '|'.join(keywords)})
+    result = await db.execute(query, {"release_note_id": release_note_id, "keyword": "|".join(keywords)})
     rows = result.fetchall()
 
-    paragraphs = [
-        {"section_id": row.section_id, "raw_text": row.raw_text, "metadata": row.metadata}
-        for row in rows
-    ]
+    paragraphs = [{"section_id": row.section_id, "raw_text": row.raw_text, "metadata": row.metadata} for row in rows]
     return paragraphs

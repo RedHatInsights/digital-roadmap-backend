@@ -26,6 +26,9 @@ clean:
 	rm -rf $(VENV_DIR)
 	rm -rf .install .venv
 
+freeze:
+	@$(PROJECT_DIR)/scripts/freeze.py
+
 lint:
 	@echo "Running lint checks..."
 	@$(RUFF) check $(PROJECT_DIR) --fix

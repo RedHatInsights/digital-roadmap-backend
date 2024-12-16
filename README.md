@@ -1,6 +1,6 @@
-# Digital roadmap backend PoC
+# Digital roadmap backend
 
-FastAPI application using `Uvicorn` as the ASGI server.
+FastAPI application using `uvicorn` as the ASGI server.
 
 ## Prerequisites
 
@@ -10,10 +10,27 @@ Before you begin, ensure you have the following installed:
 
 ## Setup Instructions
 
-1. Clone this repository
-2. Create a virtual environment (`make venv`), activate it and install requirements `make install`
-3. Run server - `make run`
-4. Take a look at the docs endpoint at `http://127.0.0.1:8000/docs`
+1. Clone this repository.
+2. Create a virtual environment and install the requirements.
+
+    ```shell
+    make install  # or install-dev
+    ```
+
+    Or create a virtual environment manually, activate it, and install the requirements.
+
+    ```shell
+    pip install -r requirements.txt -r requirements-dev.txt
+    ```
+
+3. Run the server with `make run`. This will run using the default virtual environment.
+
+    To run the server manually:
+    ```
+    fastapi run app/main.py --reload --host 127.0.0.1 --port 8081
+    ```
+
+4. Open docs endpoint at `http://127.0.0.1:8081/docs`
 
 ## TODO
 

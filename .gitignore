@@ -1,5 +1,5 @@
-venv
 __pycache__
-.ruff_cache
 .install
-.venv
+.ruff_cache
+/.venv*
+/venv*

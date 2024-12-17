@@ -17,12 +17,6 @@ Before you begin, ensure you have the following installed:
     make install  # or install-dev
     ```
 
-    Or create a virtual environment manually, activate it, and install the requirements.
-
-    ```shell
-    pip install -r requirements.txt -r requirements-dev.txt
-    ```
-
 3. Run the server with `make run`. This will run using the default virtual environment.
 
     To run the server manually:

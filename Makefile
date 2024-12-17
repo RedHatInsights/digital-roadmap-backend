@@ -11,15 +11,15 @@ default: install
 
 .PHONY: venv
 venv:
-	python3 -m venv $(VENV_DIR)
+	python3 -m venv --clear $(VENV_DIR)
 
 .PHONY: install
 install: venv
 	$(PIP) install -r requirements/requirements-$(PYTHON_VERSION).txt
 
 .PHONY: install-dev
-install-dev: install
-	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt -r requirements/requirements-test-$(PYTHON_VERSION).txt
+install-dev: venv
+	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt
 
 .PHONY: run
 run:

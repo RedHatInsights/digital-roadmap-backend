@@ -22,7 +22,6 @@ def freeze(python_version: str, requirement: Path) -> str:
     freeze_file = repo_root / "requirements" / f"{requirement.stem}-{python_version}.txt"
 
     # Create a fresh virtual environment
-    # venv.create(venv_path, with_pip=True, system_site_packages=True, clear=True)
     subprocess.check_output([python_bin, "-m", "venv", "--clear", "--system-site-packages", venv_path])
     subprocess.check_output([venv_python, "-m", "pip", "install", "--upgrade", "pip"])
 
@@ -33,7 +32,13 @@ def freeze(python_version: str, requirement: Path) -> str:
 
     # Generate a freeze file
     result = subprocess.run([venv_python, "-m", "pip", "freeze"], check=True, capture_output=True)
-    freeze_file.write_bytes(result.stdout)
+    header = b""
+    if requirement.stem.endswith("-dev"):
+        reqs_header = f"-r requirements-{ python_version }.txt\n".encode("utf-8")
+        test_header = f"-r requirements-test-{ python_version }.txt\n".encode("utf-8")
+        header = reqs_header + test_header
+
+    freeze_file.write_bytes(header + result.stdout)
 
     return f"✅ {requirement.stem}-{python_version} complete"
 

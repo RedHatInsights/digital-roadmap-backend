@@ -1,3 +1,5 @@
+-r requirements-3.11.txt
+-r requirements-test-3.11.txt
 asttokens==3.0.0
 cfgv==3.4.0
 decorator==5.1.1

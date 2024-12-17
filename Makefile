@@ -4,7 +4,7 @@ PYTHON=$(VENV_DIR)/bin/python
 PIP=$(VENV_DIR)/bin/python -m pip
 RUFF=$(VENV_DIR)/bin/ruff
 PROJECT_DIR=$(shell pwd)
-
+PYTHON_VERSION = $(shell python -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 
 default: install
@@ -15,11 +15,11 @@ venv:
 
 .PHONY: install
 install: venv
-	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements/requirements-$(PYTHON_VERSION).txt
 
 .PHONY: install-dev
 install-dev: install
-	$(PIP) install -r requirements-dev.txt
+	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt -r requirements/requirements-test-$(PYTHON_VERSION).txt
 
 .PHONY: run
 run:

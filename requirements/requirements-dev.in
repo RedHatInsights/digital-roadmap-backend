@@ -1,7 +1,3 @@
-ruff
-httpx
-pytest
 ipython
 ipdb
-pytest-cov
 pre-commit

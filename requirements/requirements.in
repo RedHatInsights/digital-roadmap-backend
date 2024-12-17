@@ -1,0 +1,4 @@
+fastapi[standard]
+greenlet
+sqlalchemy
+psycopg

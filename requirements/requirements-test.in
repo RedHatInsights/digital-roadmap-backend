@@ -1,5 +1,3 @@
 ruff
 pytest
 pytest-cov
-httpx
-pre-commit

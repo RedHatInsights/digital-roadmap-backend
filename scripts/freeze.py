@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -43,11 +44,27 @@ def freeze(python_version: str, requirement: Path) -> str:
     return f"✅ {requirement.stem}-{python_version} complete"
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--python-versions", default="3.9,3.11,3.12")
+
+    return parser.parse_args()
+
+
+def sort_versions(versions: list[str]) -> list[str]:
+    def list_of_parts(items):
+        return [int(n) for n in items.split(".")]
+
+    stripped_versions = [version.strip() for version in versions.split(",")]
+    return sorted(stripped_versions, key=list_of_parts)
+
+
 def main():
+    args = parse_args()
     file = Path(__file__)
     repo_root = file.parent.parent
     requirements = repo_root.joinpath("requirements").glob("*.in")
-    python_versions = {"3.9", "3.11", "3.12"}
+    python_versions = sort_versions(args.python_versions)
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = [
             executor.submit(freeze, py_ver, req)

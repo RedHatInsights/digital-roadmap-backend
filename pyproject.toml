@@ -16,3 +16,19 @@ target-version = "py39"
 lint.ignore = [
     "E501",  # Ignore line length (similar to flake8's max-line-length)
 ]
+
+[tool.pytest.ini_options]
+addopts ="""
+    -r a
+    --verbose
+    --strict-markers
+    --cov app
+    --cov-report html
+    --durations-min 1
+    --durations 10
+    --color yes
+    --showlocals
+"""
+testpaths = [
+    "app",
+]

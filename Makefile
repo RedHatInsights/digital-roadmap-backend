@@ -3,6 +3,8 @@ VENV_DIR=.venvs/digital_roadmap
 PYTHON=$(VENV_DIR)/bin/python
 PIP=$(VENV_DIR)/bin/python -m pip
 RUFF=$(VENV_DIR)/bin/ruff
+PRE_COMMIT=$(VENV_DIR)/bin/pre-commit
+PYTEST=$(VENV_DIR)/bin/pytest
 PROJECT_DIR=$(shell pwd)
 PYTHON_VERSION = $(shell python -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
@@ -35,6 +37,8 @@ freeze:
 
 .PHONY: lint
 lint:
-	@echo "Running lint checks..."
-	@$(RUFF) check $(PROJECT_DIR) --fix
-	@echo "Linting completed."
+	@$(PRE_COMMIT) run --all-files
+
+.PHONY: test
+test:
+	@$(PYTEST)

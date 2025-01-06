@@ -42,3 +42,7 @@ lint:
 .PHONY: test
 test:
 	@$(PYTEST)
+
+.PHONY: build
+build:
+	docker build -t digital_roadmap:latest -f Containerfile .

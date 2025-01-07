@@ -36,12 +36,12 @@ spec:
       value: 5d
 
     - name: tag-prefix
-      value: pr-{{ pull_request_number }}
+      value: pr-{{ pull_request_number }}-
 
-pipelineRef:
-  name: pipeline-build
+  pipelineRef:
+    name: pipeline-build
 
-workspaces:
-  - name: git-auth
-    secret:
-      secretName: '{{ git_auth_secret }}'
+  workspaces:
+    - name: git-auth
+      secret:
+        secretName: '{{ git_auth_secret }}'

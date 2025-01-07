@@ -2,8 +2,8 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: pipeline-build
-spec:
 
+spec:
   params:
     - name: git-url
       description: Source Repository URL

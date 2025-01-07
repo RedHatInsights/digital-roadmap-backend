@@ -32,10 +32,10 @@ spec:
     - name: dockerfile
       value: /Containerfile
 
-pipelineRef:
-  name: pipeline-build
+  pipelineRef:
+    name: pipeline-build
 
-workspaces:
-  - name: git-auth
-    secret:
-      secretName: '{{ git_auth_secret }}'
+  workspaces:
+    - name: git-auth
+      secret:
+        secretName: '{{ git_auth_secret }}'

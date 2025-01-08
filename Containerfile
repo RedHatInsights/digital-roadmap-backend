@@ -16,7 +16,7 @@ LABEL version=0.0.1
 ENV VENV=/opt/venvs/rhel_roadmap
 ENV PYTHON="${VENV}/bin/python"
 ENV PATH="${VENV}/bin:$PATH"
-ENV PYTHON_VERSION="3.11"
+ENV PYTHON_VERSION="3.12"
 
 COPY LICENSE /licenses/Apache-2.0.txt
 

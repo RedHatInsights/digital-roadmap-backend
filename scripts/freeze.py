@@ -76,14 +76,7 @@ def main():
 
     # Put requirements for the main Python version in the repo root for convenience.
     target_python_version = "3.12"
-    requirements_link = repo_root.joinpath("requirements.txt")
-    # exists() returns False if the symlink is broken.
-    #   The follow_symlinks option was added in Python 3.12.
-    #   Doing it this way for better compatibility for now.
-    if requirements_link.exists() or requirements_link.is_symlink():
-        requirements_link.unlink()
-
-    requirements_link.symlink_to(f"requirements/requirements-{target_python_version}.txt")
+    shutil.copy(repo_root / "requirements" / f"requirements-{target_python_version}.txt", "requirements.txt")
 
 
 if __name__ == "__main__":

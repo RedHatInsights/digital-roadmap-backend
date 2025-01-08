@@ -1,0 +1,7 @@
+codecov:
+  notify:
+    after_n_builds: 2
+    wait_for_ci: false
+
+  require_ci_to_pass: false
+  token: 7102844c-b283-40bb-8e13-75dee404ec34  # notsecret  # repo-scoped, upload-only, stability in fork PRs

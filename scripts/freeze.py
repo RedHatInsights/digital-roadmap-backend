@@ -46,12 +46,12 @@ def freeze(python_version: str, requirement: Path) -> str:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--python-versions", default="3.9,3.11,3.12")
+    parser.add_argument("--python-versions", default="3.12,3.13")
 
     return parser.parse_args()
 
 
-def sort_versions(versions: list[str]) -> list[str]:
+def sort_versions(versions: str) -> list[str]:
     def list_of_parts(items):
         return [int(n) for n in items.split(".")]
 
@@ -74,8 +74,16 @@ def main():
     for future in as_completed(futures):
         print(future.result())
 
-    target_python_version = "3.9"
-    shutil.copy(repo_root / "requirements" / f"requirements-{target_python_version}.txt", "requirements.txt")
+    # Put requirements for the main Python version in the repo root for convenience.
+    target_python_version = "3.12"
+    requirements_link = repo_root.joinpath("requirements.txt")
+    # exists() returns False if the symlink is broken.
+    #   The follow_symlinks option was added in Python 3.12.
+    #   Doing it this way for better compatibility for now.
+    if requirements_link.exists() or requirements_link.is_symlink():
+        requirements_link.unlink()
+
+    requirements_link.symlink_to(f"requirements/requirements-{target_python_version}.txt")
 
 
 if __name__ == "__main__":

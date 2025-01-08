@@ -5,7 +5,7 @@ API server providing access to Red Hat Enterprise Linux roadmap information.
 
 ## Prerequisites
 
-Python 3.9 or later.
+Python 3.12 or later.
 A container runtime such as `docker` or `podman`.
 
 
@@ -58,13 +58,13 @@ pre-commit run --all-files
 
 ### Updating requirements
 
-Python 3.9, 3.11, and 3.12 must be available in order to generate requirements files.
+Python 3.12 and 3.13 must be available in order to generate requirements files.
 
-The following files are used for updating requiremetns:
+The following files are used for updating requirements:
 
-- `requiremetns.in` - Direct project dependencies
-- `requiremetns-dev.in` - Requirements for development
-- `requiremetns-test.in` - Requirements for running tests
+- `requirements.in` - Direct project dependencies
+- `requirements-dev.in` - Requirements for development
+- `requirements-test.in` - Requirements for running tests
 - `constraints.txt` - Indirect project dependencies
 
 ```

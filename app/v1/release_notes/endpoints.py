@@ -11,7 +11,7 @@ v1_router = APIRouter()
 
 
 @v1_router.get("/")
-async def get_relevant(
+async def get_release_notes(
     major: int = Query(..., description="Major version number"),
     minor: int = Query(..., description="Minor version number"),
     keywords: Optional[list[str]] = Query(None, description="List of keywords to search for"),

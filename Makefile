@@ -9,6 +9,19 @@ PROJECT_DIR=$(shell pwd)
 PYTHON_VERSION = $(shell python -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 
+DB_IMAGE ?= quay.io/samdoran/digital-roadmap-data
+DB_PORT ?= 5432
+
+# Determine container runtime, preferring Docker on macOS
+OS = $(shell uname)
+CONTAINER_RUNTIMES = podman docker
+ifeq ($(OS), Darwin)
+	CONTAINER_RUNTIMES = docker podman
+endif
+
+CONTAINER_RUNTIME ?= $(shell type -P $(CONTAINER_RUNTIMES) | head -n 1)
+
+
 default: install
 
 .PHONY: venv
@@ -22,6 +35,12 @@ install: venv
 .PHONY: install-dev
 install-dev: venv
 	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt
+
+.PHONY: run-db
+run-db:
+	@$(CONTAINER_RUNTIME) stop digital-roadmap-data > /dev/null 2>&1 || true
+	@sleep 0.1
+	$(CONTAINER_RUNTIME) run --rm -d -p $(DB_PORT):5432 --name digital-roadmap-data $(DB_IMAGE)
 
 .PHONY: run
 run:
@@ -45,4 +64,4 @@ test:
 
 .PHONY: build
 build:
-	docker build -t digital_roadmap:latest -f Containerfile .
+	$(CONTAINER_RUNTIME) build -t digital-roadmap:latest -f Containerfile .

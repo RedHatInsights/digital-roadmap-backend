@@ -37,10 +37,13 @@ install-dev: venv
 	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt
 
 .PHONY: run-db
-run-db:
+run-db: stop-db
+	$(CONTAINER_RUNTIME) run --rm -d -p $(DB_PORT):5432 --name digital-roadmap-data $(DB_IMAGE)
+
+.PHONY: stop-db
+stop-db:
 	@$(CONTAINER_RUNTIME) stop digital-roadmap-data > /dev/null 2>&1 || true
 	@sleep 0.1
-	$(CONTAINER_RUNTIME) run --rm -d -p $(DB_PORT):5432 --name digital-roadmap-data $(DB_IMAGE)
 
 .PHONY: run
 run:

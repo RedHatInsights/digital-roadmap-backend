@@ -19,7 +19,7 @@ ifeq ($(OS), Darwin)
 	CONTAINER_RUNTIMES = docker podman
 endif
 
-CONTAINER_RUNTIME ?= $(shell type -P $(CONTAINER_RUNTIMES) | head -n 1)
+CONTAINER_RUNTIME ?= $(shell type -P $(CONTAINER_RUNTIMES) 2>&1 | head -n 1)
 
 
 default: install

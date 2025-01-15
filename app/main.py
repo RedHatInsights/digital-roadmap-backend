@@ -13,5 +13,11 @@ api_router = APIRouter()
 api_router.include_router(released_v1_router, prefix="/v1/release-notes", tags=["release-notes"])
 api_router.include_router(upcoming_v1_router, prefix="/v1/upcoming-changes", tags=["upcoming-changes"])
 
+
+@api_router.get("/v1/ping")
+async def ping():
+    return {"status": "pong"}
+
+
 # Include the main API router in the FastAPI app with the prefix
 app.include_router(api_router, prefix="/api/digital-roadmap", tags=["digital-roadmap"])

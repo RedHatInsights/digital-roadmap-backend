@@ -23,7 +23,7 @@ ifeq ($(OS), Darwin)
 	CONTAINER_RUNTIMES = docker podman
 endif
 
-CONTAINER_RUNTIME ?= $(shell type -P $(CONTAINER_RUNTIMES) 2>&1 | head -n 1)
+CONTAINER_RUNTIME ?= $(shell type -P $(CONTAINER_RUNTIMES) | head -n 1)
 
 
 default: install
@@ -40,12 +40,22 @@ install: venv
 install-dev: venv
 	$(PIP) install -r requirements/requirements-dev-$(PYTHON_VERSION).txt
 
-.PHONY: run-db
-run-db: stop-db
+.PHONY: check-container-runtime
+check-container-runtime:
+ifeq ($(strip $(CONTAINER_RUNTIME)),)
+	@echo "Missing container runtime. Could not find '$(CONTAINER_RUNTIMES)' in PATH."
+	@exit 1
+else
+	@echo Found container runtime \'$(CONTAINER_RUNTIME)\'
+endif
+
+
+.PHONY: start-db
+start-db: stop-db
 	$(CONTAINER_RUNTIME) run --rm -d -p $(DB_PORT):5432 --name digital-roadmap-data $(DB_IMAGE)
 
 .PHONY: stop-db
-stop-db:
+stop-db: check-container-runtime
 	@$(CONTAINER_RUNTIME) stop digital-roadmap-data > /dev/null 2>&1 || true
 	@sleep 0.1
 
@@ -70,5 +80,5 @@ test:
 	@$(PYTEST)
 
 .PHONY: build
-build:
+build: check-container-runtime
 	$(CONTAINER_RUNTIME) build -t digital-roadmap:latest -f Containerfile .

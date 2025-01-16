@@ -12,6 +12,10 @@ export PIP_DISABLE_PIP_VERSION_CHECK = 1
 DB_IMAGE ?= quay.io/samdoran/digital-roadmap-data
 DB_PORT ?= 5432
 
+# Set the shell because otherwise this defaults to /bin/sh,
+# which is dash on Ubuntu. The type builtin for dash does not accept flags.
+SHELL = /bin/bash
+
 # Determine container runtime, preferring Docker on macOS
 OS = $(shell uname)
 CONTAINER_RUNTIMES = podman docker

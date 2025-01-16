@@ -15,7 +15,7 @@ Create a virtual environment, install the requirements, and run the server.
 
 ```shell
 make install
-make run-db run
+make start-db run
 ```
 
 This runs a server using the default virtual environment. Documentation can be found at  `http://127.0.0.1:8081/docs`.
@@ -26,7 +26,7 @@ Install the developer tools and run the server.
 
 ```shell
 make install-dev
-make run-db run
+make start-db run
 ```
 
 Alternatively you may create your own virtual environment, install the requirements, and run the server manually.
@@ -40,10 +40,10 @@ The database runs in a container and contains data already. To specify a differe
 
 ```shell
 export DB_IMAGE=digital-roadmap:latest
-make run-db
+make start-db
 ```
 
-To restart the database container, run `make run-db`.
+To restart the database container, run `make start-db`.
 
 To stop the database, run `make stop-db`.
 

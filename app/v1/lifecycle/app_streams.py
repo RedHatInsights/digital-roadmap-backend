@@ -38,16 +38,16 @@ async def get_major_version(
 @v1_router.get("/{major_version}/names")
 async def get_module_names(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
-) -> list[str]:
+) -> dict[str, list[str]]:
     data = MODULE_DATA.get(major_version, [])
-    return [item["module_name"] for item in data]
+    return {"names": sorted(item["module_name"] for item in data)}
 
 
 @v1_router.get("/{major_version}/{module}")
 async def get_module(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
     module: t.Annotated[str, Path(description="Module name")],
-) -> str | list[dict[str, str]]:
+) -> list[dict[str, t.Any]] | None:
     data = MODULE_DATA.get(major_version, [])
     if data:
         return sorted(item for item in data if item.get("module_name") == module)

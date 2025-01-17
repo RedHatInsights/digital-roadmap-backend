@@ -2,6 +2,7 @@ import typing as t
 
 from fastapi import APIRouter, Path
 from fastapi.param_functions import Query
+from fastapi.responses import JSONResponse
 
 from app.data import MODULE_DATA
 
@@ -43,13 +44,16 @@ async def get_module_names(
     return {"names": sorted(item["module_name"] for item in data)}
 
 
-@v1_router.get("/{major_version}/{module}")
+@v1_router.get("/{major_version}/{module_name}")
 async def get_module(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
-    module: t.Annotated[str, Path(description="Module name")],
-) -> list[dict[str, t.Any]] | None:
-    data = MODULE_DATA.get(major_version, [])
-    if data:
-        return sorted(item for item in data if item.get("module_name") == module)
+    module_name: t.Annotated[str, Path(description="Module name")],
+):
+    if data := MODULE_DATA.get(major_version):
+        if modules := sorted(item for item in data if item.get("module_name") == module_name):
+            return modules
 
-    return "No matches"
+    return JSONResponse(
+        content={"message": "No modules matches query", "query": module_name},
+        status_code=404,
+    )

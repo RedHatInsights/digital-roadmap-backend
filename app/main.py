@@ -1,5 +1,6 @@
 from fastapi import APIRouter, FastAPI
 
+from app.v1.app_streams import v1_router as app_streams_v1_router
 from app.v1.lifecycle.router import v1_router as lifecycle_v1_router
 from app.v1.released.endpoints import v1_router as released_v1_router
 from app.v1.upcoming.endpoints import v1_router as upcoming_v1_router
@@ -13,6 +14,7 @@ api_router = APIRouter()
 # Include individual service routers under the main API router
 api_router.include_router(released_v1_router, prefix="/v1/release-notes", tags=["release-notes"])
 api_router.include_router(upcoming_v1_router, prefix="/v1/upcoming-changes", tags=["upcoming-changes"])
+api_router.include_router(app_streams_v1_router, prefix="/v1/app-streams", tags=["app-streams"])
 api_router.include_router(lifecycle_v1_router, prefix="/v1/lifecycle")  # tag provided in app/v1/lifecycle/router.py
 
 

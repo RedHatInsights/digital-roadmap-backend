@@ -10,7 +10,7 @@ from app.models import TaggedParagraph
 v1_router = APIRouter()
 
 
-@v1_router.get("")
+@v1_router.get("/")
 async def get_relevant(
     major: int = Query(..., description="Major version number"),
     minor: int = Query(..., description="Minor version number"),

@@ -53,7 +53,7 @@ client = TestClient(application)
     ),
 )
 def test_system_specified(source_data, path, response, monkeypatch):
-    monkeypatch.setattr(app.v1.lifecycle.systems.endpoints, "OS_DATA_MOCKED", source_data)
+    monkeypatch.setattr(app.v1.lifecycle.systems, "OS_DATA_MOCKED", source_data)
 
     data = client.get(f"/api/digital-roadmap/v1/lifecycle/systems{path}")
     assert data.json() == response

@@ -19,10 +19,9 @@ async def get_app_streams(
 ):
     if name:
         result = []
-        for modules in MODULE_DATA.values():
-            for module in modules:
-                if name.lower() in module["module_name"].lower():
-                    result.append(module)
+        for module in MODULE_DATA:
+            if name.lower() in module["module_name"].lower():
+                result.append(module)
 
         return {"data": result}
 

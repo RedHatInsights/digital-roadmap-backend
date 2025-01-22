@@ -1,12 +1,31 @@
-name: Unit tests
+name: CI
 on:
   push:
-    branches: [develop]
+    branches:
+      - develop
+
   pull_request:
-    branches: [develop]
+    branches:
+      - develop
 
 jobs:
-  build:
+  sanity:
+    name: Sanity
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+
+    - name: Run pre-commit checks
+      uses: pre-commit/action@v3.0.1
+
+  units:
     name: Units - ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -33,11 +52,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/requirements-test-${{ matrix.python-version }}.txt -r requirements/requirements-${{ matrix.python-version }}.txt
 
-      - name: Test with pytest
+      - name: Run unit tests
         run: |
           pytest --cov-report=xml
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage report
         uses: codecov/codecov-action@v4
         with:
           env_vars: OS,PYTHON

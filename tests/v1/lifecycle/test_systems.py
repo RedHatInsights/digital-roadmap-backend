@@ -1,10 +1,6 @@
 import pytest
-from fastapi.testclient import TestClient
 
-import app
-from app.main import app as application
-
-client = TestClient(application)
+import roadmap
 
 
 @pytest.mark.parametrize(
@@ -52,8 +48,7 @@ client = TestClient(application)
         ),
     ),
 )
-def test_system_specified(source_data, path, response, monkeypatch):
-    monkeypatch.setattr(app.v1.lifecycle.systems, "OS_DATA_MOCKED", source_data)
-
-    data = client.get(f"/api/digital-roadmap/v1/lifecycle/systems{path}")
+def test_system_specified(client, api_prefix, source_data, path, response, monkeypatch):
+    monkeypatch.setattr(roadmap.v1.lifecycle.systems, "OS_DATA_MOCKED", source_data)
+    data = client.get(f"{api_prefix}/lifecycle/systems{path}")
     assert data.json() == response

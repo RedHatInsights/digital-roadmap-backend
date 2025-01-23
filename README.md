@@ -66,7 +66,7 @@ Alternatively you may create your own virtual environment, install the requireme
 ```
 # After creating and activating a virtual environment
 pip install -r requirements/requirements-dev-{Python version}.txt
-fastapi run app/main.py --reload --host 127.0.0.1 --port 8081
+fastapi run roadmap/main.py --reload --host 127.0.0.1 --port 8081
 ```
 
 The database runs in a container and contains data already. To specify a different container image, set `DB_IMAGE`.

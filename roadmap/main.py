@@ -1,8 +1,8 @@
 from fastapi import APIRouter, FastAPI
 
-from app.v1.lifecycle.router import v1_router as lifecycle_v1_router
-from app.v1.release_notes.endpoints import v1_router as release_notes_v1_router
-from app.v1.upcoming.endpoints import v1_router as upcoming_v1_router
+from roadmap.v1.lifecycle import v1_router as lifecycle_v1_router
+from roadmap.v1.release_notes import v1_router as release_notes_v1_router
+from roadmap.v1.upcoming import v1_router as upcoming_v1_router
 
 # Initialize FastAPI app
 app = FastAPI()

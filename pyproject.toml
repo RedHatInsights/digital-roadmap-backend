@@ -22,13 +22,11 @@ addopts ="""
     -r a
     --verbose
     --strict-markers
-    --cov app
+    --cov roadmap
     --cov-report html
     --durations-min 1
     --durations 10
     --color yes
     --showlocals
 """
-testpaths = [
-    "app",
-]
+testpaths = "tests"

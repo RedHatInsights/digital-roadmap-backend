@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path
 from fastapi.param_functions import Query
 from fastapi.responses import JSONResponse
 
-from app.data import MODULE_DATA
+from roadmap.data import MODULE_DATA
 
 v1_router = APIRouter(
     prefix="/app-streams",

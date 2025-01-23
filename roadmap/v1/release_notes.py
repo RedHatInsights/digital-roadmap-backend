@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import get_paragraphs
-from app.database import get_db
-from app.models import TaggedParagraph
+from roadmap.crud import get_paragraphs
+from roadmap.database import get_db
+from roadmap.models import TaggedParagraph
 
 v1_router = APIRouter()
 

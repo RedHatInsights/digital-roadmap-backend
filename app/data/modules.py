@@ -139,7 +139,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "a51370e3",
-                "description": "Apache Subversion, a Modern Version Control " "System",
+                "description": "Apache Subversion, a Modern Version Control System",
                 "name": "subversion",
                 "profiles": {
                     "common": ["subversion", "subversion-libs", "subversion-tools"],
@@ -151,7 +151,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "78111232",
-                "description": "Apache Subversion, a Modern Version Control " "System",
+                "description": "Apache Subversion, a Modern Version Control System",
                 "name": "subversion",
                 "profiles": {
                     "common": ["subversion", "subversion-libs", "subversion-tools"],
@@ -163,7 +163,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "a74460ab",
-                "description": "Apache Subversion, a Modern Version Control " "System",
+                "description": "Apache Subversion, a Modern Version Control System",
                 "name": "subversion",
                 "profiles": {
                     "common": ["subversion", "subversion-libs", "subversion-tools"],
@@ -692,7 +692,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "2fbcbb20",
-                "description": "This allows you to write a FastCGI client in " "the Perl language.\n",
+                "description": "This allows you to write a FastCGI client in the Perl language.\n",
                 "name": "perl-FCGI",
                 "profiles": {"common": ["perl-FCGI"]},
                 "stream": "0.78",
@@ -859,7 +859,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "9edba152",
-                "description": "Apache httpd is a powerful, efficient, and " "extensible HTTP server.",
+                "description": "Apache httpd is a powerful, efficient, and extensible HTTP server.",
                 "name": "httpd",
                 "profiles": {
                     "common": ["httpd", "httpd-filesystem", "httpd-tools", "mod_http2", "mod_ssl"],
@@ -930,7 +930,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "77fc8825",
-                "description": "An initial version of the mailman mailing list " "management software",
+                "description": "An initial version of the mailman mailing list management software",
                 "name": "mailman",
                 "profiles": {"common": ["mailman"]},
                 "stream": "2.1",
@@ -2109,7 +2109,7 @@ MODULE_DATA = [
             {
                 "arch": "x86_64",
                 "context": "9edba152",
-                "description": "an initial version of the squid caching proxy " "module",
+                "description": "an initial version of the squid caching proxy module",
                 "name": "squid",
                 "profiles": {"common": ["squid"]},
                 "stream": "4",

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import argparse
 import shutil
 import subprocess
@@ -35,8 +34,8 @@ def freeze(python_version: str, requirement: Path) -> str:
     result = subprocess.run([venv_python, "-m", "pip", "freeze"], check=True, capture_output=True)
     header = b""
     if requirement.stem.endswith("-dev"):
-        reqs_header = f"-r requirements-{ python_version }.txt\n".encode("utf-8")
-        test_header = f"-r requirements-test-{ python_version }.txt\n".encode("utf-8")
+        reqs_header = f"-r requirements-{python_version}.txt\n".encode("utf-8")
+        test_header = f"-r requirements-test-{python_version}.txt\n".encode("utf-8")
         header = reqs_header + test_header
 
     freeze_file.write_bytes(header + result.stdout)

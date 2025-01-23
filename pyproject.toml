@@ -30,3 +30,4 @@ addopts ="""
     --showlocals
 """
 testpaths = "tests"
+pythonpath = "src"

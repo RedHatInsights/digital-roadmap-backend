@@ -5,8 +5,41 @@ API server providing access to Red Hat Enterprise Linux roadmap information.
 
 ## Prerequisites
 
-Python 3.12 or later.
-A container runtime such as `docker` or `podman`.
+- Python 3.12 or later.
+- A container runtime such as `docker` or `podman`.
+
+### Prerequisites for `psycopg` ###
+
+In order to create a [local installation] of `psycopg`, the the following packages and configuration are required.
+
+#### Linux ####
+
+RHEL
+
+```shell
+PYTHON_VERSION=3.12
+yum -y install "python${PYTHON_VERSION}-devel" gcc libpq-devel
+```
+
+Debian
+
+```shell
+PYTHON_VERSION=3.12
+apt install -y \
+    python3-pip \
+    "python${PYTHON_VERSION}-dev" \
+    "python${PYTHON_VERSION}-venv" \
+    gcc libpq-dev
+```
+
+#### macOS ####
+
+`libpq` is required and `pg_config` must be in the `PATH`. These directions assume `zsh`, but you can run `brew info libpq` for instructions specific to your shell.
+
+```shell
+brew install libpq
+echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
+```
 
 
 ## Setup Instructions
@@ -82,3 +115,6 @@ make freeze
 ```
 
 Commit the changes.
+
+
+[local installation]: https://www.psycopg.org/psycopg3/docs/basic/install.html#local-installation

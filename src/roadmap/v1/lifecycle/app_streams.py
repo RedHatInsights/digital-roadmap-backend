@@ -5,6 +5,7 @@ from fastapi.param_functions import Query
 from fastapi.responses import JSONResponse
 
 from roadmap.data import MODULE_DATA
+from roadmap.models import AppStreamResponse
 
 v1_router = APIRouter(
     prefix="/app-streams",
@@ -31,7 +32,7 @@ async def get_app_streams(
 @v1_router.get("/{major_version}")
 async def get_major_version(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
-):
+) -> AppStreamResponse:
     return {"data": [module for module in MODULE_DATA if module.get("rhel_major_version", 0) == major_version]}
 
 
@@ -47,7 +48,7 @@ async def get_module_names(
 async def get_module(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
     module_name: t.Annotated[str, Path(description="Module name")],
-):
+) -> AppStreamResponse:
     if data := [module for module in MODULE_DATA if module.get("rhel_major_version", 0) == major_version]:
         if modules := sorted(item for item in data if item.get("module_name") == module_name):
             return {"data": modules}

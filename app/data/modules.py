@@ -17,6 +17,7 @@ MODULE_DATA = [
                 "version": "820190208025401",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "satellite-5-client",
@@ -53,6 +54,7 @@ MODULE_DATA = [
                 "version": "820190204085912",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "swig",
@@ -128,6 +130,7 @@ MODULE_DATA = [
                 "version": "8080020221213075530",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "pmdk",
@@ -148,6 +151,7 @@ MODULE_DATA = [
                 "version": "8080020221121213140",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "subversion",
@@ -211,6 +215,7 @@ MODULE_DATA = [
                 "version": "8070020220701055624",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "rust-toolset",
@@ -228,6 +233,7 @@ MODULE_DATA = [
                 "version": "820181214214108",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "jaxb",
@@ -249,6 +255,7 @@ MODULE_DATA = [
                 "version": "8080020230207081414",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "python39",
@@ -276,6 +283,7 @@ MODULE_DATA = [
                 "version": "8100020240927003152",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-DBD-SQLite",
@@ -297,6 +305,7 @@ MODULE_DATA = [
                 "version": "820181214121133",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "python27",
@@ -323,6 +332,7 @@ MODULE_DATA = [
                 "version": "820190212161047",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "postgresql",
@@ -443,6 +453,7 @@ MODULE_DATA = [
                 "version": "820190104140337",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "varnish",
@@ -460,6 +471,7 @@ MODULE_DATA = [
                 "version": "820181213144015",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "mysql",
@@ -500,6 +512,7 @@ MODULE_DATA = [
                 "version": "8090020240126173013",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "nginx",
@@ -638,6 +651,7 @@ MODULE_DATA = [
                 "version": "8100020240119085512",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "rhn-tools",
@@ -676,6 +690,7 @@ MODULE_DATA = [
                 "version": "820190321094720",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-DBI",
@@ -699,6 +714,7 @@ MODULE_DATA = [
                 "version": "820190116185335",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "pki-core",
@@ -716,6 +732,7 @@ MODULE_DATA = [
                 "version": "820190128182152",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "llvm-toolset",
@@ -733,6 +750,7 @@ MODULE_DATA = [
                 "version": "820190207221833",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "log4j",
@@ -752,6 +770,7 @@ MODULE_DATA = [
                 "version": "8080020221020123337",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-FCGI",
@@ -769,6 +788,7 @@ MODULE_DATA = [
                 "version": "820181214153815",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-IO-Socket-SSL",
@@ -799,6 +819,7 @@ MODULE_DATA = [
                 "version": "8060020211122104554",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "python38",
@@ -826,6 +847,7 @@ MODULE_DATA = [
                 "version": "8090020230810143931",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "eclipse",
@@ -854,6 +876,7 @@ MODULE_DATA = [
                 "version": "8030020201023061315",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "idm",
@@ -909,6 +932,7 @@ MODULE_DATA = [
                 "version": "820190227212412",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "python36",
@@ -936,6 +960,7 @@ MODULE_DATA = [
                 "version": "820190123171828",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "httpd",
@@ -968,6 +993,7 @@ MODULE_DATA = [
                 "version": "820190206142837",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-libwww-perl",
@@ -994,6 +1020,7 @@ MODULE_DATA = [
                 "version": "8060020210901111951",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "jmc",
@@ -1018,6 +1045,7 @@ MODULE_DATA = [
                 "version": "8050020211005144542",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "mailman",
@@ -1035,6 +1063,7 @@ MODULE_DATA = [
                 "version": "820181213140247",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-DBD-MySQL",
@@ -1057,6 +1086,7 @@ MODULE_DATA = [
                 "version": "820181214121012",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "redis",
@@ -1085,6 +1115,7 @@ MODULE_DATA = [
                 "version": "8070020220509142426",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "389-ds",
@@ -1105,6 +1136,7 @@ MODULE_DATA = [
                 "version": "820190201170147",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "ant",
@@ -1157,6 +1189,7 @@ MODULE_DATA = [
                 "version": "8100020240221104459",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "mod_auth_openidc",
@@ -1176,6 +1209,7 @@ MODULE_DATA = [
                 "version": "820181213140451",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "nodejs",
@@ -1314,6 +1348,7 @@ MODULE_DATA = [
                 "version": "8100020240808073736",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "php",
@@ -1486,6 +1521,7 @@ MODULE_DATA = [
                 "version": "8100020241112130045",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "ruby",
@@ -1582,6 +1618,7 @@ MODULE_DATA = [
                 "version": "8100020240906074654",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "gimp",
@@ -1606,6 +1643,7 @@ MODULE_DATA = [
                 "version": "820181213135540",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "mariadb",
@@ -1678,6 +1716,7 @@ MODULE_DATA = [
                 "version": "8080020231003163755",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "scala",
@@ -1700,6 +1739,7 @@ MODULE_DATA = [
                 "version": "820181213143541",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-YAML",
@@ -1724,6 +1764,7 @@ MODULE_DATA = [
                 "version": "820181214175558",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "javapackages-runtime",
@@ -1743,6 +1784,7 @@ MODULE_DATA = [
                 "version": "820181213140046",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl",
@@ -1825,6 +1867,7 @@ MODULE_DATA = [
                 "version": "8100020240314121426",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "inkscape",
@@ -1857,6 +1900,7 @@ MODULE_DATA = [
                 "version": "820181213140018",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "mercurial",
@@ -1889,6 +1933,7 @@ MODULE_DATA = [
                 "version": "8070020220729131051",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-App-cpanminus",
@@ -1909,6 +1954,7 @@ MODULE_DATA = [
                 "version": "820181214184336",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "container-tools",
@@ -2121,6 +2167,7 @@ MODULE_DATA = [
                 "version": "820190211172150",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "freeradius",
@@ -2187,6 +2234,7 @@ MODULE_DATA = [
                 "version": "8100020230904084920",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "virt",
@@ -2211,6 +2259,7 @@ MODULE_DATA = [
                 "version": "820190226174025",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "maven",
@@ -2262,6 +2311,7 @@ MODULE_DATA = [
                 "version": "8100020240210094037",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "pki-deps",
@@ -2279,6 +2329,7 @@ MODULE_DATA = [
                 "version": "820190223041344",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "perl-DBD-Pg",
@@ -2298,6 +2349,7 @@ MODULE_DATA = [
                 "version": "820181214121102",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "squid",
@@ -2315,6 +2367,7 @@ MODULE_DATA = [
                 "version": "820181213143653",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "libselinux-python",
@@ -2334,6 +2387,7 @@ MODULE_DATA = [
                 "version": "820181213140134",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "parfait",
@@ -2358,6 +2412,7 @@ MODULE_DATA = [
                 "version": "820181213142511",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "nginx",
@@ -2408,6 +2463,7 @@ MODULE_DATA = [
                 "version": "9050020240717000500",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "nodejs",
@@ -2480,6 +2536,7 @@ MODULE_DATA = [
                 "version": "9050020241113142151",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "php",
@@ -2546,6 +2603,7 @@ MODULE_DATA = [
                 "version": "9050020241112094217",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "postgresql",
@@ -2590,6 +2648,7 @@ MODULE_DATA = [
                 "version": "9050020241122142517",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "redis",
@@ -2607,6 +2666,7 @@ MODULE_DATA = [
                 "version": "9050020241104103753",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "ruby",
@@ -2643,6 +2703,7 @@ MODULE_DATA = [
                 "version": "9040020240906110954",
             },
         ],
+        "type": "module",
     },
     {
         "module_name": "mariadb",
@@ -2671,6 +2732,7 @@ MODULE_DATA = [
                 "version": "9040020240126110506",
             }
         ],
+        "type": "module",
     },
     {
         "module_name": "maven",
@@ -2692,5 +2754,6 @@ MODULE_DATA = [
                 "version": "9040020240210002822",
             }
         ],
+        "type": "module",
     },
 ]

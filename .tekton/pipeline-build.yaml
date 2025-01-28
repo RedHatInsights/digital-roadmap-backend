@@ -67,6 +67,11 @@ spec:
       type: string
       default: ""
 
+    - name: additional-tags
+      description: Additional tags to apply to the image
+      type: array
+      default: []
+
   results:
     - name: IMAGE_URL
       description: ""
@@ -369,6 +374,7 @@ spec:
 
         - name: ADDITIONAL_TAGS
           value:
+            - $(params.additional-tags[*])
             - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
       runAfter:
         - build-container

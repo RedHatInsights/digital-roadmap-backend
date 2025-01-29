@@ -64,7 +64,7 @@ stop-db: check-container-runtime
 
 .PHONY: run
 run:
-	$(VENV_DIR)/bin/fastapi run roadmap/main.py --reload --host 127.0.0.1 --port 8081
+	$(VENV_DIR)/bin/fastapi run src/roadmap/main.py --reload --host 127.0.0.1 --port 8081
 
 .PHONY: clean
 clean:

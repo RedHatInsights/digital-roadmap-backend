@@ -46,7 +46,7 @@ RUN microdnf install -y --nodocs \
     "python${PYTHON_VERSION}" \
     && rm -rf /var/cache/yum/*
 
-COPY roadmap/ /srv/rhel_roadmap/roadmap/
+COPY /src/roadmap/ /srv/rhel_roadmap/roadmap/
 
 RUN useradd --system --create-home --home-dir /srv/rhel_roadmap roady
 

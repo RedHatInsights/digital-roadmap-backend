@@ -1,4 +1,5 @@
 from fastapi import APIRouter, FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from roadmap.v1.lifecycle import v1_router as lifecycle_v1_router
 from roadmap.v1.release_notes import v1_router as release_notes_v1_router
@@ -6,6 +7,11 @@ from roadmap.v1.upcoming import v1_router as upcoming_v1_router
 
 # Initialize FastAPI app
 app = FastAPI()
+
+# Add Prometheus metrics
+instrumentor = Instrumentator()
+instrumentor.instrument(app, metric_namespace="digital_roadmap")
+instrumentor.expose(app)
 
 # Create a main API router with the /api prefix
 api_router = APIRouter()

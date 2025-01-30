@@ -1,4 +1,5 @@
 fastapi[standard]
 greenlet
 sqlalchemy
+prometheus-fastapi-instrumentator
 psycopg[c]

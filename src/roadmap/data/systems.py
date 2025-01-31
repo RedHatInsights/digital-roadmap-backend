@@ -1,5 +1,6 @@
 from datetime import date
 
+
 OS_DATA_MOCKED = [
     {
         "name": "RHEL",

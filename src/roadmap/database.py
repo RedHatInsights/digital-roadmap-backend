@@ -1,8 +1,10 @@
 # database.py
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from roadmap.config import SQLALCHEMY_DATABASE_URI
+
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URI, echo=True)
 

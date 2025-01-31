@@ -2,7 +2,9 @@
 import argparse
 import shutil
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from concurrent.futures import as_completed
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 

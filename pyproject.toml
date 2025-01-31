@@ -1,6 +1,11 @@
 [tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py39"
+
+[tool.ruff.lint]
 # Enable ruff rules to act like flake8
-lint.select = [
+select = [
     "E",  # pycodestyle (formerly part of flake8)
     "F",  # pyflakes (formerly part of flake8)
     "I",  # import order (like isort)
@@ -8,14 +13,17 @@ lint.select = [
     "C90",  # flake8-comprehensions
 ]
 
-line-length = 120
-indent-width = 4
-target-version = "py39"
-
 # Exclude specific rules if needed
-lint.ignore = [
+ignore = [
     "E501",  # Ignore line length (similar to flake8's max-line-length)
 ]
+
+[tool.ruff.lint.isort]
+case-sensitive = false
+force-single-line = true
+lines-after-imports = 2
+lines-between-types = 1
+order-by-type = false
 
 [tool.pytest.ini_options]
 addopts = [

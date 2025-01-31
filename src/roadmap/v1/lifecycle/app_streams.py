@@ -1,10 +1,12 @@
 import typing as t
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter
+from fastapi import Path
 from fastapi.param_functions import Query
 from fastapi.responses import JSONResponse
 
 from roadmap.data import MODULE_DATA
+
 
 router = APIRouter(
     prefix="/app-streams",

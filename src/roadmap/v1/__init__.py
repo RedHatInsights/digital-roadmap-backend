@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
-from . import lifecycle, release_notes, upcoming
+from . import lifecycle
+from . import release_notes
+from . import upcoming
+
 
 router = APIRouter(prefix="/v1")
 router.include_router(lifecycle.router)

@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter
+from fastapi import Path
 
 from roadmap.data.systems import OS_DATA_MOCKED
+
 
 router = APIRouter(
     prefix="/systems",

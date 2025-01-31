@@ -1,5 +1,6 @@
 from datetime import date
 
+
 MODULE_DATA = [
     {
         "module_name": "go-toolset",

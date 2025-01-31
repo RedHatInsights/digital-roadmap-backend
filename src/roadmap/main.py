@@ -1,7 +1,9 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter
+from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
 import roadmap.v1
+
 
 # Initialize FastAPI app
 app = FastAPI()

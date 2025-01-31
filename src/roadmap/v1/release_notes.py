@@ -1,11 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from roadmap.crud import get_paragraphs
 from roadmap.database import get_db
 from roadmap.models import TaggedParagraph
+
 
 router = APIRouter(prefix="/release-notes", tags=["release notes"])
 

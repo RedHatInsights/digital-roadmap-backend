@@ -2,10 +2,10 @@ from fastapi import APIRouter
 
 from roadmap.data import UPCOMING_DATA
 
-v1_router = APIRouter()
+router = APIRouter(prefix="/upcoming-changes", tags=["upcoming changes"])
 
 
-@v1_router.get("/")
+@router.get("/")
 async def get_upcoming():
     # TODO: Replace fixture data with data from database
     return UPCOMING_DATA

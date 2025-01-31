@@ -2,27 +2,27 @@ from fastapi import APIRouter, Path
 
 from roadmap.data.systems import OS_DATA_MOCKED
 
-v1_router = APIRouter(
+router = APIRouter(
     prefix="/systems",
     tags=["lifecycle", "systems"],
 )
 
 
-@v1_router.get("/")
+@router.get("/")
 async def get_systems():
     systems = get_systems_data()
 
     return sorted(systems, key=lambda d: (d["major"], d["minor"]))
 
 
-@v1_router.get("/{major}")
+@router.get("/{major}")
 async def get_systems_major(major: int = Path(..., description="Major version number")):
     systems = get_systems_data(major)
 
     return sorted(systems, key=lambda d: (d["major"], d["minor"]))
 
 
-@v1_router.get("/{major}/{minor}")
+@router.get("/{major}/{minor}")
 async def get_systems_major_minor(
     major: int = Path(..., description="Major version number"),
     minor: int = Path(..., description="Minor version number"),

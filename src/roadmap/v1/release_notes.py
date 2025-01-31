@@ -7,10 +7,10 @@ from roadmap.crud import get_paragraphs
 from roadmap.database import get_db
 from roadmap.models import TaggedParagraph
 
-v1_router = APIRouter()
+router = APIRouter(prefix="/release-notes", tags=["release notes"])
 
 
-@v1_router.get("/")
+@router.get("/")
 async def get_release_notes(
     major: int = Query(..., description="Major version number"),
     minor: int = Query(..., description="Minor version number"),

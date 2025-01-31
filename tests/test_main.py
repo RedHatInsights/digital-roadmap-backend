@@ -10,3 +10,17 @@ def test_metrics(client):
 
     assert response.status_code == 200
     assert b"digital_roadmap_http_request" in response.read()
+
+
+def test_openapi_docs_root(client):
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    assert "paths" in response.json()
+
+
+def test_openapi_docs_v1(client):
+    response = client.get("/api/digital-roadmap/v1/openapi.json")
+
+    assert response.status_code == 200
+    assert "paths" in response.json()

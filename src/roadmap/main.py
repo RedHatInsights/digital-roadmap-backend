@@ -16,6 +16,9 @@ instrumentor.expose(app)
 # Create a main API router with the base prefix
 api_router = APIRouter(prefix="/api/digital-roadmap", tags=["digital-roadmap"])
 
+# Additional route to the OpenAPI JSON under the versioned path
+roadmap.v1.router.add_api_route("/openapi.json", app.openapi, include_in_schema=False)
+
 # Include individual service routers under the main API router
 api_router.include_router(roadmap.v1.router)
 

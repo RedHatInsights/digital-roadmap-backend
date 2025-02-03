@@ -1,8 +1,28 @@
+import sentry_sdk
+
 from fastapi import APIRouter
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 
 import roadmap.v1
+
+
+sentry_sdk.init(
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+    integrations=[
+        FastApiIntegration(
+            failed_request_status_codes={403, 404, *range(500, 599)},
+            http_methods_to_capture=("GET",),
+        ),
+        StarletteIntegration(
+            failed_request_status_codes={403, 404, *range(500, 599)},
+            http_methods_to_capture=("GET",),
+        ),
+    ],
+)
 
 
 # Initialize FastAPI app

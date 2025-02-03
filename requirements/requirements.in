@@ -3,3 +3,4 @@ greenlet
 sqlalchemy
 prometheus-fastapi-instrumentator
 psycopg[c]
+sentry-sdk

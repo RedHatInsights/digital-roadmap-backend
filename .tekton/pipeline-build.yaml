@@ -52,6 +52,10 @@ spec:
       description: Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
       default: ""
 
+    - name: build-image-index
+      description: Add built image into an OCI image index
+      default: "false"
+
     - name: build-args
       description: Array of --build-arg values ("arg=value" strings) for buildah
       type: array

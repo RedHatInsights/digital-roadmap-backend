@@ -100,6 +100,7 @@ spec:
 
         - name: skip-checks
           value: $(params.skip-checks)
+
       taskRef:
         resolver: bundles
         params:
@@ -125,8 +126,10 @@ spec:
 
         - name: ociArtifactExpiresAfter
           value: $(params.image-expires-after)
+
       runAfter:
         - init
+
       taskRef:
         resolver: bundles
         params:
@@ -144,6 +147,7 @@ spec:
           operator: in
           values:
             - "true"
+
       workspaces:
         - name: basic-auth
           workspace: git-auth
@@ -161,8 +165,10 @@ spec:
 
         - name: ociArtifactExpiresAfter
           value: $(params.image-expires-after)
+
       runAfter:
         - clone-repository
+
       taskRef:
         resolver: bundles
         params:
@@ -174,6 +180,7 @@ spec:
 
           - name: kind
             value: task
+
       workspaces:
         - name: git-basic-auth
           workspace: git-auth
@@ -216,8 +223,10 @@ spec:
 
         - name: CACHI2_ARTIFACT
           value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+
       runAfter:
         - prefetch-dependencies
+
       taskRef:
         resolver: bundles
         params:
@@ -242,8 +251,10 @@ spec:
 
         - name: IMAGE_DIGEST
           value: $(tasks.build-container.results.IMAGE_DIGEST)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -255,6 +266,7 @@ spec:
 
           - name: kind
             value: task
+
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -268,8 +280,10 @@ spec:
 
         - name: image-url
           value: $(tasks.build-container.results.IMAGE_URL)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -291,8 +305,10 @@ spec:
       params:
         - name: image-url
           value: $(tasks.build-container.results.IMAGE_URL)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -309,6 +325,7 @@ spec:
           operator: in
           values:
             - "false"
+
     - name: sast-snyk-check
       params:
         - name: image-digest
@@ -325,8 +342,10 @@ spec:
 
         - name: ARGS
           value: "--project-name=digital-roadmap --report --org=12d05a23-73a7-4a1d-9162-ab12e8c051c4"
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -338,6 +357,7 @@ spec:
 
           - name: kind
             value: task
+
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -351,8 +371,10 @@ spec:
 
         - name: image-url
           value: $(tasks.build-container.results.IMAGE_URL)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -364,6 +386,7 @@ spec:
 
           - name: kind
             value: task
+
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -522,8 +545,10 @@ spec:
           value:
             - $(params.additional-tags[*])
             - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -552,8 +577,10 @@ spec:
 
         - name: SOURCE_ARTIFACT
           value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -573,8 +600,10 @@ spec:
 
         - name: image-url
           value: $(tasks.build-container.results.IMAGE_URL)
+
       runAfter:
         - build-container
+
       taskRef:
         resolver: bundles
         params:
@@ -592,6 +621,7 @@ spec:
       params:
         - name: IMAGE_URL
           value: $(tasks.build-container.results.IMAGE_URL)
+
       taskRef:
         resolver: bundles
         params:

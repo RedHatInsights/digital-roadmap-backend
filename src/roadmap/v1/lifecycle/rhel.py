@@ -1,6 +1,6 @@
 import typing as t
 
-from operator import itemgetter
+from operator import attrgetter
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -10,6 +10,7 @@ from fastapi import Request
 
 from roadmap.common import get_all_systems
 from roadmap.data.systems import OS_DATA_MOCKED
+from roadmap.models import System
 
 
 router = APIRouter(
@@ -25,14 +26,14 @@ async def get_systems(request: Request):
 
     systems = get_systems_data()
 
-    return sorted(systems, key=itemgetter("major", "minor"), reverse=True)
+    return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
 @router.get("/{major}")
-async def get_systems_major(major: t.Annotated[int, Path(description="Major version number")]):
     systems = get_systems_data(major)
+async def get_systems_major(major: t.Annotated[int, Path(description="Major version number")]) -> list[System]:
 
-    return sorted(systems, key=itemgetter("major", "minor"), reverse=True)
+    return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
 @router.get("/{major}/{minor}")
@@ -42,15 +43,15 @@ async def get_systems_major_minor(
 ):
     systems = get_systems_data(major, minor)
 
-    return sorted(systems, key=itemgetter("major", "minor"), reverse=True)
+    return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
 def get_systems_data(major=None, minor=None):
     data = OS_DATA_MOCKED
 
     if major is not None:
-        data = [d for d in data if d["major"] == major]
+        data = [d for d in data if d.major == major]
     if minor is not None:
-        data = [d for d in data if d["minor"] == minor]
+        data = [d for d in data if d.minor == minor]
 
     return data

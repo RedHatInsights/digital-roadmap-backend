@@ -27,8 +27,8 @@ import roadmap
             ],
             "/9",
             [
-                {"major": 9, "minor": 0, "data": "data"},
                 {"major": 9, "minor": 2, "data": "data"},
+                {"major": 9, "minor": 0, "data": "data"},
             ],
         ),
         (
@@ -40,10 +40,10 @@ import roadmap
             ],
             "",
             [
-                {"major": 8, "minor": 3, "data": "data"},
-                {"major": 8, "minor": 7, "data": "data"},
-                {"major": 9, "minor": 0, "data": "data"},
                 {"major": 9, "minor": 2, "data": "data"},
+                {"major": 9, "minor": 0, "data": "data"},
+                {"major": 8, "minor": 7, "data": "data"},
+                {"major": 8, "minor": 3, "data": "data"},
             ],
         ),
     ),

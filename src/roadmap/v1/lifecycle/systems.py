@@ -14,14 +14,14 @@ router = APIRouter(
 async def get_systems():
     systems = get_systems_data()
 
-    return sorted(systems, key=lambda d: (d["major"], d["minor"]))
+    return sorted(systems, key=lambda d: (d["major"], d["minor"]), reverse=True)
 
 
 @router.get("/{major}")
 async def get_systems_major(major: int = Path(..., description="Major version number")):
     systems = get_systems_data(major)
 
-    return sorted(systems, key=lambda d: (d["major"], d["minor"]))
+    return sorted(systems, key=lambda d: (d["major"], d["minor"]), reverse=True)
 
 
 @router.get("/{major}/{minor}")
@@ -31,7 +31,7 @@ async def get_systems_major_minor(
 ):
     systems = get_systems_data(major, minor)
 
-    return sorted(systems, key=lambda d: (d["major"], d["minor"]))
+    return sorted(systems, key=lambda d: (d["major"], d["minor"]), reverse=True)
 
 
 def get_systems_data(major=None, minor=None):

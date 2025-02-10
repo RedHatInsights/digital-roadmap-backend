@@ -22,8 +22,9 @@ class Lifecycle(BaseModel):
 
 
 class RHELLifecycle(Lifecycle):
+    name: str = "RHEL"
     major: int
-    minor: int
+    minor: int | None = None
     end_e4s: date | None = None
     end_els: date | None = None
     end_eus: date | None = None

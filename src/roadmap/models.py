@@ -11,7 +11,7 @@ class System(BaseModel):
     release: str
     release_date: date
     retirement_date: date
-    systems: int = 0
+    count: int = 0
     lifecycle_type: str
 
 

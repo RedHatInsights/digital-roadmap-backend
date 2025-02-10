@@ -12,7 +12,7 @@ OS_DATA_MOCKED = [
         release="Not applicable",
         release_date=date(2023, 5, 1),
         retirement_date=date(2023, 11, 1),
-        systems=5,
+        count=5,
         lifecycle_type="mainline",
     ),
     System(
@@ -22,7 +22,7 @@ OS_DATA_MOCKED = [
         release="Not applicable",
         release_date=date(2022, 5, 18),
         retirement_date=date(2032, 5, 1),
-        systems=45,
+        count=45,
         lifecycle_type="mainline",
     ),
     System(
@@ -32,7 +32,7 @@ OS_DATA_MOCKED = [
         release="Not applicable",
         release_date=date(2023, 5, 1),
         retirement_date=date(2023, 5, 1),
-        systems=12,
+        count=12,
         lifecycle_type="e4s",
     ),
     System(
@@ -42,7 +42,7 @@ OS_DATA_MOCKED = [
         release="Not applicable",
         release_date=date(2020, 11, 1),
         retirement_date=date(2021, 5, 1),
-        systems=50,
+        count=50,
         lifecycle_type="eus",
     ),
 ]
@@ -215,3 +215,4 @@ OS_LIFECYCLE_DATES = {
         end_eus=date(2035, 5, 31),
         end_e4s=date(2037, 5, 31),
     ),
+}

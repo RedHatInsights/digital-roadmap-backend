@@ -13,7 +13,7 @@ LABEL url="https://github.com/RedHatInsights/digital-roadmap-backend"
 LABEL vendor="Red Hat, Inc."
 LABEL version=0.0.1
 
-ENV VENV=/opt/venvs/rhel_roadmap
+ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"
 ENV PATH="${VENV}/bin:$PATH"
 ENV PYTHON_VERSION="3.12"
@@ -33,10 +33,11 @@ RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
 
 FROM registry.access.redhat.com/ubi9-minimal:latest AS final
 
-ENV VENV=/opt/venvs/rhel_roadmap
+ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"
 ENV PATH="${VENV}/bin:$PATH"
 ENV PYTHON_VERSION="3.12"
+ENV PYTHONPATH=/srv/roady/
 
 COPY LICENSE /licenses/Apache-2.0.txt
 COPY --from=builder "${VENV}" "${VENV}"
@@ -46,11 +47,11 @@ RUN microdnf install -y --nodocs \
     "python${PYTHON_VERSION}" \
     && rm -rf /var/cache/yum/*
 
-COPY /src/roadmap/ /srv/rhel_roadmap/roadmap/
+RUN useradd --system --create-home --home-dir /srv/roady roady
 
-RUN useradd --system --create-home --home-dir /srv/rhel_roadmap roady
+COPY /src/roadmap/ /srv/roady/roadmap/
 
 USER roady
-WORKDIR /srv/rhel_roadmap
+WORKDIR /srv/roady
 
-CMD ["fastapi", "run", "roadmap/main.py", "--proxy-headers", "--port", "80"]
+CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--port", "80", "--host", "0.0.0.0"]

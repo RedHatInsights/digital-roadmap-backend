@@ -1,3 +1,5 @@
+import typing as t
+
 from datetime import date
 
 from pydantic import BaseModel
@@ -7,10 +9,10 @@ from pydantic import Field
 class System(BaseModel):
     name: str
     major: int
-    minor: int
+    minor: int | None = None
     release: str
-    release_date: date
-    retirement_date: date
+    release_date: date | t.Literal["Unknown"]
+    retirement_date: date | t.Literal["Unknown"]
     count: int = 0
     lifecycle_type: str
 

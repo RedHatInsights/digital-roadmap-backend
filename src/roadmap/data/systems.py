@@ -48,8 +48,11 @@ OS_DATA_MOCKED = [
 ]
 
 
-# EUS - Extended Updated Support
+# Mainline
+# EUS - Extended Updated Support (73)
 # E4S - Extended support for SAP
+# ELS - Extended Lifecycle Support (204)
+# EELS - Enhanced Extended Updated Support
 OS_LIFECYCLE_DATES = {
     "8": RHELLifecycle(
         major=8,

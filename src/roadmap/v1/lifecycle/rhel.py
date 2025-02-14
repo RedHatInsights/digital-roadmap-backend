@@ -16,6 +16,8 @@ router = APIRouter(
     tags=["RHEL"],
 )
 
+MajorVersion = t.Annotated[int, Path(description="Major version number", ge=8, le=10)]
+MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, le=10)]
 
 @router.get("/")
 async def get_systems(request: Request) -> list[System]:
@@ -31,19 +33,30 @@ async def get_systems(request: Request) -> list[System]:
                 break
 
     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
+## Relevant ##
+relevant = APIRouter(
+    prefix="/relevant/systems",
+    tags=["relevant", "rhel", "systems"],
+)
 
 
-@router.get("/{major}")
-async def get_systems_major(major: t.Annotated[int, Path(description="Major version number")]) -> list[System]:
+@relevant.get("/rhel")
+async def get_relevant_systems(
+    authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+) -> dict[str, list[System] | str | int]:
+@relevant.get("/rhel/{major}")
+async def get_relevant_systems_major(major: t.Annotated[int, MajorVersion]) -> list[System]:
     systems = get_systems_data(major)
 
     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
-@router.get("/{major}/{minor}")
-async def get_systems_major_minor(
-    major: int = Path(..., description="Major version number"),
-    minor: int = Path(..., description="Minor version number"),
+@relevant.get("/rhel/{major}/{minor}")
+async def get_relevant_systems_major_minor(
+    major: MajorVersion,
+    minor: MinorVersion,
 ):
     systems = get_systems_data(major, minor)
 

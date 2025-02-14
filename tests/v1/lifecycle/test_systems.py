@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import pytest
 
 import roadmap
@@ -27,8 +29,8 @@ import roadmap
             ],
             "/9",
             [
-                {"major": 9, "minor": 2, "data": "data"},
                 {"major": 9, "minor": 0, "data": "data"},
+                {"major": 9, "minor": 2, "data": "data"},
             ],
         ),
         (
@@ -40,10 +42,10 @@ import roadmap
             ],
             "",
             [
-                {"major": 9, "minor": 2, "data": "data"},
-                {"major": 9, "minor": 0, "data": "data"},
-                {"major": 8, "minor": 7, "data": "data"},
                 {"major": 8, "minor": 3, "data": "data"},
+                {"major": 8, "minor": 7, "data": "data"},
+                {"major": 9, "minor": 0, "data": "data"},
+                {"major": 9, "minor": 2, "data": "data"},
             ],
         ),
     ),
@@ -51,4 +53,4 @@ import roadmap
 def test_system_specified(client, api_prefix, source_data, path, response, monkeypatch):
     monkeypatch.setattr(roadmap.v1.lifecycle.systems, "OS_DATA_MOCKED", source_data)
     data = client.get(f"{api_prefix}/lifecycle/systems{path}")
-    assert data.json() == response
+    assert data.json() == sorted(response, key=itemgetter("major", "minor"), reverse=True)

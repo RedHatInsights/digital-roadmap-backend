@@ -7,8 +7,8 @@ from roadmap.data.systems import OS_DATA_MOCKED
 
 
 router = APIRouter(
-    prefix="/systems",
-    tags=["lifecycle", "systems"],
+    prefix="/rhel",
+    tags=["RHEL"],
 )
 
 

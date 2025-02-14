@@ -10,7 +10,7 @@ from roadmap.data import MODULE_DATA
 
 router = APIRouter(
     prefix="/app-streams",
-    tags=["lifecycle", "app streams"],
+    tags=["App Streams"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -20,10 +20,7 @@ async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
 ):
     if name:
-        result = []
-        for module in MODULE_DATA:
-            if name.lower() in module["module_name"].lower():
-                result.append(module)
+        result = [module for module in MODULE_DATA if name.lower() in module["module_name"].lower()]
 
         return {"data": result}
 

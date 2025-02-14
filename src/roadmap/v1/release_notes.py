@@ -11,7 +11,7 @@ from roadmap.database import get_db
 from roadmap.models import TaggedParagraph
 
 
-router = APIRouter(prefix="/release-notes", tags=["release notes"])
+router = APIRouter(prefix="/release-notes", tags=["Release Notes"])
 
 
 @router.get("/")

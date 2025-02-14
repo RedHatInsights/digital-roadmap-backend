@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from . import app_streams
-from . import systems
+from . import rhel
 
 
-router = APIRouter(prefix="/lifecycle")
+router = APIRouter(prefix="/lifecycle", tags=["Lifecycle"])
 router.include_router(app_streams.router)
-router.include_router(systems.router)
+router.include_router(rhel.router)

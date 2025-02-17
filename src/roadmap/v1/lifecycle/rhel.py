@@ -7,9 +7,12 @@ from operator import attrgetter
 from fastapi import APIRouter
 from fastapi import Header
 from fastapi import Path
+from pydantic import BaseModel
 
 from roadmap.common import get_system_count_from_inventory
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.models import HostCount
+from roadmap.models import LifecycleKind
 from roadmap.models import RHELLifecycle
 from roadmap.models import System
 
@@ -24,6 +27,11 @@ router = APIRouter(
 
 MajorVersion = t.Annotated[int, Path(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, le=10)]
+
+
+class RelevantSystemsResponse(BaseModel):
+    data: list[System]
+    total: int
 
 
 @router.get("/", summary="Return lifecycle data for all RHEL versions")
@@ -61,7 +69,7 @@ async def get_systems_major_minor(
 
 ## Relevant ##
 relevant = APIRouter(
-    prefix="/relevant/rhel",
+    prefix="/relevant/lifecycle/rhel",
     tags=["Relevant", "RHEL"],
 )
 
@@ -71,7 +79,7 @@ async def get_relevant_systems(
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
-) -> dict[str, list[System] | str | int]:
+) -> RelevantSystemsResponse:
     headers = {
         "Authorization": authorization,
         "User-Agent": user_agent,
@@ -88,11 +96,11 @@ async def get_relevant_systems(
 
         name = system_profile.get("operating_system", {}).get("name")
         if name is None:
-            logger.info("Unable to ge relevant systems due to missing OS from system profile")
+            logger.info("Unable to get relevant systems due to missing OS from system profile")
             continue
 
         installed_products = system_profile.get("installed_products", [{}])
-        major = str(system_profile.get("operating_system", {}).get("major"))
+        major = system_profile.get("operating_system", {}).get("major")
 
         # Use minor from RHSM version in order to calculate the correct end date.
         # The minor from RHSM indicates that the system is pinned to a
@@ -101,9 +109,7 @@ async def get_relevant_systems(
         lifecycle_type = get_lifecycle_type(installed_products)
         minor = rhsm_version.partition(".")[-1] or None
 
-        # FIXME: Make count_key a model
-        # (name, major, minor (optional), lifecycle type)
-        count_key: tuple[str, str, str | None, str] = (name, major, minor, lifecycle_type)
+        count_key = HostCount(name=name, major=major, minor=minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
 
         # TODO: Figure out start and and date based on lifecycle type
@@ -129,12 +135,13 @@ async def get_relevant_systems(
         #   If ??? in installed_product --> E4S
 
     results = []
-    for vector, count in system_counts.items():
-        major = vector[1]
-        minor = vector[2]
-        lifecycle_type = vector[3]
+    logger.debug(system_counts.keys())
+    for count_key, count in system_counts.items():
+        major = count_key.major
+        minor = count_key.minor
+        lifecycle_type = count_key.lifecycle
 
-        key = major if minor is None else f"{major}.{minor}"
+        key = str(major) if minor is None else f"{major}.{minor}"
         logger.debug(key)
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
@@ -146,17 +153,17 @@ async def get_relevant_systems(
             release_date = lifecycle_info.start
             retirement_date = lifecycle_info.end
 
-        if lifecycle_type == "ELS":
-            retirement_date = lifecycle_info.end_els
+            if lifecycle_type == LifecycleKind.els:
+                retirement_date = lifecycle_info.end_els
 
-        if lifecycle_type == "E4S":
-            retirement_date = lifecycle_info.end_e4s
+            if lifecycle_type == LifecycleKind.e4s:
+                retirement_date = lifecycle_info.end_e4s
 
         results.append(
             System(
-                name=vector[0],
+                name=count_key.name,
                 major=major,
-                minor=minor or 0,
+                minor=minor,
                 lifecycle_type=lifecycle_type,
                 release="Not applicable",
                 release_date=release_date,
@@ -165,10 +172,10 @@ async def get_relevant_systems(
             )
         )
 
-    return {
-        "total": sum(system.count for system in results),
-        "data": sorted(results, key=attrgetter("major", "minor")),
-    }
+    return RelevantSystemsResponse(
+        total=sum(system.count for system in results),
+        data=sorted(results, key=sort_null_version("lifecycle_type", "major", "minor"), reverse=True),
+    )
 
 
 @relevant.get("/{major}")
@@ -193,7 +200,7 @@ def get_systems_data(major=None, minor=None):
         System(
             name=item.name,
             major=item.major,
-            minor=getattr(item, "minor", None) or 0,
+            minor=item.minor,
             release="release",
             release_date=item.start,
             retirement_date=item.end,
@@ -211,7 +218,7 @@ def get_systems_data(major=None, minor=None):
     return data
 
 
-def get_lifecycle_type(products: list[dict[str, str]]) -> str:
+def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:
     """Calculate lifecycle type based on the product ID.
 
     https://downloads.corp.redhat.com/internal/products
@@ -224,13 +231,20 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> str:
 
     """
     ids = {item.get("id") for item in products}
-    logger.debug(ids)
-    type = "mainline"
+    type = LifecycleKind.mainline
 
     if "73" in ids:
-        type = "EUS"
+        type = LifecycleKind.eus
 
     if "204" in ids:
-        type = "ELS"
+        type = LifecycleKind.els
 
     return type
+
+
+def sort_null_version(attr, /, *attrs) -> t.Callable:
+    def _getter(item):
+        # If an attribute is None, use a 0 instead of None for the purpose of sorting
+        return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
+
+    return _getter

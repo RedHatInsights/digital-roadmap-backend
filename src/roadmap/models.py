@@ -1,9 +1,27 @@
 import typing as t
 
 from datetime import date
+from enum import StrEnum
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+
+
+class LifecycleKind(StrEnum):
+    mainline = "mainline"
+    eus = "EUS"
+    els = "ELS"
+    e4s = "E4S"
+
+
+class HostCount(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    major: int
+    minor: int | None = None
+    lifecycle: LifecycleKind
 
 
 class System(BaseModel):
@@ -14,7 +32,7 @@ class System(BaseModel):
     release_date: date | t.Literal["Unknown"]
     retirement_date: date | t.Literal["Unknown"]
     count: int = 0
-    lifecycle_type: str
+    lifecycle_type: LifecycleKind
 
 
 class Lifecycle(BaseModel):

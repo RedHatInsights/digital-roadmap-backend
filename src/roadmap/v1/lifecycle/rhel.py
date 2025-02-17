@@ -34,37 +34,39 @@ class RelevantSystemsResponse(BaseModel):
     total: int
 
 
-@router.get("/", summary="Return lifecycle data for all RHEL versions")
-async def get_systems() -> list[RHELLifecycle]:
-    return sorted(
-        (item for item in OS_LIFECYCLE_DATES.values() if item.minor is not None),
-        key=attrgetter("major", "minor"),
-    )
+class LifecycleResponse(BaseModel):
+    data: list[RHELLifecycle]
 
 
-@router.get("/{major}")
+@router.get("/", summary="Return lifecycle data for all RHEL versions", response_model=LifecycleResponse)
+async def get_systems():
+    return {"data": get_lifecycle_data()}
+
+
+@router.get("/{major}", response_model=LifecycleResponse)
 async def get_systems_major(
     major: MajorVersion,
-) -> list[RHELLifecycle]:
-    return sorted(
-        (item for item in OS_LIFECYCLE_DATES.values() if item.minor is not None and item.major == major),
-        key=attrgetter("major", "minor"),
-    )
+):
+    return {"data": get_lifecycle_data(major)}
 
 
-@router.get("/{major}/{minor}")
+@router.get("/{major}/{minor}", response_model=LifecycleResponse)
 async def get_systems_major_minor(
     major: MajorVersion,
     minor: MinorVersion,
 ):
-    return sorted(
-        (
-            item
-            for item in OS_LIFECYCLE_DATES.values()
-            if item.minor is not None and (item.major, item.minor) == (major, minor)
-        ),
-        key=attrgetter("major", "minor"),
-    )
+    return {"data": get_lifecycle_data(major, minor)}
+
+
+def get_lifecycle_data(major: int | None = None, minor: int | None = None, reverse: bool = True):
+    lifecycles = (item for item in OS_LIFECYCLE_DATES.values() if item.minor is not None)
+
+    if major and minor:
+        lifecycles = (item for item in lifecycles if (item.major, item.minor) == (major, minor))
+    elif major:
+        lifecycles = (item for item in lifecycles if item.major == major)
+
+    return sorted(lifecycles, key=attrgetter("major", "minor"), reverse=reverse)
 
 
 ## Relevant ##
@@ -112,28 +114,6 @@ async def get_relevant_systems(
         count_key = HostCount(name=name, major=major, minor=minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
 
-        # TODO: Figure out start and and date based on lifecycle type
-        #   Start date is always 8.0 start date
-        #   If no minor version
-        #       --> start date is the major start date
-        #       --> end date is the major end date
-        #
-        #  End date calculation
-        #
-        #   Default to mainline
-        #
-        #   Example:
-        #        "installed_products": [
-        #             {
-        #                 "id": "479"
-        #             }
-        #         ],
-        #
-        #   If 73 in installed_product --> EUS
-        #   If 204 in installed_product --> ELS
-        #   If ??? in installed_product --> EEUS
-        #   If ??? in installed_product --> E4S
-
     results = []
     logger.debug(system_counts.keys())
     for count_key, count in system_counts.items():
@@ -146,7 +126,7 @@ async def get_relevant_systems(
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
-            logger.error(f"Missing OS key: {key}")
+            logger.error(f"Missing lifecycle data for RHEL {key}")
             release_date = "Unknown"
             retirement_date = "Unknown"
         else:

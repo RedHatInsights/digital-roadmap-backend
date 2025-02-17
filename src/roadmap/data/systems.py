@@ -1,52 +1,6 @@
 from datetime import date
 
-from roadmap.models import LifecycleKind
 from roadmap.models import RHELLifecycle
-from roadmap.models import System
-
-
-OS_DATA_MOCKED = [
-    System(
-        name="RHEL",
-        major=9,
-        minor=2,
-        release="Not applicable",
-        release_date=date(2023, 5, 1),
-        retirement_date=date(2023, 11, 1),
-        count=5,
-        lifecycle_type=LifecycleKind.mainline,
-    ),
-    System(
-        name="RHEL",
-        major=9,
-        minor=0,
-        release="Not applicable",
-        release_date=date(2022, 5, 18),
-        retirement_date=date(2032, 5, 1),
-        count=45,
-        lifecycle_type=LifecycleKind.mainline,
-    ),
-    System(
-        name="RHEL",
-        major=8,
-        minor=7,
-        release="Not applicable",
-        release_date=date(2023, 5, 1),
-        retirement_date=date(2023, 5, 1),
-        count=12,
-        lifecycle_type=LifecycleKind.e4s,
-    ),
-    System(
-        name="RHEL",
-        major=8,
-        minor=3,
-        release="Not applicable",
-        release_date=date(2020, 11, 1),
-        retirement_date=date(2021, 5, 1),
-        count=50,
-        lifecycle_type=LifecycleKind.eus,
-    ),
-]
 
 
 # Mainline

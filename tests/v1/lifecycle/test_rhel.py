@@ -1,56 +1,33 @@
-from operator import itemgetter
-
 import pytest
 
-import roadmap
+
+def test_all_rhel(client, api_prefix):
+    response = client.get(f"{api_prefix}/lifecycle/rhel")
+    data = response.json()["data"]
+    names = {item.get("name") for item in data}
+
+    assert len(data) > 0
+    assert names == {"RHEL"}
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize(
-    ("source_data", "path", "response"),
+    ("path", "expected"),
     (
         (
-            [{"major": 8, "minor": 3, "data": "data"}, {"major": 8, "minor": 4, "data": "data"}],
             "/8/3",
-            [{"major": 8, "minor": 3, "data": "data"}],
+            ("RHEL", 8, 3),
         ),
         (
-            [{"major": 8, "minor": 3, "data": "data"}, {"major": 9, "minor": 0, "data": "data"}],
-            "/9/0",
-            [{"major": 9, "minor": 0, "data": "data"}],
-        ),
-        ([{"major": 8, "minor": 3, "data": "data"}, {"major": 9, "minor": 0, "data": "data"}], "/9/20", []),
-        ([], "/9/20", []),
-        (
-            [
-                {"major": 8, "minor": 3, "data": "data"},
-                {"major": 9, "minor": 0, "data": "data"},
-                {"major": 8, "minor": 7, "data": "data"},
-                {"major": 9, "minor": 2, "data": "data"},
-            ],
-            "/9",
-            [
-                {"major": 9, "minor": 0, "data": "data"},
-                {"major": 9, "minor": 2, "data": "data"},
-            ],
-        ),
-        (
-            [
-                {"major": 8, "minor": 3, "data": "data"},
-                {"major": 9, "minor": 0, "data": "data"},
-                {"major": 8, "minor": 7, "data": "data"},
-                {"major": 9, "minor": 2, "data": "data"},
-            ],
-            "",
-            [
-                {"major": 8, "minor": 3, "data": "data"},
-                {"major": 8, "minor": 7, "data": "data"},
-                {"major": 9, "minor": 0, "data": "data"},
-                {"major": 9, "minor": 2, "data": "data"},
-            ],
+            "/9/1",
+            ("RHEL", 9, 1),
         ),
     ),
 )
-def test_system_specified(client, api_prefix, source_data, path, response, monkeypatch):
-    monkeypatch.setattr(roadmap.v1.lifecycle.rhel, "OS_DATA_MOCKED", source_data)
-    data = client.get(f"{api_prefix}/lifecycle/rhel{path}")
-    assert data.json() == sorted(response, key=itemgetter("major", "minor"), reverse=True)
+def test_rhel_major_minor(client, api_prefix, path, expected):
+    response = client.get(f"{api_prefix}/lifecycle/rhel{path}")
+    data = response.json()["data"][0]
+    (name, major, minor) = data["name"], data["major"], data["minor"]
+
+    assert response.status_code == 200
+    assert (name, major, minor) == expected

@@ -28,7 +28,6 @@ class System(BaseModel):
     name: str
     major: int
     minor: int | None = None
-    release: str
     release_date: date | t.Literal["Unknown"]
     retirement_date: date | t.Literal["Unknown"]
     count: int = 0

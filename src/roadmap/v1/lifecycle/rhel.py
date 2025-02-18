@@ -157,43 +157,21 @@ async def get_relevant_systems(
     )
 
 
-@relevant.get("/{major}")
-async def get_relevant_systems_major(major: t.Annotated[int, MajorVersion]) -> list[System]:
-    systems = get_systems_data(major)
-
-    return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
-
-
-@relevant.get("/{major}/{minor}")
-async def get_relevant_systems_major_minor(
-    major: MajorVersion,
-    minor: MinorVersion,
-):
-    systems = get_systems_data(major, minor)
-
-    return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
+# @relevant.get("/{major}")
+# async def get_relevant_systems_major(major: t.Annotated[int, MajorVersion]) -> RelevantSystemsResponse:
+#     systems = get_systems_data(major)
+#
+#     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
-def get_systems_data(major=None, minor=None):
-    data = [
-        System(
-            name=item.name,
-            major=item.major,
-            minor=item.minor,
-            release_date=item.start,
-            retirement_date=item.end,
-            lifecycle_type="lifecycle type",
-        )
-        for item in OS_LIFECYCLE_DATES.values()
-        if getattr(item, "minor") is not None
-    ]
-
-    if major is not None:
-        data = [item for item in data if item.major == major]
-    if minor is not None:
-        data = [item for item in data if item.minor == minor]
-
-    return data
+# @relevant.get("/{major}/{minor}")
+# async def get_relevant_systems_major_minor(
+#     major: MajorVersion,
+#     minor: MinorVersion,
+# ) -> RelevantSystemsResponse:
+#     systems = get_systems_data(major, minor)
+#
+#     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:

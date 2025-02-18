@@ -12,8 +12,8 @@ PRE_COMMIT=$(VENV_DIR)/bin/pre-commit
 
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 
-DB_IMAGE ?= quay.io/samdoran/digital-roadmap-data
-DB_PORT ?= 5432
+ROADMAP_DB_IMAGE ?= quay.io/samdoran/digital-roadmap-data
+ROADMAP_DB_PORT ?= 5432
 
 # Set the shell because otherwise this defaults to /bin/sh,
 # which is dash on Ubuntu. The type builtin for dash does not accept flags.
@@ -55,7 +55,7 @@ endif
 
 .PHONY: start-db
 start-db: stop-db
-	$(CONTAINER_RUNTIME) run --rm -d -p $(DB_PORT):5432 --name digital-roadmap-data $(DB_IMAGE)
+	$(CONTAINER_RUNTIME) run --rm -d -p $(ROADMAP_DB_PORT):5432 --name digital-roadmap-data $(ROADMAP_DB_IMAGE)
 
 .PHONY: stop-db
 stop-db: check-container-runtime

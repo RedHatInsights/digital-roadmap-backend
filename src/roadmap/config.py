@@ -1,11 +1,25 @@
-import os
+from pydantic import PostgresDsn
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True)
 
-DB_NAME = os.getenv("DB_NAME", "digital_roadmap")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", 5432)
-SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    db_name: str = "digital_roadmap"
+    db_user: str = "postgres"
+    db_password: str = "postgres"
+    db_host: str = "localhost"
+    db_port: int = 5432
+    debug: bool = False
+    dev: bool = False
+    test: bool = False
+
+    @property
+    def database_url(self) -> PostgresDsn:
+        return PostgresDsn(
+            url=f"postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        )
+
+
+SETTINGS = Settings()

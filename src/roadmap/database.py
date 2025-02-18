@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from roadmap.config import SQLALCHEMY_DATABASE_URI
+from roadmap.config import SETTINGS
 
 
-engine = create_async_engine(SQLALCHEMY_DATABASE_URI, echo=True)
+engine = create_async_engine(str(SETTINGS.database_url), echo=True)
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

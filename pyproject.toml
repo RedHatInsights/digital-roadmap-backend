@@ -37,6 +37,7 @@ addopts = [
     "--durations", "10",
     "--color", "yes",
     "--showlocals",
+    "--pdbcls", "IPython.terminal.debugger:TerminalPdb",
 ]
 testpaths = "tests"
 pythonpath = "src"

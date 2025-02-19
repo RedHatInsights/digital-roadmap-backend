@@ -30,6 +30,60 @@
         },
         "operating_system": {
           "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "73"
+          }
+        ]
+      }
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "204"
+          }
+        ]
+      }
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.6"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 6
+        },
+        "installed_products": [
+          {
+            "id": "241"
+          }
+        ]
+      }
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
           "major": 7,
           "minor": 4
         },

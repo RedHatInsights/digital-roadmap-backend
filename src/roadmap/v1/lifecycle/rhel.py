@@ -191,6 +191,9 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:
     if "204" in ids:
         type = LifecycleKind.els
 
+    if "241" in ids:
+        type = LifecycleKind.e4s
+
     return type
 
 

@@ -7,6 +7,7 @@ API server providing access to Red Hat Enterprise Linux roadmap information.
 
 - Python 3.12 or later.
 - A container runtime such as `docker` or `podman`.
+- To use the `/relevant/` APIs, create an [offline token] in order to generate an access token.
 
 ### Prerequisites for `psycopg` ###
 
@@ -53,6 +54,32 @@ make start-db run
 
 This runs a server using the default virtual environment. Documentation can be found at  `http://127.0.0.1:8081/docs`.
 
+### Relevant APIs
+
+The `/relevant/` APIs query [host inventory] in order to return relevant results. To avoid querying the inventory API and return fixture data, set `ROADMAP_DEV=1` in the environment.
+
+```
+export ROADMAP_DEV=1
+make run
+```
+
+This will return data from [tests/fixtures/](tests/fixtures), making it easy to change the response for testing and development.
+
+### Getting a token for accessing Red Hat APIs
+
+In order to query host inventory, a Red Hat API access token is required. Access tokens are only valid for fifteen minutes and require an [offline token] in order to generate new ones.
+
+```
+export RH_OFFLINE_TOKEN="[offline token]"
+export RH_TOKEN="$(./scripts/get-redhat-access-token.py)"
+```
+
+Use the access token in the request header. Here is an example using [httpie].
+
+```
+http localhost:8081/api/roadmap/v1/relevant/lifecycle/rhel/ \
+ Authorization:"Bearer $RH_TOKEN"
+```
 
 ## Developer Guide
 Install the developer tools and run the server.
@@ -118,3 +145,6 @@ Commit the changes.
 
 
 [local installation]: https://www.psycopg.org/psycopg3/docs/basic/install.html#local-installation
+[offline token]: https://access.redhat.com/articles/3626371
+[host inventory]: https://developers.redhat.com/api-catalog/api/inventory
+[httpie]: https://httpie.io/docs/cli

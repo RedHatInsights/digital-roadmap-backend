@@ -1,7 +1,7 @@
 import pytest
 
 
-def test_all_rhel(client, api_prefix):
+def test_rhel_lifecycle(client, api_prefix):
     response = client.get(f"{api_prefix}/lifecycle/rhel")
     data = response.json()["data"]
     names = {item.get("name") for item in data}
@@ -11,23 +11,36 @@ def test_all_rhel(client, api_prefix):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize(
-    ("path", "expected"),
-    (
-        (
-            "/8/3",
-            ("RHEL", 8, 3),
-        ),
-        (
-            "/9/1",
-            ("RHEL", 9, 1),
-        ),
-    ),
-)
-def test_rhel_major_minor(client, api_prefix, path, expected):
-    response = client.get(f"{api_prefix}/lifecycle/rhel{path}")
-    data = response.json()["data"][0]
-    (name, major, minor) = data["name"], data["major"], data["minor"]
+def test_rhel_lifecycle_major_version(client, api_prefix):
+    response = client.get(f"{api_prefix}/lifecycle/rhel/9")
+    data = response.json()["data"]
+    names = {item.get("name") for item in data}
+    versions = {item.get("major") for item in data}
+
+    assert len(data) > 0
+    assert names == {"RHEL"}
+    assert versions == {9}
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("params", ("9/0", "9/1", "8/2", "8/0"))
+def test_rhel_lifecycle_major_minor_version(client, api_prefix, params):
+    response = client.get(f"{api_prefix}/lifecycle/rhel/{params}")
+    data = response.json()["data"]
+    names = {item.get("name") for item in data}
+    major = data[0]["major"]
+    minor = data[0]["minor"]
 
     assert response.status_code == 200
-    assert (name, major, minor) == expected
+    assert len(data) == 1
+    assert names == {"RHEL"}
+    assert (major, minor) == tuple(int(v) for v in params.split("/"))
+
+
+def test_rhel_relevant(client, api_prefix, mocker):
+    mocker.patch("roadmap.common.SETTINGS.test", True)
+
+    response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    data = response.json()["data"]
+
+    assert len(data) > 1

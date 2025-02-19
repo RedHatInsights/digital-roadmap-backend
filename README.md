@@ -1,3 +1,7 @@
+[![CI](https://github.com/RedHatInsights/digital-roadmap-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/RedHatInsights/digital-roadmap-backend/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/RedHatInsights/digital-roadmap-backend/graph/badge.svg?token=1K4JGKV8EA)](https://codecov.io/gh/RedHatInsights/digital-roadmap-backend)
+
+
 # Digital roadmap backend
 
 API server providing access to Red Hat Enterprise Linux roadmap information.

@@ -61,7 +61,7 @@ async def get_systems_major_minor(
 def get_lifecycle_data(major: int | None = None, minor: int | None = None, reverse: bool = True):
     lifecycles = (item for item in OS_LIFECYCLE_DATES.values() if item.minor is not None)
 
-    if major and minor:
+    if major and minor is not None:
         lifecycles = (item for item in lifecycles if (item.major, item.minor) == (major, minor))
     elif major:
         lifecycles = (item for item in lifecycles if item.major == major)

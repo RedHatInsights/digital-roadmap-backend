@@ -21,7 +21,7 @@ OS_DATA_MOCKED = [
         "retirement_date": date(2032, 5, 1),
         "systems": 45,
         "lifecycle_type": "mainline",
-    },   
+    },
     {
         "name": "RHEL",
         "major": 8,

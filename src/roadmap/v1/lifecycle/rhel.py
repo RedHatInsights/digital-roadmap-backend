@@ -117,11 +117,7 @@ async def get_relevant_systems(
     results = []
     logger.debug(system_counts.keys())
     for count_key, count in system_counts.items():
-        major = count_key.major
-        minor = count_key.minor
-        lifecycle_type = count_key.lifecycle
-
-        key = str(major) if minor is None else f"{major}.{minor}"
+        key = str(count_key.major) if count_key.minor is None else f"{count_key.major}.{count_key.minor}"
         logger.debug(key)
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
@@ -133,18 +129,18 @@ async def get_relevant_systems(
             release_date = lifecycle_info.start
             retirement_date = lifecycle_info.end
 
-            if lifecycle_type == LifecycleKind.els:
+            if count_key.lifecycle == LifecycleKind.els:
                 retirement_date = lifecycle_info.end_els
 
-            if lifecycle_type == LifecycleKind.e4s:
+            if count_key.lifecycle == LifecycleKind.e4s:
                 retirement_date = lifecycle_info.end_e4s
 
         results.append(
             System(
                 name=count_key.name,
-                major=major,
-                minor=minor,
-                lifecycle_type=lifecycle_type,
+                major=count_key.major,
+                minor=count_key.minor,
+                lifecycle_type=count_key.lifecycle,
                 release_date=release_date,
                 retirement_date=retirement_date,
                 count=count,

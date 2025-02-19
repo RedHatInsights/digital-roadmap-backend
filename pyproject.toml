@@ -39,5 +39,6 @@ addopts = [
     "--showlocals",
     "--pdbcls", "IPython.terminal.debugger:TerminalPdb",
 ]
+asyncio_mode = "auto"
 testpaths = "tests"
 pythonpath = "src"

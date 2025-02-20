@@ -36,15 +36,12 @@ async def test_get_system_count_from_inventory_dev_mode(mocker):
 
 
 async def test_get_system_count_from_inventory_error(mocker):
+    from email.message import Message
+    from io import BytesIO
+
     mocker.patch(
         "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError(
-            "url",
-            401,
-            "Unauthorized",
-            {},
-            "fp",
-        ),
+        side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Unauthorized", fp=BytesIO()),
     )
 
     with pytest.raises(HTTPException):

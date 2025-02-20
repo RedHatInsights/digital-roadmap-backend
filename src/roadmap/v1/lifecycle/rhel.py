@@ -76,18 +76,22 @@ relevant = APIRouter(
 )
 
 
+@relevant.get("/{major}/{minor}")
+@relevant.get("/{major}")
 @relevant.get("/")
 async def get_relevant_systems(
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    major: int | None = None,
+    minor: int | None = None,
 ) -> RelevantSystemsResponse:
     headers = {
         "Authorization": authorization,
         "User-Agent": user_agent,
         "X-RH-Identity": x_rh_identity,
     }
-    systems_response = await get_system_count_from_inventory(headers)
+    systems_response = await get_system_count_from_inventory(headers=headers, major=major, minor=minor)
 
     system_counts = defaultdict(int)
     for result in systems_response.get("results", []):
@@ -102,23 +106,21 @@ async def get_relevant_systems(
             continue
 
         installed_products = system_profile.get("installed_products", [{}])
-        major = system_profile.get("operating_system", {}).get("major")
+        os_major = system_profile.get("operating_system", {}).get("major")
 
         # Use minor from RHSM version in order to calculate the correct end date.
         # The minor from RHSM indicates that the system is pinned to a
         # specific minor RHEL version.
         rhsm_version = system_profile.get("rhsm", {}).get("version", "")
         lifecycle_type = get_lifecycle_type(installed_products)
-        minor = rhsm_version.partition(".")[-1] or None
+        os_minor = rhsm_version.partition(".")[-1] or None
 
-        count_key = HostCount(name=name, major=major, minor=minor, lifecycle=lifecycle_type)
+        count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
 
     results = []
-    logger.debug(system_counts.keys())
     for count_key, count in system_counts.items():
         key = str(count_key.major) if count_key.minor is None else f"{count_key.major}.{count_key.minor}"
-        logger.debug(key)
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
@@ -151,23 +153,6 @@ async def get_relevant_systems(
         total=sum(system.count for system in results),
         data=sorted(results, key=sort_null_version("lifecycle_type", "major", "minor"), reverse=True),
     )
-
-
-# @relevant.get("/{major}")
-# async def get_relevant_systems_major(major: t.Annotated[int, MajorVersion]) -> RelevantSystemsResponse:
-#     systems = get_systems_data(major)
-#
-#     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
-
-
-# @relevant.get("/{major}/{minor}")
-# async def get_relevant_systems_major_minor(
-#     major: MajorVersion,
-#     minor: MinorVersion,
-# ) -> RelevantSystemsResponse:
-#     systems = get_systems_data(major, minor)
-#
-#     return sorted(systems, key=attrgetter("major", "minor"), reverse=True)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:

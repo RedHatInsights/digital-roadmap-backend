@@ -16,7 +16,13 @@ logger = logging.getLogger("uvicorn.error")
 
 
 # FIXME: This should be cached
-async def get_system_count_from_inventory(headers: dict[str, str | None]) -> dict[str, t.Any]:
+async def get_system_count_from_inventory(
+    headers: dict[str, str | None],
+    page: int = 1,
+    per_page: int = 100,
+    major: int | None = None,
+    minor: int | None = None,
+) -> dict[str, t.Any]:
     if SETTINGS.dev:
         logger.debug("Running in development mode. Returning fixture response data for inventory.")
         file = Path(__file__).resolve()
@@ -32,8 +38,8 @@ async def get_system_count_from_inventory(headers: dict[str, str | None]) -> dic
     # Filter out missing header values
     headers = {k: v for k, v in headers.items() if v is not None}
     params = {
-        "per_page": 100,
-        "page": 100,
+        "per_page": per_page,
+        "page": page,
         "staleness": ["fresh", "stale", "stale_warning"],
         "order_by": "updated",
         "fields[system_profile]": ",".join(
@@ -47,6 +53,13 @@ async def get_system_count_from_inventory(headers: dict[str, str | None]) -> dic
             ]
         ),
     }
+    if any(value is not None for value in (major, minor)):
+        # Build the filter value of either "{major}" or "{major}.{minor}",
+        # such as "9", or "9.5".
+        params["filter[system_profile][operating_system][RHEL][version][eq]"] = (
+            f"{major}{'.' + str(minor) if minor is not None else ''}"
+        )
+
     req = urllib.request.Request(
         f"https://console.redhat.com/api/inventory/v1/hosts?{urllib.parse.urlencode(params, doseq=True)}",
         headers=headers,  # pyright: ignore [reportArgumentType]

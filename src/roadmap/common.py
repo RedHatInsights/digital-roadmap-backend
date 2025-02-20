@@ -49,7 +49,7 @@ async def get_system_count_from_inventory(headers: dict[str, str | None]) -> dic
     }
     req = urllib.request.Request(
         f"https://console.redhat.com/api/inventory/v1/hosts?{urllib.parse.urlencode(params, doseq=True)}",
-        headers=headers,
+        headers=headers,  # pyright: ignore [reportArgumentType]
     )
 
     try:

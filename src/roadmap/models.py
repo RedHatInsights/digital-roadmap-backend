@@ -36,8 +36,8 @@ class System(BaseModel):
     name: str
     major: int
     minor: int | None = None
-    release_date: date | t.Literal["Unknown"]
-    retirement_date: date | t.Literal["Unknown"]
+    release_date: date | t.Literal["Unknown"] | None
+    retirement_date: date | t.Literal["Unknown"] | None
     support_status: SupportStatus = SupportStatus.supported
     count: int = 0
     lifecycle_type: LifecycleType

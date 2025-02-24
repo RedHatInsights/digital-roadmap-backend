@@ -107,13 +107,8 @@ async def get_relevant_systems(
 
         installed_products = system_profile.get("installed_products", [{}])
         os_major = system_profile.get("operating_system", {}).get("major")
-
-        # Use minor from RHSM version in order to calculate the correct end date.
-        # The minor from RHSM indicates that the system is pinned to a
-        # specific minor RHEL version.
-        rhsm_version = system_profile.get("rhsm", {}).get("version", "")
+        os_minor = system_profile.get("operating_system", {}).get("minor")
         lifecycle_type = get_lifecycle_type(installed_products)
-        os_minor = rhsm_version.partition(".")[-1] or None
 
         count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1

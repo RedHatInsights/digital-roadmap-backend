@@ -15,6 +15,14 @@ class LifecycleKind(StrEnum):
     e4s = "E4S"
 
 
+class SupportStatus(StrEnum):
+    supported = "Supported"
+    six_months = "Support ends within 6 months"
+    retired = "Retired"
+    not_installed = "Not installed"
+    upcoming = "Upcoming"
+
+
 class HostCount(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -30,6 +38,7 @@ class System(BaseModel):
     minor: int | None = None
     release_date: date | t.Literal["Unknown"]
     retirement_date: date | t.Literal["Unknown"]
+    support_status: SupportStatus = SupportStatus.supported
     count: int = 0
     lifecycle_type: LifecycleKind
 

@@ -26,8 +26,26 @@ async def get_system_count_from_inventory(
     if SETTINGS.dev:
         logger.debug("Running in development mode. Returning fixture response data for inventory.")
         file = Path(__file__).resolve()
-        response_data = file.parent.parent.parent / "tests" / "fixtures" / "inventory_response.json"
-        return json.loads(response_data.read_text())
+        logger.debug(f"{major=} {minor=}")
+        response_data_file = file.parent.parent.parent / "tests" / "fixtures" / "inventory_response.json"
+        response_data = json.loads(response_data_file.read_text())
+        if major is not None:
+            filtered_results = [
+                item
+                for item in response_data["results"]
+                if item.get("system_profile", {}).get("operating_system", {}).get("major") == major
+            ]
+            response_data["results"] = filtered_results
+
+        if minor is not None:
+            filtered_results = [
+                item
+                for item in response_data["results"]
+                if item.get("system_profile", {}).get("operating_system", {}).get("minor") == minor
+            ]
+            response_data["results"] = filtered_results
+
+        return response_data
 
     if not headers.get("Authorization"):
         # If we don't have a token, do not try to query the API.

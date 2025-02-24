@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from roadmap.common import get_system_count_from_inventory
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
-from roadmap.models import LifecycleKind
+from roadmap.models import LifecycleType
 from roadmap.models import RHELLifecycle
 from roadmap.models import System
 
@@ -131,10 +131,10 @@ async def get_relevant_systems(
             release_date = lifecycle_info.start
             retirement_date = lifecycle_info.end
 
-            if count_key.lifecycle == LifecycleKind.els:
+            if count_key.lifecycle == LifecycleType.els:
                 retirement_date = lifecycle_info.end_els
 
-            if count_key.lifecycle == LifecycleKind.e4s:
+            if count_key.lifecycle == LifecycleType.e4s:
                 retirement_date = lifecycle_info.end_e4s
 
         results.append(
@@ -155,7 +155,7 @@ async def get_relevant_systems(
     )
 
 
-def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:
+def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     """Calculate lifecycle type based on the product ID.
 
     https://downloads.corp.redhat.com/internal/products
@@ -168,16 +168,16 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleKind:
 
     """
     ids = {item.get("id") for item in products}
-    type = LifecycleKind.mainline
+    type = LifecycleType.mainline
 
     if "73" in ids:
-        type = LifecycleKind.eus
+        type = LifecycleType.eus
 
     if "204" in ids:
-        type = LifecycleKind.els
+        type = LifecycleType.els
 
     if "241" in ids:
-        type = LifecycleKind.e4s
+        type = LifecycleType.e4s
 
     return type
 

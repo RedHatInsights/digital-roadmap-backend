@@ -8,7 +8,7 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 
-class LifecycleKind(StrEnum):
+class LifecycleType(StrEnum):
     mainline = "mainline"
     eus = "EUS"
     els = "ELS"
@@ -29,7 +29,7 @@ class HostCount(BaseModel):
     name: str
     major: int
     minor: int | None = None
-    lifecycle: LifecycleKind
+    lifecycle: LifecycleType
 
 
 class System(BaseModel):
@@ -40,7 +40,7 @@ class System(BaseModel):
     retirement_date: date | t.Literal["Unknown"]
     support_status: SupportStatus = SupportStatus.supported
     count: int = 0
-    lifecycle_type: LifecycleKind
+    lifecycle_type: LifecycleType
 
 
 class Lifecycle(BaseModel):

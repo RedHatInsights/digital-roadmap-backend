@@ -83,11 +83,18 @@ async def test_get_system_count_from_inventory_missing_none_filter(mocker):
     assert mock_req.call_args.kwargs["headers"] == {"Authorization": "Bearer token"}
 
 
-async def test_get_system_count_from_inventory_dev_mode(mocker):
+@pytest.mark.parametrize(
+    ("major", "minor"),
+    (
+        (9, None),
+        (8, 0),
+    ),
+)
+async def test_get_system_count_from_inventory_dev_mode(mocker, major, minor):
     mocker.patch("roadmap.common.SETTINGS.dev", True)
     mocker.patch("roadmap.common.urllib.request.urlopen", side_effect=ValueError("Should not get here"))
 
-    result = await get_system_count_from_inventory({})
+    result = await get_system_count_from_inventory({}, major=major, minor=minor)
 
     assert len(result) > 0
 

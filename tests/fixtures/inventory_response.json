@@ -49,7 +49,7 @@
         "operating_system": {
           "name": "RHEL",
           "major": 9,
-          "minor": 4
+          "minor": 10
         },
         "installed_products": [
           {

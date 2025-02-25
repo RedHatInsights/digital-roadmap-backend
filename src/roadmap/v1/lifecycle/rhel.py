@@ -9,7 +9,7 @@ from fastapi import Header
 from fastapi import Path
 from pydantic import BaseModel
 
-from roadmap.common import get_system_count_from_inventory
+from roadmap.common import query_host_inventory
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
@@ -91,7 +91,7 @@ async def get_relevant_systems(
         "User-Agent": user_agent,
         "X-RH-Identity": x_rh_identity,
     }
-    systems_response = await get_system_count_from_inventory(headers=headers, major=major, minor=minor)
+    systems_response = await query_host_inventory(headers=headers, major=major, minor=minor)
 
     system_counts = defaultdict(int)
     for result in systems_response.get("results", []):

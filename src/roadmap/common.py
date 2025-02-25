@@ -16,7 +16,7 @@ logger = logging.getLogger("uvicorn.error")
 
 
 # FIXME: This should be cached
-async def get_system_count_from_inventory(
+async def query_host_inventory(
     headers: dict[str, str | None],
     page: int = 1,
     per_page: int = 100,

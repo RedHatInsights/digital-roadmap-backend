@@ -39,7 +39,7 @@ def test_rhel_lifecycle_major_minor_version(client, api_prefix, params):
 
 def test_rhel_relevant(client, api_prefix, mocker, read_json_fixture):
     mock_response = read_json_fixture("inventory_response.json")
-    mocker.patch("roadmap.v1.lifecycle.rhel.get_system_count_from_inventory", return_value=mock_response)
+    mocker.patch("roadmap.v1.lifecycle.rhel.query_host_inventory", return_value=mock_response)
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
     data = response.json()["data"]

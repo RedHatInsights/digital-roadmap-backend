@@ -95,9 +95,9 @@ async def get_relevant_systems(
 
     system_counts = defaultdict(int)
     for result in systems_response.get("results", []):
-        system_profile = result["system_profile"]
+        system_profile = result.get("system_profile")
         if not system_profile:
-            logger.info("Unable to get relevant systems due to missing system profile")
+            logger.info(f"Unable to get relevant systems due to missing system profile. ID={result.get('id')}")
             continue
 
         name = system_profile.get("operating_system", {}).get("name")

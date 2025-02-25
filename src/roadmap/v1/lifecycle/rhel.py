@@ -13,6 +13,7 @@ from roadmap.common import query_host_inventory
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
+from roadmap.models import Meta
 from roadmap.models import RHELLifecycle
 from roadmap.models import System
 
@@ -30,8 +31,8 @@ MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, l
 
 
 class RelevantSystemsResponse(BaseModel):
+    meta: Meta
     data: list[System]
-    total: int
 
 
 class LifecycleResponse(BaseModel):
@@ -145,7 +146,7 @@ async def get_relevant_systems(
         )
 
     return RelevantSystemsResponse(
-        total=sum(system.count for system in results),
+        meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_null_version("lifecycle_type", "major", "minor"), reverse=True),
     )
 

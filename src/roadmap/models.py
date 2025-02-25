@@ -8,6 +8,11 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 
+class Meta(BaseModel):
+    total: int
+    count: int
+
+
 class LifecycleType(StrEnum):
     mainline = "mainline"
     eus = "EUS"

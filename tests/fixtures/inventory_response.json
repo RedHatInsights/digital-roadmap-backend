@@ -1,9 +1,144 @@
 {
-  "per_page": 100,
+  "total": 12451,
   "page": 1,
-  "total": 1145,
   "count": 100,
+  "per_page": 100,
   "results": [
+    {
+      "id": "4b1e1dd8-53bb-448e-8730-da75da7cafe0"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        },
+        "installed_products": [
+          {
+            "id": "73"
+          }
+        ]
+      },
+      "id": "8b547565-48c2-4266-8d9d-e28873324e3d"
+    },
+    {
+      "id": "1c21ef3e-d10b-4ac2-ba3f-70c6450a1749"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "e9f09e3b-9241-4dcb-83f6-1eaf3e7a0ddc"
+    },
+    {
+      "id": "7e98cba4-b567-4aea-86c7-10d2adbc240a"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "baaf1384-b7cc-4be9-af04-d07595b9153d"
+    },
+    {
+      "id": "1c50e232-cf08-421a-a72e-8ef9300d8744"
+    },
+    {
+      "system_profile": {
+        "arch": "ppc64le"
+      },
+      "id": "05ad650a-bf3e-4ee7-9913-4e7ce27b88bd"
+    },
+    {
+      "id": "8e5a3460-074c-4aa0-bed8-1d17fdb0b81c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 1
+        }
+      },
+      "id": "2933710a-c9f6-4a3a-aace-97c3f2cc5a30"
+    },
+    {
+      "id": "0b163cd8-7e19-44e5-9791-a2515b23b23d"
+    },
+    {
+      "system_profile": {},
+      "id": "de64fb6b-0738-4679-8839-78e81b19c9b7"
+    },
+    {
+      "id": "0bc05176-2d14-4130-bf23-cc7eda1d80fe"
+    },
+    {
+      "system_profile": {},
+      "id": "ed746f5b-1244-447e-b093-4461b0876b6f"
+    },
+    {
+      "id": "b83b5b6a-7222-4b3a-ad32-b9899133576b"
+    },
+    {
+      "system_profile": {},
+      "id": "ce8ad2b2-584d-4c7b-889d-0228af9568ee"
+    },
+    {
+      "id": "ec6a5a44-3560-4722-bbf5-a0e9c9e3f9c4"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "eaf90a79-be9f-49eb-a73a-d0dcabd2a58b"
+    },
+    {
+      "id": "1ddd247f-b5ae-4192-a347-0fdea7fce481"
+    },
     {
       "system_profile": {
         "arch": "x86_64",
@@ -20,7 +155,524 @@
             "id": "479"
           }
         ]
-      }
+      },
+      "id": "187d72aa-0c29-4884-816e-f0bc94b495d4"
+    },
+    {
+      "id": "115a0b8f-b039-44e9-9ec6-16114c849420"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "b3f9c524-6fa2-470f-babc-d5ace9b9c97b"
+    },
+    {
+      "id": "4dae2901-76be-4967-b58b-d07afb285c00"
+    },
+    {
+      "system_profile": {},
+      "id": "7eb90660-cd48-4e71-9f31-4b4b58672762"
+    },
+    {
+      "id": "9dcec1c2-fb91-46b3-918f-6803b248cba7"
+    },
+    {
+      "system_profile": {},
+      "id": "942ad99d-8b6e-4331-9248-034c5d6e590c"
+    },
+    {
+      "id": "f63e3c7b-23fe-49dd-9599-f1bf766f2727"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 2
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "e4e6e704-9cef-4c96-a74e-d15bf7f8dcc1"
+    },
+    {
+      "id": "f1facaeb-831f-40d9-b3f2-921531fc5e09"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "6435c69f-81ec-45ec-a2f0-aeaeab1e3f80"
+    },
+    {
+      "id": "acb556cd-1947-4638-bb6c-8999bad6dc5c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "dd39814b-4d7b-4dec-8b27-2b5584c533e1"
+    },
+    {
+      "id": "7b82c17e-d5d7-433f-b537-b15b96bfa20c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 7,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "69",
+            "name": "Red Hat Enterprise Linux Server"
+          }
+        ]
+      },
+      "id": "c175e777-a137-4bfe-8701-fb99d34ce91d"
+    },
+    {
+      "id": "4a827f54-09da-47b1-a387-3daf46158f28"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "869cb835-1434-43c7-b1c9-bcd3f7eb7bd7"
+    },
+    {
+      "id": "5e4755a5-d3ff-47e4-9716-c7607cc13101"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "d2404aca-208a-4710-aff3-1b9886f13da0"
+    },
+    {
+      "id": "48d7c2d1-391d-4eb6-9b35-a9d1df8736d5"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 3
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "68cb429f-bd9b-4a54-8092-c62d632d170f"
+    },
+    {
+      "id": "688fc22d-d0b4-4193-8e7f-c4d9686daf3e"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "9a08e1aa-19b8-4e1c-9405-2fa97f890ea1"
+    },
+    {
+      "id": "be2bdfe6-8cfe-43ea-b809-bc4d4fac3bcd"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "5298c48e-0356-40fb-ae19-fddcaee737fe"
+    },
+    {
+      "id": "39d99bb2-91a2-4233-b686-6fa60d989921"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 7,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "69",
+            "name": "Red Hat Enterprise Linux Server"
+          }
+        ]
+      },
+      "id": "e09a6eeb-80af-469e-b82d-e5def96d81eb"
+    },
+    {
+      "id": "d5455430-ddfb-4049-b01e-3a0f6af1c309"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 3
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "41704db7-23cf-48f7-8043-0f61558c7ed0"
+    },
+    {
+      "id": "b7015636-81d9-4521-96af-c063c3c97215"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "62ad0f77-07bc-407e-8f35-2e122b0a258f"
+    },
+    {
+      "id": "bd96cebf-25a3-4576-93a4-413fc3ef2202"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "fc17f1dc-10be-4b4a-bd3e-fdda2515b77c"
+    },
+    {
+      "id": "37ceea72-9bd8-4376-b12b-066537f289a6"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "db8055bf-7ae2-45e1-af4a-26ddd1be8239"
+    },
+    {
+      "id": "a8ca0e65-b90b-43d7-9b16-b8ceddd2a8e1"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 7,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "69",
+            "name": "Red Hat Enterprise Linux Server"
+          }
+        ]
+      },
+      "id": "3f43813a-138b-4cd2-8455-c887aaadd13a"
+    },
+    {
+      "id": "294e5946-f59b-4bf9-a0b8-5ccc868f7ae1"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 7,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "69",
+            "name": "Red Hat Enterprise Linux Server"
+          }
+        ]
+      },
+      "id": "760d58e2-6eec-4e23-8cb9-de7f5b1128d5"
+    },
+    {
+      "id": "449f5348-665f-4d94-8d81-a7829f255fcf"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "b6ec628a-71b6-4390-8d59-b13e3754d781"
+    },
+    {
+      "id": "fca63f81-3d6c-4d12-9ef4-074a9b0de86c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        }
+      },
+      "id": "ea3dcee2-755f-4388-8a56-96b28ec35e5d"
+    },
+    {
+      "id": "a972bef5-553f-44e4-867f-26ec6b4f06cb"
+    },
+    {
+      "system_profile": {},
+      "id": "f6771f81-c498-43bf-a598-5f5514418f5c"
+    },
+    {
+      "id": "87167de5-570e-4c7b-b7da-7cda27651711"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "91a5dc61-26ed-4e2a-a31f-1097b1089fd2"
+    },
+    {
+      "id": "b19a6ead-8d86-4a6f-838d-70fd65db0e42"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "86b6ad75-e3f2-4ab3-9fdc-6c2371181916"
+    },
+    {
+      "id": "1682c40f-0891-4e11-a1ee-93ff6205e5e7"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "f65679d1-ac11-4d2b-b71e-d122deb92fe0"
+    },
+    {
+      "id": "6a49c7fc-d69d-435f-8f07-995dcb0e7524"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "c975aa94-ab2b-47d6-bb4d-00caf14367f6"
+    },
+    {
+      "id": "5b8f10e4-5c2f-43da-871c-a9f3e89be7f3"
+    },
+    {
+      "system_profile": {},
+      "id": "b2ac2646-a505-410d-8d12-889ddce5b05a"
+    },
+    {
+      "id": "eb9df9ab-4f0d-4045-8462-6436afe9a546"
+    },
+    {
+      "system_profile": {},
+      "id": "4188e1d8-feef-4c3b-b663-9438bfb9a40b"
+    },
+    {
+      "id": "3949da84-17dd-45a9-bcdd-099da17eaa29"
+    },
+    {
+      "system_profile": {},
+      "id": "8ec0960e-1650-48c1-b109-05d27f9591a0"
+    },
+    {
+      "id": "a1bf1413-e9f6-4ebc-bc22-2464eb35fd0c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 2
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "cc257faf-3d67-457e-9abd-7a42c05cfda7"
+    },
+    {
+      "id": "d56f72ca-66b0-499b-8f2e-d92068b5f7ca"
+    },
+    {
+      "system_profile": {},
+      "id": "acc89f37-939e-445f-8f73-43213a4e4c9a"
+    },
+    {
+      "id": "b3adb779-4e54-4103-a51d-bb76e5b21596"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "1ef32129-1f43-41fd-8288-0257ac4e78e9"
+    },
+    {
+      "id": "e8abeafc-7ecc-43a4-bfe9-caa477b4e0aa"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "94a74b57-8d5c-477c-8ea6-a4bdb30e17be"
+    },
+    {
+      "id": "98cfa664-6d97-4b9a-a9ef-d5cf53b5ae88"
     },
     {
       "system_profile": {
@@ -35,10 +687,14 @@
         },
         "installed_products": [
           {
-            "id": "73"
+            "id": "479"
           }
         ]
-      }
+      },
+      "id": "8550c458-bd95-4899-9639-14455bda9920"
+    },
+    {
+      "id": "87b7c8a7-5e9d-4916-bd7c-5514804c4b26"
     },
     {
       "system_profile": {
@@ -49,20 +705,412 @@
         "operating_system": {
           "name": "RHEL",
           "major": 9,
-          "minor": 10
+          "minor": 4
         },
         "installed_products": [
           {
-            "id": "204"
+            "id": "479"
           }
         ]
-      }
+      },
+      "id": "859b9699-feea-4fba-a679-c07e6bb2197a"
+    },
+    {
+      "id": "4b1dfc68-e2af-47d3-9c5d-d224989f1610"
+    },
+    {
+      "system_profile": {},
+      "id": "5c45d80d-7d56-480c-97ef-e50635b30729"
+    },
+    {
+      "id": "eaececf5-7652-4287-9624-65516d3f7d49"
     },
     {
       "system_profile": {
         "arch": "x86_64",
         "rhsm": {
-          "version": "9.6"
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "f8072aae-5827-4e19-9e1d-361a307ec1a0"
+    },
+    {
+      "id": "b372f0df-283f-4605-8ade-08982099697d"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "6f97ca3d-c945-434b-9f05-731c0720355b"
+    },
+    {
+      "id": "0f13e3db-c12b-4a87-8b1a-7a7847afe175"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 10
+        }
+      },
+      "id": "45f3ddf4-dddc-4cb7-86a9-727039bae4c9"
+    },
+    {
+      "id": "1eb92eb4-b7da-4502-9886-15a83413417d"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 6
+        }
+      },
+      "id": "fd9b3da4-34da-40b2-8213-36dbef9b8753"
+    },
+    {
+      "id": "22ff2e89-4094-4aaf-b524-e30203634ebd"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "0d5de51b-4b70-435d-85d6-2571d81c8990"
+    },
+    {
+      "id": "816bd865-72ee-4861-8497-20864ba0fa2b"
+    },
+    {
+      "system_profile": {},
+      "id": "d5207d81-19dd-4b3e-9d37-409397b5f874"
+    },
+    {
+      "id": "d0c681ee-40b9-4aea-8af3-5656c627c2b2"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "18fee57b-c44c-440d-8e81-68e3609114ce"
+    },
+    {
+      "id": "361c5e43-effe-4c93-9c27-1d1dde1e0b18"
+    },
+    {
+      "system_profile": {},
+      "id": "057c2a9c-606e-48c2-a0a9-aaa6e1e786df"
+    },
+    {
+      "id": "b0aaf44e-e976-4373-8773-0eda17f3e100"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "8.10"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 10
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "ff2bbe17-5ced-481e-aff2-dd5ef0de1fd2"
+    },
+    {
+      "id": "687b4374-66cf-42b3-8202-b931ccf08797"
+    },
+    {
+      "system_profile": {},
+      "id": "28637f62-6d28-4ebb-a48b-59f339ecf4ba"
+    },
+    {
+      "id": "409b0dd4-1c1b-4a92-a0d8-1822aad6e2e6"
+    },
+    {
+      "system_profile": {},
+      "id": "46a8f659-b83e-4b0f-b0f2-9d4f94a6d28e"
+    },
+    {
+      "id": "1999933f-0931-423b-9f92-e2e5ec952c5c"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "e1e71f2f-c7c6-4575-bdfa-df2369b6847e"
+    },
+    {
+      "id": "d568e31c-be91-4183-a9b3-c76bf7acfbf0"
+    },
+    {
+      "system_profile": {},
+      "id": "4a4bbaff-849a-4dbc-b44f-fff6f42096a9"
+    },
+    {
+      "id": "6c8e0c93-c73f-4cc9-b61b-70a563cf6ae8"
+    },
+    {
+      "system_profile": {},
+      "id": "0b8b1f2b-a600-4d9c-8a15-ab3103c60385"
+    },
+    {
+      "id": "f1d1efed-06cb-4bcf-9619-188510507c1d"
+    },
+    {
+      "system_profile": {},
+      "id": "c1bf8303-47fe-45a4-aa57-cab71c6af3ad"
+    },
+    {
+      "id": "a2f9280f-7440-47cd-ab7f-e6e130768a5e"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "fc522214-fd20-425f-b50b-7102cb4c15f9"
+    },
+    {
+      "id": "1fc827a3-6468-4ec9-ac77-931d123b78fd"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 1
+        }
+      },
+      "id": "8dc5064a-10a8-4b70-a008-883e01239e85"
+    },
+    {
+      "id": "0a7a9402-295a-44fc-9081-935929cb583c"
+    },
+    {
+      "system_profile": {},
+      "id": "9fc0d993-13b3-48b0-91ca-eccfd05c5897"
+    },
+    {
+      "id": "cfe4e7bb-a305-4e91-8ea1-73e22b8f5efe"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": "9.4"
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "1944321b-f28f-4f66-ba6b-b8eea8f4cdf9"
+    },
+    {
+      "id": "d2a93a1e-2396-43ac-8c98-01940f687853"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 2
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "56f1ae2a-e877-4a67-8e23-21ea46e408e6"
+    },
+    {
+      "id": "b1873017-ec4b-4cca-963a-9ee07b2f25e5"
+    },
+    {
+      "system_profile": {
+        "arch": "ppc64le"
+      },
+      "id": "5af3de90-dda5-4d09-803b-9d80cd08ae16"
+    },
+    {
+      "id": "6c3df2b9-574f-45ba-9488-a3510b51cbde"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64"
+      },
+      "id": "d30a85e1-3376-48fa-87f3-00b46b05ea6c"
+    },
+    {
+      "id": "4c228d1c-0da2-41bf-ba0b-0120dc07347e"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 10
+        }
+      },
+      "id": "49da5fac-9e62-4e95-a32b-2f6bac028b77"
+    },
+    {
+      "id": "4c6c7a15-61b0-4909-9228-11c9c736e3b1"
+    },
+    {
+      "system_profile": {},
+      "id": "c8b58738-af5c-42c7-8f83-5b67ed76f8e9"
+    },
+    {
+      "id": "5aaa3524-371a-494e-8dde-e84851806dae"
+    },
+    {
+      "system_profile": {},
+      "id": "dadb863c-77d8-4b02-8eb3-dcc1a6f207c5"
+    },
+    {
+      "id": "002d0f69-8f19-4c5e-bac5-b94897c36fae"
+    },
+    {
+      "system_profile": {},
+      "id": "1b09b33c-6731-4f9f-94d9-abab76c77c97"
+    },
+    {
+      "id": "c22da5fc-b656-4ec4-9262-6c0a6da32e10"
+    },
+    {
+      "system_profile": {},
+      "id": "ec90d100-7607-422c-9ed5-67bf945c5e98"
+    },
+    {
+      "id": "018f248d-3b1b-495f-91fd-7dffd3b55999"
+    },
+    {
+      "system_profile": {},
+      "id": "0e971ef6-969c-47fb-af8d-a972516bb365"
+    },
+    {
+      "id": "9977fc55-a1ef-426d-a422-76494f97235e"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "ce59f7c9-2712-48b9-9bb9-9886f686410e"
+    },
+    {
+      "id": "c967323c-dc89-42d4-baf8-ae6fb72ede07"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "rhsm": {
+          "version": ""
+        },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 5
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "b730fd27-6dca-40ab-800c-dcc25444cb91"
+    },
+    {
+      "id": "84cfd5e7-d51f-47d7-bfd2-efd9195e78af"
+    },
+    {
+      "system_profile": {
+        "arch": "aarch64",
+        "rhsm": {
+          "version": ""
         },
         "operating_system": {
           "name": "RHEL",
@@ -71,10 +1119,23 @@
         },
         "installed_products": [
           {
-            "id": "241"
+            "id": "363"
           }
         ]
-      }
+      },
+      "id": "255b8488-7acc-491f-b5de-529e23632c41"
+    },
+    {
+      "id": "34971954-1515-4c82-adc0-834a3e80ec57"
+    },
+    {
+      "system_profile": {
+        "arch": "ppc64le"
+      },
+      "id": "a197d983-c1ce-4fd6-8ec6-4f164422b13f"
+    },
+    {
+      "id": "ac4c0fc7-f9bc-41d0-a7c7-4ecd07a8a1fd"
     },
     {
       "system_profile": {
@@ -82,369 +1143,390 @@
         "rhsm": {
           "version": ""
         },
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479"
+          }
+        ]
+      },
+      "id": "890892c8-7818-4a5e-a3c6-c9ba586447b4"
+    },
+    {
+      "id": "12b5a930-c4cc-4fd8-a0ed-fd9fa07357dd"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        }
+      },
+      "id": "2f2cab05-f59b-482c-8a9d-deca81d7919b"
+    },
+    {
+      "id": "2fd5d50f-be0a-4f2c-8d93-8f6347f5700f"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "0892a1bd-7aa7-4e9e-aa1c-a7632350f78a"
+    },
+    {
+      "id": "e3ab686f-235b-43c7-b3b6-5f6b1a59f531"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "2ac1e10f-727c-496b-9c48-cca318cc90af"
+    },
+    {
+      "id": "faed6b85-b67f-4b6c-baec-0f79d8356325"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "33c43d71-eb37-4ea2-808f-5c8537329d9b"
+    },
+    {
+      "id": "0c0d95e0-1573-4225-8bb4-763c071b6135"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "a277eff0-e446-47bc-91ee-31f244699fab"
+    },
+    {
+      "id": "d3a4ed60-6dff-404c-aa9d-1ba82fe1c0ad"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "4953ca78-b39d-4098-a485-7caef113dc0b"
+    },
+    {
+      "id": "93c99bc5-aeed-42f8-a1c1-b04a6542a6d6"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "18382c3f-211e-41ab-a1ee-f3eeb2484e75"
+    },
+    {
+      "id": "476fabf4-1e3c-41f0-ab69-40f66f987c32"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "4662203a-a896-4d33-9b2e-3dac5ed1e9ef"
+    },
+    {
+      "id": "6dc62984-21ea-4559-b884-9f238b8c2147"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "c0eaaefc-b1b3-4112-8355-347d99b8924e"
+    },
+    {
+      "id": "64dea79c-d0f0-4c12-8de6-eaadc368a433"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "890be69e-c568-4595-909b-a6f0887894a8"
+    },
+    {
+      "id": "24a8913a-a4e9-4dd3-8684-a2748c54784e"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "0c4ef429-045e-4a16-8d1f-8aa7912332dc"
+    },
+    {
+      "id": "43509f10-3082-42b0-9eb8-38d0a03cb7d5"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "071d2f37-fff4-4b3f-b5aa-30f82f29f7a6"
+    },
+    {
+      "id": "ba6902e5-51a5-4c4d-a639-ebb188332887"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "0abf4d00-3341-4390-a066-8d41f4d4343a"
+    },
+    {
+      "id": "2b42f3d6-8063-4764-b7f1-4881415983e9"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 9,
+          "minor": 4
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          },
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          }
+        ]
+      },
+      "id": "d9175c13-03f5-435c-afd0-84f91ffcca4a"
+    },
+    {
+      "id": "a0333d14-3a87-4e47-a63d-0ce7149ac7af"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "operating_system": {
+          "name": "RHEL",
+          "major": 8,
+          "minor": 9
+        },
+        "installed_products": [
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "f79c5fd9-3aaf-4cb3-ad9e-7f2a415bcf0a"
+    },
+    {
+      "id": "35f3c46d-028b-4fcc-9626-708900d7ff91"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
+        "installed_products": [
+          {
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
+          {
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
+          }
+        ]
+      },
+      "id": "3b58b5f4-903f-490c-88ba-60f3e1f06e86"
+    },
+    {
+      "id": "6211516d-df9f-4e49-809a-c781311f828b"
+    },
+    {
+      "system_profile": {
+        "arch": "x86_64",
         "operating_system": {
           "name": "RHEL",
           "major": 7,
-          "minor": 4
+          "minor": 9
         },
         "installed_products": [
           {
-            "id": "479"
+            "id": "69",
+            "name": "Red Hat Enterprise Linux Server"
           }
         ]
-      }
+      },
+      "id": "a376dc11-71a3-4a54-98f6-8bc6a916c35a"
     },
     {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "250"
-          },
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 2
-        }
-      }
-    },
-    {
-      "system_profile": {}
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {}
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 7
-        },
-        "installed_products": [
-          {
-            "id": "486"
-          },
-          {
-            "id": "495"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64"
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        }
-      }
+      "id": "fc64aba9-7e84-44fa-b04c-756de1692486"
     },
     {
       "system_profile": {
@@ -453,607 +1535,22 @@
           "name": "RHEL",
           "major": 8,
           "minor": 10
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le"
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
         },
         "installed_products": [
           {
-            "id": "479"
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
           }
         ]
-      }
+      },
+      "id": "1a08cdd0-b9a6-42ed-9461-962d6fb52f19"
+    },
+    {
+      "id": "4eb7fa75-7a6c-403f-8eef-fe0c500b8ff0"
     },
     {
       "system_profile": {
         "arch": "x86_64",
-        "rhsm": {
-          "version": "9.4"
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "419"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 2
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          },
-          {
-            "id": "491"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "s390x",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 8,
-          "minor": 2
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 1
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": "9"
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "aarch64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": "9.4"
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          },
-          {
-            "id": "480"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le"
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "ppc64le",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "aarch64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "419"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 2
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
         "operating_system": {
           "name": "RHEL",
           "major": 8,
@@ -1061,17 +1558,19 @@
         },
         "installed_products": [
           {
-            "id": "479"
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
           }
         ]
-      }
+      },
+      "id": "adde9b85-5ab4-46f5-bfd1-95edebc09889"
+    },
+    {
+      "id": "3bc6ac85-590e-4b77-b3ff-4ea89fb5a529"
     },
     {
       "system_profile": {
         "arch": "x86_64",
-        "rhsm": {
-          "version": "9.4"
-        },
         "operating_system": {
           "name": "RHEL",
           "major": 9,
@@ -1079,17 +1578,19 @@
         },
         "installed_products": [
           {
-            "id": "479"
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
           }
         ]
-      }
+      },
+      "id": "3659396d-fd0a-4454-82df-3230c51a0ecd"
+    },
+    {
+      "id": "eca38204-fd3a-40fe-9253-98629008b8ea"
     },
     {
       "system_profile": {
         "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
         "operating_system": {
           "name": "RHEL",
           "major": 9,
@@ -1097,209 +1598,16 @@
         },
         "installed_products": [
           {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
+            "id": "480",
+            "name": "Red Hat Ansible Automation Platform"
+          },
           {
-            "id": "479"
+            "id": "479",
+            "name": "Red Hat Enterprise Linux for x86_64"
           }
         ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 2
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64"
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "rhsm": {
-          "version": ""
-        },
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 4
-        },
-        "installed_products": [
-          {
-            "id": "479"
-          }
-        ]
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 5
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 1
-        }
-      }
-    },
-    {
-      "system_profile": {
-        "arch": "x86_64",
-        "operating_system": {
-          "name": "RHEL",
-          "major": 9,
-          "minor": 3
-        }
-      }
+      },
+      "id": "72571306-2e21-4935-9bc6-23bb579d5ca3"
     }
   ]
 }

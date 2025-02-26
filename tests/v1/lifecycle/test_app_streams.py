@@ -31,7 +31,7 @@ def test_get_app_streams_by_name(api_prefix, client):
 @pytest.mark.parametrize("version", (8, 9))
 def test_get_app_stream_names(api_prefix, client, version):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}/names")
-    names = result.json().get("names", [])
+    names = result.json().get("data", [])
 
     assert result.status_code == 200
     assert len(names) > 0
@@ -49,7 +49,7 @@ def test_get_app_stream_module_info(api_prefix, client):
 
 def test_get_app_stream_module_info_not_found(api_prefix, client):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/8/NOPE")
-    message = result.json().get("message", "")
+    detail = result.json().get("detail", "")
 
     assert result.status_code == 404
-    assert "no modules" in message.lower()
+    assert "no modules" in detail.lower()

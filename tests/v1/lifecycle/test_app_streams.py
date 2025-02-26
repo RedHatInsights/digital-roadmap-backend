@@ -53,3 +53,11 @@ def test_get_app_stream_module_info_not_found(api_prefix, client):
 
     assert result.status_code == 404
     assert "no modules" in detail.lower()
+
+
+def test_get_relevant_app_stream(api_prefix, client):
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams/")
+    data = result.json().get("data", "")
+
+    assert result.status_code == 200
+    assert len(data) > 0

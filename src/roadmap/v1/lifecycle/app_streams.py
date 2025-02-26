@@ -3,9 +3,17 @@ import typing as t
 from fastapi import APIRouter
 from fastapi import Path
 from fastapi.param_functions import Query
+from fastapi.params import Depends
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from roadmap.data import MODULE_DATA
+from roadmap.models import Meta
+
+
+class AppStreamsResponse(BaseModel):
+    meta: Meta
+    data: list[dict]
 
 
 router = APIRouter(
@@ -15,16 +23,22 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", response_model=AppStreamsResponse)
 async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
 ):
     if name:
         result = [module for module in MODULE_DATA if name.lower() in module["module_name"].lower()]
 
-        return {"data": result}
+        return {
+            "meta": {"total": 0, "count": 10},
+            "data": result,
+        }
 
-    return {"data": [module for module in MODULE_DATA]}
+    return {
+        "meta": {"total": 0, "count": 10},
+        "data": [module for module in MODULE_DATA],
+    }
 
 
 @router.get("/{major_version}")
@@ -55,3 +69,15 @@ async def get_module(
         content={"message": "No modules matches query", "query": module_name},
         status_code=404,
     )
+
+
+## Relevant ##
+relevant = APIRouter(
+    prefix="/relevant/lifecycle/app-streams",
+    tags=["Relevant", "App Streams"],
+)
+
+
+@relevant.get("/", response_model=AppStreamsResponse)
+async def get_relevant_app_streams(result: t.Annotated[t.Any, Depends(get_app_streams)]):
+    return result

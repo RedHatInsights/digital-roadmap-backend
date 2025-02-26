@@ -2,13 +2,13 @@
 -r requirements-test-3.13.txt
 asttokens==3.0.0
 cfgv==3.4.0
-decorator==5.1.1
+decorator==5.2.1
 distlib==0.3.9
 executing==2.2.0
 filelock==3.17.0
-identify==2.6.6
+identify==2.6.8
 ipdb==0.13.13
-ipython==8.31.0
+ipython==8.32.0
 jedi==0.19.2
 matplotlib-inline==0.1.7
 nodeenv==1.9.1
@@ -23,5 +23,5 @@ Pygments==2.19.1
 PyYAML==6.0.2
 stack-data==0.6.3
 traitlets==5.14.3
-virtualenv==20.29.1
+virtualenv==20.29.2
 wcwidth==0.2.13

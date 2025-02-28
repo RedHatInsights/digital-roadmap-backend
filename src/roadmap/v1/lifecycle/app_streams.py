@@ -113,7 +113,7 @@ def is_rolling(name: str, stream: str, os_major: int) -> bool | None | str:
 
 
 @relevant.get("/", response_model=AppStreamsResponse)
-async def get_relevant_app_streams(
+async def get_relevant_app_streams(  # noqa: C901
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,

@@ -63,7 +63,7 @@ async def query_host_inventory(
         "fields[system_profile]": ",".join(
             [
                 "arch",
-                # "dnf_modules",
+                "dnf_modules",
                 "operating_system",
                 "rhsm",
                 # "installed_packages",

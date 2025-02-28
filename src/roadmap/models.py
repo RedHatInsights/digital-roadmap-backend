@@ -37,6 +37,16 @@ class HostCount(BaseModel):
     lifecycle: LifecycleType
 
 
+class AppStreamCount(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    os_major: int | None
+    os_minor: int | None = None
+    os_lifecycle: LifecycleType | None
+    stream: str
+
+
 class System(BaseModel):
     name: str
     major: int

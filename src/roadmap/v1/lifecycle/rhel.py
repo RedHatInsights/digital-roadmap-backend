@@ -133,6 +133,9 @@ async def get_relevant_systems(
             if count_key.lifecycle == LifecycleType.e4s:
                 retirement_date = lifecycle_info.end_e4s
 
+            if count_key.lifecycle == LifecycleType.aus:
+                retirement_date = lifecycle_info.end_aus
+
         results.append(
             System(
                 name=count_key.name,
@@ -155,18 +158,20 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     """Calculate lifecycle type based on the product ID.
 
     https://downloads.corp.redhat.com/internal/products
+    https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
 
-    Mainline < EUS (73) < ELS(204) < E4S < EELS
-    If 73 in installed_product --> EUS
-    If 204 in installed_product --> ELS
-    If ??? in installed_product --> EELS
-    If ??? in installed_product --> E4S
+    Mainline < EUS < E4S/EEUS < AUS
+
+    EUS --> 70, 73, 75
+    ELS --> 204
+    E4S/EEUS --> 241
+    AUS --> 251
 
     """
     ids = {item.get("id") for item in products}
     type = LifecycleType.mainline
 
-    if "73" in ids:
+    if any(id in ids for id in {"70", "73", "75"}):
         type = LifecycleType.eus
 
     if "204" in ids:
@@ -174,6 +179,9 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
 
     if "241" in ids:
         type = LifecycleType.e4s
+
+    if "251" in ids:
+        type = LifecycleType.aus
 
     return type
 

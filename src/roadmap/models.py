@@ -18,6 +18,7 @@ class LifecycleType(StrEnum):
     eus = "EUS"
     els = "ELS"
     e4s = "E4S"
+    aus = "AUS"
 
 
 class SupportStatus(StrEnum):
@@ -71,6 +72,7 @@ class RHELLifecycle(Lifecycle):
     end_e4s: date | None = None
     end_els: date | None = None
     end_eus: date | None = None
+    end_aus: date | None = None
 
 
 class ReleaseModel(BaseModel):

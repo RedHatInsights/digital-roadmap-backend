@@ -61,12 +61,12 @@ async def query_host_inventory(
         "staleness": ["fresh", "stale", "stale_warning"],
         "order_by": "updated",
         "fields[system_profile]": ",".join(
+            # TODO: Make these fields a parameter
             [
-                "arch",
                 "dnf_modules",
                 "operating_system",
                 "rhsm",
-                # "installed_packages",
+                "installed_packages",
                 "installed_products",
             ]
         ),

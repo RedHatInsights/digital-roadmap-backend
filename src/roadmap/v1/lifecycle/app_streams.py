@@ -11,7 +11,7 @@ from fastapi.param_functions import Query
 from pydantic import BaseModel
 
 from roadmap.common import query_host_inventory
-from roadmap.data import MODULE_DATA
+from roadmap.data import APP_STREAM_MODULES
 from roadmap.models import AppStreamCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -42,7 +42,7 @@ async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
 ):
     if name:
-        result = [module for module in MODULE_DATA if name.lower() in module["module_name"].lower()]
+        result = [module for module in APP_STREAM_MODULES if name.lower() in module["module_name"].lower()]
 
         return {
             "meta": {"total": len(result), "count": len(result)},
@@ -50,8 +50,8 @@ async def get_app_streams(
         }
 
     return {
-        "meta": {"total": len(MODULE_DATA), "count": len(MODULE_DATA)},
-        "data": [module for module in MODULE_DATA],
+        "meta": {"total": len(APP_STREAM_MODULES), "count": len(APP_STREAM_MODULES)},
+        "data": [module for module in APP_STREAM_MODULES],
     }
 
 
@@ -59,7 +59,7 @@ async def get_app_streams(
 async def get_major_version(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
 ):
-    modules = [module for module in MODULE_DATA if module.get("rhel_major_version", 0) == major_version]
+    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
     return {
         "meta": {"total": len(modules), "count": len(modules)},
         "data": modules,
@@ -70,7 +70,7 @@ async def get_major_version(
 async def get_module_names(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
 ):
-    modules = [module for module in MODULE_DATA if module.get("rhel_major_version", 0) == major_version]
+    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
     return {
         "meta": {"total": len(modules), "count": len(modules)},
         "data": sorted(item["module_name"] for item in modules),
@@ -82,7 +82,7 @@ async def get_module(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
     module_name: t.Annotated[str, Path(description="Module name")],
 ):
-    if data := [module for module in MODULE_DATA if module.get("rhel_major_version", 0) == major_version]:
+    if data := [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]:
         if modules := sorted(item for item in data if item.get("module_name") == module_name):
             return {"meta": {"total": len(modules), "count": len(modules)}, "data": modules}
 
@@ -100,7 +100,7 @@ relevant = APIRouter(
 
 
 def is_rolling(name: str, stream: str, os_major: int) -> bool | None | str:
-    for module in MODULE_DATA:
+    for module in APP_STREAM_MODULES:
         if (module["module_name"], module["rhel_major_version"]) == (name, os_major):
             for s in module["streams"]:
                 if s["stream"] == stream:
@@ -167,7 +167,7 @@ async def get_relevant_app_streams(  # noqa: C901
 
     response = []
     for module, count in module_count.items():
-        for m in MODULE_DATA:
+        for m in APP_STREAM_MODULES:
             if (module.os_major, module.name) == (m["rhel_major_version"], m["module_name"]):
                 for stream in m["streams"]:
                     if module.stream == stream["stream"]:

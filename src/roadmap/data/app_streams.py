@@ -1,5 +1,6 @@
 from datetime import date
 
+from pydantic import AliasChoices
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
@@ -11,8 +12,8 @@ from roadmap.data.systems import OS_LIFECYCLE_DATES
 class AppStreamPackage(BaseModel):
     name: str
     application_stream_name: str
-    start_date: str | date | None = Field(init=False, default=None)
-    end_date: str | date = Field(alias="enddate")
+    start_date: str | date | None = None
+    end_date: str | date = Field(validation_alias=AliasChoices("end_date", "enddate"))
     initial_product_version: str
     stream: str
     lifecycle: int
@@ -23,11 +24,12 @@ class AppStreamPackage(BaseModel):
     def validate_version(cls, value):
         return ".".join(value.split(".")[:2])
 
-    @field_validator("start_date", "end_date", mode="before")
+    @field_validator("start_date", "end_date", mode="after")
     @classmethod
     def ensure_date(cls, value):
+        """Ensure the date value is a date object."""
         if isinstance(value, date):
-            return date
+            return value
 
         try:
             return date.fromisoformat(value)
@@ -36,12 +38,13 @@ class AppStreamPackage(BaseModel):
 
     @model_validator(mode="after")
     def set_start_date(self):
-        try:
-            self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start
-        except KeyError:
-            print(f"Missing lifecycle dates for RHEL {self.initial_product_version}")
-            self.start_date = date(1111, 11, 11)
-            return self
+        """If no start_date is supplied, get it from the OS lifecycle date"""
+        if self.start_date is None:
+            try:
+                self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start
+            except KeyError:
+                self.start_date = date(1111, 11, 11)
+                return self
 
         return self
 

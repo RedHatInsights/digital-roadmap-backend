@@ -1,3 +1,4 @@
+import gzip
 import json
 import logging
 import typing as t
@@ -27,8 +28,9 @@ async def query_host_inventory(
         logger.debug("Running in development mode. Returning fixture response data for inventory.")
         file = Path(__file__).resolve()
         logger.debug(f"{major=} {minor=}")
-        response_data_file = file.parent.parent.parent / "tests" / "fixtures" / "inventory_response.json"
-        response_data = json.loads(response_data_file.read_text())
+        response_data_file = file.parent.parent.parent / "tests" / "fixtures" / "inventory_response_packages.json.gz"
+        with gzip.open(response_data_file) as gzfile:
+            response_data = json.load(gzfile)
         if major is not None:
             filtered_results = [
                 item

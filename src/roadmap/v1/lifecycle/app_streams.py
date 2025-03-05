@@ -161,29 +161,24 @@ async def get_relevant_app_streams(  # noqa: C901
     }
     module_count = defaultdict(int)
     inventory_result = await query_host_inventory(headers=headers)
-    module_names = [
-        (item["name"], item["stream"])
-        for result in inventory_result["results"]
-        for item in result.get("system_profile", {}).get("dnf_modules", {})
-    ]
-    logger.debug(f"Modules: {module_names}")
-    for result in inventory_result.get("results", []):
-        system_profile = result.get("system_profile")
+
+    # Get a count of each module and package based on OS and OS lifecycle
+    for system in inventory_result.get("results", []):
+        system_profile = system.get("system_profile")
         if not system_profile:
-            logger.info(f"Unable to get relevant systems due to missing system profile. ID={result.get('id')}")
+            logger.info(f"Unable to get relevant systems due to missing system profile. ID={system.get('id')}")
             continue
 
+        # Make sure the system is RHEL
         name = system_profile.get("operating_system", {}).get("name")
-        if name is None:
-            logger.info("Unable to get relevant systems due to missing OS from system profile")
-            continue
-
-        if (dnf_modules := system_profile.get("dnf_modules", [])) is None:
+        if name != "RHEL":
             logger.info("Unable to get relevant systems due to missing OS from system profile")
             continue
 
         os_major = system_profile.get("operating_system", {}).get("major")
         os_minor = system_profile.get("operating_system", {}).get("minor")
+        os_lifecycle = get_lifecycle_type(system_profile.get("installed_products", [{}]))
+        dnf_modules = system_profile.get("dnf_modules", [])
 
         for module in dnf_modules:
             rolling = is_rolling(module["name"], module["stream"], os_major)
@@ -191,8 +186,9 @@ async def get_relevant_app_streams(  # noqa: C901
                 name=module["name"],
                 stream=module["stream"],
                 os_major=os_major,
-                os_minor=os_minor if rolling else None,
-                os_lifecycle=LifecycleType.mainline if rolling else None,
+                os_minor=os_minor,
+                os_lifecycle=os_lifecycle,
+                rolling=rolling,
             )
             logger.debug(count_key)
             module_count[count_key] += 1
@@ -200,29 +196,30 @@ async def get_relevant_app_streams(  # noqa: C901
     # Build response
     # Look at RHEL major, then module_name, stream
     #   If those match, add to response and add count
-
     response = []
-    for module, count in module_count.items():
-        for m in APP_STREAM_MODULES:
-            if (module.os_major, module.name) == (m["rhel_major_version"], m["module_name"]):
-                for stream in m["streams"]:
-                    if module.stream == stream["stream"]:
-                        # Got it!
-                        # Include in response
-                        # TODO: Get correct dates
-                        value_to_add = {
-                            "name": module.name,
-                            "stream": module.stream,
-                            "os_major": module.os_major,
-                            "os_minor": module.os_minor,
-                            "os_lifecycle": module.os_lifecycle,
-                            "start_date": stream["start_date"],  # TODO: Get correct dates
-                            "end_date": stream["end_date"],  # TODO: Get correct dates
-                            "count": count,
-                            "rolling": stream["rolling"],
-                        }
-                        response.append(value_to_add)
-
+    for count_key, count in module_count.items():
+        for module in APP_STREAM_MODULES:
+            if (count_key.os_major, count_key.name) == (module["rhel_major_version"], module["module_name"]):
+                try:
+                    for stream in module["streams"]:
+                        if count_key.stream == stream["stream"]:
+                            # Got it!
+                            # Include in response
+                            value_to_add = AppStream(
+                                name=count_key.name,
+                                stream=count_key.stream,
+                                os_major=count_key.os_major,
+                                os_minor=count_key.os_minor,
+                                os_lifecycle=count_key.os_lifecycle,
+                                start_date=stream["start_date"],
+                                end_date=stream["end_date"],
+                                count=count,
+                                rolling=stream["rolling"],
+                                support_status=SupportStatus.supported,  # TODO: Calculate support status
+                            )
+                            response.append(value_to_add)
+                except Exception:
+                    logger.debug(f"{stream.get('name', 'name')} {stream.get('end_date', 'end_date')}")
     return {
         "meta": {
             "total": sum(module_count.values()),

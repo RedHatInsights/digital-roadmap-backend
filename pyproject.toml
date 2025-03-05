@@ -31,6 +31,7 @@ addopts = [
     "--verbose",
     "--strict-markers",
     "--cov", "src",
+    "--cov-branch",
     "--cov-report", "html",
     "--cov-report", "term-missing:skip-covered",
     "--durations-min", "1",

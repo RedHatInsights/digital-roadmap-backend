@@ -1,3 +1,4 @@
+import gzip
 import json
 
 from pathlib import Path
@@ -18,7 +19,11 @@ def client():
 def read_json_fixture():
     fixture_path = Path(__file__).parent.joinpath("fixtures").resolve()
 
-    def _read_json_file(file: Path):
+    def _read_json_file(file: str):
+        if file.endswith(".gz"):
+            with gzip.open(fixture_path.joinpath(file)) as gzfile:
+                return json.load(gzfile)
+
         return json.loads(fixture_path.joinpath(file).read_text())
 
     return _read_json_file

@@ -55,7 +55,10 @@ def test_get_app_stream_module_info_not_found(api_prefix, client):
     assert "no modules" in detail.lower()
 
 
-def test_get_relevant_app_stream(api_prefix, client):
+def test_get_relevant_app_stream(api_prefix, client, mocker, read_json_fixture):
+    mock_response = read_json_fixture("inventory_response_packages.json.gz")
+    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
+
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams/")
     data = result.json().get("data", "")
 

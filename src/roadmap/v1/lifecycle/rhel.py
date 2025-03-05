@@ -9,6 +9,7 @@ from fastapi import Header
 from fastapi import Path
 from pydantic import BaseModel
 
+from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
@@ -152,38 +153,6 @@ async def get_relevant_systems(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_null_version("lifecycle_type", "major", "minor"), reverse=True),
     )
-
-
-def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
-    """Calculate lifecycle type based on the product ID.
-
-    https://downloads.corp.redhat.com/internal/products
-    https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
-
-    Mainline < EUS < E4S/EEUS < AUS
-
-    EUS --> 70, 73, 75
-    ELS --> 204
-    E4S/EEUS --> 241
-    AUS --> 251
-
-    """
-    ids = {item.get("id") for item in products}
-    type = LifecycleType.mainline
-
-    if any(id in ids for id in {"70", "73", "75"}):
-        type = LifecycleType.eus
-
-    if "204" in ids:
-        type = LifecycleType.els
-
-    if "241" in ids:
-        type = LifecycleType.e4s
-
-    if "251" in ids:
-        type = LifecycleType.aus
-
-    return type
 
 
 def sort_null_version(attr, /, *attrs) -> t.Callable:

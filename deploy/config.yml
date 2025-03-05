@@ -1,0 +1,119 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: "${APP_NAME}"
+
+objects:
+  - apiVersion: cloud.redhat.com/v1alpha1
+    kind: ClowdApp
+    metadata:
+      name: "${APP_NAME}"
+
+    spec:
+      envName: ${ENV_NAME}
+
+      deployments:
+        - name: roadmap-api
+          minReplicas: ${{MIN_REPLICAS}}
+          deploymentStrategy:
+            privateStrategy: RollingUpdate
+
+          webServices:
+            public:
+              enabled: true
+              apiPath: "${APP_NAME}"
+
+          podSpec:
+            image: ${IMAGE}:${IMAGE_TAG}
+            env:
+              - name: APP_NAME
+                value: "${APP_NAME}"
+
+              - name: ROADMAP_DB_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: ${ROADMAP_DB_SECRET_NAME}
+                    key: db.host
+
+              - name: ROADMAP_DB_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: ${ROADMAP_DB_SECRET_NAME}
+                    key: db.port
+
+              - name: ROADMAP_DB_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: ${ROADMAP_DB_SECRET_NAME}
+                    key: db.user
+
+              - name: ROADMAP_DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: ${ROADMAP_DB_SECRET_NAME}
+                    key: db.password
+
+            resources:
+              limits:
+                cpu: ${CPU_LIMIT_SERVICE}
+                memory: ${MEMORY_LIMIT_SERVICE}
+
+              requests:
+                cpu: ${CPU_REQUEST_SERVICE}
+                memory: ${MEMORY_REQUEST_SERVICE}
+
+            livenessProbe:
+              httpGet:
+                path: /api/roadmap/v1/ping
+                port: ${WEB_PORT}
+
+              initialDelaySeconds: 10
+              periodSeconds: 3
+
+            readinessProbe:
+              httpGet:
+                path: /api/roadmap/v1/ping
+                port: ${WEB_PORT}
+
+parameters:
+  - name: IMAGE_TAG
+    description: Image tag
+    required: true
+    value: latest
+
+  - name: IMAGE
+    description: Image name
+    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/digital-roadmap
+
+  - name: ENV_NAME
+    required: true
+
+  - name: MIN_REPLICAS
+    description: Replica count for backend service
+    value: 3
+
+  - name: APP_NAME
+    required: true
+    value: roadmap
+
+  - name: WEB_PORT
+    description: Port this is running on
+    value: 8066
+
+  - name: MEMORY_LIMIT_SERVICE
+    value: 2048Mi
+
+  - name: MEMORY_REQUEST_SERVICE
+    value: 1024Mi
+
+  - name: CPU_LIMIT_SERVICE
+    value: "2"
+
+  - name: CPU_REQUEST_SERVICE
+    value: "1"
+
+  - name: ROADMAP_DB_SECRET_NAME
+    value: roadmap-db
+
+  - name: SENTRY_ENVIRONMENT
+    description: Environment name for Setry

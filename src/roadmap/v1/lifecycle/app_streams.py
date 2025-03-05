@@ -2,6 +2,7 @@ import logging
 import typing as t
 
 from collections import defaultdict
+from datetime import date
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -9,20 +10,55 @@ from fastapi import Path
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
 from pydantic import BaseModel
+from pydantic import model_validator
 
+from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.data import APP_STREAM_MODULES
+from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import AppStreamCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
+from roadmap.models import SupportStatus
 
 
 logger = logging.getLogger("uvicorn.error")
 
 
+class AppStream(BaseModel):
+    name: str
+    stream: str
+    os_major: int
+    os_minor: int | None = None
+    os_lifecycle: LifecycleType
+    start_date: date
+    end_date: date
+    count: int
+    rolling: bool
+    support_status: SupportStatus
+
+    @model_validator(mode="after")
+    def set_end_date(self):
+        """Set end_date based on rolling status, OS major/minor, and lifecycle"""
+        if self.rolling:
+            lifecycle_attr = "end"
+            if self.os_lifecycle is not LifecycleType.mainline:
+                lifecycle_attr += f"_{self.os_lifecycle.lower()}"
+
+            os_key = f"{self.os_major}{'.' + str(self.os_minor) if self.os_minor is not None else ''}"
+            try:
+                self.end_date = getattr(OS_LIFECYCLE_DATES[os_key], lifecycle_attr)
+            except KeyError:
+                logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
+                self.end_date = date(1111, 11, 11)
+                return self
+
+        return self
+
+
 class AppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[dict]
+    data: list[AppStream]
 
 
 class AppStreamsNamesResponse(BaseModel):

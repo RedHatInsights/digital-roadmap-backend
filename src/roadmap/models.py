@@ -46,6 +46,7 @@ class AppStreamCount(BaseModel):
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
     stream: str
+    rolling: bool = False
 
 
 class System(BaseModel):

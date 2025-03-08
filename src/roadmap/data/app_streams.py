@@ -52,6 +52,16 @@ class AppStreamPackage(BaseModel):
 
         return self
 
+    @model_validator(mode="after")
+    def set_os_version(self):
+        self.os_major = int(self.initial_product_version.split(".")[0])
+        try:
+            self.os_minor = int(self.initial_product_version.split(".")[1])
+        except IndexError:
+            self.os_minor = None
+
+        return self
+
 
 APP_STREAM_PACKAGES = {
     "aardvark-dns": AppStreamPackage(

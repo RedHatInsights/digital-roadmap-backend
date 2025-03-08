@@ -85,7 +85,7 @@ class AppStream(BaseModel):
 
     # Module validators are run in the order they are defined.
     @model_validator(mode="after")
-    def set_dates(self):
+    def set_dates(self):  # noqa: C901
         """Set end_date based on rolling status, OS major/minor, and lifecycle"""
 
         # If not rolling, use package/module start/end dates

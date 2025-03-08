@@ -9,8 +9,8 @@ from pydantic import Field
 
 
 class Meta(BaseModel):
-    total: int
     count: int
+    total: int | None = None
 
 
 class LifecycleType(StrEnum):

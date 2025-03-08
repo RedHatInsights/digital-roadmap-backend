@@ -1,20 +1,29 @@
+import typing as t
+
 from datetime import date
 
+from pydantic import AfterValidator
 from pydantic import AliasChoices
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
+from roadmap.common import ensure_date
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+
+
+Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 
 
 class AppStreamPackage(BaseModel):
     name: str
     application_stream_name: str
-    start_date: str | date | None = None
-    end_date: str | date = Field(validation_alias=AliasChoices("end_date", "enddate"))
+    start_date: Date | None = None
+    end_date: Date = Field(validation_alias=AliasChoices("end_date", "enddate"))
     initial_product_version: str
+    os_major: int | None = Field(init=False, default=None)
+    os_minor: int | None = None
     stream: str
     lifecycle: int
     rolling: bool = False
@@ -23,18 +32,6 @@ class AppStreamPackage(BaseModel):
     @classmethod
     def validate_version(cls, value):
         return ".".join(value.split(".")[:2])
-
-    @field_validator("start_date", "end_date", mode="after")
-    @classmethod
-    def ensure_date(cls, value):
-        """Ensure the date value is a date object."""
-        if isinstance(value, date):
-            return value
-
-        try:
-            return date.fromisoformat(value)
-        except (ValueError, TypeError):
-            raise ValueError("Date must be in ISO 8601 format")
 
     @model_validator(mode="after")
     def set_start_date(self):

@@ -5,6 +5,7 @@ import typing as t
 import urllib.parse
 import urllib.request
 
+from datetime import date
 from pathlib import Path
 from urllib.error import HTTPError
 
@@ -134,3 +135,14 @@ def sort_null_version(attr, /, *attrs) -> t.Callable:
         return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
 
     return _getter
+
+
+def ensure_date(value: str | date):
+    """Ensure the date value is a date object."""
+    if isinstance(value, date):
+        return value
+
+    try:
+        return date.fromisoformat(value)
+    except (ValueError, TypeError):
+        raise ValueError("Date must be in ISO 8601 format")

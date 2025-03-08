@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
+from roadmap.common import sort_null_version
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
@@ -153,11 +154,3 @@ async def get_relevant_systems(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_null_version("lifecycle_type", "major", "minor"), reverse=True),
     )
-
-
-def sort_null_version(attr, /, *attrs) -> t.Callable:
-    def _getter(item):
-        # If an attribute is None, use a 0 instead of None for the purpose of sorting
-        return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
-
-    return _getter

@@ -126,3 +126,11 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
         type = LifecycleType.aus
 
     return type
+
+
+def sort_null_version(attr, /, *attrs) -> t.Callable:
+    def _getter(item):
+        # If an attribute is None, use a 0 instead of None for the purpose of sorting
+        return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
+
+    return _getter

@@ -224,19 +224,6 @@ relevant = APIRouter(
 )
 
 
-def is_rolling(name: str, stream: str, os_major: int) -> bool | None | str:
-    for module in APP_STREAM_MODULES:
-        if (module["module_name"], module["rhel_major_version"]) == (name, os_major):
-            for s in module["streams"]:
-                if s["stream"] == stream:
-                    # Match!
-                    # Unknown values will be None
-                    return s["rolling"]
-
-    # No match
-    return False
-
-
 @relevant.get("/", response_model=AppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,

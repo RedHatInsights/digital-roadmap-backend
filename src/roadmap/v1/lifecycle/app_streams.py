@@ -105,7 +105,7 @@ class AppStream(BaseModel):
 
             # End date
             lifecycle_attr = "end"
-            if self.os_lifecycle is not LifecycleType.mainline:
+            if self.os_lifecycle and self.os_lifecycle is not LifecycleType.mainline:
                 lifecycle_attr += f"_{self.os_lifecycle.lower()}"
 
             try:

@@ -150,6 +150,11 @@ class AppStreamsNamesResponse(BaseModel):
     data: list[str]
 
 
+class ModulesResponse(BaseModel):
+    meta: Meta
+    data: list[dict]
+
+
 router = APIRouter(
     prefix="/app-streams",
     tags=["App Streams"],
@@ -157,7 +162,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=AppStreamsResponse)
+@router.get("/", response_model=ModulesResponse)
 async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
 ):
@@ -175,7 +180,7 @@ async def get_app_streams(
     }
 
 
-@router.get("/{major_version}", response_model=AppStreamsResponse)
+@router.get("/{major_version}", response_model=ModulesResponse)
 async def get_major_version(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
 ):
@@ -197,7 +202,7 @@ async def get_module_names(
     }
 
 
-@router.get("/{major_version}/{module_name}", response_model=AppStreamsResponse)
+@router.get("/{major_version}/{module_name}", response_model=ModulesResponse)
 async def get_module(
     major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
     module_name: t.Annotated[str, Path(description="Module name")],

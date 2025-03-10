@@ -303,15 +303,10 @@ async def get_relevant_app_streams(  # noqa: C901
         for app_stream_count in app_stream_counts:
             module_count[app_stream_count] += 1
 
-    # breakpoint()
     # Build response
-    # Look at RHEL major, then module_name, stream
-    #   If those match, add to response and add count
     response = []
     for count_key, count in module_count.items():
         try:
-            # Got it!
-            # Include in response
             value_to_add = AppStream(
                 name=count_key.name,
                 stream=count_key.stream,

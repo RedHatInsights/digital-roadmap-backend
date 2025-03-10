@@ -1,3 +1,4 @@
+from datetime import date
 from email.message import Message
 from io import BytesIO
 from urllib.error import HTTPError
@@ -6,6 +7,7 @@ import pytest
 
 from fastapi import HTTPException
 
+from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
 
 
@@ -107,3 +109,16 @@ async def test_query_host_inventory_error(mocker):
 
     with pytest.raises(HTTPException):
         await query_host_inventory({"Authorization": "Bearer token"})
+
+
+@pytest.mark.parametrize("date_string", ("20250101", "2025-01-01"))
+def test_ensure_date(date_string):
+    result = ensure_date(date_string)
+
+    assert result == date(2025, 1, 1)
+
+
+@pytest.mark.parametrize("date_string", (1_000, "101"))
+def test_ensure_date_error(date_string):
+    with pytest.raises((ValueError, TypeError), match="Date must be"):
+        ensure_date(date_string)

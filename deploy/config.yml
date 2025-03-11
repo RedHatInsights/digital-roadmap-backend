@@ -33,25 +33,31 @@ objects:
                 valueFrom:
                   secretKeyRef:
                     name: ${ROADMAP_DB_SECRET_NAME}
-                    key: db.host
+                    key: host
 
               - name: ROADMAP_DB_PORT
                 valueFrom:
                   secretKeyRef:
                     name: ${ROADMAP_DB_SECRET_NAME}
-                    key: db.port
+                    key: port
 
               - name: ROADMAP_DB_USER
                 valueFrom:
                   secretKeyRef:
                     name: ${ROADMAP_DB_SECRET_NAME}
-                    key: db.user
+                    key: user
 
               - name: ROADMAP_DB_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: ${ROADMAP_DB_SECRET_NAME}
-                    key: db.password
+                    key: password
+
+              - name: SENTRY_DSN
+                valueFrom:
+                  secretKeyRef:
+                    name: sentry
+                    key: dsn
 
             resources:
               limits:
@@ -113,7 +119,7 @@ parameters:
     value: "1"
 
   - name: ROADMAP_DB_SECRET_NAME
-    value: roadmap-db
+    value: database
 
   - name: SENTRY_ENVIRONMENT
     description: Environment name for Setry

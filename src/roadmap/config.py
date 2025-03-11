@@ -1,4 +1,5 @@
 from pydantic import PostgresDsn
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
 
     db_name: str = "digital_roadmap"
     db_user: str = "postgres"
-    db_password: str = "postgres"
+    db_password: SecretStr = SecretStr("postgres")
     db_host: str = "localhost"
     db_port: int = 5432
     debug: bool = False
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> PostgresDsn:
         return PostgresDsn(
-            url=f"postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+            url=f"postgresql+psycopg://{self.db_user}:{self.db_password.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
 

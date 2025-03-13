@@ -40,7 +40,7 @@ class AppStreamPackage(BaseModel):
             try:
                 self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start
             except KeyError:
-                self.start_date = date(1111, 11, 11)
+                self.start_date = "Unknown"
                 return self
 
         return self

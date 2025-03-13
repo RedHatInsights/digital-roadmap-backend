@@ -39,7 +39,7 @@ def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
                 if module_stream["stream"] == stream:
                     return module_stream["rolling"]
 
-    logger.debug(f"No match for rolling {name} {stream} {os_major}")
+    logger.debug(f"No match for rolling RHEL {os_major} {name} {stream}")
     return False
 
 
@@ -101,7 +101,7 @@ class AppStream(BaseModel):
                     self.start_date = OS_LIFECYCLE_DATES[os_key].start
                 except KeyError:
                     logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                    self.start_date = date(1111, 11, 11)
+                    self.start_date = "Unknown"
 
             # End date
             lifecycle_attr = "end"
@@ -112,7 +112,7 @@ class AppStream(BaseModel):
                 self.end_date = getattr(OS_LIFECYCLE_DATES[os_key], lifecycle_attr)
             except KeyError:
                 logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                self.end_date = date(1111, 11, 11)
+                self.end_date = "Unknown"
 
         else:
             if self.impl is AppStreamImplementation.package:

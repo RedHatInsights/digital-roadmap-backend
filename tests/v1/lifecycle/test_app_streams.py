@@ -101,7 +101,7 @@ def test_app_stream_missing_lifecycle_data():
         rolling=True,
     )
 
-    assert app_stream.start_date == date(1111, 11, 11)
+    assert app_stream.start_date == "Unknown"
 
 
 def test_app_stream_package_no_start_date():
@@ -135,7 +135,7 @@ def test_app_stream_package_missing_rhel_data():
         rolling=True,
     )
 
-    assert package.start_date == date(1111, 11, 11)
+    assert package.start_date == "Unknown"
 
 
 def test_app_stream_package_single_digit():

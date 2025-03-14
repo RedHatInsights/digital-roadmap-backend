@@ -61,8 +61,8 @@ objects:
 
             resources:
               limits:
-                cpu: ${CPU_LIMIT_SERVICE}
-                memory: ${MEMORY_LIMIT_SERVICE}
+                cpu: "${CPU_LIMIT_SERVICE}"
+                memory: "${MEMORY_LIMIT_SERVICE}"
 
               requests:
                 cpu: ${CPU_REQUEST_SERVICE}
@@ -71,7 +71,7 @@ objects:
             livenessProbe:
               httpGet:
                 path: /api/roadmap/v1/ping
-                port: ${WEB_PORT}
+                port: ${{WEB_PORT}}
 
               initialDelaySeconds: 10
               periodSeconds: 3
@@ -79,7 +79,7 @@ objects:
             readinessProbe:
               httpGet:
                 path: /api/roadmap/v1/ping
-                port: ${WEB_PORT}
+                port: ${{WEB_PORT}}
 
 parameters:
   - name: IMAGE_TAG
@@ -104,7 +104,7 @@ parameters:
 
   - name: WEB_PORT
     description: Port this is running on
-    value: 8066
+    value: "8066"
 
   - name: MEMORY_LIMIT_SERVICE
     value: 2048Mi

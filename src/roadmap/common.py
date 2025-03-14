@@ -103,12 +103,11 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     https://downloads.corp.redhat.com/internal/products
     https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
 
-    Mainline < EUS < E4S/EEUS < AUS
+    Mainline < EUS < E4S/EEUS
 
     EUS --> 70, 73, 75
     ELS --> 204
     E4S/EEUS --> 241
-    AUS --> 251
 
     """
     ids = {item.get("id") for item in products}
@@ -122,9 +121,6 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
 
     if "241" in ids:
         type = LifecycleType.e4s
-
-    if "251" in ids:
-        type = LifecycleType.aus
 
     return type
 

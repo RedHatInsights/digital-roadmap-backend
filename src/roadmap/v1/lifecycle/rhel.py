@@ -135,9 +135,6 @@ async def get_relevant_systems(
             if count_key.lifecycle == LifecycleType.e4s:
                 retirement_date = lifecycle_info.end_e4s
 
-            if count_key.lifecycle == LifecycleType.aus:
-                retirement_date = lifecycle_info.end_aus
-
         results.append(
             System(
                 name=count_key.name,

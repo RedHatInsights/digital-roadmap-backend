@@ -96,7 +96,7 @@ parameters:
 
   - name: MIN_REPLICAS
     description: Replica count for backend service
-    value: 3
+    value: "3"
 
   - name: APP_NAME
     required: true

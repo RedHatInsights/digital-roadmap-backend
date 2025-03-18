@@ -47,7 +47,7 @@ RUN microdnf install -y --nodocs \
     "python${PYTHON_VERSION}" \
     && rm -rf /var/cache/yum/*
 
-RUN useradd --system --create-home --home-dir /srv/roady roady
+RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
 COPY /src/roadmap/ /srv/roady/roadmap/
 

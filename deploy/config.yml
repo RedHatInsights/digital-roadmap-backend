@@ -104,7 +104,7 @@ parameters:
 
   - name: WEB_PORT
     description: Port this is running on
-    value: "8066"
+    value: "8000"
 
   - name: MEMORY_LIMIT_SERVICE
     value: 2048Mi

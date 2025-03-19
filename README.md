@@ -56,7 +56,7 @@ make install
 make start-db run
 ```
 
-This runs a server using the default virtual environment. Documentation can be found at  `http://127.0.0.1:8066/docs`.
+This runs a server using the default virtual environment. Documentation can be found at  `http://127.0.0.1:8000/docs`.
 
 ### Relevant APIs
 
@@ -81,7 +81,7 @@ export RH_TOKEN="$(./scripts/get-redhat-access-token.py)"
 Use the access token in the request header. Here is an example using [httpie].
 
 ```
-http localhost:8066/api/roadmap/v1/relevant/lifecycle/rhel/ \
+http localhost:8000/api/roadmap/v1/relevant/lifecycle/rhel/ \
  Authorization:"Bearer $RH_TOKEN"
 ```
 
@@ -97,7 +97,7 @@ Alternatively you may create your own virtual environment, install the requireme
 ```
 # After creating and activating a virtual environment
 pip install -r requirements/requirements-dev-{Python version}.txt
-fastapi run src/roadmap/main.py --reload --host 127.0.0.1 --port 8066
+fastapi run src/roadmap/main.py --reload --host 127.0.0.1 --port 8000
 ```
 
 The database runs in a container and contains data already. To specify a different container image, set `DB_IMAGE`.

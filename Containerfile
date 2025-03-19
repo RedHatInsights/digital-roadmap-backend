@@ -54,4 +54,4 @@ COPY /src/roadmap/ /srv/roady/roadmap/
 USER roady
 WORKDIR /srv/roady
 
-CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--port", "8066", "--host", "0.0.0.0"]
+CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--port", "8000", "--host", "0.0.0.0"]

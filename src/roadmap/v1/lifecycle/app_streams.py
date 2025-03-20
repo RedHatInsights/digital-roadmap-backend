@@ -68,6 +68,18 @@ class AppStreamCount(BaseModel):
     stream: str
     impl: AppStreamImplementation
     rolling: bool = False
+    normalized_name: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_stream_name(cls, data: t.Any) -> t.Any:
+        if "postgresql" in data["name"].lower():
+            data["name"] = "PostgreSQL"
+
+        if data["stream"]:
+            logger.debug(f"{data['name']} {data['stream']}")
+
+        return data
 
 
 class AppStream(BaseModel):

@@ -306,6 +306,10 @@ async def get_relevant_app_streams(  # noqa: C901
     # Build response
     response = []
     for count_key, count in module_count.items():
+        if count_key.rolling:
+            # Omit rolling app streams
+            continue
+
         try:
             value_to_add = AppStream(
                 name=count_key.name,
@@ -325,6 +329,7 @@ async def get_relevant_app_streams(  # noqa: C901
     return {
         "meta": {
             "count": len(module_count),
+            "total": sum(item.count for item in response),
         },
         "data": sorted(response, key=sort_null_version("name", "stream", "os_major", "os_minor", "os_lifecycle")),
     }

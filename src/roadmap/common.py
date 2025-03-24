@@ -83,7 +83,7 @@ async def query_host_inventory(
         )
 
     req = urllib.request.Request(
-        f"https://console.redhat.com/api/inventory/v1/hosts?{urllib.parse.urlencode(params, doseq=True)}",
+        f"{SETTINGS.host_inventory_url}/api/inventory/v1/hosts?{urllib.parse.urlencode(params, doseq=True)}",
         headers=headers,  # pyright: ignore [reportArgumentType]
     )
 

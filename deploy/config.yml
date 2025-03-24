@@ -29,6 +29,9 @@ objects:
               - name: APP_NAME
                 value: "${APP_NAME}"
 
+              - name: ROADMAP_HOST_INVENTORY_URL
+                value: "${ROADMAP_HOST_INVENTORY_URL}"
+
               - name: ROADMAP_DB_HOST
                 valueFrom:
                   secretKeyRef:
@@ -123,3 +126,5 @@ parameters:
 
   - name: SENTRY_ENVIRONMENT
     description: Environment name for Setry
+
+  - name: ROADMAP_HOST_INVENTORY_URL

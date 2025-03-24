@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     db_port: int = 5432
     debug: bool = False
     dev: bool = False
+    host_inventory_url: str = "https://console.redhat.com"
     test: bool = False
 
     @property

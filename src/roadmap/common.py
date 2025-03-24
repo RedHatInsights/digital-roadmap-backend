@@ -51,7 +51,7 @@ async def query_host_inventory(
 
         return response_data
 
-    if not headers.get("Authorization"):
+    if not any(headers.get(value) for value in ("Authorization", "X-RH-Identity")):
         # If we don't have a token, do not try to query the API.
         # This could be a dev/test environment.
         logger.info("Missing authorization header. Unable to get inventory.")

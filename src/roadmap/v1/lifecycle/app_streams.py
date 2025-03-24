@@ -331,5 +331,5 @@ async def get_relevant_app_streams(  # noqa: C901
             "count": len(module_count),
             "total": sum(item.count for item in response),
         },
-        "data": sorted(response, key=sort_null_version("name", "stream", "os_major", "os_minor", "os_lifecycle")),
+        "data": sorted(response, key=sort_null_version("name", "os_major", "os_minor", "os_lifecycle")),
     }

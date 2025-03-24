@@ -75,14 +75,17 @@ objects:
               httpGet:
                 path: /api/roadmap/v1/ping
                 port: ${{WEB_PORT}}
-
-              initialDelaySeconds: 10
-              periodSeconds: 3
+              initialDelaySeconds: 15
+              periodSeconds: 10
+              failureThreshold: 6
 
             readinessProbe:
               httpGet:
                 path: /api/roadmap/v1/ping
                 port: ${{WEB_PORT}}
+              initialDelaySeconds: 15
+              periodSeconds: 10
+              failureThreshold: 6
 
 parameters:
   - name: IMAGE_TAG

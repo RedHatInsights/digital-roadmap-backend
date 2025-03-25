@@ -1,11 +1,13 @@
 import typing as t
 
-from datetime import date
+from datetime import date, timedelta
 from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
+
 
 
 class Meta(BaseModel):
@@ -25,7 +27,8 @@ class SupportStatus(StrEnum):
     six_months = "Support ends within 6 months"
     retired = "Retired"
     not_installed = "Not installed"
-    upcoming = "Upcoming"
+    upcoming = "Upcoming release"
+    unknown = "Unknown"
 
 
 class HostCount(BaseModel):
@@ -46,6 +49,39 @@ class System(BaseModel):
     support_status: SupportStatus = SupportStatus.supported
     count: int = 0
     lifecycle_type: LifecycleType
+
+
+    @model_validator(mode='after')
+    def update_support_status(self):
+        """Validator for setting support status.
+        Expected types/values of start_date and end_date are:
+            - str(Unknown)
+            - None
+            - date(YYYY-MM-DD)
+        """
+        today = date.today()
+
+        if self.release_date != "Unknown" and self.release_date is not None:
+            if self.release_date > today:
+                self.support_status = SupportStatus.upcoming
+                return self
+
+        if self.retirement_date != "Unknown" and self.retirement_date is not None:
+            if self.retirement_date < today:
+                self.support_status = SupportStatus.retired
+                return self
+            
+            six_months_date = self.retirement_date - timedelta(days=180)
+            if six_months_date <= today:
+                self.support_status = SupportStatus.six_months
+            else:
+                self.support_status = SupportStatus.supported
+        
+        else:
+            self.support_status = SupportStatus.unknown
+            return self
+
+        return self
 
 
 class Lifecycle(BaseModel):

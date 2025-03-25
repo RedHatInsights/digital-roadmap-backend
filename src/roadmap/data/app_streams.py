@@ -6003,6 +6003,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Go",
                 "arch": "x86_64",
                 "context": "b754926a",
                 "description": "Go Tools and libraries",
@@ -6084,6 +6085,7 @@ APP_STREAM_MODULES = [
                 "version": "820181213143944",
             },
             {
+                "application_stream_name": "SWIG 4",
                 "arch": "x86_64",
                 "context": "9f9e2e7e",
                 "description": "Simplified Wrapper and Interface Generator "
@@ -6108,6 +6110,7 @@ APP_STREAM_MODULES = [
                 "version": "8040020201001104431",
             },
             {
+                "application_stream_name": "SWIG 4.1",
                 "arch": "x86_64",
                 "context": "fd72936b",
                 "description": "Simplified Wrapper and Interface Generator "
@@ -6181,6 +6184,7 @@ APP_STREAM_MODULES = [
                 "version": "820181215112250",
             },
             {
+                "application_stream_name": "Apache Subversion 1.10",
                 "arch": "x86_64",
                 "context": "78111232",
                 "description": "Apache Subversion, a Modern Version Control System",
@@ -6201,6 +6205,7 @@ APP_STREAM_MODULES = [
                 "version": "8070020220701055908",
             },
             {
+                "application_stream_name": "Apache Subversion 1.14",
                 "arch": "x86_64",
                 "context": "a74460ab",
                 "description": "Apache Subversion, a Modern Version Control System",
@@ -6228,6 +6233,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Rust",
                 "arch": "x86_64",
                 "context": "b09eea91",
                 "description": "Rust Toolset",
@@ -6270,6 +6276,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Python 3.9",
                 "arch": "x86_64",
                 "context": "d47b87a4",
                 "description": "This module gives users access to the internal "
@@ -6322,6 +6329,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Python 2.7",
                 "arch": "x86_64",
                 "context": "43711c95",
                 "description": "This module provides the Python 2.7 interpreter "
@@ -6350,6 +6358,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "PostgreSQL 10",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6370,6 +6379,7 @@ APP_STREAM_MODULES = [
                 "version": "820190104140132",
             },
             {
+                "application_stream_name": "PostgreSQL 12",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6390,6 +6400,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241122084405",
             },
             {
+                "application_stream_name": "PostgreSQL 13",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6410,6 +6421,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241122084628",
             },
             {
+                "application_stream_name": "PostgreSQL 15",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6430,6 +6442,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241122084744",
             },
             {
+                "application_stream_name": "PostgreSQL 16",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6450,6 +6463,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241122085009",
             },
             {
+                "application_stream_name": "PostgreSQL 9.6",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -6477,6 +6491,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Varnish 6",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "Varnish Cache web application accelerator",
@@ -6514,6 +6529,7 @@ APP_STREAM_MODULES = [
                 "version": "820190104140943",
             },
             {
+                "application_stream_name": "MySQL 8",
                 "arch": "x86_64",
                 "context": "a75119d5",
                 "description": "MySQL is a multi-user, multi-threaded SQL "
@@ -6539,6 +6555,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "NGINX 1.14",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "nginx 1.14 webserver module",
@@ -6562,6 +6579,7 @@ APP_STREAM_MODULES = [
                 "version": "820181214004940",
             },
             {
+                "application_stream_name": "NGINX 1.16",
                 "arch": "x86_64",
                 "context": "522a0ee4",
                 "description": "nginx 1.16 webserver module",
@@ -6585,6 +6603,7 @@ APP_STREAM_MODULES = [
                 "version": "8040020210526102347",
             },
             {
+                "application_stream_name": "NGINX 1.18",
                 "arch": "x86_64",
                 "context": "522a0ee4",
                 "description": "nginx 1.18 webserver module",
@@ -6608,6 +6627,7 @@ APP_STREAM_MODULES = [
                 "version": "8040020210526100943",
             },
             {
+                "application_stream_name": "NGINX 1.20",
                 "arch": "x86_64",
                 "context": "63b34585",
                 "description": "nginx 1.20 webserver module",
@@ -6631,6 +6651,7 @@ APP_STREAM_MODULES = [
                 "version": "8080020231012034601",
             },
             {
+                "application_stream_name": "NGINX 1.22",
                 "arch": "x86_64",
                 "context": "63b34585",
                 "description": "nginx 1.22 webserver module",
@@ -6654,6 +6675,7 @@ APP_STREAM_MODULES = [
                 "version": "8080020231011224613",
             },
             {
+                "application_stream_name": "NGINX 1.24",
                 "arch": "x86_64",
                 "context": "e155f54d",
                 "description": "nginx 1.24 webserver module",
@@ -6749,6 +6771,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "pki-core",
                 "arch": "x86_64",
                 "context": "5a87be8a",
                 "description": "A module for PKI Core packages.",
@@ -6768,6 +6791,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "LLVM",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "LLVM Tools and libraries",
@@ -6859,6 +6883,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Python 3.8",
                 "arch": "x86_64",
                 "context": "d9f72c26",
                 "description": "This module gives users access to the internal "
@@ -6888,6 +6913,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "",
                 "arch": "x86_64",
                 "context": "498c0fee",
                 "description": "The Eclipse platform is designed for building "
@@ -6918,6 +6944,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Identity Management Client",
                 "arch": "x86_64",
                 "context": "49cc9d1b",
                 "description": "RHEL IdM is an integrated solution to provide "
@@ -6940,6 +6967,7 @@ APP_STREAM_MODULES = [
                 "version": "820190227213458",
             },
             {
+                "application_stream_name": "Identity Management DL1",
                 "arch": "x86_64",
                 "context": "5986f621",
                 "description": "RHEL IdM is an integrated solution to provide "
@@ -6976,6 +7004,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Python 3.6",
                 "arch": "x86_64",
                 "context": "17efdbc7",
                 "description": "This module gives users access to the internal "
@@ -7005,6 +7034,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Apache httpd 2.4",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "Apache httpd is a powerful, efficient, and extensible HTTP server.",
@@ -7067,6 +7097,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Java Mission Control",
                 "arch": "x86_64",
                 "context": "6392b1f8",
                 "description": "Java Mission Control is a powerful profiler for "
@@ -7093,6 +7124,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Mailman 2.1",
                 "arch": "x86_64",
                 "context": "77fc8825",
                 "description": "An initial version of the mailman mailing list management software",
@@ -7136,6 +7168,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Redis 5",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "redis 5 module",
@@ -7148,6 +7181,7 @@ APP_STREAM_MODULES = [
                 "version": "820181217094919",
             },
             {
+                "application_stream_name": "Redis 6",
                 "arch": "x86_64",
                 "context": "3b9f49c4",
                 "description": "redis 6 module",
@@ -7167,6 +7201,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "389-ds 1.4",
                 "arch": "x86_64",
                 "context": "1fc8b219",
                 "description": "389 Directory Server is an LDAPv3 compliant "
@@ -7213,6 +7248,7 @@ APP_STREAM_MODULES = [
                 "version": "820181213135032",
             },
             {
+                "application_stream_name": "Apache Ant 1.1",
                 "arch": "x86_64",
                 "context": "417e5c08",
                 "description": "Apache Ant is a Java library and command-line "
@@ -7244,6 +7280,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "mod_auth_openidc for Apache",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "This module enables an Apache 2.x web server to "
@@ -7265,6 +7302,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Node.js 10",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7288,6 +7326,7 @@ APP_STREAM_MODULES = [
                 "version": "820190108092226",
             },
             {
+                "application_stream_name": "Node.js 12",
                 "arch": "x86_64",
                 "context": "ad008a3a",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7311,6 +7350,7 @@ APP_STREAM_MODULES = [
                 "version": "8060020220523160029",
             },
             {
+                "application_stream_name": "Node.js 14",
                 "arch": "x86_64",
                 "context": "bd1311ed",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7334,6 +7374,7 @@ APP_STREAM_MODULES = [
                 "version": "8070020230306170042",
             },
             {
+                "application_stream_name": "Node.js 16",
                 "arch": "x86_64",
                 "context": "a75119d5",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7357,6 +7398,7 @@ APP_STREAM_MODULES = [
                 "version": "8090020240315081818",
             },
             {
+                "application_stream_name": "Node.js 18",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7380,6 +7422,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020240807161023",
             },
             {
+                "application_stream_name": "Node.js 20",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "Node.js is a platform built on Chrome's "
@@ -7410,6 +7453,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "PHP 7.2",
                 "arch": "x86_64",
                 "context": "765540",
                 "description": "php 7.2 module",
@@ -7445,6 +7489,7 @@ APP_STREAM_MODULES = [
                 "version": "820181215112050",
             },
             {
+                "application_stream_name": "PHP 7.3",
                 "arch": "x86_64",
                 "context": "ceb1cf90",
                 "description": "php 7.3 module",
@@ -7480,6 +7525,7 @@ APP_STREAM_MODULES = [
                 "version": "8020020200715124551",
             },
             {
+                "application_stream_name": "PHP 7.4",
                 "arch": "x86_64",
                 "context": "f7998665",
                 "description": "php 7.4 module",
@@ -7515,6 +7561,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241113075828",
             },
             {
+                "application_stream_name": "PHP 8.0",
                 "arch": "x86_64",
                 "context": "0b4eb31d",
                 "description": "php 8.0 module",
@@ -7548,6 +7595,7 @@ APP_STREAM_MODULES = [
                 "version": "8080020231006102311",
             },
             {
+                "application_stream_name": "PHP 8.2",
                 "arch": "x86_64",
                 "context": "f7998665",
                 "description": "php 8.2 module",
@@ -7588,6 +7636,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Ruby 2.5",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7604,6 +7653,7 @@ APP_STREAM_MODULES = [
                 "version": "820190111110530",
             },
             {
+                "application_stream_name": "Ruby 2.6",
                 "arch": "x86_64",
                 "context": "ad008a3a",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7620,6 +7670,7 @@ APP_STREAM_MODULES = [
                 "version": "8060020220527104428",
             },
             {
+                "application_stream_name": "Ruby 2.7",
                 "arch": "x86_64",
                 "context": "63b34585",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7636,6 +7687,7 @@ APP_STREAM_MODULES = [
                 "version": "8080020230427102918",
             },
             {
+                "application_stream_name": "Ruby 3.0",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7652,6 +7704,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020240522072634",
             },
             {
+                "application_stream_name": "Ruby 3.1",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7668,6 +7721,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020241127152928",
             },
             {
+                "application_stream_name": "Ruby 3.3",
                 "arch": "x86_64",
                 "context": "489197000000",
                 "description": "Ruby is the interpreted scripting language for "
@@ -7717,6 +7771,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "MariaDB 10.11",
                 "arch": "x86_64",
                 "context": "e155f54d",
                 "description": "MariaDB is a community developed branch of "
@@ -7740,6 +7795,7 @@ APP_STREAM_MODULES = [
                 "version": "8100020240129174731",
             },
             {
+                "application_stream_name": "MariaDB 10.3",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "MariaDB is a community developed branch of "
@@ -7763,6 +7819,7 @@ APP_STREAM_MODULES = [
                 "version": "820190314153642",
             },
             {
+                "application_stream_name": "MariaDB 10.5",
                 "arch": "x86_64",
                 "context": "63b34585",
                 "description": "MariaDB is a community developed branch of "
@@ -7864,6 +7921,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Perl 5.24",
                 "arch": "x86_64",
                 "context": "ee766497",
                 "description": "Perl is a high-level programming language with "
@@ -7884,6 +7942,7 @@ APP_STREAM_MODULES = [
                 "version": "820190207164249",
             },
             {
+                "application_stream_name": "Perl 5.26",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "Perl is a high-level programming language with "
@@ -7924,6 +7983,7 @@ APP_STREAM_MODULES = [
                 "version": "8040020200923213406",
             },
             {
+                "application_stream_name": "Perl 5.32",
                 "arch": "x86_64",
                 "context": "9fe1d287",
                 "description": "Perl is a high-level programming language with "
@@ -7985,6 +8045,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Mercurial 4.8",
                 "arch": "x86_64",
                 "context": "77fc8825",
                 "description": "Mercurial is a fast, lightweight source control "
@@ -7999,6 +8060,7 @@ APP_STREAM_MODULES = [
                 "version": "820190108205035",
             },
             {
+                "application_stream_name": "Mercurial 6.2",
                 "arch": "x86_64",
                 "context": "3dbb8329",
                 "description": "Mercurial is a fast, lightweight source control "
@@ -8107,6 +8169,7 @@ APP_STREAM_MODULES = [
                 "version": "8030020210302075156",
             },
             {
+                "application_stream_name": "container-tools 2.0",
                 "arch": "x86_64",
                 "context": "e34216c9",
                 "description": "Stable versions of podman 1.6, buildah 1.11, "
@@ -8146,6 +8209,7 @@ APP_STREAM_MODULES = [
                 "version": "8050020220411114323",
             },
             {
+                "application_stream_name": "container-tools 3.0",
                 "arch": "x86_64",
                 "context": "489fc8e9",
                 "description": "Stable versions of podman 3.0, buildah 1.19, "
@@ -8186,6 +8250,7 @@ APP_STREAM_MODULES = [
                 "version": "8070020230131134905",
             },
             {
+                "application_stream_name": "container-tools 4.0",
                 "arch": "x86_64",
                 "context": "d7b6f4b7",
                 "description": "Stable versions of podman 4.0, buildah 1.24, "
@@ -8228,6 +8293,7 @@ APP_STREAM_MODULES = [
                 "version": "8090020240413110917",
             },
             {
+                "application_stream_name": "container-tools rhel8",
                 "arch": "x86_64",
                 "context": "20125149",
                 "description": "Contains SELinux policies, binaries and other "
@@ -8292,6 +8358,7 @@ APP_STREAM_MODULES = [
                 "version": "820190131191847",
             },
             {
+                "application_stream_name": "FreeRADIUS 3.0",
                 "arch": "x86_64",
                 "context": "69ef70f8",
                 "description": "The FreeRADIUS Server Project is a high "
@@ -8330,6 +8397,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "virt rhel",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "A virtualization module",
@@ -8356,6 +8424,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Maven 3.5",
                 "arch": "x86_64",
                 "context": "5ea3b708",
                 "description": "Maven is a software project management and "
@@ -8372,6 +8441,7 @@ APP_STREAM_MODULES = [
                 "version": "820181213140354",
             },
             {
+                "application_stream_name": "Maven 3.6",
                 "arch": "x86_64",
                 "context": "9d367344",
                 "description": "Maven is a software project management and "
@@ -8388,6 +8458,7 @@ APP_STREAM_MODULES = [
                 "version": "8080020230202141236",
             },
             {
+                "application_stream_name": "Maven 3.8",
                 "arch": "x86_64",
                 "context": "9b3be2c4",
                 "description": "Maven is a software project management and "
@@ -8411,6 +8482,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "pki-deps",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "A module for PKI dependencies.",
@@ -8451,6 +8523,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 8,
         "streams": [
             {
+                "application_stream_name": "Squid 4",
                 "arch": "x86_64",
                 "context": "9edba152",
                 "description": "an initial version of the squid caching proxy module",
@@ -8517,6 +8590,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "NGINX 1.22",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "nginx 1.22 webserver module",
@@ -8540,6 +8614,7 @@ APP_STREAM_MODULES = [
                 "version": "9050020240717000135",
             },
             {
+                "application_stream_name": "NGINX 1.24",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "nginx 1.24 webserver module",
@@ -8570,6 +8645,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "Node.js 18",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "Node.js is a platform built on Chrome's "
@@ -8593,6 +8669,7 @@ APP_STREAM_MODULES = [
                 "version": "9040020240807131341",
             },
             {
+                "application_stream_name": "Node.js 20",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "Node.js is a platform built on Chrome's "
@@ -8616,6 +8693,7 @@ APP_STREAM_MODULES = [
                 "version": "9050020240923133857",
             },
             {
+                "application_stream_name": "Node.js 22",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "Node.js is a platform built on Chrome's "
@@ -8646,6 +8724,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "PHP 8.1",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "php 8.1 module",
@@ -8677,6 +8756,7 @@ APP_STREAM_MODULES = [
                 "version": "9050020241112144108",
             },
             {
+                "application_stream_name": "PHP 8.2",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "php 8.2 module",
@@ -8715,6 +8795,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "PostgreSQL 15",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -8735,6 +8816,7 @@ APP_STREAM_MODULES = [
                 "version": "9050020241122141928",
             },
             {
+                "application_stream_name": "PostgreSQL 16",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "PostgreSQL is an advanced Object-Relational "
@@ -8762,6 +8844,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "Redis 7",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "redis 7 module",
@@ -8781,6 +8864,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "Ruby 3.1",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "Ruby is the interpreted scripting language for "
@@ -8797,6 +8881,7 @@ APP_STREAM_MODULES = [
                 "version": "9050020241127153348",
             },
             {
+                "application_stream_name": "Ruby 3.3",
                 "arch": "x86_64",
                 "context": "9",
                 "description": "Ruby is the interpreted scripting language for "
@@ -8820,6 +8905,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "MariaDB 10.11",
                 "arch": "x86_64",
                 "context": "rhel9",
                 "description": "MariaDB is a community developed branch of "
@@ -8850,6 +8936,7 @@ APP_STREAM_MODULES = [
         "rhel_major_version": 9,
         "streams": [
             {
+                "application_stream_name": "Maven 3.8",
                 "arch": "x86_64",
                 "context": "470dcefd",
                 "description": "Maven is a software project management and "

@@ -2,7 +2,7 @@ import logging
 import typing as t
 
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from enum import StrEnum
 
 from fastapi import APIRouter
@@ -136,6 +136,38 @@ class AppStream(BaseModel):
                                 self.start_date = stream["start_date"]
                                 self.end_date = stream["end_date"]
                                 break
+
+        return self
+    
+    @model_validator(mode='after')
+    def update_support_status(self):
+        """Validator for setting status.
+        Expected types/values of start_date and end_date are:
+            - str(Unknown)
+            - None
+            - date(YYYY-MM-DD)
+        """
+        today = date.today()
+
+        if self.start_date != "Unknown" and self.start_date is not None:
+            if self.start_date > today:
+                self.support_status = SupportStatus.upcoming
+                return self
+
+        if self.end_date != "Unknown" and self.end_date is not None:
+            if self.end_date < today:
+                self.support_status = SupportStatus.retired
+                return self
+            
+            six_months_date = self.end_date - timedelta(days=180)
+            if six_months_date <= today:
+                self.support_status = SupportStatus.six_months
+            else:
+                self.support_status = SupportStatus.supported
+        
+        else:
+            self.support_status = SupportStatus.unknown
+            return self
 
         return self
 

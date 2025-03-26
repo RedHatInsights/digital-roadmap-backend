@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:
-    build.appstudio.openshift.io/repo: https://gitlab.cee.redhat.com/rhel-lightspeed/digital-roadmap/digital-roadmap-backend-mirror/-/tree/{{revision}}
+    build.appstudio.openshift.io/repo: https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/backend/-/tree/{{revision}}
     build.appstudio.redhat.com/commit_sha: '{{ revision }}'
     build.appstudio.redhat.com/target_branch: '{{ target_branch }}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
@@ -11,12 +11,12 @@ metadata:
   creationTimestamp: null
 
   labels:
-    appstudio.openshift.io/application: digital-roadmap-develop
-    appstudio.openshift.io/component: digital-roadmap-develop
+    appstudio.openshift.io/application: roadmap
+    appstudio.openshift.io/component: roadmap
     pipelines.appstudio.openshift.io/type: build
 
   namespace: rhel-lightspeed-tenant
-  name: digital-roadmap-pr
+  name: roadmap-pr
 
 spec:
   params:
@@ -27,7 +27,7 @@ spec:
       value: '{{ revision }}'
 
     - name: output-image
-      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap:pr-{{ pull_request_number }}-latest
+      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/roadmap:pr-{{ pull_request_number }}-latest
 
     - name: dockerfile
       value: /Containerfile

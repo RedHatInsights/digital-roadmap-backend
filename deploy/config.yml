@@ -95,7 +95,7 @@ parameters:
 
   - name: IMAGE
     description: Image name
-    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/digital-roadmap
+    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/roadmap
 
   - name: ENV_NAME
     required: true

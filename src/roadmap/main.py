@@ -1,3 +1,4 @@
+import logging
 import os
 
 import sentry_sdk
@@ -9,6 +10,8 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
 import roadmap.v1
+
+from roadmap.common import HealtCheckFilter
 
 
 sentry_sdk.init(
@@ -27,6 +30,9 @@ sentry_sdk.init(
 )
 
 print("\n".join(f"{key}={value}" for key, value in sorted(os.environ.items())), flush=True)
+
+logging.getLogger("uvicorn.access").addFilter(HealtCheckFilter())
+
 
 # Initialize FastAPI app
 app = FastAPI()

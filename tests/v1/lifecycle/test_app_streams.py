@@ -153,3 +153,80 @@ def test_app_stream_package_single_digit():
     )
 
     assert package.os_minor is None
+
+
+@pytest.mark.parametrize(
+    ("current_date", "app_stream_start", "app_stream_end", "status"),
+    (
+        (
+            # OK situation, stream supported
+            date(2025, 3, 27),
+            date(2020, 1, 1),
+            date(2027, 12, 31),
+            SupportStatus.supported,
+        ),
+        # Support ends within 6 months (180 days)
+        (
+            date(2027, 6, 15),
+            date(2020, 1, 1),
+            date(2027, 12, 1),
+            SupportStatus.six_months,
+        ),
+        # Stream retired
+        (
+            date(2028, 1, 1),
+            date(2020, 1, 1),
+            date(2027, 12, 31),
+            SupportStatus.retired,
+        ),
+        # Stream not yet started
+        (
+            date(2019, 12, 31),
+            date(2020, 1, 1),
+            date(2027, 12, 31),
+            SupportStatus.upcoming,
+        ),
+        # Stream has no end date
+        (
+            date(2025, 3, 27),
+            date(2020, 1, 1),
+            None,
+            SupportStatus.unknown,
+        ),
+        # Stream has no start date
+        (
+            date(2025, 3, 27),
+            None,
+            date(2027, 12, 31),
+            SupportStatus.supported,
+        ),
+        # Stream has no start or end date
+        (
+            date(2025, 3, 27),
+            None,
+            None,
+            SupportStatus.unknown,
+        ),
+    ),
+)
+def test_calculate_support_status_appstream(mocker, current_date, app_stream_start, app_stream_end, status):
+    # cannot mock the datetime.date.today directly as it's written in C
+    # https://docs.python.org/3/library/unittest.mock-examples.html#partial-mocking
+    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date")
+    mock_date.today.return_value = current_date
+    mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
+
+    app_stream = AppStream(
+        name="pkg-name",
+        stream="1",
+        os_major=1,
+        os_minor=1,
+        os_lifecycle="mainline",
+        count=4,
+        impl="package",
+        rolling=False,
+        start_date=app_stream_start,
+        end_date=app_stream_end,
+    )
+
+    assert app_stream.support_status == status

@@ -2,7 +2,8 @@ import logging
 import typing as t
 
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
+from datetime import timedelta
 from enum import StrEnum
 
 from fastapi import APIRouter
@@ -80,7 +81,7 @@ class AppStream(BaseModel):
     end_date: Date | None = None
     count: int
     rolling: bool = False
-    support_status: SupportStatus
+    support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
 
     # Module validators are run in the order they are defined.
@@ -138,8 +139,8 @@ class AppStream(BaseModel):
                                 break
 
         return self
-    
-    @model_validator(mode='after')
+
+    @model_validator(mode="after")
     def update_support_status(self):
         """Validator for setting status.
         Expected types/values of start_date and end_date are:
@@ -158,18 +159,16 @@ class AppStream(BaseModel):
             if self.end_date < today:
                 self.support_status = SupportStatus.retired
                 return self
-            
+
             six_months_date = self.end_date - timedelta(days=180)
             if six_months_date <= today:
                 self.support_status = SupportStatus.six_months
             else:
                 self.support_status = SupportStatus.supported
-        
+
         else:
             self.support_status = SupportStatus.unknown
             return self
-
-        return self
 
 
 class AppStreamsResponse(BaseModel):

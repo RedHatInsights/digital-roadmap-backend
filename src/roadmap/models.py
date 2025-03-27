@@ -1,13 +1,13 @@
 import typing as t
 
-from datetime import date, timedelta
+from datetime import date
+from datetime import timedelta
 from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
-
 
 
 class Meta(BaseModel):
@@ -46,12 +46,11 @@ class System(BaseModel):
     minor: int | None = None
     release_date: date | t.Literal["Unknown"] | None
     retirement_date: date | t.Literal["Unknown"] | None
-    support_status: SupportStatus = SupportStatus.supported
+    support_status: SupportStatus = SupportStatus.unknown
     count: int = 0
     lifecycle_type: LifecycleType
 
-
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def update_support_status(self):
         """Validator for setting support status.
         Expected types/values of start_date and end_date are:
@@ -70,13 +69,13 @@ class System(BaseModel):
             if self.retirement_date < today:
                 self.support_status = SupportStatus.retired
                 return self
-            
+
             six_months_date = self.retirement_date - timedelta(days=180)
             if six_months_date <= today:
                 self.support_status = SupportStatus.six_months
             else:
                 self.support_status = SupportStatus.supported
-        
+
         else:
             self.support_status = SupportStatus.unknown
             return self

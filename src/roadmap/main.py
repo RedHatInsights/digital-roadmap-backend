@@ -1,3 +1,5 @@
+import os
+
 import sentry_sdk
 
 from fastapi import APIRouter
@@ -24,6 +26,7 @@ sentry_sdk.init(
     ],
 )
 
+print("\n".join(f"{key}={value}" for key, value in sorted(os.environ.items())), flush=True)
 
 # Initialize FastAPI app
 app = FastAPI()

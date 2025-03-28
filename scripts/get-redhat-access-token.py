@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import json
 import os
 import sys
@@ -10,6 +11,17 @@ from urllib.error import HTTPError
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--env",
+        "-e",
+        type=str,
+        default="prod",
+        choices=["stage", "prod"],
+        help="Environment to request a token from",
+    )
+    args = parser.parse_args()
+
     offline_token = os.getenv("RH_OFFLINE_TOKEN")
     if offline_token is None:
         sys.exit(
@@ -19,7 +31,8 @@ def main():
         )
 
     # Get a new auth token that expires in 15 minutes
-    url = "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
+    stage = "stage." if args.env == "stage" else ""
+    url = f"https://sso.{stage}redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
     values = {
         "grant_type": "refresh_token",
         "client_id": "rhsm-api",

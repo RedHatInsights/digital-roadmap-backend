@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
 from roadmap.models import System
 
@@ -63,15 +64,14 @@ from roadmap.models import System
 def test_calculate_support_status_system(mocker, current_date, system_start, system_end, status):
     # cannot mock the datetime.date.today directly as it's written in C
     # https://docs.python.org/3/library/unittest.mock-examples.html#partial-mocking
-    mock_date = mocker.patch("roadmap.models.date")
+    mock_date = mocker.patch("roadmap.models.date", wraps=date)
     mock_date.today.return_value = current_date
-    mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
 
     app_stream = System(
-        name="pkg-name",
+        name="system-name",
         major=9,
         minor=6,
-        lifecycle_type="mainline",
+        lifecycle_type=LifecycleType.mainline,
         count=4,
         release_date=system_start,
         retirement_date=system_end,

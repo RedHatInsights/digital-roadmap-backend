@@ -3,7 +3,6 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
-from datetime import timedelta
 from enum import StrEnum
 
 from fastapi import APIRouter
@@ -23,6 +22,7 @@ from roadmap.common import sort_null_version
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
@@ -142,33 +142,13 @@ class AppStream(BaseModel):
 
     @model_validator(mode="after")
     def update_support_status(self):
-        """Validator for setting status.
-        Expected types/values of start_date and end_date are:
-            - str(Unknown)
-            - None
-            - date(YYYY-MM-DD)
-        """
+        """Validator for setting status."""
         today = date.today()
+        self.support_status = _calculate_support_status(
+            start_date=self.start_date, end_date=self.end_date, current_date=today
+        )
 
-        if self.start_date != "Unknown" and self.start_date is not None:
-            if self.start_date > today:
-                self.support_status = SupportStatus.upcoming
-                return self
-
-        if self.end_date != "Unknown" and self.end_date is not None:
-            if self.end_date < today:
-                self.support_status = SupportStatus.retired
-                return self
-
-            six_months_date = self.end_date - timedelta(days=180)
-            if six_months_date <= today:
-                self.support_status = SupportStatus.six_months
-            else:
-                self.support_status = SupportStatus.supported
-
-        else:
-            self.support_status = SupportStatus.unknown
-            return self
+        return self
 
 
 class AppStreamsResponse(BaseModel):

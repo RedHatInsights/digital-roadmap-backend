@@ -212,18 +212,17 @@ def test_app_stream_package_single_digit():
 def test_calculate_support_status_appstream(mocker, current_date, app_stream_start, app_stream_end, status):
     # cannot mock the datetime.date.today directly as it's written in C
     # https://docs.python.org/3/library/unittest.mock-examples.html#partial-mocking
-    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date")
+    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date", wraps=date)
     mock_date.today.return_value = current_date
-    mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
 
     app_stream = AppStream(
         name="pkg-name",
         stream="1",
         os_major=1,
         os_minor=1,
-        os_lifecycle="mainline",
+        os_lifecycle=LifecycleType.mainline,
         count=4,
-        impl="package",
+        impl=AppStreamImplementation.package,
         rolling=False,
         start_date=app_stream_start,
         end_date=app_stream_end,

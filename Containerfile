@@ -26,9 +26,14 @@ RUN microdnf install -y --nodocs \
     && rm -rf /var/cache/yum/*
 
 COPY "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
+COPY "requirements/requirements-runner-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-runner.txt
 RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
-    && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt
+    && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt \
+    # Inventory sync venv setup
+    && "python${PYTHON_VERSION}" -m venv /opt/venvs/runner \
+    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
+    && /opt/venvs/runner/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-runner.txt
 
 
 FROM registry.access.redhat.com/ubi9-minimal:latest AS final
@@ -40,7 +45,7 @@ ENV PYTHON_VERSION="3.12"
 ENV PYTHONPATH=/srv/roady/
 
 COPY LICENSE /licenses/Apache-2.0.txt
-COPY --from=builder "${VENV}" "${VENV}"
+COPY --from=builder /opt/venvs/ /opt/venvs/
 
 RUN microdnf install -y --nodocs \
     libpq \
@@ -50,6 +55,7 @@ RUN microdnf install -y --nodocs \
 RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
 COPY /src/roadmap/ /srv/roady/roadmap/
+COPY /scripts/runner.py /usr/local/bin/runner.py
 
 USER roady
 WORKDIR /srv/roady

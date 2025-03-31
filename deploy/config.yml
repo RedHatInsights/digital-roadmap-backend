@@ -1,16 +1,19 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: "${APP_NAME}"
+  name: ${APP_NAME}
 
 objects:
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: ClowdApp
     metadata:
-      name: "${APP_NAME}"
+      name: ${APP_NAME}
 
     spec:
       envName: ${ENV_NAME}
+
+      dependencies:
+        - rbac
 
       deployments:
         - name: roadmap-api
@@ -21,16 +24,16 @@ objects:
           webServices:
             public:
               enabled: true
-              apiPath: "${APP_NAME}"
+              apiPath: ${APP_NAME}
 
           podSpec:
             image: ${IMAGE}:${IMAGE_TAG}
             env:
               - name: APP_NAME
-                value: "${APP_NAME}"
+                value: ${APP_NAME}
 
               - name: ROADMAP_HOST_INVENTORY_URL
-                value: "${ROADMAP_HOST_INVENTORY_URL}"
+                value: ${ROADMAP_HOST_INVENTORY_URL}
 
               - name: ROADMAP_DB_HOST
                 valueFrom:
@@ -93,6 +96,28 @@ objects:
               periodSeconds: 10
               failureThreshold: 6
 
+      jobs:
+        - name: inventory-sync
+          suspend: false
+          activeDeadlineSeconds: 6000
+          successfulJobHistoryLimit: 1
+          podSpec:
+            image: busybox
+            args:
+              - /bin/sh
+              - -c
+              - echo "CJI works"
+
+  - apiVersion: cloud.redhat.com/v1alpha1
+    kind: ClowdJobInvocation
+    metadata:
+      name: ???
+
+    spec:
+      appName: ${APP_NAME}
+      jobs:
+        - inventory-sync
+
 parameters:
   - name: IMAGE_TAG
     description: Image tag
@@ -137,3 +162,4 @@ parameters:
     description: Environment name for Setry
 
   - name: ROADMAP_HOST_INVENTORY_URL
+

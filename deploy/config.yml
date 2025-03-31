@@ -32,6 +32,9 @@ objects:
               - name: ROADMAP_HOST_INVENTORY_URL
                 value: "${ROADMAP_HOST_INVENTORY_URL}"
 
+              - name: ROADMAP_RBAC_URL
+                value: "${ROADMAP_RBAC_URL}"
+
               - name: ROADMAP_DB_HOST
                 valueFrom:
                   secretKeyRef:
@@ -128,3 +131,5 @@ parameters:
     description: Environment name for Setry
 
   - name: ROADMAP_HOST_INVENTORY_URL
+
+  - name: ROADMAP_RBAC_URL

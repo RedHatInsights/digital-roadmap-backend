@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# https://github.com/chambridge/replication_subscriber/blob/bea19ba28f7fb06b5401f1e7262456ec9bec40a7/replication_subscriber/runner.py
+# https://github.com/chambridge/replication_subscriber/blob/d0411b257c62b9bf98f0d7757a3b1150add423d7/replication_subscriber/runner.py
 import logging
 import os
 import sys
@@ -213,7 +213,9 @@ def check_or_create_hosts_tables(logger, session):
             reporter character varying(255) NOT NULL,
             per_reporter_staleness jsonb DEFAULT '{}'::jsonb NOT NULL,
             org_id character varying(36) NOT NULL,
-            groups jsonb NOT NULL
+            groups jsonb NOT NULL,
+            tags_alt jsonb,
+            last_check_in timestamp with time zone
         );"""
         session.execute(sa_text(hosts_table_create))
         session.commit()

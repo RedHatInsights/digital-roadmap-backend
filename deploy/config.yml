@@ -103,7 +103,7 @@ objects:
             image: ${IMAGE}:${IMAGE_TAG}
             env:
               - name: LOG_LEVEL
-                value: INFO
+                value: ${LOG_LEVEL}
 
               - name: DB_SSL_MODE
                 value: ${DB_SSL_MODE}
@@ -261,3 +261,6 @@ parameters:
 
   - name: INVENTORY_SYNC_COUNTER
     value: '1'
+
+  - name: LOG_LEVEL
+    value: DEBUG

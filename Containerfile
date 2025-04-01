@@ -26,14 +26,14 @@ RUN microdnf install -y --nodocs \
     && rm -rf /var/cache/yum/*
 
 COPY "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
-COPY "requirements/requirements-runner-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-runner.txt
+COPY "requirements/requirements-replication-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-replication.txt
 RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
     && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt \
     # Inventory sync venv setup
-    && "python${PYTHON_VERSION}" -m venv /opt/venvs/runner \
+    && "python${PYTHON_VERSION}" -m venv /opt/venvs/replication \
     && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
-    && /opt/venvs/runner/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-runner.txt
+    && /opt/venvs/replication/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-replication.txt
 
 
 FROM registry.access.redhat.com/ubi9-minimal:latest AS final
@@ -55,7 +55,7 @@ RUN microdnf install -y --nodocs \
 RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
 COPY /src/roadmap/ /srv/roady/roadmap/
-COPY /scripts/runner.py /usr/local/bin/runner.py
+COPY /scripts/replication.py /usr/local/bin/replication.py
 
 USER roady
 WORKDIR /srv/roady

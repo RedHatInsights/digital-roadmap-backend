@@ -13,6 +13,7 @@ objects:
       envName: ${ENV_NAME}
 
       dependencies:
+        - host-inventory
         - rbac
 
       deployments:

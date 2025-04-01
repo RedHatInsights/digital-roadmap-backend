@@ -16,7 +16,7 @@ objects:
         - rbac
 
       deployments:
-        - name: roadmap-api
+        - name: roadmap-api  # Would changing this to just API break 3scale?
           minReplicas: ${{MIN_REPLICAS}}
           deploymentStrategy:
             privateStrategy: RollingUpdate
@@ -98,20 +98,95 @@ objects:
 
       jobs:
         - name: inventory-sync
-          suspend: false
-          activeDeadlineSeconds: 6000
-          successfulJobHistoryLimit: 1
+          restartPolicy: Never
           podSpec:
-            image: busybox
+            image: ${IMAGE}:${IMAGE_TAG}
+            env:
+              - name: LOG_LEVEL
+                value: INFO
+
+              - name: DB_SSL_MODE
+                value: ${DB_SSL_MODE}
+
+              - name: CLOWDER_ENABLED
+                value: "true"
+
+              - name: HBI_PUBLICATION
+                value: hbi_hosts_pub
+
+              - name: HBI_SUBSCRIPTION
+                value: ${APP_NAME}_hosts_sub
+
+              - name: ALTER_SUBSCRIPTION
+                value: ${ALTER_SUBSCRIPTION}
+
+              - name: DROP_SUBSCRIPTION
+                value: ${DROP_SUBSCRIPTION}
+
+              - name: DB_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: ${ROADMAP_DB_SECRET_NAME}
+                    key: db.name
+
             args:
-              - /bin/sh
-              - -c
-              - echo "CJI works"
+              - /opt/venvs/replication/bin/python
+              - /usr/local/bin/replication.py
+
+            resources:
+              limits:
+                cpu: ${CPU_LIMIT_INVENTORY_SYNC}
+                memory: ${MEMORY_LIMIT_INVENTORY_SYNC}
+
+              requests:
+                cpu: ${CPU_REQUEST_INVENTORY_SYNC}
+                memory: ${MEMORY_REQUEST_INVENTORY_SYNC}
+
+            database:
+              shareDbAppName: ${DB_NAME}
+
+            volumeMounts:
+              - name: host-inventory-db
+                mountPath: /etc/db/hbi
+                readOnly: true
+
+              - name: rds-client-ca
+                mountPath: /etc/db/rdsclientca
+                readOnly: true
+
+            volumes:
+              - name: host-inventory-db
+                secret:
+                  secretName: host-inventory-db
+                  optional: true
+                  items:
+                    - key: db.host
+                      path: db_host
+
+                    - key: db.name
+                      path: db_name
+
+                    - key: db.password
+                      path: db_password
+
+                    - key: db.port
+                      path: db_port
+
+                    - key: db.user
+                      path: db_user
+
+              - name: rds-client-ca
+                secret:
+                  secretName: rds-client-ca
+                  optional: true
+                  items:
+                    - key: rds-cacert
+                      path: rds_cacert
 
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: ClowdJobInvocation
     metadata:
-      name: ???
+      name: inventory-sync-${INVENTORY_SYNC_COUNTER}
 
     spec:
       appName: ${APP_NAME}
@@ -136,8 +211,8 @@ parameters:
     value: "3"
 
   - name: APP_NAME
-    required: true
     value: roadmap
+    required: true
 
   - name: WEB_PORT
     description: Port this is running on
@@ -163,3 +238,26 @@ parameters:
 
   - name: ROADMAP_HOST_INVENTORY_URL
 
+  - name: CPU_REQUEST_INVENTORY_SYNC
+    value: 250m
+
+  - name: CPU_LIMIT_INVENTORY_SYNC
+    value: 500m
+
+  - name: MEMORY_REQUEST_INVENTORY_SYNC
+    value: 256Mi
+
+  - name: MEMORY_LIMIT_INVENTORY_SYNC
+    value: 512Mi
+
+  - name: DB_SSL_MODE
+    value: prefer
+
+  - name: ALTER_SUBSCRIPTION
+    value: ''
+
+  - name: DROP_SUBSCRIPTION
+    value: ''
+
+  - name: INVENTORY_SYNC_COUNTER
+    value: '1'

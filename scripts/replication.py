@@ -29,6 +29,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
+LOGGER = logging.getLogger(LOGGER_NAME)
+LOGGER.setLevel((os.getenv("LOG_LEVEL", logging.INFO)))
+
 
 class ShutdownHandler:
     def __init__(self):
@@ -58,6 +61,7 @@ def register_shutdown(function, message):
 def _init_config():
     db_uri = None
     cfg = app_common_python.LoadedConfig
+    logger.debug(cfg.__dict__)
     if cfg and cfg.database:
         db_user = cfg.database.username
         db_password = cfg.database.password
@@ -322,6 +326,9 @@ def run(logger, session, engine):
 
 def main(logger):
     db_uri = _init_config()
+    if db_uri is None:
+        sys.exit("Missing database connection information.")
+
     Session, engine = _init_db(db_uri)
     session = Session()
     register_shutdown(session.get_bind().dispose, "Closing database")

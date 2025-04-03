@@ -1,4 +1,5 @@
 import logging
+import os
 
 import sentry_sdk
 
@@ -13,20 +14,21 @@ import roadmap.v1
 from roadmap.common import HealtCheckFilter
 
 
-sentry_sdk.init(
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
-    integrations=[
-        FastApiIntegration(
-            failed_request_status_codes={403, 404, *range(500, 599)},
-            http_methods_to_capture=("GET",),
-        ),
-        StarletteIntegration(
-            failed_request_status_codes={403, 404, *range(500, 599)},
-            http_methods_to_capture=("GET",),
-        ),
-    ],
-)
+if os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        integrations=[
+            FastApiIntegration(
+                failed_request_status_codes={403, 404, *range(500, 599)},
+                http_methods_to_capture=("GET",),
+            ),
+            StarletteIntegration(
+                failed_request_status_codes={403, 404, *range(500, 599)},
+                http_methods_to_capture=("GET",),
+            ),
+        ],
+    )
 
 logging.getLogger("uvicorn.access").addFilter(HealtCheckFilter())
 

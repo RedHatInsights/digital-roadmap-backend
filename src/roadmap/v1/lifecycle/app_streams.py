@@ -17,7 +17,7 @@ from pydantic import model_validator
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
-from roadmap.common import sort_null_version
+from roadmap.common import sort_attrs
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
@@ -130,7 +130,7 @@ async def get_app_streams(
 
     return {
         "meta": {"total": len(result), "count": len(result)},
-        "data": result,
+        "data": sorted(result, key=sort_attrs("name")),
     }
 
 
@@ -141,7 +141,7 @@ async def get_major_version(
     result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
         "meta": {"total": len(result), "count": len(result)},
-        "data": result,
+        "data": sorted(result, key=sort_attrs("name")),
     }
 
 
@@ -152,7 +152,7 @@ async def get_app_stream_item_names(
     modules = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
         "meta": {"total": len(modules), "count": len(modules)},
-        "data": sorted(item.name for item in modules),
+        "data": sorted({item.name for item in modules}),
     }
 
 
@@ -162,7 +162,7 @@ async def get_app_stream_item(
     name: t.Annotated[str, Path(description="Module or package name")],
 ):
     if data := [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]:
-        if items := sorted(item for item in data if item.name == name):
+        if items := sorted((item for item in data if item.name == name), key=sort_attrs("name")):
             return {
                 "meta": {"total": len(items), "count": len(items)},
                 "data": items,
@@ -287,5 +287,5 @@ async def get_relevant_app_streams(  # noqa: C901
             "count": len(module_count),
             "total": sum(item.count for item in response),
         },
-        "data": sorted(response, key=sort_null_version("name", "os_major", "os_minor", "os_lifecycle")),
+        "data": sorted(response, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
     }

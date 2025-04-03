@@ -24,6 +24,8 @@ class AppStreamImplementation(StrEnum):
 
 
 class AppStreamEntity(BaseModel):
+    """An application stream module or package."""
+
     name: str
     application_stream_name: str
     stream: str
@@ -6602,7 +6604,6 @@ APP_STREAM_PACKAGES = {
     ),
 }
 
-
 APP_STREAM_MODULES = [
     AppStreamEntity(
         name="389-ds",
@@ -7765,3 +7766,5 @@ APP_STREAM_MODULES = [
         rolling=False,
     ),
 ]
+
+APP_STREAM_MODULES_PACKAGES = [*APP_STREAM_MODULES, *APP_STREAM_PACKAGES.values()]

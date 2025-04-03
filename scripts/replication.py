@@ -71,7 +71,7 @@ def _init_config():
         if cfg.database.rdsCa:
             db_ssl_cert = cfg.rds_ca()
         db_ssl_mode = os.getenv("DB_SSL_MODE", "")
-        db_uri = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        db_uri = f"postgresql:psycopg//{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         if db_ssl_mode == SSL_VERIFY_FULL:
             db_uri += f"?sslmode={db_ssl_mode}&sslrootcert={db_ssl_cert}"
     return db_uri

@@ -75,6 +75,7 @@ objects:
                   secretKeyRef:
                     name: sentry
                     key: dsn
+                    optional: true
 
             resources:
               limits:

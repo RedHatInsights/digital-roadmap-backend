@@ -34,7 +34,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
     for item in APP_STREAM_MODULES:
-        if (name, os_major) == (item.cdn_name, item.os_major):
+        if (name, os_major) == (item.name, item.os_major):
             if item.stream == stream:
                 return item.rolling
 
@@ -45,7 +45,7 @@ def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
 def get_module_os_major_versions(name: str) -> set[int]:
     matches = set()
     for item in APP_STREAM_MODULES:
-        if item.cdn_name == name:
+        if item.name == name:
             matches.add(item.os_major)
 
     return matches

@@ -19,7 +19,9 @@ from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import sort_null_version
 from roadmap.data import APP_STREAM_MODULES
+from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
+from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
@@ -117,18 +119,18 @@ router = APIRouter(
 @router.get("/", response_model=AppStreamsResponse)
 async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
+    kind: AppStreamImplementation | None = None,
 ):
+    result = APP_STREAM_MODULES_PACKAGES
     if name:
-        result = [module for module in APP_STREAM_MODULES if name.lower() in module["module_name"].lower()]
+        result = [item for item in result if name.lower() in item.name.lower()]
 
-        return {
-            "meta": {"total": len(result), "count": len(result)},
-            "data": result,
-        }
+    if kind:
+        result = [item for item in result if kind == item.impl]
 
     return {
-        "meta": {"total": len(APP_STREAM_MODULES), "count": len(APP_STREAM_MODULES)},
-        "data": [module for module in APP_STREAM_MODULES],
+        "meta": {"total": len(result), "count": len(result)},
+        "data": result,
     }
 
 
@@ -136,36 +138,39 @@ async def get_app_streams(
 async def get_major_version(
     major_version: RHELMajorVersion,
 ):
-    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
+    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
-        "meta": {"total": len(modules), "count": len(modules)},
-        "data": modules,
+        "meta": {"total": len(result), "count": len(result)},
+        "data": result,
     }
 
 
 @router.get("/{major_version}/names", response_model=AppStreamsNamesResponse)
-async def get_module_names(
+async def get_app_stream_item_names(
     major_version: RHELMajorVersion,
 ):
-    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
+    modules = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
         "meta": {"total": len(modules), "count": len(modules)},
-        "data": sorted(item["module_name"] for item in modules),
+        "data": sorted(item.name for item in modules),
     }
 
 
-async def get_module(
-    module_name: t.Annotated[str, Path(description="Module name")],
 @router.get("/{major_version}/{name}", response_model=AppStreamsResponse)
+async def get_app_stream_item(
     major_version: RHELMajorVersion,
+    name: t.Annotated[str, Path(description="Module or package name")],
 ):
-    if data := [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]:
-        if modules := sorted(item for item in data if item.get("module_name") == module_name):
-            return {"meta": {"total": len(modules), "count": len(modules)}, "data": modules}
+    if data := [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]:
+        if items := sorted(item for item in data if item.name == name):
+            return {
+                "meta": {"total": len(items), "count": len(items)},
+                "data": items,
+            }
 
     raise HTTPException(
         status_code=404,
-        detail=f"No modules found with name '{module_name}'",
+        detail=f"No modules or packages found with name '{name}'",
     )
 
 

@@ -30,6 +30,7 @@ from roadmap.models import SupportStatus
 logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
+RHELMajorVersion = t.Annotated[int, Path(description="Major RHEL version", ge=8, le=10)]
 
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
@@ -129,7 +130,7 @@ async def get_app_streams(
 
 @router.get("/{major_version}", response_model=ModulesResponse)
 async def get_major_version(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
+    major_version: RHELMajorVersion,
 ):
     modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
     return {
@@ -140,7 +141,7 @@ async def get_major_version(
 
 @router.get("/{major_version}/names", response_model=AppStreamsNamesResponse)
 async def get_module_names(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
+    major_version: RHELMajorVersion,
 ):
     modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
     return {
@@ -151,8 +152,8 @@ async def get_module_names(
 
 @router.get("/{major_version}/{module_name}", response_model=ModulesResponse)
 async def get_module(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
     module_name: t.Annotated[str, Path(description="Module name")],
+    major_version: RHELMajorVersion,
 ):
     if data := [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]:
         if modules := sorted(item for item in data if item.get("module_name") == module_name):

@@ -76,6 +76,9 @@ objects:
                     name: sentry
                     key: dsn
 
+              - name: SENTRY_ENVIRONMENT
+                value: ${ENV_NAME}
+
             resources:
               limits:
                 cpu: "${CPU_LIMIT_SERVICE}"
@@ -237,9 +240,6 @@ parameters:
 
   - name: ROADMAP_DB_SECRET_NAME
     value: roadmap-db
-
-  - name: SENTRY_ENVIRONMENT
-    description: Environment name for Setry
 
   - name: ROADMAP_HOST_INVENTORY_URL
 

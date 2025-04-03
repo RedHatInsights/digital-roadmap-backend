@@ -53,6 +53,8 @@ def get_module_os_major_versions(name: str) -> set[int]:
 
 
 class AppStreamCount(BaseModel):
+    """All these things must match in order for a module to be considered the same."""
+
     model_config = ConfigDict(frozen=True)
 
     name: str
@@ -64,7 +66,9 @@ class AppStreamCount(BaseModel):
     rolling: bool = False
 
 
-class AppStream(BaseModel):
+class RelevantAppStream(BaseModel):
+    """App stream module or package with calculated support status."""
+
     name: str
     os_major: int | None
     os_minor: int | None = None
@@ -88,9 +92,9 @@ class AppStream(BaseModel):
         return self
 
 
-class AppStreamsResponse(BaseModel):
+class RelevantAppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[AppStream]
+    data: list[RelevantAppStream]
 
 
 class AppStreamsNamesResponse(BaseModel):
@@ -98,9 +102,9 @@ class AppStreamsNamesResponse(BaseModel):
     data: list[str]
 
 
-class ModulesResponse(BaseModel):
+class AppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[dict]
+    data: list[AppStreamEntity]
 
 
 router = APIRouter(
@@ -110,7 +114,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ModulesResponse)
+@router.get("/", response_model=AppStreamsResponse)
 async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
 ):
@@ -128,7 +132,7 @@ async def get_app_streams(
     }
 
 
-@router.get("/{major_version}", response_model=ModulesResponse)
+@router.get("/{major_version}", response_model=AppStreamsResponse)
 async def get_major_version(
     major_version: RHELMajorVersion,
 ):
@@ -150,9 +154,9 @@ async def get_module_names(
     }
 
 
-@router.get("/{major_version}/{module_name}", response_model=ModulesResponse)
 async def get_module(
     module_name: t.Annotated[str, Path(description="Module name")],
+@router.get("/{major_version}/{name}", response_model=AppStreamsResponse)
     major_version: RHELMajorVersion,
 ):
     if data := [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]:
@@ -259,7 +263,7 @@ async def get_relevant_app_streams(  # noqa: C901
             continue
 
         try:
-            value_to_add = AppStream(
+            value_to_add = RelevantAppStream(
                 name=count_key.name,
                 stream=count_key.stream,
                 os_major=count_key.os_major,

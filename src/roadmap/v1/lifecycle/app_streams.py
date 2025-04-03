@@ -331,7 +331,6 @@ async def get_relevant_app_streams(  # noqa: C901
                 impl=count_key.impl,
                 count=count,
                 rolling=count_key.rolling,
-                support_status=SupportStatus.supported,  # TODO: Calculate support status
             )
             response.append(value_to_add)
         except Exception as exc:

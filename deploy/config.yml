@@ -242,6 +242,9 @@ parameters:
   - name: ROADMAP_DB_SECRET_NAME
     value: roadmap-db
 
+  - name: DB_NAME
+    required: true
+
   - name: ROADMAP_HOST_INVENTORY_URL
 
   - name: CPU_REQUEST_INVENTORY_SYNC

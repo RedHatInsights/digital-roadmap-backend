@@ -3,7 +3,6 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
-from enum import StrEnum
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -21,7 +20,7 @@ from roadmap.common import query_host_inventory
 from roadmap.common import sort_null_version
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
-from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -35,10 +34,9 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
     for item in APP_STREAM_MODULES:
-        if (name, os_major) == (item["module_name"], item["rhel_major_version"]):
-            for module_stream in item["streams"]:
-                if module_stream["stream"] == stream:
-                    return module_stream["rolling"]
+        if (name, os_major) == (item.cdn_name, item.os_major):
+            if item.stream == stream:
+                return item.rolling
 
     logger.debug(f"No match for rolling RHEL {os_major} {name} {stream}")
     return False
@@ -47,16 +45,10 @@ def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
 def get_module_os_major_versions(name: str) -> set[int]:
     matches = set()
     for item in APP_STREAM_MODULES:
-        if item["module_name"] == name:
-            matches.add(item["rhel_major_version"])
+        if item.cdn_name == name:
+            matches.add(item.os_major)
 
     return matches
-
-
-class AppStreamImplementation(StrEnum):
-    scl = "scl"
-    package = "package"
-    module = "dnf_module"
 
 
 class AppStreamCount(BaseModel):

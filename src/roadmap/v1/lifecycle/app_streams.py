@@ -76,62 +76,6 @@ class AppStream(BaseModel):
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
 
-    # Module validators are run in the order they are defined.
-    @model_validator(mode="after")
-    def set_dates(self):  # noqa: C901
-        """Set end_date based on rolling status, OS major/minor, and lifecycle"""
-
-        # If not rolling, use package/module start/end dates
-        # If it is rolling, use OS start/end dates
-        #   need to know the lifecycle type
-
-        if self.rolling:
-            os_key = f"{self.os_major}{'.' + str(self.os_minor) if self.os_minor is not None else ''}"
-
-            # Start date
-            if self.start_date is None:
-                try:
-                    self.start_date = OS_LIFECYCLE_DATES[os_key].start
-                except KeyError:
-                    logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                    self.start_date = "Unknown"
-
-            # End date
-            lifecycle_attr = "end"
-            if self.os_lifecycle and self.os_lifecycle is not LifecycleType.mainline:
-                lifecycle_attr += f"_{self.os_lifecycle.lower()}"
-
-            try:
-                self.end_date = getattr(OS_LIFECYCLE_DATES[os_key], lifecycle_attr)
-            except KeyError:
-                logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                self.end_date = "Unknown"
-
-        else:
-            if self.impl is AppStreamImplementation.package:
-                for app_stream_package in APP_STREAM_PACKAGES.values():
-                    if (app_stream_package.application_stream_name, app_stream_package.os_major) == (
-                        self.name,
-                        self.os_major,
-                    ):
-                        self.start_date = app_stream_package.start_date
-                        self.end_date = app_stream_package.end_date
-                        break
-
-            elif self.impl is AppStreamImplementation.module:
-                for app_stream_module in APP_STREAM_MODULES:
-                    if (app_stream_module["module_name"], app_stream_module["rhel_major_version"]) == (
-                        self.name,
-                        self.os_major,
-                    ):
-                        for stream in app_stream_module["streams"]:
-                            if stream["stream"] == self.stream:
-                                self.start_date = stream["start_date"]
-                                self.end_date = stream["end_date"]
-                                break
-
-        return self
-
     @model_validator(mode="after")
     def update_support_status(self):
         """Validator for setting status."""

@@ -1,3 +1,4 @@
 app-common-python
 psycopg[c]
+psycopg2
 sqlalchemy

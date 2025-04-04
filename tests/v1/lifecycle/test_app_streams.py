@@ -77,7 +77,7 @@ def test_get_relevant_app_stream(api_prefix, client, mocker, read_json_fixture):
 def test_get_relevant_app_stream_error(api_prefix, client, mocker, read_json_fixture):
     mock_response = read_json_fixture("inventory_response_packages.json.gz")
     mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
-    mocker.patch("roadmap.v1.lifecycle.app_streams.AppStreamEntity", side_effect=ValueError("Raised intentionally"))
+    mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams/")
     detail = result.json().get("detail", "")

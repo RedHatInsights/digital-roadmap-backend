@@ -181,7 +181,7 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("/", response_model=AppStreamsResponse)
+@relevant.get("/", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,

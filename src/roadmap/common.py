@@ -130,9 +130,10 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     return type
 
 
-def sort_null_version(attr, /, *attrs) -> t.Callable:
+def sort_attrs(attr, /, *attrs) -> t.Callable:
     def _getter(item):
         # If an attribute is None, use a 0 instead of None for the purpose of sorting
+        # FIXME: There is a bug if getatter() is an empty string "", a 0 is used instead of an empty string.
         return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
 
     return _getter

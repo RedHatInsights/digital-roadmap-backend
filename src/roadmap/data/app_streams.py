@@ -1,6 +1,7 @@
 import typing as t
 
 from datetime import date
+from enum import StrEnum
 
 from pydantic import AfterValidator
 from pydantic import AliasChoices
@@ -16,16 +17,25 @@ from roadmap.data.systems import OS_LIFECYCLE_DATES
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 
 
-class AppStreamPackage(BaseModel):
+class AppStreamImplementation(StrEnum):
+    scl = "scl"
+    package = "package"
+    module = "dnf_module"
+
+
+class AppStreamEntity(BaseModel):
+    """An application stream module or package."""
+
     name: str
     application_stream_name: str
-    start_date: Date | None = None
-    end_date: Date = Field(validation_alias=AliasChoices("end_date", "enddate"))
-    initial_product_version: str
-    os_major: int | None = Field(init=False, default=None)
-    os_minor: int | None = None
     stream: str
-    lifecycle: int
+    start_date: Date | None = None
+    end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"))
+    impl: AppStreamImplementation
+    initial_product_version: str | None = None
+    os_major: int | None = None
+    os_minor: int | None = None
+    lifecycle: int | None = None
     rolling: bool = False
 
     @field_validator("initial_product_version")
@@ -54,8818 +64,7707 @@ class AppStreamPackage(BaseModel):
 
     @model_validator(mode="after")
     def set_os_version(self):
-        self.os_major = int(self.initial_product_version.split(".")[0])
-        try:
-            self.os_minor = int(self.initial_product_version.split(".")[1])
-        except IndexError:
-            self.os_minor = None
+        # Change this to be
+        # if initial_product_version is not None
+        #   then set os_major/minor
+        # Don't override the values if they were set
+        if self.initial_product_version is not None:
+            self.os_major = int(self.initial_product_version.split(".")[0])
+            try:
+                self.os_minor = int(self.initial_product_version.split(".")[1])
+            except IndexError:
+                self.os_minor = None
 
         return self
 
 
 APP_STREAM_PACKAGES = {
-    "aardvark-dns": AppStreamPackage(
+    "aardvark-dns": AppStreamEntity(
         name="aardvark-dns",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.5.0",
         lifecycle=0,
         rolling=True,
     ),
-    "ansible-core": AppStreamPackage(
+    "ansible-core": AppStreamEntity(
         name="ansible-core",
         application_stream_name="Ansible Core",
         start_date=date(2022, 5, 18),
         end_date=date(2023, 11, 10),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.12.2",
         lifecycle=2,
         rolling=False,
     ),
-    "ansible-test": AppStreamPackage(
+    "ansible-test": AppStreamEntity(
         name="ansible-test",
         application_stream_name="Ansible Core",
         start_date=date(2022, 5, 18),
         end_date=date(2023, 11, 10),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.12.2",
         lifecycle=2,
         rolling=False,
     ),
-    "aspnetcore-runtime-6.0": AppStreamPackage(
+    "aspnetcore-runtime-6.0": AppStreamEntity(
         name="aspnetcore-runtime-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "aspnetcore-runtime-7.0": AppStreamPackage(
+    "aspnetcore-runtime-7.0": AppStreamEntity(
         name="aspnetcore-runtime-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "aspnetcore-runtime-8.0": AppStreamPackage(
+    "aspnetcore-runtime-8.0": AppStreamEntity(
         name="aspnetcore-runtime-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "aspnetcore-runtime-9.0": AppStreamPackage(
+    "aspnetcore-runtime-9.0": AppStreamEntity(
         name="aspnetcore-runtime-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "aspnetcore-runtime-dbg-8.0": AppStreamPackage(
+    "aspnetcore-runtime-dbg-8.0": AppStreamEntity(
         name="aspnetcore-runtime-dbg-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "aspnetcore-runtime-dbg-9.0": AppStreamPackage(
+    "aspnetcore-runtime-dbg-9.0": AppStreamEntity(
         name="aspnetcore-runtime-dbg-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "aspnetcore-targeting-pack-6.0": AppStreamPackage(
+    "aspnetcore-targeting-pack-6.0": AppStreamEntity(
         name="aspnetcore-targeting-pack-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "aspnetcore-targeting-pack-7.0": AppStreamPackage(
+    "aspnetcore-targeting-pack-7.0": AppStreamEntity(
         name="aspnetcore-targeting-pack-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "aspnetcore-targeting-pack-8.0": AppStreamPackage(
+    "aspnetcore-targeting-pack-8.0": AppStreamEntity(
         name="aspnetcore-targeting-pack-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "aspnetcore-targeting-pack-9.0": AppStreamPackage(
+    "aspnetcore-targeting-pack-9.0": AppStreamEntity(
         name="aspnetcore-targeting-pack-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "authd": AppStreamPackage(
+    "authd": AppStreamEntity(
         name="authd",
         application_stream_name="authd 1.4.4",
         start_date=date(2019, 5, 7),
         end_date=date(2021, 5, 31),
         initial_product_version="8.0",
+        impl=AppStreamImplementation.package,
         stream="1.4.4",
         lifecycle=2,
         rolling=False,
     ),
-    "autoconf-latest": AppStreamPackage(
+    "autoconf-latest": AppStreamEntity(
         name="autoconf-latest",
         application_stream_name="GNU Autoconf (Latest Version)",
         start_date=date(2024, 4, 30),
         end_date=date(1111, 11, 11),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.71",
         lifecycle=0,
         rolling=True,
     ),
-    "autoconf271": AppStreamPackage(
+    "autoconf271": AppStreamEntity(
         name="autoconf271",
         application_stream_name="GNU Autoconf (Latest Version)",
         start_date=date(2024, 4, 30),
         end_date=date(1111, 11, 11),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.71",
         lifecycle=0,
         rolling=True,
     ),
-    "bind9.18": AppStreamPackage(
+    "bind9.18": AppStreamEntity(
         name="bind9.18",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-chroot": AppStreamPackage(
+    "bind9.18-chroot": AppStreamEntity(
         name="bind9.18-chroot",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-devel": AppStreamPackage(
+    "bind9.18-devel": AppStreamEntity(
         name="bind9.18-devel",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-dnssec-utils": AppStreamPackage(
+    "bind9.18-dnssec-utils": AppStreamEntity(
         name="bind9.18-dnssec-utils",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-doc": AppStreamPackage(
+    "bind9.18-doc": AppStreamEntity(
         name="bind9.18-doc",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-libs": AppStreamPackage(
+    "bind9.18-libs": AppStreamEntity(
         name="bind9.18-libs",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bind9.18-utils": AppStreamPackage(
+    "bind9.18-utils": AppStreamEntity(
         name="bind9.18-utils",
         application_stream_name="BIND 9.18",
         start_date=date(2024, 11, 12),
         end_date=date(2027, 5, 31),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.18.29",
         lifecycle=3,
         rolling=False,
     ),
-    "bubblewrap": AppStreamPackage(
+    "bubblewrap": AppStreamEntity(
         name="bubblewrap",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="0.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "buildah": AppStreamPackage(
+    "buildah": AppStreamEntity(
         name="buildah",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.29.1",
         lifecycle=0,
         rolling=True,
     ),
-    "buildah-tests": AppStreamPackage(
+    "buildah-tests": AppStreamEntity(
         name="buildah-tests",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.29.1",
         lifecycle=0,
         rolling=True,
     ),
-    "cargo": AppStreamPackage(
+    "cargo": AppStreamEntity(
         name="cargo",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "cargo-doc": AppStreamPackage(
+    "cargo-doc": AppStreamEntity(
         name="cargo-doc",
         application_stream_name="Rust",
         start_date=date(2022, 11, 15),
         end_date=date(1111, 11, 11),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="1.62.1",
         lifecycle=0,
         rolling=True,
     ),
-    "clang": AppStreamPackage(
+    "clang": AppStreamEntity(
         name="clang",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clang-analyzer": AppStreamPackage(
+    "clang-analyzer": AppStreamEntity(
         name="clang-analyzer",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clang-devel": AppStreamPackage(
+    "clang-devel": AppStreamEntity(
         name="clang-devel",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clang-libs": AppStreamPackage(
+    "clang-libs": AppStreamEntity(
         name="clang-libs",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clang-resource-filesystem": AppStreamPackage(
+    "clang-resource-filesystem": AppStreamEntity(
         name="clang-resource-filesystem",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clang-tools-extra": AppStreamPackage(
+    "clang-tools-extra": AppStreamEntity(
         name="clang-tools-extra",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "clippy": AppStreamPackage(
+    "clippy": AppStreamEntity(
         name="clippy",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "cmake": AppStreamPackage(
+    "cmake": AppStreamEntity(
         name="cmake",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.20.2",
         lifecycle=0,
         rolling=True,
     ),
-    "cmake-data": AppStreamPackage(
+    "cmake-data": AppStreamEntity(
         name="cmake-data",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.20.2",
         lifecycle=0,
         rolling=True,
     ),
-    "cmake-filesystem": AppStreamPackage(
+    "cmake-filesystem": AppStreamEntity(
         name="cmake-filesystem",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.20.2",
         lifecycle=0,
         rolling=True,
     ),
-    "cmake-gui": AppStreamPackage(
+    "cmake-gui": AppStreamEntity(
         name="cmake-gui",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.20.2",
         lifecycle=0,
         rolling=True,
     ),
-    "cmake-rpm-macros": AppStreamPackage(
+    "cmake-rpm-macros": AppStreamEntity(
         name="cmake-rpm-macros",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.20.2",
         lifecycle=0,
         rolling=True,
     ),
-    "compiler-rt": AppStreamPackage(
+    "compiler-rt": AppStreamEntity(
         name="compiler-rt",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "conmon": AppStreamPackage(
+    "conmon": AppStreamEntity(
         name="conmon",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.1.7",
         lifecycle=0,
         rolling=True,
     ),
-    "container-selinux": AppStreamPackage(
+    "container-selinux": AppStreamEntity(
         name="container-selinux",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.205.0",
         lifecycle=0,
         rolling=True,
     ),
-    "containernetworking-plugins": AppStreamPackage(
+    "containernetworking-plugins": AppStreamEntity(
         name="containernetworking-plugins",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "containers-common": AppStreamPackage(
+    "containers-common": AppStreamEntity(
         name="containers-common",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1",
         lifecycle=0,
         rolling=True,
     ),
-    "crun": AppStreamPackage(
+    "crun": AppStreamEntity(
         name="crun",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.8.1",
         lifecycle=0,
         rolling=True,
     ),
-    "delve": AppStreamPackage(
+    "delve": AppStreamEntity(
         name="delve",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.9.1",
         lifecycle=0,
         rolling=True,
     ),
-    "dotnet": AppStreamPackage(
+    "dotnet": AppStreamEntity(
         name="dotnet",
         application_stream_name=".NET 2.1",
         start_date=date(2019, 5, 7),
         end_date=date(2021, 8, 31),
         initial_product_version="8.0",
+        impl=AppStreamImplementation.package,
         stream="2.1",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-apphost-pack-6.0": AppStreamPackage(
+    "dotnet-apphost-pack-6.0": AppStreamEntity(
         name="dotnet-apphost-pack-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-apphost-pack-7.0": AppStreamPackage(
+    "dotnet-apphost-pack-7.0": AppStreamEntity(
         name="dotnet-apphost-pack-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-apphost-pack-8.0": AppStreamPackage(
+    "dotnet-apphost-pack-8.0": AppStreamEntity(
         name="dotnet-apphost-pack-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-apphost-pack-9.0": AppStreamPackage(
+    "dotnet-apphost-pack-9.0": AppStreamEntity(
         name="dotnet-apphost-pack-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-host": AppStreamPackage(
+    "dotnet-host": AppStreamEntity(
         name="dotnet-host",
         application_stream_name=".NET 9",
         start_date=date(2022, 5, 18),
         end_date=date(1111, 11, 11),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=0,
         rolling=True,
     ),
-    "dotnet-hostfxr-6.0": AppStreamPackage(
+    "dotnet-hostfxr-6.0": AppStreamEntity(
         name="dotnet-hostfxr-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-hostfxr-7.0": AppStreamPackage(
+    "dotnet-hostfxr-7.0": AppStreamEntity(
         name="dotnet-hostfxr-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-hostfxr-8.0": AppStreamPackage(
+    "dotnet-hostfxr-8.0": AppStreamEntity(
         name="dotnet-hostfxr-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-hostfxr-9.0": AppStreamPackage(
+    "dotnet-hostfxr-9.0": AppStreamEntity(
         name="dotnet-hostfxr-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-runtime-6.0": AppStreamPackage(
+    "dotnet-runtime-6.0": AppStreamEntity(
         name="dotnet-runtime-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-runtime-7.0": AppStreamPackage(
+    "dotnet-runtime-7.0": AppStreamEntity(
         name="dotnet-runtime-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-runtime-8.0": AppStreamPackage(
+    "dotnet-runtime-8.0": AppStreamEntity(
         name="dotnet-runtime-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-runtime-9.0": AppStreamPackage(
+    "dotnet-runtime-9.0": AppStreamEntity(
         name="dotnet-runtime-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-runtime-dbg-8.0": AppStreamPackage(
+    "dotnet-runtime-dbg-8.0": AppStreamEntity(
         name="dotnet-runtime-dbg-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-runtime-dbg-9.0": AppStreamPackage(
+    "dotnet-runtime-dbg-9.0": AppStreamEntity(
         name="dotnet-runtime-dbg-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-6.0": AppStreamPackage(
+    "dotnet-sdk-6.0": AppStreamEntity(
         name="dotnet-sdk-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.103",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-sdk-6.0-source-built-artifacts": AppStreamPackage(
+    "dotnet-sdk-6.0-source-built-artifacts": AppStreamEntity(
         name="dotnet-sdk-6.0-source-built-artifacts",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.103",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-sdk-7.0": AppStreamPackage(
+    "dotnet-sdk-7.0": AppStreamEntity(
         name="dotnet-sdk-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-7.0-source-built-artifacts": AppStreamPackage(
+    "dotnet-sdk-7.0-source-built-artifacts": AppStreamEntity(
         name="dotnet-sdk-7.0-source-built-artifacts",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-8.0": AppStreamPackage(
+    "dotnet-sdk-8.0": AppStreamEntity(
         name="dotnet-sdk-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-sdk-8.0-source-built-artifacts": AppStreamPackage(
+    "dotnet-sdk-8.0-source-built-artifacts": AppStreamEntity(
         name="dotnet-sdk-8.0-source-built-artifacts",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-sdk-9.0": AppStreamPackage(
+    "dotnet-sdk-9.0": AppStreamEntity(
         name="dotnet-sdk-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-9.0-source-built-artifacts": AppStreamPackage(
+    "dotnet-sdk-9.0-source-built-artifacts": AppStreamEntity(
         name="dotnet-sdk-9.0-source-built-artifacts",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-aot-9.0": AppStreamPackage(
+    "dotnet-sdk-aot-9.0": AppStreamEntity(
         name="dotnet-sdk-aot-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-sdk-dbg-8.0": AppStreamPackage(
+    "dotnet-sdk-dbg-8.0": AppStreamEntity(
         name="dotnet-sdk-dbg-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-sdk-dbg-9.0": AppStreamPackage(
+    "dotnet-sdk-dbg-9.0": AppStreamEntity(
         name="dotnet-sdk-dbg-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-targeting-pack-6.0": AppStreamPackage(
+    "dotnet-targeting-pack-6.0": AppStreamEntity(
         name="dotnet-targeting-pack-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.3",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-targeting-pack-7.0": AppStreamPackage(
+    "dotnet-targeting-pack-7.0": AppStreamEntity(
         name="dotnet-targeting-pack-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-targeting-pack-8.0": AppStreamPackage(
+    "dotnet-targeting-pack-8.0": AppStreamEntity(
         name="dotnet-targeting-pack-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-targeting-pack-9.0": AppStreamPackage(
+    "dotnet-targeting-pack-9.0": AppStreamEntity(
         name="dotnet-targeting-pack-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-templates-6.0": AppStreamPackage(
+    "dotnet-templates-6.0": AppStreamEntity(
         name="dotnet-templates-6.0",
         application_stream_name=".NET 6",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 11, 8),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="6.0.103",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-templates-7.0": AppStreamPackage(
+    "dotnet-templates-7.0": AppStreamEntity(
         name="dotnet-templates-7.0",
         application_stream_name=".NET 7",
         start_date=date(2022, 11, 15),
         end_date=date(2024, 5, 30),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet-templates-8.0": AppStreamPackage(
+    "dotnet-templates-8.0": AppStreamEntity(
         name="dotnet-templates-8.0",
         application_stream_name=".NET 8",
         start_date=date(2023, 11, 7),
         end_date=date(2026, 11, 30),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet-templates-9.0": AppStreamPackage(
+    "dotnet-templates-9.0": AppStreamEntity(
         name="dotnet-templates-9.0",
         application_stream_name=".NET 9",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 5, 12),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet3.0": AppStreamPackage(
+    "dotnet3.0": AppStreamEntity(
         name="dotnet3.0",
         application_stream_name=".NET 3.0",
         start_date=date(2019, 11, 5),
         end_date=date(2020, 3, 3),
         initial_product_version="8.1",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet3.1": AppStreamPackage(
+    "dotnet3.1": AppStreamEntity(
         name="dotnet3.1",
         application_stream_name=".NET 3.1",
         start_date=date(2019, 11, 5),
         end_date=date(2022, 12, 3),
         initial_product_version="8.1",
+        impl=AppStreamImplementation.package,
         stream="3.1",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet5.0": AppStreamPackage(
+    "dotnet5.0": AppStreamEntity(
         name="dotnet5.0",
         application_stream_name=".NET 5.0",
         start_date=date(2020, 11, 3),
         end_date=date(2022, 5, 9),
         initial_product_version="8.3",
+        impl=AppStreamImplementation.package,
         stream="5.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet6.0": AppStreamPackage(
+    "dotnet6.0": AppStreamEntity(
         name="dotnet6.0",
         application_stream_name=".NET 6.0",
         start_date=date(2021, 11, 9),
         end_date=date(2024, 11, 30),
         initial_product_version="8.5",
+        impl=AppStreamImplementation.package,
         stream="6.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet7.0": AppStreamPackage(
+    "dotnet7.0": AppStreamEntity(
         name="dotnet7.0",
         application_stream_name=".NET 7.0",
         start_date=date(2022, 11, 9),
         end_date=date(2024, 5, 31),
         initial_product_version="8.7",
+        impl=AppStreamImplementation.package,
         stream="7.0",
         lifecycle=1,
         rolling=False,
     ),
-    "dotnet8.0": AppStreamPackage(
+    "dotnet8.0": AppStreamEntity(
         name="dotnet8.0",
         application_stream_name=".NET 8.0",
         start_date=date(2023, 11, 14),
         end_date=date(2026, 11, 30),
         initial_product_version="8.9",
+        impl=AppStreamImplementation.package,
         stream="8.0",
         lifecycle=3,
         rolling=False,
     ),
-    "dotnet9.0": AppStreamPackage(
+    "dotnet9.0": AppStreamEntity(
         name="dotnet9.0",
         application_stream_name=".NET 9.0",
         start_date=date(2024, 5, 22),
         end_date=date(2026, 5, 12),
         initial_product_version="8.10",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=1,
         rolling=False,
     ),
-    "esc": AppStreamPackage(
+    "esc": AppStreamEntity(
         name="esc",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.1.2",
         lifecycle=5,
         rolling=False,
     ),
-    "firefox": AppStreamPackage(
+    "firefox": AppStreamEntity(
         name="firefox",
         application_stream_name="Firefox",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="102.9.0",
         lifecycle=0,
         rolling=True,
     ),
-    "firefox-x11": AppStreamPackage(
+    "firefox-x11": AppStreamEntity(
         name="firefox-x11",
         application_stream_name="Firefox",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="102.9.0",
         lifecycle=0,
         rolling=True,
     ),
-    "fuse-overlayfs": AppStreamPackage(
+    "fuse-overlayfs": AppStreamEntity(
         name="fuse-overlayfs",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.10",
         lifecycle=0,
         rolling=True,
     ),
-    "gcc-toolset-14-binutils-gprofng": AppStreamPackage(
+    "gcc-toolset-14-binutils-gprofng": AppStreamEntity(
         name="gcc-toolset-14-binutils-gprofng",
         application_stream_name="gcc-toolset 14",
         start_date=date(2024, 11, 12),
         end_date=date(2026, 11, 9),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="2.41",
         lifecycle=2,
         rolling=False,
     ),
-    "git": AppStreamPackage(
+    "git": AppStreamEntity(
         name="git",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-all": AppStreamPackage(
+    "git-all": AppStreamEntity(
         name="git-all",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-clang-format": AppStreamPackage(
+    "git-clang-format": AppStreamEntity(
         name="git-clang-format",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "git-core": AppStreamPackage(
+    "git-core": AppStreamEntity(
         name="git-core",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-core-doc": AppStreamPackage(
+    "git-core-doc": AppStreamEntity(
         name="git-core-doc",
         application_stream_name="Git",
         start_date=date(2022, 5, 18),
         end_date=date(1111, 11, 11),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-credential-libsecret": AppStreamPackage(
+    "git-credential-libsecret": AppStreamEntity(
         name="git-credential-libsecret",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-daemon": AppStreamPackage(
+    "git-daemon": AppStreamEntity(
         name="git-daemon",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-email": AppStreamPackage(
+    "git-email": AppStreamEntity(
         name="git-email",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-gui": AppStreamPackage(
+    "git-gui": AppStreamEntity(
         name="git-gui",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-instaweb": AppStreamPackage(
+    "git-instaweb": AppStreamEntity(
         name="git-instaweb",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-lfs": AppStreamPackage(
+    "git-lfs": AppStreamEntity(
         name="git-lfs",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "git-subtree": AppStreamPackage(
+    "git-subtree": AppStreamEntity(
         name="git-subtree",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "git-svn": AppStreamPackage(
+    "git-svn": AppStreamEntity(
         name="git-svn",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "gitk": AppStreamPackage(
+    "gitk": AppStreamEntity(
         name="gitk",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "gitweb": AppStreamPackage(
+    "gitweb": AppStreamEntity(
         name="gitweb",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "go-filesystem": AppStreamPackage(
+    "go-filesystem": AppStreamEntity(
         name="go-filesystem",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "go-rpm-macros": AppStreamPackage(
+    "go-rpm-macros": AppStreamEntity(
         name="go-rpm-macros",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "go-rpm-templates": AppStreamPackage(
+    "go-rpm-templates": AppStreamEntity(
         name="go-rpm-templates",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "go-toolset": AppStreamPackage(
+    "go-toolset": AppStreamEntity(
         name="go-toolset",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang": AppStreamPackage(
+    "golang": AppStreamEntity(
         name="golang",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang-bin": AppStreamPackage(
+    "golang-bin": AppStreamEntity(
         name="golang-bin",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang-misc": AppStreamPackage(
+    "golang-misc": AppStreamEntity(
         name="golang-misc",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang-race": AppStreamPackage(
+    "golang-race": AppStreamEntity(
         name="golang-race",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang-src": AppStreamPackage(
+    "golang-src": AppStreamEntity(
         name="golang-src",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "golang-tests": AppStreamPackage(
+    "golang-tests": AppStreamEntity(
         name="golang-tests",
         application_stream_name="Go",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.19.6",
         lifecycle=0,
         rolling=True,
     ),
-    "httpd": AppStreamPackage(
+    "httpd": AppStreamEntity(
         name="httpd",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "httpd-core": AppStreamPackage(
+    "httpd-core": AppStreamEntity(
         name="httpd-core",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 11, 15),
         end_date=date(2032, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="2.4.53",
         lifecycle=10,
         rolling=False,
     ),
-    "httpd-devel": AppStreamPackage(
+    "httpd-devel": AppStreamEntity(
         name="httpd-devel",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "httpd-filesystem": AppStreamPackage(
+    "httpd-filesystem": AppStreamEntity(
         name="httpd-filesystem",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "httpd-manual": AppStreamPackage(
+    "httpd-manual": AppStreamEntity(
         name="httpd-manual",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "httpd-tools": AppStreamPackage(
+    "httpd-tools": AppStreamEntity(
         name="httpd-tools",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "idm-jss": AppStreamPackage(
+    "idm-jss": AppStreamEntity(
         name="idm-jss",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="5.2.1",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-jss-tomcat": AppStreamPackage(
+    "idm-jss-tomcat": AppStreamEntity(
         name="idm-jss-tomcat",
         application_stream_name="IDM",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 5, 31),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="5.5.0",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-ldapjdk": AppStreamPackage(
+    "idm-ldapjdk": AppStreamEntity(
         name="idm-ldapjdk",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="5.2.0",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-acme": AppStreamPackage(
+    "idm-pki-acme": AppStreamEntity(
         name="idm-pki-acme",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-base": AppStreamPackage(
+    "idm-pki-base": AppStreamEntity(
         name="idm-pki-base",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-ca": AppStreamPackage(
+    "idm-pki-ca": AppStreamEntity(
         name="idm-pki-ca",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-est": AppStreamPackage(
+    "idm-pki-est": AppStreamEntity(
         name="idm-pki-est",
         application_stream_name="IDM",
         start_date=date(2023, 5, 10),
         end_date=date(2027, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="11.3.0",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-java": AppStreamPackage(
+    "idm-pki-java": AppStreamEntity(
         name="idm-pki-java",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-kra": AppStreamPackage(
+    "idm-pki-kra": AppStreamEntity(
         name="idm-pki-kra",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-server": AppStreamPackage(
+    "idm-pki-server": AppStreamEntity(
         name="idm-pki-server",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-pki-tools": AppStreamPackage(
+    "idm-pki-tools": AppStreamEntity(
         name="idm-pki-tools",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "idm-tomcatjss": AppStreamPackage(
+    "idm-tomcatjss": AppStreamEntity(
         name="idm-tomcatjss",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="8.2.0",
         lifecycle=5,
         rolling=False,
     ),
-    "java-1.8.0-openjdk": AppStreamPackage(
+    "java-1.8.0-openjdk": AppStreamEntity(
         name="java-1.8.0-openjdk",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-demo": AppStreamPackage(
+    "java-1.8.0-openjdk-demo": AppStreamEntity(
         name="java-1.8.0-openjdk-demo",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-demo-fastdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-demo-fastdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-demo-fastdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-demo-slowdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-demo-slowdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-demo-slowdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-devel": AppStreamPackage(
+    "java-1.8.0-openjdk-devel": AppStreamEntity(
         name="java-1.8.0-openjdk-devel",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-devel-fastdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-devel-fastdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-devel-fastdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-devel-slowdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-devel-slowdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-devel-slowdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-fastdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-fastdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-fastdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-headless": AppStreamPackage(
+    "java-1.8.0-openjdk-headless": AppStreamEntity(
         name="java-1.8.0-openjdk-headless",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-headless-fastdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-headless-fastdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-headless-fastdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-headless-slowdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-headless-slowdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-headless-slowdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-javadoc": AppStreamPackage(
+    "java-1.8.0-openjdk-javadoc": AppStreamEntity(
         name="java-1.8.0-openjdk-javadoc",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-javadoc-zip": AppStreamPackage(
+    "java-1.8.0-openjdk-javadoc-zip": AppStreamEntity(
         name="java-1.8.0-openjdk-javadoc-zip",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-slowdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-slowdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-slowdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-src": AppStreamPackage(
+    "java-1.8.0-openjdk-src": AppStreamEntity(
         name="java-1.8.0-openjdk-src",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-src-fastdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-src-fastdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-src-fastdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-1.8.0-openjdk-src-slowdebug": AppStreamPackage(
+    "java-1.8.0-openjdk-src-slowdebug": AppStreamEntity(
         name="java-1.8.0-openjdk-src-slowdebug",
         application_stream_name="OpenJDK 1.8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.8.0.322.b06",
         lifecycle=4,
         rolling=False,
     ),
-    "java-11-openjdk": AppStreamPackage(
+    "java-11-openjdk": AppStreamEntity(
         name="java-11-openjdk",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-demo": AppStreamPackage(
+    "java-11-openjdk-demo": AppStreamEntity(
         name="java-11-openjdk-demo",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-demo-fastdebug": AppStreamPackage(
+    "java-11-openjdk-demo-fastdebug": AppStreamEntity(
         name="java-11-openjdk-demo-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-demo-slowdebug": AppStreamPackage(
+    "java-11-openjdk-demo-slowdebug": AppStreamEntity(
         name="java-11-openjdk-demo-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-devel": AppStreamPackage(
+    "java-11-openjdk-devel": AppStreamEntity(
         name="java-11-openjdk-devel",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-devel-fastdebug": AppStreamPackage(
+    "java-11-openjdk-devel-fastdebug": AppStreamEntity(
         name="java-11-openjdk-devel-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-devel-slowdebug": AppStreamPackage(
+    "java-11-openjdk-devel-slowdebug": AppStreamEntity(
         name="java-11-openjdk-devel-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-fastdebug": AppStreamPackage(
+    "java-11-openjdk-fastdebug": AppStreamEntity(
         name="java-11-openjdk-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-headless": AppStreamPackage(
+    "java-11-openjdk-headless": AppStreamEntity(
         name="java-11-openjdk-headless",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-headless-fastdebug": AppStreamPackage(
+    "java-11-openjdk-headless-fastdebug": AppStreamEntity(
         name="java-11-openjdk-headless-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-headless-slowdebug": AppStreamPackage(
+    "java-11-openjdk-headless-slowdebug": AppStreamEntity(
         name="java-11-openjdk-headless-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-javadoc": AppStreamPackage(
+    "java-11-openjdk-javadoc": AppStreamEntity(
         name="java-11-openjdk-javadoc",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-javadoc-zip": AppStreamPackage(
+    "java-11-openjdk-javadoc-zip": AppStreamEntity(
         name="java-11-openjdk-javadoc-zip",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-jmods": AppStreamPackage(
+    "java-11-openjdk-jmods": AppStreamEntity(
         name="java-11-openjdk-jmods",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-jmods-fastdebug": AppStreamPackage(
+    "java-11-openjdk-jmods-fastdebug": AppStreamEntity(
         name="java-11-openjdk-jmods-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-jmods-slowdebug": AppStreamPackage(
+    "java-11-openjdk-jmods-slowdebug": AppStreamEntity(
         name="java-11-openjdk-jmods-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-slowdebug": AppStreamPackage(
+    "java-11-openjdk-slowdebug": AppStreamEntity(
         name="java-11-openjdk-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-src": AppStreamPackage(
+    "java-11-openjdk-src": AppStreamEntity(
         name="java-11-openjdk-src",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-src-fastdebug": AppStreamPackage(
+    "java-11-openjdk-src-fastdebug": AppStreamEntity(
         name="java-11-openjdk-src-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-src-slowdebug": AppStreamPackage(
+    "java-11-openjdk-src-slowdebug": AppStreamEntity(
         name="java-11-openjdk-src-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-static-libs": AppStreamPackage(
+    "java-11-openjdk-static-libs": AppStreamEntity(
         name="java-11-openjdk-static-libs",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-static-libs-fastdebug": AppStreamPackage(
+    "java-11-openjdk-static-libs-fastdebug": AppStreamEntity(
         name="java-11-openjdk-static-libs-fastdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-11-openjdk-static-libs-slowdebug": AppStreamPackage(
+    "java-11-openjdk-static-libs-slowdebug": AppStreamEntity(
         name="java-11-openjdk-static-libs-slowdebug",
         application_stream_name="OpenJDK 11",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 10, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.14.1.1",
         lifecycle=5,
         rolling=False,
     ),
-    "java-17-openjdk": AppStreamPackage(
+    "java-17-openjdk": AppStreamEntity(
         name="java-17-openjdk",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-demo": AppStreamPackage(
+    "java-17-openjdk-demo": AppStreamEntity(
         name="java-17-openjdk-demo",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-demo-fastdebug": AppStreamPackage(
+    "java-17-openjdk-demo-fastdebug": AppStreamEntity(
         name="java-17-openjdk-demo-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-demo-slowdebug": AppStreamPackage(
+    "java-17-openjdk-demo-slowdebug": AppStreamEntity(
         name="java-17-openjdk-demo-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-devel": AppStreamPackage(
+    "java-17-openjdk-devel": AppStreamEntity(
         name="java-17-openjdk-devel",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-devel-fastdebug": AppStreamPackage(
+    "java-17-openjdk-devel-fastdebug": AppStreamEntity(
         name="java-17-openjdk-devel-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-devel-slowdebug": AppStreamPackage(
+    "java-17-openjdk-devel-slowdebug": AppStreamEntity(
         name="java-17-openjdk-devel-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-fastdebug": AppStreamPackage(
+    "java-17-openjdk-fastdebug": AppStreamEntity(
         name="java-17-openjdk-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-headless": AppStreamPackage(
+    "java-17-openjdk-headless": AppStreamEntity(
         name="java-17-openjdk-headless",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-headless-fastdebug": AppStreamPackage(
+    "java-17-openjdk-headless-fastdebug": AppStreamEntity(
         name="java-17-openjdk-headless-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-headless-slowdebug": AppStreamPackage(
+    "java-17-openjdk-headless-slowdebug": AppStreamEntity(
         name="java-17-openjdk-headless-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-javadoc": AppStreamPackage(
+    "java-17-openjdk-javadoc": AppStreamEntity(
         name="java-17-openjdk-javadoc",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-javadoc-zip": AppStreamPackage(
+    "java-17-openjdk-javadoc-zip": AppStreamEntity(
         name="java-17-openjdk-javadoc-zip",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-jmods": AppStreamPackage(
+    "java-17-openjdk-jmods": AppStreamEntity(
         name="java-17-openjdk-jmods",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-jmods-fastdebug": AppStreamPackage(
+    "java-17-openjdk-jmods-fastdebug": AppStreamEntity(
         name="java-17-openjdk-jmods-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-jmods-slowdebug": AppStreamPackage(
+    "java-17-openjdk-jmods-slowdebug": AppStreamEntity(
         name="java-17-openjdk-jmods-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-slowdebug": AppStreamPackage(
+    "java-17-openjdk-slowdebug": AppStreamEntity(
         name="java-17-openjdk-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-src": AppStreamPackage(
+    "java-17-openjdk-src": AppStreamEntity(
         name="java-17-openjdk-src",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-src-fastdebug": AppStreamPackage(
+    "java-17-openjdk-src-fastdebug": AppStreamEntity(
         name="java-17-openjdk-src-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-src-slowdebug": AppStreamPackage(
+    "java-17-openjdk-src-slowdebug": AppStreamEntity(
         name="java-17-openjdk-src-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-static-libs": AppStreamPackage(
+    "java-17-openjdk-static-libs": AppStreamEntity(
         name="java-17-openjdk-static-libs",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-static-libs-fastdebug": AppStreamPackage(
+    "java-17-openjdk-static-libs-fastdebug": AppStreamEntity(
         name="java-17-openjdk-static-libs-fastdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-17-openjdk-static-libs-slowdebug": AppStreamPackage(
+    "java-17-openjdk-static-libs-slowdebug": AppStreamEntity(
         name="java-17-openjdk-static-libs-slowdebug",
         application_stream_name="OpenJDK 17",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 12, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="17.0.2.0.8",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk": AppStreamPackage(
+    "java-21-openjdk": AppStreamEntity(
         name="java-21-openjdk",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-demo": AppStreamPackage(
+    "java-21-openjdk-demo": AppStreamEntity(
         name="java-21-openjdk-demo",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-demo-fastdebug": AppStreamPackage(
+    "java-21-openjdk-demo-fastdebug": AppStreamEntity(
         name="java-21-openjdk-demo-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-demo-slowdebug": AppStreamPackage(
+    "java-21-openjdk-demo-slowdebug": AppStreamEntity(
         name="java-21-openjdk-demo-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-devel": AppStreamPackage(
+    "java-21-openjdk-devel": AppStreamEntity(
         name="java-21-openjdk-devel",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-devel-fastdebug": AppStreamPackage(
+    "java-21-openjdk-devel-fastdebug": AppStreamEntity(
         name="java-21-openjdk-devel-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-devel-slowdebug": AppStreamPackage(
+    "java-21-openjdk-devel-slowdebug": AppStreamEntity(
         name="java-21-openjdk-devel-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-fastdebug": AppStreamPackage(
+    "java-21-openjdk-fastdebug": AppStreamEntity(
         name="java-21-openjdk-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-headless": AppStreamPackage(
+    "java-21-openjdk-headless": AppStreamEntity(
         name="java-21-openjdk-headless",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-headless-fastdebug": AppStreamPackage(
+    "java-21-openjdk-headless-fastdebug": AppStreamEntity(
         name="java-21-openjdk-headless-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-headless-slowdebug": AppStreamPackage(
+    "java-21-openjdk-headless-slowdebug": AppStreamEntity(
         name="java-21-openjdk-headless-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-javadoc": AppStreamPackage(
+    "java-21-openjdk-javadoc": AppStreamEntity(
         name="java-21-openjdk-javadoc",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-javadoc-zip": AppStreamPackage(
+    "java-21-openjdk-javadoc-zip": AppStreamEntity(
         name="java-21-openjdk-javadoc-zip",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-jmods": AppStreamPackage(
+    "java-21-openjdk-jmods": AppStreamEntity(
         name="java-21-openjdk-jmods",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-jmods-fastdebug": AppStreamPackage(
+    "java-21-openjdk-jmods-fastdebug": AppStreamEntity(
         name="java-21-openjdk-jmods-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-jmods-slowdebug": AppStreamPackage(
+    "java-21-openjdk-jmods-slowdebug": AppStreamEntity(
         name="java-21-openjdk-jmods-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-slowdebug": AppStreamPackage(
+    "java-21-openjdk-slowdebug": AppStreamEntity(
         name="java-21-openjdk-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-src": AppStreamPackage(
+    "java-21-openjdk-src": AppStreamEntity(
         name="java-21-openjdk-src",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-src-fastdebug": AppStreamPackage(
+    "java-21-openjdk-src-fastdebug": AppStreamEntity(
         name="java-21-openjdk-src-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-src-slowdebug": AppStreamPackage(
+    "java-21-openjdk-src-slowdebug": AppStreamEntity(
         name="java-21-openjdk-src-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-static-libs": AppStreamPackage(
+    "java-21-openjdk-static-libs": AppStreamEntity(
         name="java-21-openjdk-static-libs",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-static-libs-fastdebug": AppStreamPackage(
+    "java-21-openjdk-static-libs-fastdebug": AppStreamEntity(
         name="java-21-openjdk-static-libs-fastdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "java-21-openjdk-static-libs-slowdebug": AppStreamPackage(
+    "java-21-openjdk-static-libs-slowdebug": AppStreamEntity(
         name="java-21-openjdk-static-libs-slowdebug",
         application_stream_name="OpenJDK 21",
         start_date=date(2023, 11, 7),
         end_date=date(2029, 12, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="21.0.0.0.0",
         lifecycle=6,
         rolling=False,
     ),
-    "jaxb-api": AppStreamPackage(
+    "jaxb-api": AppStreamEntity(
         name="jaxb-api",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.3.3",
         lifecycle=5,
         rolling=False,
     ),
-    "jboss-jaxrs-2.0-api": AppStreamPackage(
+    "jboss-jaxrs-2.0-api": AppStreamEntity(
         name="jboss-jaxrs-2.0-api",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.0.0",
         lifecycle=5,
         rolling=False,
     ),
-    "jboss-logging": AppStreamPackage(
+    "jboss-logging": AppStreamEntity(
         name="jboss-logging",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.4.1",
         lifecycle=5,
         rolling=False,
     ),
-    "jboss-logging-tools": AppStreamPackage(
+    "jboss-logging-tools": AppStreamEntity(
         name="jboss-logging-tools",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.2.1",
         lifecycle=5,
         rolling=False,
     ),
-    "jdeparser": AppStreamPackage(
+    "jdeparser": AppStreamEntity(
         name="jdeparser",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.0.3",
         lifecycle=5,
         rolling=False,
     ),
-    "jmc-core": AppStreamPackage(
+    "jmc-core": AppStreamEntity(
         name="jmc-core",
         application_stream_name="Java Mission Control",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="7.1.1",
         lifecycle=0,
         rolling=True,
     ),
-    "jss": AppStreamPackage(
+    "jss": AppStreamEntity(
         name="jss",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.0.3",
         lifecycle=5,
         rolling=False,
     ),
-    "ldapjdk": AppStreamPackage(
+    "ldapjdk": AppStreamEntity(
         name="ldapjdk",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.0.0",
         lifecycle=5,
         rolling=False,
     ),
-    "libomp": AppStreamPackage(
+    "libomp": AppStreamEntity(
         name="libomp",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "libomp-devel": AppStreamPackage(
+    "libomp-devel": AppStreamEntity(
         name="libomp-devel",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "libomp-test": AppStreamPackage(
+    "libomp-test": AppStreamEntity(
         name="libomp-test",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "lld": AppStreamPackage(
+    "lld": AppStreamEntity(
         name="lld",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "lld-devel": AppStreamPackage(
+    "lld-devel": AppStreamEntity(
         name="lld-devel",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "lld-libs": AppStreamPackage(
+    "lld-libs": AppStreamEntity(
         name="lld-libs",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "lld-test": AppStreamPackage(
+    "lld-test": AppStreamEntity(
         name="lld-test",
         application_stream_name="LLVM",
         start_date=date(2022, 11, 15),
         end_date=date(1111, 11, 11),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="14.0.6",
         lifecycle=0,
         rolling=True,
     ),
-    "lldb": AppStreamPackage(
+    "lldb": AppStreamEntity(
         name="lldb",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "lldb-devel": AppStreamPackage(
+    "lldb-devel": AppStreamEntity(
         name="lldb-devel",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm": AppStreamPackage(
+    "llvm": AppStreamEntity(
         name="llvm",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-devel": AppStreamPackage(
+    "llvm-devel": AppStreamEntity(
         name="llvm-devel",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-googletest": AppStreamPackage(
+    "llvm-googletest": AppStreamEntity(
         name="llvm-googletest",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-libs": AppStreamPackage(
+    "llvm-libs": AppStreamEntity(
         name="llvm-libs",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-static": AppStreamPackage(
+    "llvm-static": AppStreamEntity(
         name="llvm-static",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-test": AppStreamPackage(
+    "llvm-test": AppStreamEntity(
         name="llvm-test",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "llvm-toolset": AppStreamPackage(
+    "llvm-toolset": AppStreamEntity(
         name="llvm-toolset",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "make": AppStreamPackage(
+    "make": AppStreamEntity(
         name="make",
         application_stream_name="GNU Make (Latest Version)",
         start_date=date(2022, 11, 9),
         end_date=date(1111, 11, 11),
         initial_product_version="8.7",
+        impl=AppStreamImplementation.package,
         stream="rhel8",
         lifecycle=0,
         rolling=True,
     ),
-    "make-latest": AppStreamPackage(
+    "make-latest": AppStreamEntity(
         name="make-latest",
         application_stream_name="GNU Make (Latest Version)",
         start_date=date(2024, 11, 12),
         end_date=date(1111, 11, 11),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "make441": AppStreamPackage(
+    "make441": AppStreamEntity(
         name="make441",
         application_stream_name="GNU Make (Latest Version)",
         start_date=date(2024, 11, 12),
         end_date=date(1111, 11, 11),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "mariadb": AppStreamPackage(
+    "mariadb": AppStreamEntity(
         name="mariadb",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-backup": AppStreamPackage(
+    "mariadb-backup": AppStreamEntity(
         name="mariadb-backup",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-common": AppStreamPackage(
+    "mariadb-common": AppStreamEntity(
         name="mariadb-common",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-devel": AppStreamPackage(
+    "mariadb-devel": AppStreamEntity(
         name="mariadb-devel",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.16",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-embedded": AppStreamPackage(
+    "mariadb-embedded": AppStreamEntity(
         name="mariadb-embedded",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-embedded-devel": AppStreamPackage(
+    "mariadb-embedded-devel": AppStreamEntity(
         name="mariadb-embedded-devel",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.16",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-errmsg": AppStreamPackage(
+    "mariadb-errmsg": AppStreamEntity(
         name="mariadb-errmsg",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-gssapi-server": AppStreamPackage(
+    "mariadb-gssapi-server": AppStreamEntity(
         name="mariadb-gssapi-server",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-oqgraph-engine": AppStreamPackage(
+    "mariadb-oqgraph-engine": AppStreamEntity(
         name="mariadb-oqgraph-engine",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-pam": AppStreamPackage(
+    "mariadb-pam": AppStreamEntity(
         name="mariadb-pam",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-server": AppStreamPackage(
+    "mariadb-server": AppStreamEntity(
         name="mariadb-server",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-server-galera": AppStreamPackage(
+    "mariadb-server-galera": AppStreamEntity(
         name="mariadb-server-galera",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-server-utils": AppStreamPackage(
+    "mariadb-server-utils": AppStreamEntity(
         name="mariadb-server-utils",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.13",
         lifecycle=10,
         rolling=False,
     ),
-    "mariadb-test": AppStreamPackage(
+    "mariadb-test": AppStreamEntity(
         name="mariadb-test",
         application_stream_name="MariaDB 10.5",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="10.5.16",
         lifecycle=10,
         rolling=False,
     ),
-    "mod_jk": AppStreamPackage(
+    "mod_jk": AppStreamEntity(
         name="mod_jk",
         application_stream_name="Tomcat mod_jk connector for Apache",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.2.48",
         lifecycle=5,
         rolling=False,
     ),
-    "mod_ldap": AppStreamPackage(
+    "mod_ldap": AppStreamEntity(
         name="mod_ldap",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "mod_lua": AppStreamPackage(
+    "mod_lua": AppStreamEntity(
         name="mod_lua",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "mod_proxy_cluster": AppStreamPackage(
+    "mod_proxy_cluster": AppStreamEntity(
         name="mod_proxy_cluster",
         application_stream_name="JBoss mod_cluster for Apache",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.3.14",
         lifecycle=5,
         rolling=False,
     ),
-    "mod_proxy_html": AppStreamPackage(
+    "mod_proxy_html": AppStreamEntity(
         name="mod_proxy_html",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "mod_session": AppStreamPackage(
+    "mod_session": AppStreamEntity(
         name="mod_session",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "mod_ssl": AppStreamPackage(
+    "mod_ssl": AppStreamEntity(
         name="mod_ssl",
         application_stream_name="Apache httpd 2.4",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.4.51",
         lifecycle=10,
         rolling=False,
     ),
-    "mysql": AppStreamPackage(
+    "mysql": AppStreamEntity(
         name="mysql",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.28",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-common": AppStreamPackage(
+    "mysql-common": AppStreamEntity(
         name="mysql-common",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.28",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-devel": AppStreamPackage(
+    "mysql-devel": AppStreamEntity(
         name="mysql-devel",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.30",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-errmsg": AppStreamPackage(
+    "mysql-errmsg": AppStreamEntity(
         name="mysql-errmsg",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.28",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-libs": AppStreamPackage(
+    "mysql-libs": AppStreamEntity(
         name="mysql-libs",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.30",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-server": AppStreamPackage(
+    "mysql-server": AppStreamEntity(
         name="mysql-server",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.28",
         lifecycle=4,
         rolling=False,
     ),
-    "mysql-test": AppStreamPackage(
+    "mysql-test": AppStreamEntity(
         name="mysql-test",
         application_stream_name="MySQL 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.30",
         lifecycle=4,
         rolling=False,
     ),
-    "netavark": AppStreamPackage(
+    "netavark": AppStreamEntity(
         name="netavark",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.5.0",
         lifecycle=0,
         rolling=True,
     ),
-    "netstandard-targeting-pack-2.1": AppStreamPackage(
+    "netstandard-targeting-pack-2.1": AppStreamEntity(
         name="netstandard-targeting-pack-2.1",
         application_stream_name=".NET 9",
         start_date=date(2022, 5, 18),
         end_date=date(2026, 11, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="9.0",
         lifecycle=3,
         rolling=False,
     ),
-    "nginx": AppStreamPackage(
+    "nginx": AppStreamEntity(
         name="nginx",
         application_stream_name="NGINX 1.20",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="1.20.1",
         lifecycle=10,
         rolling=False,
     ),
-    "nodejs": AppStreamPackage(
+    "nodejs": AppStreamEntity(
         name="nodejs",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="16.14.0",
         lifecycle=2,
         rolling=False,
     ),
-    "nodejs-docs": AppStreamPackage(
+    "nodejs-docs": AppStreamEntity(
         name="nodejs-docs",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="16.18.1",
         lifecycle=2,
         rolling=False,
     ),
-    "nodejs-full-i18n": AppStreamPackage(
+    "nodejs-full-i18n": AppStreamEntity(
         name="nodejs-full-i18n",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="16.14.0",
         lifecycle=2,
         rolling=False,
     ),
-    "nodejs-libs": AppStreamPackage(
+    "nodejs-libs": AppStreamEntity(
         name="nodejs-libs",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="16.14.0",
         lifecycle=2,
         rolling=False,
     ),
-    "nodejs-nodemon": AppStreamPackage(
+    "nodejs-nodemon": AppStreamEntity(
         name="nodejs-nodemon",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.0.3",
         lifecycle=2,
         rolling=False,
     ),
-    "npm": AppStreamPackage(
+    "npm": AppStreamEntity(
         name="npm",
         application_stream_name="Node.js 16",
         start_date=date(2022, 5, 18),
         end_date=date(2024, 4, 30),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.3.1",
         lifecycle=2,
         rolling=False,
     ),
-    "oci-seccomp-bpf-hook": AppStreamPackage(
+    "oci-seccomp-bpf-hook": AppStreamEntity(
         name="oci-seccomp-bpf-hook",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.2.8",
         lifecycle=0,
         rolling=True,
     ),
-    "osinfo-db": AppStreamPackage(
+    "osinfo-db": AppStreamEntity(
         name="osinfo-db",
         application_stream_name="osinfo-db",
         start_date=date(2019, 5, 7),
         end_date=date(2029, 5, 31),
         initial_product_version="8.0",
+        impl=AppStreamImplementation.package,
         stream="20181011",
         lifecycle=0,
         rolling=False,
     ),
-    "perl": AppStreamPackage(
+    "perl": AppStreamEntity(
         name="perl",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Attribute-Handlers": AppStreamPackage(
+    "perl-Attribute-Handlers": AppStreamEntity(
         name="perl-Attribute-Handlers",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-AutoLoader": AppStreamPackage(
+    "perl-AutoLoader": AppStreamEntity(
         name="perl-AutoLoader",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-AutoSplit": AppStreamPackage(
+    "perl-AutoSplit": AppStreamEntity(
         name="perl-AutoSplit",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-B": AppStreamPackage(
+    "perl-B": AppStreamEntity(
         name="perl-B",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Benchmark": AppStreamPackage(
+    "perl-Benchmark": AppStreamEntity(
         name="perl-Benchmark",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Class-Struct": AppStreamPackage(
+    "perl-Class-Struct": AppStreamEntity(
         name="perl-Class-Struct",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Config-Extensions": AppStreamPackage(
+    "perl-Config-Extensions": AppStreamEntity(
         name="perl-Config-Extensions",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-DBM_Filter": AppStreamPackage(
+    "perl-DBM_Filter": AppStreamEntity(
         name="perl-DBM_Filter",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Devel-Peek": AppStreamPackage(
+    "perl-Devel-Peek": AppStreamEntity(
         name="perl-Devel-Peek",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Devel-SelfStubber": AppStreamPackage(
+    "perl-Devel-SelfStubber": AppStreamEntity(
         name="perl-Devel-SelfStubber",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-DirHandle": AppStreamPackage(
+    "perl-DirHandle": AppStreamEntity(
         name="perl-DirHandle",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Dumpvalue": AppStreamPackage(
+    "perl-Dumpvalue": AppStreamEntity(
         name="perl-Dumpvalue",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-DynaLoader": AppStreamPackage(
+    "perl-DynaLoader": AppStreamEntity(
         name="perl-DynaLoader",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-English": AppStreamPackage(
+    "perl-English": AppStreamEntity(
         name="perl-English",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Errno": AppStreamPackage(
+    "perl-Errno": AppStreamEntity(
         name="perl-Errno",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-ExtUtils-Constant": AppStreamPackage(
+    "perl-ExtUtils-Constant": AppStreamEntity(
         name="perl-ExtUtils-Constant",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-ExtUtils-Embed": AppStreamPackage(
+    "perl-ExtUtils-Embed": AppStreamEntity(
         name="perl-ExtUtils-Embed",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-ExtUtils-Miniperl": AppStreamPackage(
+    "perl-ExtUtils-Miniperl": AppStreamEntity(
         name="perl-ExtUtils-Miniperl",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Fcntl": AppStreamPackage(
+    "perl-Fcntl": AppStreamEntity(
         name="perl-Fcntl",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-Basename": AppStreamPackage(
+    "perl-File-Basename": AppStreamEntity(
         name="perl-File-Basename",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-Compare": AppStreamPackage(
+    "perl-File-Compare": AppStreamEntity(
         name="perl-File-Compare",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-Copy": AppStreamPackage(
+    "perl-File-Copy": AppStreamEntity(
         name="perl-File-Copy",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-DosGlob": AppStreamPackage(
+    "perl-File-DosGlob": AppStreamEntity(
         name="perl-File-DosGlob",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-Find": AppStreamPackage(
+    "perl-File-Find": AppStreamEntity(
         name="perl-File-Find",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-File-stat": AppStreamPackage(
+    "perl-File-stat": AppStreamEntity(
         name="perl-File-stat",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-FileCache": AppStreamPackage(
+    "perl-FileCache": AppStreamEntity(
         name="perl-FileCache",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-FileHandle": AppStreamPackage(
+    "perl-FileHandle": AppStreamEntity(
         name="perl-FileHandle",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-FindBin": AppStreamPackage(
+    "perl-FindBin": AppStreamEntity(
         name="perl-FindBin",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-GDBM_File": AppStreamPackage(
+    "perl-GDBM_File": AppStreamEntity(
         name="perl-GDBM_File",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Getopt-Std": AppStreamPackage(
+    "perl-Getopt-Std": AppStreamEntity(
         name="perl-Getopt-Std",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Git": AppStreamPackage(
+    "perl-Git": AppStreamEntity(
         name="perl-Git",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "perl-Git-SVN": AppStreamPackage(
+    "perl-Git-SVN": AppStreamEntity(
         name="perl-Git-SVN",
         application_stream_name="Git",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.39.1",
         lifecycle=0,
         rolling=True,
     ),
-    "perl-Hash-Util": AppStreamPackage(
+    "perl-Hash-Util": AppStreamEntity(
         name="perl-Hash-Util",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Hash-Util-FieldHash": AppStreamPackage(
+    "perl-Hash-Util-FieldHash": AppStreamEntity(
         name="perl-Hash-Util-FieldHash",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-I18N-Collate": AppStreamPackage(
+    "perl-I18N-Collate": AppStreamEntity(
         name="perl-I18N-Collate",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-I18N-LangTags": AppStreamPackage(
+    "perl-I18N-LangTags": AppStreamEntity(
         name="perl-I18N-LangTags",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-I18N-Langinfo": AppStreamPackage(
+    "perl-I18N-Langinfo": AppStreamEntity(
         name="perl-I18N-Langinfo",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-IO": AppStreamPackage(
+    "perl-IO": AppStreamEntity(
         name="perl-IO",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-IPC-Open3": AppStreamPackage(
+    "perl-IPC-Open3": AppStreamEntity(
         name="perl-IPC-Open3",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Locale-Maketext-Simple": AppStreamPackage(
+    "perl-Locale-Maketext-Simple": AppStreamEntity(
         name="perl-Locale-Maketext-Simple",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Math-Complex": AppStreamPackage(
+    "perl-Math-Complex": AppStreamEntity(
         name="perl-Math-Complex",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Memoize": AppStreamPackage(
+    "perl-Memoize": AppStreamEntity(
         name="perl-Memoize",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Module-Loaded": AppStreamPackage(
+    "perl-Module-Loaded": AppStreamEntity(
         name="perl-Module-Loaded",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-NDBM_File": AppStreamPackage(
+    "perl-NDBM_File": AppStreamEntity(
         name="perl-NDBM_File",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-NEXT": AppStreamPackage(
+    "perl-NEXT": AppStreamEntity(
         name="perl-NEXT",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Net": AppStreamPackage(
+    "perl-Net": AppStreamEntity(
         name="perl-Net",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-ODBM_File": AppStreamPackage(
+    "perl-ODBM_File": AppStreamEntity(
         name="perl-ODBM_File",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Opcode": AppStreamPackage(
+    "perl-Opcode": AppStreamEntity(
         name="perl-Opcode",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-POSIX": AppStreamPackage(
+    "perl-POSIX": AppStreamEntity(
         name="perl-POSIX",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Pod-Functions": AppStreamPackage(
+    "perl-Pod-Functions": AppStreamEntity(
         name="perl-Pod-Functions",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Pod-Html": AppStreamPackage(
+    "perl-Pod-Html": AppStreamEntity(
         name="perl-Pod-Html",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Safe": AppStreamPackage(
+    "perl-Safe": AppStreamEntity(
         name="perl-Safe",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Search-Dict": AppStreamPackage(
+    "perl-Search-Dict": AppStreamEntity(
         name="perl-Search-Dict",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-SelectSaver": AppStreamPackage(
+    "perl-SelectSaver": AppStreamEntity(
         name="perl-SelectSaver",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-SelfLoader": AppStreamPackage(
+    "perl-SelfLoader": AppStreamEntity(
         name="perl-SelfLoader",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Symbol": AppStreamPackage(
+    "perl-Symbol": AppStreamEntity(
         name="perl-Symbol",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Sys-Hostname": AppStreamPackage(
+    "perl-Sys-Hostname": AppStreamEntity(
         name="perl-Sys-Hostname",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Term-Complete": AppStreamPackage(
+    "perl-Term-Complete": AppStreamEntity(
         name="perl-Term-Complete",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Term-ReadLine": AppStreamPackage(
+    "perl-Term-ReadLine": AppStreamEntity(
         name="perl-Term-ReadLine",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Test": AppStreamPackage(
+    "perl-Test": AppStreamEntity(
         name="perl-Test",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Text-Abbrev": AppStreamPackage(
+    "perl-Text-Abbrev": AppStreamEntity(
         name="perl-Text-Abbrev",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Thread": AppStreamPackage(
+    "perl-Thread": AppStreamEntity(
         name="perl-Thread",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Thread-Semaphore": AppStreamPackage(
+    "perl-Thread-Semaphore": AppStreamEntity(
         name="perl-Thread-Semaphore",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Tie": AppStreamPackage(
+    "perl-Tie": AppStreamEntity(
         name="perl-Tie",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Tie-File": AppStreamPackage(
+    "perl-Tie-File": AppStreamEntity(
         name="perl-Tie-File",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Tie-Memoize": AppStreamPackage(
+    "perl-Tie-Memoize": AppStreamEntity(
         name="perl-Tie-Memoize",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Time": AppStreamPackage(
+    "perl-Time": AppStreamEntity(
         name="perl-Time",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Time-Piece": AppStreamPackage(
+    "perl-Time-Piece": AppStreamEntity(
         name="perl-Time-Piece",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-Unicode-UCD": AppStreamPackage(
+    "perl-Unicode-UCD": AppStreamEntity(
         name="perl-Unicode-UCD",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-User-pwent": AppStreamPackage(
+    "perl-User-pwent": AppStreamEntity(
         name="perl-User-pwent",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-autouse": AppStreamPackage(
+    "perl-autouse": AppStreamEntity(
         name="perl-autouse",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-base": AppStreamPackage(
+    "perl-base": AppStreamEntity(
         name="perl-base",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-blib": AppStreamPackage(
+    "perl-blib": AppStreamEntity(
         name="perl-blib",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-debugger": AppStreamPackage(
+    "perl-debugger": AppStreamEntity(
         name="perl-debugger",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-deprecate": AppStreamPackage(
+    "perl-deprecate": AppStreamEntity(
         name="perl-deprecate",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-devel": AppStreamPackage(
+    "perl-devel": AppStreamEntity(
         name="perl-devel",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-diagnostics": AppStreamPackage(
+    "perl-diagnostics": AppStreamEntity(
         name="perl-diagnostics",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-doc": AppStreamPackage(
+    "perl-doc": AppStreamEntity(
         name="perl-doc",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-encoding-warnings": AppStreamPackage(
+    "perl-encoding-warnings": AppStreamEntity(
         name="perl-encoding-warnings",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-fields": AppStreamPackage(
+    "perl-fields": AppStreamEntity(
         name="perl-fields",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-filetest": AppStreamPackage(
+    "perl-filetest": AppStreamEntity(
         name="perl-filetest",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-if": AppStreamPackage(
+    "perl-if": AppStreamEntity(
         name="perl-if",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-interpreter": AppStreamPackage(
+    "perl-interpreter": AppStreamEntity(
         name="perl-interpreter",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-less": AppStreamPackage(
+    "perl-less": AppStreamEntity(
         name="perl-less",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-lib": AppStreamPackage(
+    "perl-lib": AppStreamEntity(
         name="perl-lib",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-libnetcfg": AppStreamPackage(
+    "perl-libnetcfg": AppStreamEntity(
         name="perl-libnetcfg",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-libs": AppStreamPackage(
+    "perl-libs": AppStreamEntity(
         name="perl-libs",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-locale": AppStreamPackage(
+    "perl-locale": AppStreamEntity(
         name="perl-locale",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-macros": AppStreamPackage(
+    "perl-macros": AppStreamEntity(
         name="perl-macros",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-meta-notation": AppStreamPackage(
+    "perl-meta-notation": AppStreamEntity(
         name="perl-meta-notation",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-mro": AppStreamPackage(
+    "perl-mro": AppStreamEntity(
         name="perl-mro",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-open": AppStreamPackage(
+    "perl-open": AppStreamEntity(
         name="perl-open",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-overload": AppStreamPackage(
+    "perl-overload": AppStreamEntity(
         name="perl-overload",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-overloading": AppStreamPackage(
+    "perl-overloading": AppStreamEntity(
         name="perl-overloading",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-ph": AppStreamPackage(
+    "perl-ph": AppStreamEntity(
         name="perl-ph",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-sigtrap": AppStreamPackage(
+    "perl-sigtrap": AppStreamEntity(
         name="perl-sigtrap",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-sort": AppStreamPackage(
+    "perl-sort": AppStreamEntity(
         name="perl-sort",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-subs": AppStreamPackage(
+    "perl-subs": AppStreamEntity(
         name="perl-subs",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-utils": AppStreamPackage(
+    "perl-utils": AppStreamEntity(
         name="perl-utils",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-vars": AppStreamPackage(
+    "perl-vars": AppStreamEntity(
         name="perl-vars",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "perl-vmsish": AppStreamPackage(
+    "perl-vmsish": AppStreamEntity(
         name="perl-vmsish",
         application_stream_name="Perl 5.32",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="5.32",
         lifecycle=10,
         rolling=False,
     ),
-    "php": AppStreamPackage(
+    "php": AppStreamEntity(
         name="php",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-bcmath": AppStreamPackage(
+    "php-bcmath": AppStreamEntity(
         name="php-bcmath",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-cli": AppStreamPackage(
+    "php-cli": AppStreamEntity(
         name="php-cli",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-common": AppStreamPackage(
+    "php-common": AppStreamEntity(
         name="php-common",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-dba": AppStreamPackage(
+    "php-dba": AppStreamEntity(
         name="php-dba",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-dbg": AppStreamPackage(
+    "php-dbg": AppStreamEntity(
         name="php-dbg",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-devel": AppStreamPackage(
+    "php-devel": AppStreamEntity(
         name="php-devel",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-embedded": AppStreamPackage(
+    "php-embedded": AppStreamEntity(
         name="php-embedded",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-enchant": AppStreamPackage(
+    "php-enchant": AppStreamEntity(
         name="php-enchant",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-ffi": AppStreamPackage(
+    "php-ffi": AppStreamEntity(
         name="php-ffi",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-fpm": AppStreamPackage(
+    "php-fpm": AppStreamEntity(
         name="php-fpm",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-gd": AppStreamPackage(
+    "php-gd": AppStreamEntity(
         name="php-gd",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-gmp": AppStreamPackage(
+    "php-gmp": AppStreamEntity(
         name="php-gmp",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-intl": AppStreamPackage(
+    "php-intl": AppStreamEntity(
         name="php-intl",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-ldap": AppStreamPackage(
+    "php-ldap": AppStreamEntity(
         name="php-ldap",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-mbstring": AppStreamPackage(
+    "php-mbstring": AppStreamEntity(
         name="php-mbstring",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-mysqlnd": AppStreamPackage(
+    "php-mysqlnd": AppStreamEntity(
         name="php-mysqlnd",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-odbc": AppStreamPackage(
+    "php-odbc": AppStreamEntity(
         name="php-odbc",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-opcache": AppStreamPackage(
+    "php-opcache": AppStreamEntity(
         name="php-opcache",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-pdo": AppStreamPackage(
+    "php-pdo": AppStreamEntity(
         name="php-pdo",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-pgsql": AppStreamPackage(
+    "php-pgsql": AppStreamEntity(
         name="php-pgsql",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-process": AppStreamPackage(
+    "php-process": AppStreamEntity(
         name="php-process",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-snmp": AppStreamPackage(
+    "php-snmp": AppStreamEntity(
         name="php-snmp",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-soap": AppStreamPackage(
+    "php-soap": AppStreamEntity(
         name="php-soap",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "php-xml": AppStreamPackage(
+    "php-xml": AppStreamEntity(
         name="php-xml",
         application_stream_name="PHP 8.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.13",
         lifecycle=10,
         rolling=False,
     ),
-    "pki-acme": AppStreamPackage(
+    "pki-acme": AppStreamEntity(
         name="pki-acme",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-base": AppStreamPackage(
+    "pki-base": AppStreamEntity(
         name="pki-base",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-base-java": AppStreamPackage(
+    "pki-base-java": AppStreamEntity(
         name="pki-base-java",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-ca": AppStreamPackage(
+    "pki-ca": AppStreamEntity(
         name="pki-ca",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-annotations": AppStreamPackage(
+    "pki-jackson-annotations": AppStreamEntity(
         name="pki-jackson-annotations",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-core": AppStreamPackage(
+    "pki-jackson-core": AppStreamEntity(
         name="pki-jackson-core",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-databind": AppStreamPackage(
+    "pki-jackson-databind": AppStreamEntity(
         name="pki-jackson-databind",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-jaxrs-json-provider": AppStreamPackage(
+    "pki-jackson-jaxrs-json-provider": AppStreamEntity(
         name="pki-jackson-jaxrs-json-provider",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-jaxrs-providers": AppStreamPackage(
+    "pki-jackson-jaxrs-providers": AppStreamEntity(
         name="pki-jackson-jaxrs-providers",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-jackson-module-jaxb-annotations": AppStreamPackage(
+    "pki-jackson-module-jaxb-annotations": AppStreamEntity(
         name="pki-jackson-module-jaxb-annotations",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="2.11.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-kra": AppStreamPackage(
+    "pki-kra": AppStreamEntity(
         name="pki-kra",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-resteasy": AppStreamPackage(
+    "pki-resteasy": AppStreamEntity(
         name="pki-resteasy",
         application_stream_name="IDM",
         start_date=date(2023, 11, 7),
         end_date=date(2027, 5, 31),
         initial_product_version="9.3",
+        impl=AppStreamImplementation.package,
         stream="3.0.26",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-resteasy-client": AppStreamPackage(
+    "pki-resteasy-client": AppStreamEntity(
         name="pki-resteasy-client",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0.26",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-resteasy-core": AppStreamPackage(
+    "pki-resteasy-core": AppStreamEntity(
         name="pki-resteasy-core",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0.26",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-resteasy-jackson2-provider": AppStreamPackage(
+    "pki-resteasy-jackson2-provider": AppStreamEntity(
         name="pki-resteasy-jackson2-provider",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0.26",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-resteasy-servlet-initializer": AppStreamPackage(
+    "pki-resteasy-servlet-initializer": AppStreamEntity(
         name="pki-resteasy-servlet-initializer",
         application_stream_name="IDM",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 5, 31),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.0.26",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-server": AppStreamPackage(
+    "pki-server": AppStreamEntity(
         name="pki-server",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-servlet-4.0-api": AppStreamPackage(
+    "pki-servlet-4.0-api": AppStreamEntity(
         name="pki-servlet-4.0-api",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="9.0.43",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-servlet-engine": AppStreamPackage(
+    "pki-servlet-engine": AppStreamEntity(
         name="pki-servlet-engine",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="9.0.43",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-symkey": AppStreamPackage(
+    "pki-symkey": AppStreamEntity(
         name="pki-symkey",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "pki-tools": AppStreamPackage(
+    "pki-tools": AppStreamEntity(
         name="pki-tools",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "podman": AppStreamPackage(
+    "podman": AppStreamEntity(
         name="podman",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-catatonit": AppStreamPackage(
+    "podman-catatonit": AppStreamEntity(
         name="podman-catatonit",
         application_stream_name="container-tools",
         start_date=date(2022, 5, 18),
         end_date=date(1111, 11, 11),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="4.0.2",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-docker": AppStreamPackage(
+    "podman-docker": AppStreamEntity(
         name="podman-docker",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-gvproxy": AppStreamPackage(
+    "podman-gvproxy": AppStreamEntity(
         name="podman-gvproxy",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-plugins": AppStreamPackage(
+    "podman-plugins": AppStreamEntity(
         name="podman-plugins",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-remote": AppStreamPackage(
+    "podman-remote": AppStreamEntity(
         name="podman-remote",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "podman-tests": AppStreamPackage(
+    "podman-tests": AppStreamEntity(
         name="podman-tests",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "postgresql": AppStreamPackage(
+    "postgresql": AppStreamEntity(
         name="postgresql",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-contrib": AppStreamPackage(
+    "postgresql-contrib": AppStreamEntity(
         name="postgresql-contrib",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-plperl": AppStreamPackage(
+    "postgresql-plperl": AppStreamEntity(
         name="postgresql-plperl",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-plpython3": AppStreamPackage(
+    "postgresql-plpython3": AppStreamEntity(
         name="postgresql-plpython3",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-pltcl": AppStreamPackage(
+    "postgresql-pltcl": AppStreamEntity(
         name="postgresql-pltcl",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-private-devel": AppStreamPackage(
+    "postgresql-private-devel": AppStreamEntity(
         name="postgresql-private-devel",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.10",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-private-libs": AppStreamPackage(
+    "postgresql-private-libs": AppStreamEntity(
         name="postgresql-private-libs",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.10",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-server": AppStreamPackage(
+    "postgresql-server": AppStreamEntity(
         name="postgresql-server",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-server-devel": AppStreamPackage(
+    "postgresql-server-devel": AppStreamEntity(
         name="postgresql-server-devel",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.10",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-test": AppStreamPackage(
+    "postgresql-test": AppStreamEntity(
         name="postgresql-test",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.10",
         lifecycle=10,
         rolling=False,
     ),
-    "postgresql-upgrade": AppStreamPackage(
+    "postgresql-upgrade": AppStreamEntity(
         name="postgresql-upgrade",
         application_stream_name="PostgreSQL 13",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="13.5",
         lifecycle=10,
         rolling=False,
     ),
-    "python-unversioned-command": AppStreamPackage(
+    "python-unversioned-command": AppStreamEntity(
         name="python-unversioned-command",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.10",
         lifecycle=10,
         rolling=False,
     ),
-    "python3": AppStreamPackage(
+    "python3": AppStreamEntity(
         name="python3",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.10",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-clang": AppStreamPackage(
+    "python3-clang": AppStreamEntity(
         name="python3-clang",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "python3-debug": AppStreamPackage(
+    "python3-debug": AppStreamEntity(
         name="python3-debug",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.16",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-devel": AppStreamPackage(
+    "python3-devel": AppStreamEntity(
         name="python3-devel",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.10",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-idle": AppStreamPackage(
+    "python3-idle": AppStreamEntity(
         name="python3-idle",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.16",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-idm-pki": AppStreamPackage(
+    "python3-idm-pki": AppStreamEntity(
         name="python3-idm-pki",
         application_stream_name="IDM",
         start_date=date(2022, 11, 15),
         end_date=date(2027, 5, 31),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="11.2.1",
         lifecycle=5,
         rolling=False,
     ),
-    "python3-libs": AppStreamPackage(
+    "python3-libs": AppStreamEntity(
         name="python3-libs",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.10",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-lit": AppStreamPackage(
+    "python3-lit": AppStreamEntity(
         name="python3-lit",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "python3-lldb": AppStreamPackage(
+    "python3-lldb": AppStreamEntity(
         name="python3-lldb",
         application_stream_name="LLVM",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="15.0.7",
         lifecycle=0,
         rolling=True,
     ),
-    "python3-pki": AppStreamPackage(
+    "python3-pki": AppStreamEntity(
         name="python3-pki",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="11.0.4",
         lifecycle=5,
         rolling=False,
     ),
-    "python3-podman": AppStreamPackage(
+    "python3-podman": AppStreamEntity(
         name="python3-podman",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="4.4.1",
         lifecycle=0,
         rolling=True,
     ),
-    "python3-test": AppStreamPackage(
+    "python3-test": AppStreamEntity(
         name="python3-test",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.16",
         lifecycle=10,
         rolling=False,
     ),
-    "python3-tkinter": AppStreamPackage(
+    "python3-tkinter": AppStreamEntity(
         name="python3-tkinter",
         application_stream_name="Python 3.9",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.9.10",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11": AppStreamPackage(
+    "python3.11": AppStreamEntity(
         name="python3.11",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-PyMySQL": AppStreamPackage(
+    "python3.11-PyMySQL": AppStreamEntity(
         name="python3.11-PyMySQL",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-PyMySQL+rsa": AppStreamPackage(
+    "python3.11-PyMySQL+rsa": AppStreamEntity(
         name="python3.11-PyMySQL+rsa",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.0.2",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-cffi": AppStreamPackage(
+    "python3.11-cffi": AppStreamEntity(
         name="python3.11-cffi",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-charset-normalizer": AppStreamPackage(
+    "python3.11-charset-normalizer": AppStreamEntity(
         name="python3.11-charset-normalizer",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-cryptography": AppStreamPackage(
+    "python3.11-cryptography": AppStreamEntity(
         name="python3.11-cryptography",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-debug": AppStreamPackage(
+    "python3.11-debug": AppStreamEntity(
         name="python3.11-debug",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11.2",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11-devel": AppStreamPackage(
+    "python3.11-devel": AppStreamEntity(
         name="python3.11-devel",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-idle": AppStreamPackage(
+    "python3.11-idle": AppStreamEntity(
         name="python3.11-idle",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11.2",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11-idna": AppStreamPackage(
+    "python3.11-idna": AppStreamEntity(
         name="python3.11-idna",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-libs": AppStreamPackage(
+    "python3.11-libs": AppStreamEntity(
         name="python3.11-libs",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-lxml": AppStreamPackage(
+    "python3.11-lxml": AppStreamEntity(
         name="python3.11-lxml",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-mod_wsgi": AppStreamPackage(
+    "python3.11-mod_wsgi": AppStreamEntity(
         name="python3.11-mod_wsgi",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-numpy": AppStreamPackage(
+    "python3.11-numpy": AppStreamEntity(
         name="python3.11-numpy",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-numpy-f2py": AppStreamPackage(
+    "python3.11-numpy-f2py": AppStreamEntity(
         name="python3.11-numpy-f2py",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-pip": AppStreamPackage(
+    "python3.11-pip": AppStreamEntity(
         name="python3.11-pip",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-pip-wheel": AppStreamPackage(
+    "python3.11-pip-wheel": AppStreamEntity(
         name="python3.11-pip-wheel",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-ply": AppStreamPackage(
+    "python3.11-ply": AppStreamEntity(
         name="python3.11-ply",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-psycopg2": AppStreamPackage(
+    "python3.11-psycopg2": AppStreamEntity(
         name="python3.11-psycopg2",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-psycopg2-debug": AppStreamPackage(
+    "python3.11-psycopg2-debug": AppStreamEntity(
         name="python3.11-psycopg2-debug",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.9.3",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11-psycopg2-tests": AppStreamPackage(
+    "python3.11-psycopg2-tests": AppStreamEntity(
         name="python3.11-psycopg2-tests",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.9.3",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11-pycparser": AppStreamPackage(
+    "python3.11-pycparser": AppStreamEntity(
         name="python3.11-pycparser",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-pysocks": AppStreamPackage(
+    "python3.11-pysocks": AppStreamEntity(
         name="python3.11-pysocks",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-pyyaml": AppStreamPackage(
+    "python3.11-pyyaml": AppStreamEntity(
         name="python3.11-pyyaml",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-requests": AppStreamPackage(
+    "python3.11-requests": AppStreamEntity(
         name="python3.11-requests",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-requests+security": AppStreamPackage(
+    "python3.11-requests+security": AppStreamEntity(
         name="python3.11-requests+security",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.28.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-requests+socks": AppStreamPackage(
+    "python3.11-requests+socks": AppStreamEntity(
         name="python3.11-requests+socks",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="2.28.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-rpm-macros": AppStreamPackage(
+    "python3.11-rpm-macros": AppStreamEntity(
         name="python3.11-rpm-macros",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 16),
         end_date=date(2026, 5, 31),
         initial_product_version="8.8",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-scipy": AppStreamPackage(
+    "python3.11-scipy": AppStreamEntity(
         name="python3.11-scipy",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-setuptools": AppStreamPackage(
+    "python3.11-setuptools": AppStreamEntity(
         name="python3.11-setuptools",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-setuptools-wheel": AppStreamPackage(
+    "python3.11-setuptools-wheel": AppStreamEntity(
         name="python3.11-setuptools-wheel",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-six": AppStreamPackage(
+    "python3.11-six": AppStreamEntity(
         name="python3.11-six",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-test": AppStreamPackage(
+    "python3.11-test": AppStreamEntity(
         name="python3.11-test",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11.2",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.11-tkinter": AppStreamPackage(
+    "python3.11-tkinter": AppStreamEntity(
         name="python3.11-tkinter",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-urllib3": AppStreamPackage(
+    "python3.11-urllib3": AppStreamEntity(
         name="python3.11-urllib3",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-wheel": AppStreamPackage(
+    "python3.11-wheel": AppStreamEntity(
         name="python3.11-wheel",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2026, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="3.11",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.11-wheel-wheel": AppStreamPackage(
+    "python3.11-wheel-wheel": AppStreamEntity(
         name="python3.11-wheel-wheel",
         application_stream_name="Python 3.11",
         start_date=date(2023, 5, 10),
         end_date=date(2032, 5, 31),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="0.38.4",
         lifecycle=10,
         rolling=False,
     ),
-    "python3.12": AppStreamPackage(
+    "python3.12": AppStreamEntity(
         name="python3.12",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-Cython": AppStreamPackage(
+    "python3.12-Cython": AppStreamEntity(
         name="python3.12-Cython",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="0.29.35",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-PyMySQL": AppStreamPackage(
+    "python3.12-PyMySQL": AppStreamEntity(
         name="python3.12-PyMySQL",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-PyMySQL+rsa": AppStreamPackage(
+    "python3.12-PyMySQL+rsa": AppStreamEntity(
         name="python3.12-PyMySQL+rsa",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-cffi": AppStreamPackage(
+    "python3.12-cffi": AppStreamEntity(
         name="python3.12-cffi",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-charset-normalizer": AppStreamPackage(
+    "python3.12-charset-normalizer": AppStreamEntity(
         name="python3.12-charset-normalizer",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-cryptography": AppStreamPackage(
+    "python3.12-cryptography": AppStreamEntity(
         name="python3.12-cryptography",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-debug": AppStreamPackage(
+    "python3.12-debug": AppStreamEntity(
         name="python3.12-debug",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-devel": AppStreamPackage(
+    "python3.12-devel": AppStreamEntity(
         name="python3.12-devel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-idle": AppStreamPackage(
+    "python3.12-idle": AppStreamEntity(
         name="python3.12-idle",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-idna": AppStreamPackage(
+    "python3.12-idna": AppStreamEntity(
         name="python3.12-idna",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-iniconfig": AppStreamPackage(
+    "python3.12-iniconfig": AppStreamEntity(
         name="python3.12-iniconfig",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="1.1.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-libs": AppStreamPackage(
+    "python3.12-libs": AppStreamEntity(
         name="python3.12-libs",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-lxml": AppStreamPackage(
+    "python3.12-lxml": AppStreamEntity(
         name="python3.12-lxml",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-mod_wsgi": AppStreamPackage(
+    "python3.12-mod_wsgi": AppStreamEntity(
         name="python3.12-mod_wsgi",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-numpy": AppStreamPackage(
+    "python3.12-numpy": AppStreamEntity(
         name="python3.12-numpy",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-numpy-f2py": AppStreamPackage(
+    "python3.12-numpy-f2py": AppStreamEntity(
         name="python3.12-numpy-f2py",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-packaging": AppStreamPackage(
+    "python3.12-packaging": AppStreamEntity(
         name="python3.12-packaging",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="23.2",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pip": AppStreamPackage(
+    "python3.12-pip": AppStreamEntity(
         name="python3.12-pip",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pip-wheel": AppStreamPackage(
+    "python3.12-pip-wheel": AppStreamEntity(
         name="python3.12-pip-wheel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pluggy": AppStreamPackage(
+    "python3.12-pluggy": AppStreamEntity(
         name="python3.12-pluggy",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="1.2.0",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-ply": AppStreamPackage(
+    "python3.12-ply": AppStreamEntity(
         name="python3.12-ply",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-psycopg2": AppStreamPackage(
+    "python3.12-psycopg2": AppStreamEntity(
         name="python3.12-psycopg2",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-psycopg2-debug": AppStreamPackage(
+    "python3.12-psycopg2-debug": AppStreamEntity(
         name="python3.12-psycopg2-debug",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.9.6",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-psycopg2-tests": AppStreamPackage(
+    "python3.12-psycopg2-tests": AppStreamEntity(
         name="python3.12-psycopg2-tests",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.9.6",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pybind11": AppStreamPackage(
+    "python3.12-pybind11": AppStreamEntity(
         name="python3.12-pybind11",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.11.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pybind11-devel": AppStreamPackage(
+    "python3.12-pybind11-devel": AppStreamEntity(
         name="python3.12-pybind11-devel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.11.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pycparser": AppStreamPackage(
+    "python3.12-pycparser": AppStreamEntity(
         name="python3.12-pycparser",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pytest": AppStreamPackage(
+    "python3.12-pytest": AppStreamEntity(
         name="python3.12-pytest",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="7.4.2",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-pyyaml": AppStreamPackage(
+    "python3.12-pyyaml": AppStreamEntity(
         name="python3.12-pyyaml",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-requests": AppStreamPackage(
+    "python3.12-requests": AppStreamEntity(
         name="python3.12-requests",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-rpm-macros": AppStreamPackage(
+    "python3.12-rpm-macros": AppStreamEntity(
         name="python3.12-rpm-macros",
         application_stream_name="Python 3.12",
         start_date=date(2024, 5, 22),
         end_date=date(2029, 5, 31),
         initial_product_version="8.10",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=5,
         rolling=False,
     ),
-    "python3.12-scipy": AppStreamPackage(
+    "python3.12-scipy": AppStreamEntity(
         name="python3.12-scipy",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-scipy-tests": AppStreamPackage(
+    "python3.12-scipy-tests": AppStreamEntity(
         name="python3.12-scipy-tests",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="1.11.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-semantic_version": AppStreamPackage(
+    "python3.12-semantic_version": AppStreamEntity(
         name="python3.12-semantic_version",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="2.10.0",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-setuptools": AppStreamPackage(
+    "python3.12-setuptools": AppStreamEntity(
         name="python3.12-setuptools",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-setuptools-rust": AppStreamPackage(
+    "python3.12-setuptools-rust": AppStreamEntity(
         name="python3.12-setuptools-rust",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="1.7.0",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-setuptools-wheel": AppStreamPackage(
+    "python3.12-setuptools-wheel": AppStreamEntity(
         name="python3.12-setuptools-wheel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="68.2.2",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-test": AppStreamPackage(
+    "python3.12-test": AppStreamEntity(
         name="python3.12-test",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12.1",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-tkinter": AppStreamPackage(
+    "python3.12-tkinter": AppStreamEntity(
         name="python3.12-tkinter",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-urllib3": AppStreamPackage(
+    "python3.12-urllib3": AppStreamEntity(
         name="python3.12-urllib3",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-wheel": AppStreamPackage(
+    "python3.12-wheel": AppStreamEntity(
         name="python3.12-wheel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="3.12",
         lifecycle=3,
         rolling=False,
     ),
-    "python3.12-wheel-wheel": AppStreamPackage(
+    "python3.12-wheel-wheel": AppStreamEntity(
         name="python3.12-wheel-wheel",
         application_stream_name="Python 3.12",
         start_date=date(2024, 4, 30),
         end_date=date(2027, 4, 30),
         initial_product_version="9.4",
+        impl=AppStreamImplementation.package,
         stream="0.41.2",
         lifecycle=3,
         rolling=False,
     ),
-    "rls": AppStreamPackage(
+    "rls": AppStreamEntity(
         name="rls",
         application_stream_name="Rust",
         start_date=date(2022, 11, 15),
         end_date=date(1111, 11, 11),
         initial_product_version="9.1",
+        impl=AppStreamImplementation.package,
         stream="1.62.1",
         lifecycle=0,
         rolling=True,
     ),
-    "ruby": AppStreamPackage(
+    "ruby": AppStreamEntity(
         name="ruby",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "ruby-default-gems": AppStreamPackage(
+    "ruby-default-gems": AppStreamEntity(
         name="ruby-default-gems",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "ruby-devel": AppStreamPackage(
+    "ruby-devel": AppStreamEntity(
         name="ruby-devel",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "ruby-doc": AppStreamPackage(
+    "ruby-doc": AppStreamEntity(
         name="ruby-doc",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "ruby-libs": AppStreamPackage(
+    "ruby-libs": AppStreamEntity(
         name="ruby-libs",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-bigdecimal": AppStreamPackage(
+    "rubygem-bigdecimal": AppStreamEntity(
         name="rubygem-bigdecimal",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-bundler": AppStreamPackage(
+    "rubygem-bundler": AppStreamEntity(
         name="rubygem-bundler",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-io-console": AppStreamPackage(
+    "rubygem-io-console": AppStreamEntity(
         name="rubygem-io-console",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-irb": AppStreamPackage(
+    "rubygem-irb": AppStreamEntity(
         name="rubygem-irb",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-json": AppStreamPackage(
+    "rubygem-json": AppStreamEntity(
         name="rubygem-json",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-minitest": AppStreamPackage(
+    "rubygem-minitest": AppStreamEntity(
         name="rubygem-minitest",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-power_assert": AppStreamPackage(
+    "rubygem-power_assert": AppStreamEntity(
         name="rubygem-power_assert",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-psych": AppStreamPackage(
+    "rubygem-psych": AppStreamEntity(
         name="rubygem-psych",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-rake": AppStreamPackage(
+    "rubygem-rake": AppStreamEntity(
         name="rubygem-rake",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-rbs": AppStreamPackage(
+    "rubygem-rbs": AppStreamEntity(
         name="rubygem-rbs",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-rdoc": AppStreamPackage(
+    "rubygem-rdoc": AppStreamEntity(
         name="rubygem-rdoc",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-rexml": AppStreamPackage(
+    "rubygem-rexml": AppStreamEntity(
         name="rubygem-rexml",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-rss": AppStreamPackage(
+    "rubygem-rss": AppStreamEntity(
         name="rubygem-rss",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-test-unit": AppStreamPackage(
+    "rubygem-test-unit": AppStreamEntity(
         name="rubygem-test-unit",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygem-typeprof": AppStreamPackage(
+    "rubygem-typeprof": AppStreamEntity(
         name="rubygem-typeprof",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygems": AppStreamPackage(
+    "rubygems": AppStreamEntity(
         name="rubygems",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "rubygems-devel": AppStreamPackage(
+    "rubygems-devel": AppStreamEntity(
         name="rubygems-devel",
         application_stream_name="Ruby 3.0",
         start_date=date(2022, 5, 18),
         end_date=date(2032, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="3.0",
         lifecycle=10,
         rolling=False,
     ),
-    "runc": AppStreamPackage(
+    "runc": AppStreamEntity(
         name="runc",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.1.4",
         lifecycle=0,
         rolling=True,
     ),
-    "rust": AppStreamPackage(
+    "rust": AppStreamEntity(
         name="rust",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-analysis": AppStreamPackage(
+    "rust-analysis": AppStreamEntity(
         name="rust-analysis",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-analyzer": AppStreamPackage(
+    "rust-analyzer": AppStreamEntity(
         name="rust-analyzer",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-debugger-common": AppStreamPackage(
+    "rust-debugger-common": AppStreamEntity(
         name="rust-debugger-common",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-doc": AppStreamPackage(
+    "rust-doc": AppStreamEntity(
         name="rust-doc",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-gdb": AppStreamPackage(
+    "rust-gdb": AppStreamEntity(
         name="rust-gdb",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-lldb": AppStreamPackage(
+    "rust-lldb": AppStreamEntity(
         name="rust-lldb",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-src": AppStreamPackage(
+    "rust-src": AppStreamEntity(
         name="rust-src",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-srpm-macros": AppStreamPackage(
+    "rust-srpm-macros": AppStreamEntity(
         name="rust-srpm-macros",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="17",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-std-static": AppStreamPackage(
+    "rust-std-static": AppStreamEntity(
         name="rust-std-static",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-std-static-wasm32-unknown-unknown": AppStreamPackage(
+    "rust-std-static-wasm32-unknown-unknown": AppStreamEntity(
         name="rust-std-static-wasm32-unknown-unknown",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-std-static-wasm32-wasi": AppStreamPackage(
+    "rust-std-static-wasm32-wasi": AppStreamEntity(
         name="rust-std-static-wasm32-wasi",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-std-static-wasm32-wasip1": AppStreamPackage(
+    "rust-std-static-wasm32-wasip1": AppStreamEntity(
         name="rust-std-static-wasm32-wasip1",
         application_stream_name="Rust",
         start_date=date(2024, 11, 12),
         end_date=date(1111, 11, 11),
         initial_product_version="9.5",
+        impl=AppStreamImplementation.package,
         stream="1.79.0",
         lifecycle=0,
         rolling=True,
     ),
-    "rust-toolset": AppStreamPackage(
+    "rust-toolset": AppStreamEntity(
         name="rust-toolset",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "rustfmt": AppStreamPackage(
+    "rustfmt": AppStreamEntity(
         name="rustfmt",
         application_stream_name="Rust",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.66.1",
         lifecycle=0,
         rolling=True,
     ),
-    "skopeo": AppStreamPackage(
+    "skopeo": AppStreamEntity(
         name="skopeo",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.11.2",
         lifecycle=0,
         rolling=True,
     ),
-    "skopeo-tests": AppStreamPackage(
+    "skopeo-tests": AppStreamEntity(
         name="skopeo-tests",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.11.2",
         lifecycle=0,
         rolling=True,
     ),
-    "slirp4netns": AppStreamPackage(
+    "slirp4netns": AppStreamEntity(
         name="slirp4netns",
         application_stream_name="container-tools",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="1.2.0",
         lifecycle=0,
         rolling=True,
     ),
-    "thunderbird": AppStreamPackage(
+    "thunderbird": AppStreamEntity(
         name="thunderbird",
         application_stream_name="Thunderbird",
         start_date=date(2023, 5, 10),
         end_date=date(1111, 11, 11),
         initial_product_version="9.2",
+        impl=AppStreamImplementation.package,
         stream="102.9.0",
         lifecycle=0,
         rolling=True,
     ),
-    "tomcatjss": AppStreamPackage(
+    "tomcatjss": AppStreamEntity(
         name="tomcatjss",
         application_stream_name="IDM",
         start_date=date(2022, 5, 18),
         end_date=date(2027, 5, 31),
         initial_product_version="9.0",
+        impl=AppStreamImplementation.package,
         stream="8.0.0",
         lifecycle=5,
         rolling=False,
     ),
 }
 
-
 APP_STREAM_MODULES = [
-    {
-        "module_name": "go-toolset",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "b754926a",
-                "description": "Go Tools and libraries",
-                "end_date": None,
-                "name": "go-toolset",
-                "profiles": {"common": ["go-toolset"]},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "820190208025401",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "satellite-5-client",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Red Hat Satellite 5 client packages provide "
-                "programs and libraries to allow your system to "
-                "receive software updates from Red Hat Satellite "
-                "5.",
-                "end_date": "Unknown",
-                "name": "satellite-5-client",
-                "profiles": {
-                    "common": [
-                        "dnf-plugin-spacewalk",
-                        "rhn-client-tools",
-                        "rhn-setup",
-                        "rhnlib",
-                        "rhnsd",
-                    ],
-                    "gui": [
-                        "dnf-plugin-spacewalk",
-                        "rhn-client-tools",
-                        "rhn-setup",
-                        "rhn-setup-gnome",
-                        "rhnlib",
-                        "rhnsd",
-                    ],
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1",
-                "version": "820190204085912",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "swig",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Simplified Wrapper and Interface Generator "
-                "(SWIG) is a software development tool for "
-                "connecting C, C++ and Objective C programs with "
-                "a variety of high-level programming languages. "
-                "SWIG is primarily used with Perl, Python and "
-                "Tcl/TK, but it has also been extended to Java, "
-                "Eiffel and Guile. SWIG is normally used to "
-                "create high-level interpreted programming "
-                "environments, systems integration, and as a "
-                "tool for building user interfaces\n",
-                "end_date": date(2022, 5, 31),
-                "name": "swig",
-                "profiles": {
-                    "common": ["swig"],
-                    "complete": ["swig", "swig-doc", "swig-gdb"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.0",
-                "version": "820181213143944",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9f9e2e7e",
-                "description": "Simplified Wrapper and Interface Generator "
-                "(SWIG) is a software development tool for "
-                "connecting C, C++ and Objective C programs with "
-                "a variety of high-level programming languages. "
-                "SWIG is primarily used with Perl, Python and "
-                "Tcl/TK, but it has also been extended to Java, "
-                "Eiffel and Guile. SWIG is normally used to "
-                "create high-level interpreted programming "
-                "environments, systems integration, and as a "
-                "tool for building user interfaces\n",
-                "end_date": date(2024, 5, 31),
-                "name": "swig",
-                "profiles": {
-                    "common": ["swig"],
-                    "complete": ["swig", "swig-doc", "swig-gdb"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "4",
-                "version": "8040020201001104431",
-            },
-            {
-                "arch": "x86_64",
-                "context": "fd72936b",
-                "description": "Simplified Wrapper and Interface Generator "
-                "(SWIG) is a software development tool for "
-                "connecting C, C++ and Objective C programs with "
-                "a variety of high-level programming languages. "
-                "SWIG is primarily used with Perl, Python and "
-                "Tcl/TK, but it has also been extended to Java, "
-                "Eiffel and Guile. SWIG is normally used to "
-                "create high-level interpreted programming "
-                "environments, systems integration, and as a "
-                "tool for building user interfaces\n",
-                "end_date": date(2027, 5, 31),
-                "name": "swig",
-                "profiles": {
-                    "common": ["swig"],
-                    "complete": ["swig", "swig-doc", "swig-gdb"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "4.1",
-                "version": "8080020221213075530",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "pmdk",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "fd72936b",
-                "description": "The Persistent Memory Development Kit is a "
-                "collection of libraries for using memory-mapped "
-                "persistence, optimized specifically for "
-                "persistent memory.",
-                "end_date": "Unknown",
-                "name": "pmdk",
-                "profiles": {},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1_fileformat_v6",
-                "version": "8080020221121213140",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "subversion",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "a51370e3",
-                "description": "Apache Subversion, a Modern Version Control System",
-                "end_date": "Unknown",
-                "name": "subversion",
-                "profiles": {
-                    "common": ["subversion", "subversion-libs", "subversion-tools"],
-                    "server": [
-                        "mod_dav_svn",
-                        "subversion",
-                        "subversion-libs",
-                        "subversion-tools",
-                    ],
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.1",
-                "version": "820181215112250",
-            },
-            {
-                "arch": "x86_64",
-                "context": "78111232",
-                "description": "Apache Subversion, a Modern Version Control System",
-                "end_date": date(2029, 5, 31),
-                "name": "subversion",
-                "profiles": {
-                    "common": ["subversion", "subversion-libs", "subversion-tools"],
-                    "server": [
-                        "mod_dav_svn",
-                        "subversion",
-                        "subversion-libs",
-                        "subversion-tools",
-                    ],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.10",
-                "version": "8070020220701055908",
-            },
-            {
-                "arch": "x86_64",
-                "context": "a74460ab",
-                "description": "Apache Subversion, a Modern Version Control System",
-                "end_date": date(2024, 5, 31),
-                "name": "subversion",
-                "profiles": {
-                    "common": ["subversion", "subversion-libs", "subversion-tools"],
-                    "server": [
-                        "mod_dav_svn",
-                        "subversion",
-                        "subversion-libs",
-                        "subversion-tools",
-                    ],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.14",
-                "version": "8070020220701055624",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "rust-toolset",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "b09eea91",
-                "description": "Rust Toolset",
-                "end_date": None,
-                "name": "rust-toolset",
-                "profiles": {"common": ["rust-toolset"]},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "820181214214108",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "jaxb",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9d367344",
-                "description": "Jakarta XML Binding defines an API and tools "
-                "that automate the mapping between XML documents "
-                "and Java objects. The Eclipse Implementation of "
-                "JAXB project contains implementation of Jakarta "
-                "XML Binding API.",
-                "end_date": "Unknown",
-                "name": "jaxb",
-                "profiles": {"common": ["jaxb-runtime"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "4",
-                "version": "8080020230207081414",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "python39",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "d47b87a4",
-                "description": "This module gives users access to the internal "
-                "Python 3.9 in RHEL8, as\n"
-                "well as provides some additional Python "
-                "packages the users might need.\n"
-                "In addition to these you can install any "
-                "python3-* package available\n"
-                "in RHEL and use it with Python from this "
-                "module.",
-                "end_date": date(2025, 11, 30),
-                "name": "python39",
-                "profiles": {
-                    "build": ["python39", "python39-devel", "python39-rpm-macros"],
-                    "common": ["python39"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.9",
-                "version": "8100020240927003152",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-DBD-SQLite",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "6bc6cad6",
-                "description": "SQLite is a public domain RDBMS database engine "
-                "that you can find at "
-                "http://www.hwaci.com/sw/sqlite/. This Perl "
-                "module provides a SQLite RDBMS module that uses "
-                "the system SQLite libraries.\n",
-                "end_date": "Unknown",
-                "name": "perl-DBD-SQLite",
-                "profiles": {"common": ["perl-DBD-SQLite"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.58",
-                "version": "820181214121133",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "python27",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "43711c95",
-                "description": "This module provides the Python 2.7 interpreter "
-                "and additional Python\n"
-                "packages the users might need.",
-                "end_date": date(2024, 6, 30),
-                "name": "python27",
-                "profiles": {
-                    "common": [
-                        "python2",
-                        "python2-libs",
-                        "python2-pip",
-                        "python2-setuptools",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.7",
-                "version": "820190212161047",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "postgresql",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2024, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "10",
-                "version": "820190104140132",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2029, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "12",
-                "version": "8100020241122084405",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2026, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "13",
-                "version": "8100020241122084628",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2028, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "15",
-                "version": "8100020241122084744",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2029, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "16",
-                "version": "8100020241122085009",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2021, 11, 30),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "9.6",
-                "version": "820190104140337",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "varnish",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Varnish Cache web application accelerator",
-                "end_date": date(2029, 5, 31),
-                "name": "varnish",
-                "profiles": {"common": ["varnish", "varnish-modules"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "6",
-                "version": "820181213144015",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mysql",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "MySQL is a multi-user, multi-threaded SQL "
-                "database server. MySQL is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MySQL client programs and generic "
-                "MySQL files.",
-                "end_date": "Unknown",
-                "name": "mysql",
-                "profiles": {"client": ["mysql"], "server": ["mysql-server"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "8",
-                "version": "820190104140943",
-            },
-            {
-                "arch": "x86_64",
-                "context": "a75119d5",
-                "description": "MySQL is a multi-user, multi-threaded SQL "
-                "database server. MySQL is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MySQL client programs and generic "
-                "MySQL files.",
-                "end_date": date(2026, 4, 30),
-                "name": "mysql",
-                "profiles": {"client": ["mysql"], "server": ["mysql-server"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "8.0",
-                "version": "8090020240126173013",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "nginx",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "nginx 1.14 webserver module",
-                "end_date": date(2021, 5, 31),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.14",
-                "version": "820181214004940",
-            },
-            {
-                "arch": "x86_64",
-                "context": "522a0ee4",
-                "description": "nginx 1.16 webserver module",
-                "end_date": date(2021, 10, 30),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.16",
-                "version": "8040020210526102347",
-            },
-            {
-                "arch": "x86_64",
-                "context": "522a0ee4",
-                "description": "nginx 1.18 webserver module",
-                "end_date": date(2022, 11, 30),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.18",
-                "version": "8040020210526100943",
-            },
-            {
-                "arch": "x86_64",
-                "context": "63b34585",
-                "description": "nginx 1.20 webserver module",
-                "end_date": date(2023, 11, 30),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.20",
-                "version": "8080020231012034601",
-            },
-            {
-                "arch": "x86_64",
-                "context": "63b34585",
-                "description": "nginx 1.22 webserver module",
-                "end_date": date(2025, 11, 30),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.22",
-                "version": "8080020231011224613",
-            },
-            {
-                "arch": "x86_64",
-                "context": "e155f54d",
-                "description": "nginx 1.24 webserver module",
-                "end_date": date(2029, 5, 31),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.24",
-                "version": "8100020240119085512",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "rhn-tools",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "e122ddfa",
-                "description": "Red Hat Satellite 5 tools packages providing "
-                "additional functionality like e.g. provisioning "
-                "or configuration management.",
-                "end_date": "Unknown",
-                "name": "rhn-tools",
-                "profiles": {
-                    "common": [
-                        "koan",
-                        "osad",
-                        "python3-spacewalk-backend-libs",
-                        "rhn-custom-info",
-                        "rhn-virtualization-host",
-                        "rhncfg",
-                        "rhncfg-actions",
-                        "rhncfg-client",
-                        "rhncfg-management",
-                        "rhnpush",
-                        "spacewalk-abrt",
-                        "spacewalk-client-cert",
-                        "spacewalk-koan",
-                        "spacewalk-oscap",
-                        "spacewalk-remote-utils",
-                        "spacewalk-usix",
-                    ]
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1",
-                "version": "820190321094720",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-DBI",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "2fbcbb20",
-                "description": "DBI is a database access Application "
-                "Programming Interface (API) for the Perl "
-                "language. The DBI API specification defines a "
-                "set of functions, variables and conventions "
-                "that provide a consistent database interface "
-                "independent of the actual database being "
-                "used.\n",
-                "end_date": "Unknown",
-                "name": "perl-DBI",
-                "profiles": {"common": ["perl-DBI"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.641",
-                "version": "820190116185335",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "pki-core",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "5a87be8a",
-                "description": "A module for PKI Core packages.",
-                "end_date": None,
-                "name": "pki-core",
-                "profiles": {},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "10.6",
-                "version": "820190128182152",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "llvm-toolset",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "LLVM Tools and libraries",
-                "end_date": None,
-                "name": "llvm-toolset",
-                "profiles": {"common": ["llvm-toolset"]},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "820190207221833",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "log4j",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9d367344",
-                "description": "Log4j is a popular Java logging library that "
-                "allows the programmer to output log statements "
-                "to a variety of output targets.",
-                "end_date": "Unknown",
-                "name": "log4j",
-                "profiles": {"common": ["log4j"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2",
-                "version": "8080020221020123337",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-FCGI",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "2fbcbb20",
-                "description": "This allows you to write a FastCGI client in the Perl language.\n",
-                "end_date": "Unknown",
-                "name": "perl-FCGI",
-                "profiles": {"common": ["perl-FCGI"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "0.78",
-                "version": "820181214153815",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-IO-Socket-SSL",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "03d935ed",
-                "description": "IO::Socket::SSL is a drop-in replacement for "
-                "IO::Socket::IP that uses TLS to encrypt data "
-                "before it is transferred to a remote server or "
-                "client. IO::Socket::SSL supports all the extra "
-                "features that one needs to write a "
-                "full-featured TLS client or server application "
-                "like multiple TLS contexts, cipher selection, "
-                "certificate verification, and TLS version "
-                "selection. Net::SSLeay offers some high level "
-                "convenience functions for accessing web pages "
-                "on TLS servers, a sslcat() function for writing "
-                "your own clients, and finally access to the API "
-                "of OpenSSL library so you can write servers or "
-                "clients for more complicated applications.\n",
-                "end_date": "Unknown",
-                "name": "perl-IO-Socket-SSL",
-                "profiles": {"common": ["perl-IO-Socket-SSL", "perl-Net-SSLeay"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2.066",
-                "version": "8060020211122104554",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "python38",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "d9f72c26",
-                "description": "This module gives users access to the internal "
-                "Python 3.8 in RHEL8, as\n"
-                "well as provides some additional Python "
-                "packages the users might need.\n"
-                "In addition to these you can install any "
-                "python3-* package available\n"
-                "in RHEL and use it with Python from this "
-                "module.",
-                "end_date": date(2023, 5, 31),
-                "name": "python38",
-                "profiles": {
-                    "build": ["python38", "python38-devel", "python38-rpm-macros"],
-                    "common": ["python38"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.8",
-                "version": "8090020230810143931",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "eclipse",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "498c0fee",
-                "description": "The Eclipse platform is designed for building "
-                "integrated development environments (IDEs), "
-                "desktop applications, and everything in "
-                "between.",
-                "end_date": date(2021, 8, 20),
-                "name": "eclipse",
-                "profiles": {
-                    "java": [
-                        "eclipse-equinox-osgi",
-                        "eclipse-jdt",
-                        "eclipse-pde",
-                        "eclipse-platform",
-                        "eclipse-swt",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "8030020201023061315",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "idm",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "49cc9d1b",
-                "description": "RHEL IdM is an integrated solution to provide "
-                "centrally managed Identity (users, hosts, "
-                "services), Authentication (SSO, 2FA), and "
-                "Authorization (host access control, SELinux "
-                "user roles, services). The solution provides "
-                "features for further integration with Linux "
-                "based clients (SUDO, automount) and integration "
-                "with Active Directory based infrastructures "
-                "(Trusts).\n"
-                "This module stream supports only client side of "
-                "RHEL IdM solution",
-                "end_date": date(2029, 5, 31),
-                "name": "idm",
-                "profiles": {"common": ["ipa-client"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "client",
-                "version": "820190227213458",
-            },
-            {
-                "arch": "x86_64",
-                "context": "5986f621",
-                "description": "RHEL IdM is an integrated solution to provide "
-                "centrally managed Identity (users, hosts, "
-                "services), Authentication (SSO, 2FA), and "
-                "Authorization (host access control, SELinux "
-                "user roles, services). The solution provides "
-                "features for further integration with Linux "
-                "based clients (SUDO, automount) and integration "
-                "with Active Directory based infrastructures "
-                "(Trusts).",
-                "end_date": date(2029, 5, 31),
-                "name": "idm",
-                "profiles": {
-                    "adtrust": [
-                        "ipa-idoverride-memberof-plugin",
-                        "ipa-server-trust-ad",
-                    ],
-                    "client": ["ipa-client"],
-                    "common": ["ipa-client"],
-                    "dns": ["ipa-server", "ipa-server-dns"],
-                    "server": ["ipa-server"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "DL1",
-                "version": "820190227212412",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "python36",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "17efdbc7",
-                "description": "This module gives users access to the internal "
-                "Python 3.6 in RHEL8, as\n"
-                "well as provides some additional Python "
-                "packages the users might need.\n"
-                "In addition to these you can install any "
-                "python3-* package available\n"
-                "in RHEL and use it with Python from this "
-                "module.",
-                "end_date": date(2029, 5, 31),
-                "name": "python36",
-                "profiles": {
-                    "build": ["python36", "python36-devel", "python36-rpm-macros"],
-                    "common": ["python36"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.6",
-                "version": "820190123171828",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "httpd",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Apache httpd is a powerful, efficient, and extensible HTTP server.",
-                "end_date": date(2029, 5, 31),
-                "name": "httpd",
-                "profiles": {
-                    "common": [
-                        "httpd",
-                        "httpd-filesystem",
-                        "httpd-tools",
-                        "mod_http2",
-                        "mod_ssl",
-                    ],
-                    "devel": [
-                        "httpd",
-                        "httpd-devel",
-                        "httpd-filesystem",
-                        "httpd-tools",
-                    ],
-                    "minimal": ["httpd"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.4",
-                "version": "820190206142837",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-libwww-perl",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "b947e2fe",
-                "description": "The libwww-perl collection is a set of Perl "
-                "modules which provide a simple and consistent "
-                "application programming interface to the "
-                "World-Wide Web. The main focus of the library "
-                "is to provide classes and functions that enable "
-                "you to write WWW clients. The library also "
-                "contains modules that are of more general use "
-                "and even classes that help you implement simple "
-                "HTTP servers. LWP::Protocol::https adds a "
-                "support for an HTTPS protocol.\n",
-                "end_date": "Unknown",
-                "name": "perl-libwww-perl",
-                "profiles": {"common": ["perl-LWP-Protocol-https", "perl-libwww-perl"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "6.34",
-                "version": "8060020210901111951",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "jmc",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "6392b1f8",
-                "description": "Java Mission Control is a powerful profiler for "
-                "HotSpot JVMs and has an advanced set of tools "
-                "that enables efficient and detailed analysis of "
-                "the extensive data collected by Java Flight "
-                "Recorder. The tool chain enables developers and "
-                "administrators to collect and analyze data from "
-                "Java applications running locally or deployed "
-                "in production environments.",
-                "end_date": None,
-                "name": "jmc",
-                "profiles": {"common": ["jmc"], "core": ["jmc-core"]},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "8050020211005144542",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mailman",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "77fc8825",
-                "description": "An initial version of the mailman mailing list management software",
-                "end_date": date(2024, 6, 30),
-                "name": "mailman",
-                "profiles": {"common": ["mailman"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.1",
-                "version": "820181213140247",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-DBD-MySQL",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "6bc6cad6",
-                "description": "DBD::mysql is the Perl5 Database Interface "
-                "driver for the MySQL database. In other words: "
-                "DBD::mysql is an interface between the Perl "
-                "programming language and the MySQL programming "
-                "API that comes with the MySQL relational "
-                "database management system.\n",
-                "end_date": "Unknown",
-                "name": "perl-DBD-MySQL",
-                "profiles": {"common": ["perl-DBD-MySQL"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "4.046",
-                "version": "820181214121012",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "redis",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "redis 5 module",
-                "end_date": date(2022, 5, 31),
-                "name": "redis",
-                "profiles": {"common": ["redis"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "5",
-                "version": "820181217094919",
-            },
-            {
-                "arch": "x86_64",
-                "context": "3b9f49c4",
-                "description": "redis 6 module",
-                "end_date": date(2029, 5, 31),
-                "name": "redis",
-                "profiles": {"common": ["redis"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "6",
-                "version": "8070020220509142426",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "389-ds",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "1fc8b219",
-                "description": "389 Directory Server is an LDAPv3 compliant "
-                "server.  The base package includes the LDAP "
-                "server and command line utilities for server "
-                "administration.",
-                "end_date": None,
-                "name": "389-ds",
-                "profiles": {},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.4",
-                "version": "820190201170147",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "ant",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "5ea3b708",
-                "description": "Apache Ant is a Java library and command-line "
-                "tool whose mission is to drive processes "
-                "described in build files as targets and "
-                "extension points dependent upon each other. The "
-                "main known usage of Ant is the build of Java "
-                "applications. Ant supplies a number of built-in "
-                "tasks allowing to compile, assemble, test and "
-                "run Java applications. Ant can also be used "
-                "effectively to build non Java applications, for "
-                "instance C or C++ applications. More generally, "
-                "Ant can be used to pilot any type of process "
-                "which can be described in terms of targets and "
-                "tasks.",
-                "end_date": "Unknown",
-                "name": "ant",
-                "profiles": {"common": ["ant"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.1",
-                "version": "820181213135032",
-            },
-            {
-                "arch": "x86_64",
-                "context": "417e5c08",
-                "description": "Apache Ant is a Java library and command-line "
-                "tool whose mission is to drive processes "
-                "described in build files as targets and "
-                "extension points dependent upon each other. The "
-                "main known usage of Ant is the build of Java "
-                "applications. Ant supplies a number of built-in "
-                "tasks allowing to compile, assemble, test and "
-                "run Java applications. Ant can also be used "
-                "effectively to build non Java applications, for "
-                "instance C or C++ applications. More generally, "
-                "Ant can be used to pilot any type of process "
-                "which can be described in terms of targets and "
-                "tasks.",
-                "end_date": date(2029, 5, 31),
-                "name": "ant",
-                "profiles": {"common": ["ant"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "1.10",
-                "version": "8100020240221104459",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mod_auth_openidc",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "This module enables an Apache 2.x web server to "
-                "operate as an OpenID Connect Relying Party "
-                "and/or OAuth 2.0 Resource Server.",
-                "end_date": date(2029, 5, 31),
-                "name": "mod_auth_openidc",
-                "profiles": {},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.3",
-                "version": "820181213140451",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "nodejs",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2021, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "10",
-                "version": "820190108092226",
-            },
-            {
-                "arch": "x86_64",
-                "context": "ad008a3a",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2022, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "12",
-                "version": "8060020220523160029",
-            },
-            {
-                "arch": "x86_64",
-                "context": "bd1311ed",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2023, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "14",
-                "version": "8070020230306170042",
-            },
-            {
-                "arch": "x86_64",
-                "context": "a75119d5",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2024, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "16",
-                "version": "8090020240315081818",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2025, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "18",
-                "version": "8100020240807161023",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2026, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "20",
-                "version": "8100020240808073736",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "php",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "765540",
-                "description": "php 7.2 module",
-                "end_date": date(2021, 5, 31),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "libzip",
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-pear",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "7.2",
-                "version": "820181215112050",
-            },
-            {
-                "arch": "x86_64",
-                "context": "ceb1cf90",
-                "description": "php 7.3 module",
-                "end_date": date(2021, 11, 30),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "libzip",
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-pear",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "7.3",
-                "version": "8020020200715124551",
-            },
-            {
-                "arch": "x86_64",
-                "context": "f7998665",
-                "description": "php 7.4 module",
-                "end_date": date(2029, 5, 31),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "libzip",
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-json",
-                        "php-mbstring",
-                        "php-pear",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "7.4",
-                "version": "8100020241113075828",
-            },
-            {
-                "arch": "x86_64",
-                "context": "0b4eb31d",
-                "description": "php 8.0 module",
-                "end_date": date(2024, 11, 30),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "libzip",
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-pear",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "8.0",
-                "version": "8080020231006102311",
-            },
-            {
-                "arch": "x86_64",
-                "context": "f7998665",
-                "description": "php 8.2 module",
-                "end_date": date(2029, 5, 31),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "libzip",
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-pear",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "8.2",
-                "version": "8100020241112130045",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "ruby",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2029, 5, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.5",
-                "version": "820190111110530",
-            },
-            {
-                "arch": "x86_64",
-                "context": "ad008a3a",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2022, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.6",
-                "version": "8060020220527104428",
-            },
-            {
-                "arch": "x86_64",
-                "context": "63b34585",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2023, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.7",
-                "version": "8080020230427102918",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2024, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.0",
-                "version": "8100020240522072634",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2025, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.1",
-                "version": "8100020241127152928",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489197000000",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2027, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.3",
-                "version": "8100020240906074654",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "gimp",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "77fc8825",
-                "description": "GIMP (GNU Image Manipulation Program) is a "
-                "powerful image composition and\n"
-                "editing program, which can be extremely useful "
-                "for creating logos and other\n"
-                "graphics for webpages. ",
-                "end_date": "Unknown",
-                "name": "gimp",
-                "profiles": {
-                    "common": ["gimp"],
-                    "devel": ["gimp-devel", "gimp-devel-tools"],
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2.8",
-                "version": "820181213135540",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mariadb",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "e155f54d",
-                "description": "MariaDB is a community developed branch of "
-                "MySQL. MariaDB is a multi-user, multi-threaded "
-                "SQL database server. It is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MariaDB/MySQL client programs and "
-                "generic MySQL files.",
-                "end_date": date(2028, 5, 31),
-                "name": "mariadb",
-                "profiles": {
-                    "client": ["mariadb"],
-                    "galera": ["mariadb-server", "mariadb-server-galera"],
-                    "server": ["mariadb-server"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "10.11",
-                "version": "8100020240129174731",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "MariaDB is a community developed branch of "
-                "MySQL. MariaDB is a multi-user, multi-threaded "
-                "SQL database server. It is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MariaDB/MySQL client programs and "
-                "generic MySQL files.",
-                "end_date": date(2029, 5, 31),
-                "name": "mariadb",
-                "profiles": {
-                    "client": ["mariadb"],
-                    "galera": ["mariadb-server", "mariadb-server-galera"],
-                    "server": ["mariadb-server"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "10.3",
-                "version": "820190314153642",
-            },
-            {
-                "arch": "x86_64",
-                "context": "63b34585",
-                "description": "MariaDB is a community developed branch of "
-                "MySQL. MariaDB is a multi-user, multi-threaded "
-                "SQL database server. It is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MariaDB/MySQL client programs and "
-                "generic MySQL files.",
-                "end_date": date(2026, 5, 31),
-                "name": "mariadb",
-                "profiles": {
-                    "client": ["mariadb"],
-                    "galera": ["mariadb-server", "mariadb-server-galera"],
-                    "server": ["mariadb-server"],
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "10.5",
-                "version": "8080020231003163755",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "scala",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "2b79a98f",
-                "description": "Scala is a general purpose programming language "
-                "designed to express common programming patterns "
-                "in a concise, elegant, and type-safe way. It "
-                "smoothly integrates features of object-oriented "
-                "and functional languages. It is also fully "
-                "interoperable with Java.",
-                "end_date": "Unknown",
-                "name": "scala",
-                "profiles": {"common": ["scala"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2.1",
-                "version": "820181213143541",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-YAML",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "8652dbeb",
-                "description": "The YAML.pm module implements a YAML Loader and "
-                "Dumper based on the YAML 1.0 specification. "
-                "YAML is a generic data serialization language "
-                "that is optimized for human readability. It can "
-                "be used to express the data structures of most "
-                "modern programming languages, including Perl. "
-                "For information on the YAML syntax, please "
-                "refer to the YAML specification.\n",
-                "end_date": "Unknown",
-                "name": "perl-YAML",
-                "profiles": {"common": ["perl-YAML"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.24",
-                "version": "820181214175558",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "javapackages-runtime",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "302ab70f",
-                "description": "This module contains basic filesystem layout "
-                "and runtime utilities used to support system "
-                "applications written in JVM languages.",
-                "end_date": "Unknown",
-                "name": "javapackages-runtime",
-                "profiles": {"common": ["javapackages-filesystem", "javapackages-tools"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "201801",
-                "version": "820181213140046",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "ee766497",
-                "description": "Perl is a high-level programming language with "
-                "roots in C, sed, awk and shell scripting. Perl "
-                "is good at handling processes and files, and is "
-                "especially good at handling text. Perl's "
-                "hallmarks are practicality and efficiency. "
-                "While it is used to do a lot of different "
-                "things, Perl's most common applications are "
-                "system administration utilities and web "
-                "programming.\n",
-                "end_date": date(2021, 5, 31),
-                "name": "perl",
-                "profiles": {"common": ["perl-core"], "minimal": ["perl"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "5.24",
-                "version": "820190207164249",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "Perl is a high-level programming language with "
-                "roots in C, sed, awk and shell scripting. Perl "
-                "is good at handling processes and files, and is "
-                "especially good at handling text. Perl's "
-                "hallmarks are practicality and efficiency. "
-                "While it is used to do a lot of different "
-                "things, Perl's most common applications are "
-                "system administration utilities and web "
-                "programming.\n",
-                "end_date": date(2029, 5, 31),
-                "name": "perl",
-                "profiles": {"common": ["perl"], "minimal": ["perl-interpreter"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "5.26",
-                "version": "820181219174508",
-            },
-            {
-                "arch": "x86_64",
-                "context": "466ea64f",
-                "description": "Perl is a high-level programming language with "
-                "roots in C, sed, awk and shell scripting. Perl "
-                "is good at handling processes and files, and is "
-                "especially good at handling text. Perl's "
-                "hallmarks are practicality and efficiency. "
-                "While it is used to do a lot of different "
-                "things, Perl's most common applications are "
-                "system administration utilities and web "
-                "programming.\n",
-                "end_date": "Unknown",
-                "name": "perl",
-                "profiles": {"common": ["perl"], "minimal": ["perl-interpreter"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "5.3",
-                "version": "8040020200923213406",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9fe1d287",
-                "description": "Perl is a high-level programming language with "
-                "roots in C, sed, awk and shell scripting. Perl "
-                "is good at handling processes and files, and is "
-                "especially good at handling text. Perl's "
-                "hallmarks are practicality and efficiency. "
-                "While it is used to do a lot of different "
-                "things, Perl's most common applications are "
-                "system administration utilities and web "
-                "programming.\n",
-                "end_date": date(2025, 4, 30),
-                "name": "perl",
-                "profiles": {"common": ["perl"], "minimal": ["perl-interpreter"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "5.32",
-                "version": "8100020240314121426",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "inkscape",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "77fc8825",
-                "description": "Inkscape is a vector graphics editor, with "
-                "capabilities similar to\n"
-                "Illustrator, CorelDraw, or Xara X, using the "
-                "W3C standard Scalable Vector\n"
-                "Graphics (SVG) file format.  It is therefore a "
-                "very useful tool for web\n"
-                "designers and as an interchange format for "
-                "desktop publishing.\n"
-                "\n"
-                "Inkscape supports many advanced SVG features "
-                "(markers, clones, alpha\n"
-                "blending, etc.) and great care is taken in "
-                "designing a streamlined\n"
-                "interface. It is very easy to edit nodes, "
-                "perform complex path operations,\n"
-                "trace bitmaps and much more.",
-                "end_date": "Unknown",
-                "name": "inkscape",
-                "profiles": {"common": ["inkscape"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "0.92.3",
-                "version": "820181213140018",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mercurial",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "77fc8825",
-                "description": "Mercurial is a fast, lightweight source control "
-                "management system designed for efficient "
-                "handling of very large distributed projects.",
-                "end_date": date(2022, 11, 30),
-                "name": "mercurial",
-                "profiles": {"common": ["mercurial"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "4.8",
-                "version": "820190108205035",
-            },
-            {
-                "arch": "x86_64",
-                "context": "3dbb8329",
-                "description": "Mercurial is a fast, lightweight source control "
-                "management system designed for efficient "
-                "handling of very large distributed projects.",
-                "end_date": date(2025, 11, 30),
-                "name": "mercurial",
-                "profiles": {"common": ["mercurial"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "6.2",
-                "version": "8070020220729131051",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-App-cpanminus",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "e5ce1481",
-                "description": "This is a CPAN client that requires zero "
-                "configuration, and stands alone but it's "
-                "maintainable and extensible with plug-ins and "
-                "friendly to shell scripting.\n",
-                "end_date": "Unknown",
-                "name": "perl-App-cpanminus",
-                "profiles": {"common": ["perl-App-cpanminus"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1.7044",
-                "version": "820181214184336",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "container-tools",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "20125149",
-                "description": "Contains SELinux policies, binaries and other "
-                "dependencies for use with container runtimes",
-                "end_date": "Unknown",
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "fuse-overlayfs",
-                        "oci-systemd-hook",
-                        "oci-umount",
-                        "podman",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                    ]
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "1",
-                "version": "820190220135513",
-            },
-            {
-                "arch": "x86_64",
-                "context": "830d479e",
-                "description": "Stable versions of podman 1.6, buildah 1.11, "
-                "skopeo 0.1, runc, conmon, CRIU, Udica, etc as "
-                "well as dependencies such as container-selinux "
-                "built and tested together. Released with RHEL "
-                "8.2 and supported for 24 months. During the "
-                "support lifecycle, back ports of important, "
-                "critical vulnerabilities (CVEs, RHSAs) and bug "
-                "fixes (RHBAs) are provided to this stream, and "
-                "versions do not move forward. For more "
-                "information see: "
-                "https://access.redhat.com/support/policy/updates/containertools",
-                "end_date": "Unknown",
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "cockpit-podman",
-                        "conmon",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "criu",
-                        "fuse-overlayfs",
-                        "podman",
-                        "python-podman-api",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                        "toolbox",
-                        "udica",
-                    ]
-                },
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2",
-                "version": "8030020210302075156",
-            },
-            {
-                "arch": "x86_64",
-                "context": "e34216c9",
-                "description": "Stable versions of podman 1.6, buildah 1.11, "
-                "skopeo 0.1, runc, conmon, CRIU, Udica, etc as "
-                "well as dependencies such as container-selinux "
-                "built and tested together. Released with RHEL "
-                "8.2 and supported for 24 months. During the "
-                "support lifecycle, back ports of important, "
-                "critical vulnerabilities (CVEs, RHSAs) and bug "
-                "fixes (RHBAs) are provided to this stream, and "
-                "versions do not move forward. For more "
-                "information see: "
-                "https://access.redhat.com/support/policy/updates/containertools",
-                "end_date": date(2022, 5, 31),
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "cockpit-podman",
-                        "conmon",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "criu",
-                        "fuse-overlayfs",
-                        "podman",
-                        "python-podman-api",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                        "toolbox",
-                        "udica",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "2.0",
-                "version": "8050020220411114323",
-            },
-            {
-                "arch": "x86_64",
-                "context": "489fc8e9",
-                "description": "Stable versions of podman 3.0, buildah 1.19, "
-                "skopeo 1.2, runc, conmon, CRIU, Udica, etc as "
-                "well as dependencies such as container-selinux "
-                "built and tested together. Released with RHEL "
-                "8.4 and supported for 24 months. During the "
-                "support lifecycle, back ports of important, "
-                "critical vulnerabilities (CVEs, RHSAs) and bug "
-                "fixes (RHBAs) are provided to this stream, and "
-                "versions do not move forward. For more "
-                "information see: "
-                "https://access.redhat.com/support/policy/updates/containertools",
-                "end_date": date(2023, 5, 31),
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "cockpit-podman",
-                        "conmon",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "criu",
-                        "crun",
-                        "fuse-overlayfs",
-                        "libslirp",
-                        "podman",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                        "toolbox",
-                        "udica",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.0",
-                "version": "8070020230131134905",
-            },
-            {
-                "arch": "x86_64",
-                "context": "d7b6f4b7",
-                "description": "Stable versions of podman 4.0, buildah 1.24, "
-                "skopeo 1.6, runc, conmon, CRIU, Udica, etc as "
-                "well as dependencies such as container-selinux "
-                "built and tested together. Released with RHEL "
-                "8.6 and supported for 24 months. During the "
-                "support lifecycle, back ports of important, "
-                "critical vulnerabilities (CVEs, RHSAs) and bug "
-                "fixes (RHBAs) are provided to this stream, and "
-                "versions do not move forward. For more "
-                "information see: "
-                "https://access.redhat.com/support/policy/updates/containertools",
-                "end_date": date(2024, 5, 31),
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "cockpit-podman",
-                        "conmon",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "containers-common",
-                        "criu",
-                        "crun",
-                        "fuse-overlayfs",
-                        "libslirp",
-                        "podman",
-                        "python3-podman",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                        "toolbox",
-                        "udica",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "4.0",
-                "version": "8090020240413110917",
-            },
-            {
-                "arch": "x86_64",
-                "context": "20125149",
-                "description": "Contains SELinux policies, binaries and other "
-                "dependencies for use with container runtimes",
-                "end_date": None,
-                "name": "container-tools",
-                "profiles": {
-                    "common": [
-                        "buildah",
-                        "container-selinux",
-                        "containernetworking-plugins",
-                        "fuse-overlayfs",
-                        "oci-systemd-hook",
-                        "oci-umount",
-                        "podman",
-                        "runc",
-                        "skopeo",
-                        "slirp4netns",
-                    ]
-                },
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel8",
-                "version": "820190211172150",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "freeradius",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "fbe42456",
-                "description": "The FreeRADIUS Server Project is a high "
-                "performance and highly configurable GPL'd free "
-                "RADIUS server. The server is similar in some "
-                "respects to Livingston's 2.0 server.  While "
-                "FreeRADIUS started as a variant of the Cistron "
-                "RADIUS server, they don't share a lot in common "
-                "any more. It now has many more features than "
-                "Cistron or Livingston, and is much more "
-                "configurable.\n"
-                "FreeRADIUS is an Internet authentication "
-                "daemon, which implements the RADIUS protocol, "
-                "as defined in RFC 2865 (and others). It allows "
-                "Network Access Servers (NAS boxes) to perform "
-                "authentication for dial-up users. There are "
-                "also RADIUS clients available for Web servers, "
-                "firewalls, Unix logins, and more.  Using RADIUS "
-                "allows authentication and authorization for a "
-                "network to be centralized, and minimizes the "
-                "amount of re-configuration which has to be done "
-                "when adding or deleting new users.",
-                "end_date": "Unknown",
-                "name": "freeradius",
-                "profiles": {"server": ["freeradius"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "3",
-                "version": "820190131191847",
-            },
-            {
-                "arch": "x86_64",
-                "context": "69ef70f8",
-                "description": "The FreeRADIUS Server Project is a high "
-                "performance and highly configurable GPL'd free "
-                "RADIUS server. The server is similar in some "
-                "respects to Livingston's 2.0 server.  While "
-                "FreeRADIUS started as a variant of the Cistron "
-                "RADIUS server, they don't share a lot in common "
-                "any more. It now has many more features than "
-                "Cistron or Livingston, and is much more "
-                "configurable.\n"
-                "FreeRADIUS is an Internet authentication "
-                "daemon, which implements the RADIUS protocol, "
-                "as defined in RFC 2865 (and others). It allows "
-                "Network Access Servers (NAS boxes) to perform "
-                "authentication for dial-up users. There are "
-                "also RADIUS clients available for Web servers, "
-                "firewalls, Unix logins, and more.  Using RADIUS "
-                "allows authentication and authorization for a "
-                "network to be centralized, and minimizes the "
-                "amount of re-configuration which has to be done "
-                "when adding or deleting new users.",
-                "end_date": date(2029, 5, 31),
-                "name": "freeradius",
-                "profiles": {"server": ["freeradius"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.0",
-                "version": "8100020230904084920",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "virt",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "A virtualization module",
-                "end_date": date(2029, 5, 31),
-                "name": "virt",
-                "profiles": {
-                    "common": [
-                        "libguestfs",
-                        "libvirt-client",
-                        "libvirt-daemon-config-network",
-                        "libvirt-daemon-kvm",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "rhel",
-                "version": "820190226174025",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "maven",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "5ea3b708",
-                "description": "Maven is a software project management and "
-                "comprehension tool. Based on the concept of a "
-                "project object model (POM), Maven can manage a "
-                "project's build, reporting and documentation "
-                "from a central piece of information.",
-                "end_date": date(2022, 5, 31),
-                "name": "maven",
-                "profiles": {"common": ["maven"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.5",
-                "version": "820181213140354",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9d367344",
-                "description": "Maven is a software project management and "
-                "comprehension tool. Based on the concept of a "
-                "project object model (POM), Maven can manage a "
-                "project's build, reporting and documentation "
-                "from a central piece of information.",
-                "end_date": date(2023, 4, 30),
-                "name": "maven",
-                "profiles": {"common": ["maven-openjdk11"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.6",
-                "version": "8080020230202141236",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9b3be2c4",
-                "description": "Maven is a software project management and "
-                "comprehension tool. Based on the concept of a "
-                "project object model (POM), Maven can manage a "
-                "project's build, reporting and documentation "
-                "from a central piece of information.",
-                "end_date": date(2025, 11, 30),
-                "name": "maven",
-                "profiles": {"common": ["maven-openjdk11"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "3.8",
-                "version": "8100020240210094037",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "pki-deps",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "A module for PKI dependencies.",
-                "end_date": None,
-                "name": "pki-deps",
-                "profiles": {},
-                "rolling": True,
-                "start_date": date(2019, 5, 7),
-                "stream": "10.6",
-                "version": "820190223041344",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "perl-DBD-Pg",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "956b9ee3",
-                "description": "DBD::Pg is a Perl module that works with the "
-                "DBI module to provide access to PostgreSQL "
-                "databases.\n",
-                "end_date": "Unknown",
-                "name": "perl-DBD-Pg",
-                "profiles": {"common": ["perl-DBD-Pg"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "3.7",
-                "version": "820181214121102",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "squid",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9edba152",
-                "description": "an initial version of the squid caching proxy module",
-                "end_date": date(2029, 5, 31),
-                "name": "squid",
-                "profiles": {"common": ["squid"]},
-                "rolling": False,
-                "start_date": date(2019, 5, 7),
-                "stream": "4",
-                "version": "820181213143653",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "libselinux-python",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "77fc8825",
-                "description": "The libselinux-python package contains the "
-                "python bindings for developing SELinux "
-                "applications.",
-                "end_date": "Unknown",
-                "name": "libselinux-python",
-                "profiles": {"common": ["libselinux-python"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "2.8",
-                "version": "820181213140134",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "parfait",
-        "rhel_major_version": 8,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "d2b614b2",
-                "description": "Parfait is a Java performance monitoring "
-                "library that exposes and collects metrics "
-                "through a variety of outputs.  It provides APIs "
-                "for extracting performance metrics from the JVM "
-                "and other sources. It interfaces to Performance "
-                "Co-Pilot (PCP) using the Memory Mapped Value "
-                "(MMV) machinery for extremely lightweight "
-                "instrumentation.",
-                "end_date": "Unknown",
-                "name": "parfait",
-                "profiles": {"common": ["parfait", "parfait-examples", "pcp-parfait-agent"]},
-                "rolling": False,
-                "start_date": "Unknown",
-                "stream": "0.5",
-                "version": "820181213142511",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "nginx",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "nginx 1.22 webserver module",
-                "end_date": date(2025, 11, 30),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "1.22",
-                "version": "9050020240717000135",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "nginx 1.24 webserver module",
-                "end_date": date(2027, 5, 31),
-                "name": "nginx",
-                "profiles": {
-                    "common": [
-                        "nginx",
-                        "nginx-all-modules",
-                        "nginx-filesystem",
-                        "nginx-mod-http-image-filter",
-                        "nginx-mod-http-perl",
-                        "nginx-mod-http-xslt-filter",
-                        "nginx-mod-mail",
-                        "nginx-mod-stream",
-                    ]
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "1.24",
-                "version": "9050020240717000500",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "nodejs",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2025, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "18",
-                "version": "9040020240807131341",
-            },
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2026, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "20",
-                "version": "9050020240923133857",
-            },
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "Node.js is a platform built on Chrome's "
-                "JavaScript runtime for easily building fast, "
-                "scalable network applications. Node.js uses an "
-                "event-driven, non-blocking I/O model that makes "
-                "it lightweight and efficient, perfect for "
-                "data-intensive real-time applications that run "
-                "across distributed devices.",
-                "end_date": date(2027, 4, 30),
-                "name": "nodejs",
-                "profiles": {
-                    "common": ["nodejs", "npm"],
-                    "development": ["nodejs", "nodejs-devel", "npm"],
-                    "minimal": ["nodejs"],
-                    "s2i": ["nodejs", "nodejs-nodemon", "npm"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "22",
-                "version": "9050020241113142151",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "php",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "php 8.1 module",
-                "end_date": date(2025, 5, 31),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "8.1",
-                "version": "9050020241112144108",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "php 8.2 module",
-                "end_date": date(2029, 5, 31),
-                "name": "php",
-                "profiles": {
-                    "common": [
-                        "php-cli",
-                        "php-common",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-xml",
-                    ],
-                    "devel": [
-                        "php-cli",
-                        "php-common",
-                        "php-devel",
-                        "php-fpm",
-                        "php-mbstring",
-                        "php-pecl-zip",
-                        "php-process",
-                        "php-xml",
-                    ],
-                    "minimal": ["php-cli", "php-common"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "8.2",
-                "version": "9050020241112094217",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "postgresql",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2028, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "15",
-                "version": "9050020241122141928",
-            },
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "PostgreSQL is an advanced Object-Relational "
-                "database management system (DBMS). The "
-                "postgresql-server package contains the programs "
-                "needed to create and run a PostgreSQL server, "
-                "which will in turn allow you to create and "
-                "maintain PostgreSQL databases. The base "
-                "postgresql package contains the client programs "
-                "that you'll need to access a PostgreSQL DBMS "
-                "server.",
-                "end_date": date(2029, 5, 31),
-                "name": "postgresql",
-                "profiles": {"client": ["postgresql"], "server": ["postgresql-server"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "16",
-                "version": "9050020241122142517",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "redis",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "redis 7 module",
-                "end_date": date(2026, 11, 30),
-                "name": "redis",
-                "profiles": {"common": ["redis"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "7",
-                "version": "9050020241104103753",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "ruby",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2025, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "3.1",
-                "version": "9050020241127153348",
-            },
-            {
-                "arch": "x86_64",
-                "context": "9",
-                "description": "Ruby is the interpreted scripting language for "
-                "quick and easy object-oriented programming.  It "
-                "has many features to process text files and to "
-                "do system management tasks (as in Perl).  It is "
-                "simple, straight-forward, and extensible.",
-                "end_date": date(2027, 3, 31),
-                "name": "ruby",
-                "profiles": {"common": ["ruby"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "3.3",
-                "version": "9040020240906110954",
-            },
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "mariadb",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "rhel9",
-                "description": "MariaDB is a community developed branch of "
-                "MySQL. MariaDB is a multi-user, multi-threaded "
-                "SQL database server. It is a client/server "
-                "implementation consisting of a server daemon "
-                "(mysqld) and many different client programs and "
-                "libraries. The base package contains the "
-                "standard MariaDB/MySQL client programs and "
-                "generic MySQL files.",
-                "end_date": date(2028, 5, 31),
-                "name": "mariadb",
-                "profiles": {
-                    "client": ["mariadb"],
-                    "galera": ["mariadb-server", "mariadb-server-galera"],
-                    "server": ["mariadb-server"],
-                },
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "10.11",
-                "version": "9040020240126110506",
-            }
-        ],
-        "type": "module",
-    },
-    {
-        "module_name": "maven",
-        "rhel_major_version": 9,
-        "streams": [
-            {
-                "arch": "x86_64",
-                "context": "470dcefd",
-                "description": "Maven is a software project management and "
-                "comprehension tool. Based on the concept of a "
-                "project object model (POM), Maven can manage a "
-                "project's build, reporting and documentation "
-                "from a central piece of information.",
-                "end_date": date(2025, 11, 30),
-                "name": "maven",
-                "profiles": {"common": ["maven-openjdk11"]},
-                "rolling": False,
-                "start_date": date(2022, 5, 18),
-                "stream": "3.8",
-                "version": "9040020240210002822",
-            }
-        ],
-        "type": "module",
-    },
+    AppStreamEntity(
+        name="389-ds",
+        application_stream_name="389-ds 1.4",
+        stream="1.4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="ant",
+        application_stream_name="389-ds 1.4",
+        stream="1.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ant",
+        application_stream_name="Apache Ant 1.1",
+        stream="1.10",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="Apache Ant 1.1",
+        stream="1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="Apache Ant 1.1",
+        stream="2",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="container-tools 2.0",
+        stream="2.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="container-tools 3.0",
+        stream="3.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="container-tools 4.0",
+        stream="4.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="container-tools",
+        application_stream_name="container-tools rhel8",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="eclipse",
+        application_stream_name="",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 8, 20),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="freeradius",
+        application_stream_name="",
+        stream="3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="freeradius",
+        application_stream_name="FreeRADIUS 3.0",
+        stream="3.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="gimp",
+        application_stream_name="FreeRADIUS 3.0",
+        stream="2.8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="go-toolset",
+        application_stream_name="Go",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="httpd",
+        application_stream_name="Apache httpd 2.4",
+        stream="2.4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="idm",
+        application_stream_name="Identity Management Client",
+        stream="client",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="idm",
+        application_stream_name="Identity Management DL1",
+        stream="DL1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="inkscape",
+        application_stream_name="Identity Management DL1",
+        stream="0.92.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="javapackages-runtime",
+        application_stream_name="Identity Management DL1",
+        stream="201801",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="jaxb",
+        application_stream_name="Identity Management DL1",
+        stream="4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="jmc",
+        application_stream_name="Java Mission Control",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="libselinux-python",
+        application_stream_name="Java Mission Control",
+        stream="2.8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="llvm-toolset",
+        application_stream_name="LLVM",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="log4j",
+        application_stream_name="LLVM",
+        stream="2",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mailman",
+        application_stream_name="Mailman 2.1",
+        stream="2.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 6, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mariadb",
+        application_stream_name="MariaDB 10.11",
+        stream="10.11",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2028, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mariadb",
+        application_stream_name="MariaDB 10.3",
+        stream="10.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mariadb",
+        application_stream_name="MariaDB 10.5",
+        stream="10.5",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2026, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="maven",
+        application_stream_name="Maven 3.5",
+        stream="3.5",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="maven",
+        application_stream_name="Maven 3.6",
+        stream="3.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="maven",
+        application_stream_name="Maven 3.8",
+        stream="3.8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mercurial",
+        application_stream_name="Mercurial 4.8",
+        stream="4.8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mercurial",
+        application_stream_name="Mercurial 6.2",
+        stream="6.2",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mod_auth_openidc",
+        application_stream_name="mod_auth_openidc for Apache",
+        stream="2.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mysql",
+        application_stream_name="mod_auth_openidc for Apache",
+        stream="8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mysql",
+        application_stream_name="MySQL 8",
+        stream="8.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2026, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.14",
+        stream="1.14",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.16",
+        stream="1.16",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 10, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.18",
+        stream="1.18",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.20",
+        stream="1.20",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.22",
+        stream="1.22",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.24",
+        stream="1.24",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 10",
+        stream="10",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 12",
+        stream="12",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 14",
+        stream="14",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 16",
+        stream="16",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 18",
+        stream="18",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 20",
+        stream="20",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2026, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 22",
+        stream="22",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2027, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="parfait",
+        application_stream_name="Node.js 22",
+        stream="0.5",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl",
+        application_stream_name="Perl 5.24",
+        stream="5.24",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl",
+        application_stream_name="Perl 5.26",
+        stream="5.26",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl",
+        application_stream_name="Perl 5.26",
+        stream="5.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl",
+        application_stream_name="Perl 5.32",
+        stream="5.32",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-App-cpanminus",
+        application_stream_name="Perl 5.32",
+        stream="1.7044",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-DBD-MySQL",
+        application_stream_name="Perl 5.32",
+        stream="4.046",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-DBD-Pg",
+        application_stream_name="Perl 5.32",
+        stream="3.7",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-DBD-SQLite",
+        application_stream_name="Perl 5.32",
+        stream="1.58",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-DBI",
+        application_stream_name="Perl 5.32",
+        stream="1.641",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-FCGI",
+        application_stream_name="Perl 5.32",
+        stream="0.78",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-IO-Socket-SSL",
+        application_stream_name="Perl 5.32",
+        stream="2.066",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-libwww-perl",
+        application_stream_name="Perl 5.32",
+        stream="6.34",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="perl-YAML",
+        application_stream_name="Perl 5.32",
+        stream="1.24",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 7.2",
+        stream="7.2",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 7.3",
+        stream="7.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 7.4",
+        stream="7.4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 8.0",
+        stream="8.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 8.2",
+        stream="8.2",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="pki-core",
+        application_stream_name="pki-core",
+        stream="10.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="pki-deps",
+        application_stream_name="pki-deps",
+        stream="10.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="pmdk",
+        application_stream_name="pki-deps",
+        stream="1_fileformat_v6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 10",
+        stream="10",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 12",
+        stream="12",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 13",
+        stream="13",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2026, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 15",
+        stream="15",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2028, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 16",
+        stream="16",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 9.6",
+        stream="9.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2021, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="python27",
+        application_stream_name="Python 2.7",
+        stream="2.7",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 6, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="python36",
+        application_stream_name="Python 3.6",
+        stream="3.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="python38",
+        application_stream_name="Python 3.8",
+        stream="3.8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="python39",
+        application_stream_name="Python 3.9",
+        stream="3.9",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="redis",
+        application_stream_name="Redis 5",
+        stream="5",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="redis",
+        application_stream_name="Redis 6",
+        stream="6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="rhn-tools",
+        application_stream_name="Redis 6",
+        stream="1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 2.5",
+        stream="2.5",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 2.6",
+        stream="2.6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 2.7",
+        stream="2.7",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2023, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 3.0",
+        stream="3.0",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 3.1",
+        stream="3.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2025, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 3.3",
+        stream="3.3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2027, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="rust-toolset",
+        application_stream_name="Rust",
+        stream="rhel8",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=None,
+        rolling=True,
+    ),
+    AppStreamEntity(
+        name="satellite-5-client",
+        application_stream_name="Rust",
+        stream="1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="scala",
+        application_stream_name="Rust",
+        stream="2.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="squid",
+        application_stream_name="Squid 4",
+        stream="4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="subversion",
+        application_stream_name="Squid 4",
+        stream="1.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=None,
+        end_date=None,
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="subversion",
+        application_stream_name="Apache Subversion 1.10",
+        stream="1.10",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="subversion",
+        application_stream_name="Apache Subversion 1.14",
+        stream="1.14",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="swig",
+        application_stream_name="SWIG 3",
+        stream="3",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2022, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="swig",
+        application_stream_name="SWIG 4",
+        stream="4",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2024, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="swig",
+        application_stream_name="SWIG 4.1",
+        stream="4.1",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2027, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="varnish",
+        application_stream_name="Varnish 6",
+        stream="6",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="virt",
+        application_stream_name="virt rhel",
+        stream="rhel",
+        impl=AppStreamImplementation.module,
+        os_major=8,
+        start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="mariadb",
+        application_stream_name="MariaDB 10.11",
+        stream="10.11",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2028, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="maven",
+        application_stream_name="Maven 3.8",
+        stream="3.8",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.22",
+        stream="1.22",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2025, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nginx",
+        application_stream_name="NGINX 1.24",
+        stream="1.24",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2027, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 18",
+        stream="18",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2025, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 20",
+        stream="20",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2026, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="nodejs",
+        application_stream_name="Node.js 22",
+        stream="22",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2027, 4, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 8.1",
+        stream="8.1",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2025, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 8.2",
+        stream="8.2",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 15",
+        stream="15",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2028, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="postgresql",
+        application_stream_name="PostgreSQL 16",
+        stream="16",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="redis",
+        application_stream_name="Redis 7",
+        stream="7",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2026, 11, 30),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 3.1",
+        stream="3.1",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2025, 3, 31),
+        rolling=False,
+    ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 3.3",
+        stream="3.3",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        start_date=date(2022, 5, 18),
+        end_date=date(2027, 3, 31),
+        rolling=False,
+    ),
 ]
+
+APP_STREAM_MODULES_PACKAGES = [*APP_STREAM_MODULES, *APP_STREAM_PACKAGES.values()]

@@ -3,7 +3,6 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
-from enum import StrEnum
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -18,10 +17,12 @@ from pydantic import model_validator
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
-from roadmap.common import sort_null_version
+from roadmap.common import sort_attrs
 from roadmap.data import APP_STREAM_MODULES
+from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
-from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -31,14 +32,14 @@ from roadmap.models import SupportStatus
 logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
+RHELMajorVersion = t.Annotated[int, Path(description="Major RHEL version", ge=8, le=10)]
 
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
     for item in APP_STREAM_MODULES:
-        if (name, os_major) == (item["module_name"], item["rhel_major_version"]):
-            for module_stream in item["streams"]:
-                if module_stream["stream"] == stream:
-                    return module_stream["rolling"]
+        if (name, os_major) == (item.name, item.os_major):
+            if item.stream == stream:
+                return item.rolling
 
     logger.debug(f"No match for rolling RHEL {os_major} {name} {stream}")
     return False
@@ -47,19 +48,15 @@ def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
 def get_module_os_major_versions(name: str) -> set[int]:
     matches = set()
     for item in APP_STREAM_MODULES:
-        if item["module_name"] == name:
-            matches.add(item["rhel_major_version"])
+        if item.name == name:
+            matches.add(item.os_major)
 
     return matches
 
 
-class AppStreamImplementation(StrEnum):
-    scl = "scl"
-    package = "package"
-    module = "dnf_module"
-
-
 class AppStreamCount(BaseModel):
+    """All these things must match in order for a module to be considered the same."""
+
     model_config = ConfigDict(frozen=True)
 
     name: str
@@ -71,7 +68,9 @@ class AppStreamCount(BaseModel):
     rolling: bool = False
 
 
-class AppStream(BaseModel):
+class RelevantAppStream(BaseModel):
+    """App stream module or package with calculated support status."""
+
     name: str
     os_major: int | None
     os_minor: int | None = None
@@ -84,62 +83,6 @@ class AppStream(BaseModel):
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
 
-    # Module validators are run in the order they are defined.
-    @model_validator(mode="after")
-    def set_dates(self):  # noqa: C901
-        """Set end_date based on rolling status, OS major/minor, and lifecycle"""
-
-        # If not rolling, use package/module start/end dates
-        # If it is rolling, use OS start/end dates
-        #   need to know the lifecycle type
-
-        if self.rolling:
-            os_key = f"{self.os_major}{'.' + str(self.os_minor) if self.os_minor is not None else ''}"
-
-            # Start date
-            if self.start_date is None:
-                try:
-                    self.start_date = OS_LIFECYCLE_DATES[os_key].start
-                except KeyError:
-                    logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                    self.start_date = "Unknown"
-
-            # End date
-            lifecycle_attr = "end"
-            if self.os_lifecycle and self.os_lifecycle is not LifecycleType.mainline:
-                lifecycle_attr += f"_{self.os_lifecycle.lower()}"
-
-            try:
-                self.end_date = getattr(OS_LIFECYCLE_DATES[os_key], lifecycle_attr)
-            except KeyError:
-                logger.error(f"Missing OS lifecycle data for {self.os_major}.{self.os_minor}")
-                self.end_date = "Unknown"
-
-        else:
-            if self.impl is AppStreamImplementation.package:
-                for app_stream_package in APP_STREAM_PACKAGES.values():
-                    if (app_stream_package.application_stream_name, app_stream_package.os_major) == (
-                        self.name,
-                        self.os_major,
-                    ):
-                        self.start_date = app_stream_package.start_date
-                        self.end_date = app_stream_package.end_date
-                        break
-
-            elif self.impl is AppStreamImplementation.module:
-                for app_stream_module in APP_STREAM_MODULES:
-                    if (app_stream_module["module_name"], app_stream_module["rhel_major_version"]) == (
-                        self.name,
-                        self.os_major,
-                    ):
-                        for stream in app_stream_module["streams"]:
-                            if stream["stream"] == self.stream:
-                                self.start_date = stream["start_date"]
-                                self.end_date = stream["end_date"]
-                                break
-
-        return self
-
     @model_validator(mode="after")
     def update_support_status(self):
         """Validator for setting status."""
@@ -151,9 +94,9 @@ class AppStream(BaseModel):
         return self
 
 
-class AppStreamsResponse(BaseModel):
+class RelevantAppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[AppStream]
+    data: list[RelevantAppStream]
 
 
 class AppStreamsNamesResponse(BaseModel):
@@ -161,9 +104,9 @@ class AppStreamsNamesResponse(BaseModel):
     data: list[str]
 
 
-class ModulesResponse(BaseModel):
+class AppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[dict]
+    data: list[AppStreamEntity]
 
 
 router = APIRouter(
@@ -173,58 +116,61 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ModulesResponse)
+@router.get("/", response_model=AppStreamsResponse)
 async def get_app_streams(
     name: t.Annotated[str | None, Query(description="Module name")] = None,
+    kind: AppStreamImplementation | None = None,
 ):
+    result = APP_STREAM_MODULES_PACKAGES
     if name:
-        result = [module for module in APP_STREAM_MODULES if name.lower() in module["module_name"].lower()]
+        result = [item for item in result if name.lower() in item.name.lower()]
 
-        return {
-            "meta": {"total": len(result), "count": len(result)},
-            "data": result,
-        }
+    if kind:
+        result = [item for item in result if kind == item.impl]
 
     return {
-        "meta": {"total": len(APP_STREAM_MODULES), "count": len(APP_STREAM_MODULES)},
-        "data": [module for module in APP_STREAM_MODULES],
+        "meta": {"total": len(result), "count": len(result)},
+        "data": sorted(result, key=sort_attrs("name")),
     }
 
 
-@router.get("/{major_version}", response_model=ModulesResponse)
+@router.get("/{major_version}", response_model=AppStreamsResponse)
 async def get_major_version(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
+    major_version: RHELMajorVersion,
 ):
-    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
+    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
-        "meta": {"total": len(modules), "count": len(modules)},
-        "data": modules,
+        "meta": {"total": len(result), "count": len(result)},
+        "data": sorted(result, key=sort_attrs("name")),
     }
 
 
 @router.get("/{major_version}/names", response_model=AppStreamsNamesResponse)
-async def get_module_names(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
+async def get_app_stream_item_names(
+    major_version: RHELMajorVersion,
 ):
-    modules = [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]
+    modules = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
     return {
         "meta": {"total": len(modules), "count": len(modules)},
-        "data": sorted(item["module_name"] for item in modules),
+        "data": sorted({item.name for item in modules}),
     }
 
 
-@router.get("/{major_version}/{module_name}", response_model=ModulesResponse)
-async def get_module(
-    major_version: t.Annotated[int, Path(description="Major RHEL version", gt=1, le=200)],
-    module_name: t.Annotated[str, Path(description="Module name")],
+@router.get("/{major_version}/{name}", response_model=AppStreamsResponse)
+async def get_app_stream_item(
+    major_version: RHELMajorVersion,
+    name: t.Annotated[str, Path(description="Module or package name")],
 ):
-    if data := [module for module in APP_STREAM_MODULES if module.get("rhel_major_version", 0) == major_version]:
-        if modules := sorted(item for item in data if item.get("module_name") == module_name):
-            return {"meta": {"total": len(modules), "count": len(modules)}, "data": modules}
+    if data := [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]:
+        if items := sorted((item for item in data if item.name == name), key=sort_attrs("name")):
+            return {
+                "meta": {"total": len(items), "count": len(items)},
+                "data": items,
+            }
 
     raise HTTPException(
         status_code=404,
-        detail=f"No modules found with name '{module_name}'",
+        detail=f"No modules or packages found with name '{name}'",
     )
 
 
@@ -235,7 +181,7 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("/", response_model=AppStreamsResponse)
+@relevant.get("/", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
@@ -322,7 +268,7 @@ async def get_relevant_app_streams(  # noqa: C901
             continue
 
         try:
-            value_to_add = AppStream(
+            value_to_add = RelevantAppStream(
                 name=count_key.name,
                 stream=count_key.stream,
                 os_major=count_key.os_major,
@@ -331,7 +277,6 @@ async def get_relevant_app_streams(  # noqa: C901
                 impl=count_key.impl,
                 count=count,
                 rolling=count_key.rolling,
-                support_status=SupportStatus.supported,  # TODO: Calculate support status
             )
             response.append(value_to_add)
         except Exception as exc:
@@ -342,5 +287,5 @@ async def get_relevant_app_streams(  # noqa: C901
             "count": len(module_count),
             "total": sum(item.count for item in response),
         },
-        "data": sorted(response, key=sort_null_version("name", "os_major", "os_minor", "os_lifecycle")),
+        "data": sorted(response, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
     }

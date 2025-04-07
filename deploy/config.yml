@@ -244,6 +244,7 @@ parameters:
 
   - name: DB_NAME
     required: true
+    value: roadmap
 
   - name: ROADMAP_HOST_INVENTORY_URL
 

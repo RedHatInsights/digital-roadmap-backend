@@ -9,6 +9,7 @@ from fastapi import Header
 from fastapi import Path
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
+from fastapi.params import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -52,6 +53,30 @@ def get_module_os_major_versions(name: str) -> set[int]:
             matches.add(item.os_major)
 
     return matches
+
+
+async def filter_app_stream_results(data, filter_params):
+    if name := filter_params.get("name"):
+        data = [item for item in data if name.lower() in item.name.lower()]
+
+    if kind := filter_params.get("kind"):
+        data = [item for item in data if kind == item.impl]
+
+    if application_stream_name := filter_params.get("application_stream_name"):
+        data = [item for item in data if application_stream_name.lower() in item.application_stream_name.lower()]
+
+    return data
+
+
+async def filter_params(
+    name: t.Annotated[str | None, Query(description="Module or package name")] = None,
+    kind: AppStreamImplementation | None = None,
+    application_stream_name: t.Annotated[str | None, Query(description="App Stream name")] = None,
+):
+    return {"name": name, "kind": kind, "application_stream_name": application_stream_name}
+
+
+AppStreamFilter = t.Annotated[dict, Depends(filter_params)]
 
 
 class AppStreamCount(BaseModel):
@@ -117,16 +142,9 @@ router = APIRouter(
 
 
 @router.get("/", response_model=AppStreamsResponse)
-async def get_app_streams(
-    name: t.Annotated[str | None, Query(description="Module name")] = None,
-    kind: AppStreamImplementation | None = None,
-):
+async def get_app_streams(filter_params: AppStreamFilter):
     result = APP_STREAM_MODULES_PACKAGES
-    if name:
-        result = [item for item in result if name.lower() in item.name.lower()]
-
-    if kind:
-        result = [item for item in result if kind == item.impl]
+    result = await filter_app_stream_results(result, filter_params)
 
     return {
         "meta": {"total": len(result), "count": len(result)},
@@ -137,8 +155,11 @@ async def get_app_streams(
 @router.get("/{major_version}", response_model=AppStreamsResponse)
 async def get_major_version(
     major_version: RHELMajorVersion,
+    filter_params: AppStreamFilter,
 ):
     result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = await filter_app_stream_results(result, filter_params)
+
     return {
         "meta": {"total": len(result), "count": len(result)},
         "data": sorted(result, key=sort_attrs("name")),
@@ -148,30 +169,15 @@ async def get_major_version(
 @router.get("/{major_version}/names", response_model=AppStreamsNamesResponse)
 async def get_app_stream_item_names(
     major_version: RHELMajorVersion,
+    filter_params: AppStreamFilter,
 ):
-    modules = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = await filter_app_stream_results(result, filter_params)
+
     return {
-        "meta": {"total": len(modules), "count": len(modules)},
-        "data": sorted({item.name for item in modules}),
+        "meta": {"total": len(result), "count": len(result)},
+        "data": sorted({item.name for item in result}),
     }
-
-
-@router.get("/{major_version}/{name}", response_model=AppStreamsResponse)
-async def get_app_stream_item(
-    major_version: RHELMajorVersion,
-    name: t.Annotated[str, Path(description="Module or package name")],
-):
-    if data := [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]:
-        if items := sorted((item for item in data if item.name == name), key=sort_attrs("name")):
-            return {
-                "meta": {"total": len(items), "count": len(items)},
-                "data": items,
-            }
-
-    raise HTTPException(
-        status_code=404,
-        detail=f"No modules or packages found with name '{name}'",
-    )
 
 
 ## Relevant ##

@@ -17,6 +17,16 @@ def test_get_app_streams(api_prefix, client):
     assert len(data) > 0
 
 
+def test_get_app_streams_filter(api_prefix, client):
+    result = client.get(
+        f"{api_prefix}/lifecycle/app-streams", params={"kind": "package", "application_stream_name": "nginx"}
+    )
+    data = result.json().get("data", [])
+
+    assert result.status_code == 200
+    assert len(data) > 0
+
+
 @pytest.mark.parametrize("version", (8, 9))
 def test_get_app_streams_by_version(api_prefix, client, version):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}")
@@ -46,7 +56,7 @@ def test_get_app_stream_names(api_prefix, client, version):
 
 
 def test_get_app_stream_module_info(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/nginx")
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/", params={"name": "nginx"})
     data = result.json().get("data", "")
     module_names = set(module["name"] for module in data)
 
@@ -56,11 +66,11 @@ def test_get_app_stream_module_info(api_prefix, client):
 
 
 def test_get_app_stream_module_info_not_found(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/NOPE")
-    detail = result.json().get("detail", "")
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/", params={"name": "NOPE"})
+    data = result.json().get("data", "")
 
-    assert result.status_code == 404
-    assert "no modules" in detail.lower()
+    assert result.status_code == 200
+    assert len(data) == 0
 
 
 def test_get_relevant_app_stream(api_prefix, client, mocker, read_json_fixture):

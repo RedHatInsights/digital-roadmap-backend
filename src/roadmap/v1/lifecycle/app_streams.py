@@ -166,7 +166,7 @@ async def get_major_version(
     }
 
 
-@router.get("/{major_version}/names", response_model=AppStreamsNamesResponse)
+@router.get("/{major_version}/packages", response_model=AppStreamsNamesResponse)
 async def get_app_stream_item_names(
     major_version: RHELMajorVersion,
     filter_params: AppStreamFilter,
@@ -177,6 +177,20 @@ async def get_app_stream_item_names(
     return {
         "meta": {"total": len(result), "count": len(result)},
         "data": sorted({item.name for item in result}),
+    }
+
+
+@router.get("/{major_version}/streams", response_model=AppStreamsNamesResponse)
+async def get_app_stream_names(
+    major_version: RHELMajorVersion,
+    filter_params: AppStreamFilter,
+):
+    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = await filter_app_stream_results(result, filter_params)
+
+    return {
+        "meta": {"total": len(result), "count": len(result)},
+        "data": sorted({item.application_stream_name for item in result}),
     }
 
 

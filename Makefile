@@ -1,6 +1,6 @@
 PROJECT_DIR=$(shell pwd)
 
-VENV_DIR=.venvs/digital_roadmap
+VENV_DIR=.venvs/roadmap
 PYTHON ?= $(shell which python || which python3)
 VENV_PYTHON=$(VENV_DIR)/bin/python
 PYTHON_VERSION = $(shell $(VENV_PYTHON) -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
@@ -12,7 +12,7 @@ PRE_COMMIT=$(VENV_DIR)/bin/pre-commit
 
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 
-ROADMAP_DB_IMAGE ?= quay.io/samdoran/digital-roadmap-data
+ROADMAP_DB_IMAGE ?= quay.io/samdoran/roadmap-data
 ROADMAP_DB_PORT ?= 5432
 
 # Set the shell because otherwise this defaults to /bin/sh,
@@ -55,11 +55,11 @@ endif
 
 .PHONY: start-db
 start-db: stop-db
-	$(CONTAINER_RUNTIME) run --rm -d -p $(ROADMAP_DB_PORT):5432 --name digital-roadmap-data $(ROADMAP_DB_IMAGE)
+	$(CONTAINER_RUNTIME) run --rm -d -p $(ROADMAP_DB_PORT):5432 --name roadmap-data $(ROADMAP_DB_IMAGE)
 
 .PHONY: stop-db
 stop-db: check-container-runtime
-	@$(CONTAINER_RUNTIME) stop digital-roadmap-data > /dev/null 2>&1 || true
+	@$(CONTAINER_RUNTIME) stop roadmap-data > /dev/null 2>&1 || true
 	@sleep 0.1
 
 .PHONY: run
@@ -84,4 +84,4 @@ test:
 
 .PHONY: build
 build: check-container-runtime
-	$(CONTAINER_RUNTIME) build -t digital-roadmap:latest -f Containerfile .
+	$(CONTAINER_RUNTIME) build -t roadmap:latest -f Containerfile .

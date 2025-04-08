@@ -60,4 +60,4 @@ COPY /scripts/replication.py /usr/local/bin/replication.py
 USER roady
 WORKDIR /srv/roady
 
-CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--port", "8000", "--host", "0.0.0.0"]

@@ -97,7 +97,7 @@ Alternatively you may create your own virtual environment, install the requireme
 ```
 # After creating and activating a virtual environment
 pip install -r requirements/requirements-dev-{Python version}.txt
-fastapi run src/roadmap/main.py --reload --host 127.0.0.1 --port 8000
+uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug
 ```
 
 The database runs in a container and contains data already. To specify a different container image, set `DB_IMAGE`.

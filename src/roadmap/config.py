@@ -26,13 +26,19 @@ class Settings(BaseSettings):
         )
 
 
-SETTINGS = Settings()
-
+_overrides = {}
 # True if ACG_CONFIG is set.
 if isClowderEnabled():
     # ACG_CONFIG must refer to a json file. Its contents populate LoadedConfig.
-    SETTINGS.db_name = LoadedConfig.database.name
-    SETTINGS.db_user = LoadedConfig.database.username
-    SETTINGS.db_password = SecretStr(LoadedConfig.database.password)
-    SETTINGS.db_host = LoadedConfig.database.hostname
-    SETTINGS.db_port = LoadedConfig.database.port
+    db = LoadedConfig.database
+    _overrides.update(
+        {
+            "db_name": db.name,
+            "db_user": db.username,
+            "db_password": SecretStr(db.password),
+            "db_host": db.hostname,
+            "db_port": db.port,
+        }
+    )
+
+SETTINGS = Settings(**_overrides)

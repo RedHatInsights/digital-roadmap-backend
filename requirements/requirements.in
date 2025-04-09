@@ -1,3 +1,4 @@
+app-common-python
 fastapi[standard]
 greenlet
 prometheus-fastapi-instrumentator
@@ -5,4 +6,3 @@ psycopg[c]
 pydantic-settings
 sentry-sdk
 sqlalchemy
-app-common-python

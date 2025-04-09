@@ -1,9 +1,9 @@
+from app_common_python import isClowderEnabled
+from app_common_python import LoadedConfig
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
-
-from app_common_python import isClowderEnabled, LoadedConfig
 
 
 class Settings(BaseSettings):

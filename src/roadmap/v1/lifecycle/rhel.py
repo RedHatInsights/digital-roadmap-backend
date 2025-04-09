@@ -41,7 +41,7 @@ class LifecycleResponse(BaseModel):
     data: list[RHELLifecycle]
 
 
-@router.get("/", summary="Return lifecycle data for all RHEL versions", response_model=LifecycleResponse)
+@router.get("", summary="Return lifecycle data for all RHEL versions", response_model=LifecycleResponse)
 async def get_systems():
     return {"data": get_lifecycle_data()}
 
@@ -81,7 +81,7 @@ relevant = APIRouter(
 
 @relevant.get("/{major}/{minor}")
 @relevant.get("/{major}")
-@relevant.get("/")
+@relevant.get("")
 async def get_relevant_systems(
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,

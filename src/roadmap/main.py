@@ -34,7 +34,7 @@ logging.getLogger("uvicorn.access").addFilter(HealtCheckFilter())
 
 
 # Initialize FastAPI app
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 # Add Prometheus metrics
 instrumentor = Instrumentator()

@@ -141,7 +141,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=AppStreamsResponse)
+@router.get("", response_model=AppStreamsResponse)
 async def get_app_streams(filter_params: AppStreamFilter):
     result = APP_STREAM_MODULES_PACKAGES
     result = await filter_app_stream_results(result, filter_params)
@@ -201,7 +201,7 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("/", response_model=RelevantAppStreamsResponse)
+@relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,

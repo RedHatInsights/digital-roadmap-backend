@@ -14,7 +14,7 @@ from roadmap.models import TaggedParagraph
 router = APIRouter(prefix="/release-notes", tags=["Release Notes"])
 
 
-@router.get("/")
+@router.get("")
 async def get_release_notes(
     major: int = Query(..., description="Major version number"),
     minor: int = Query(..., description="Minor version number"),

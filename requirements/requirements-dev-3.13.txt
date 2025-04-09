@@ -1,22 +1,23 @@
 -r requirements-3.13.txt
 -r requirements-test-3.13.txt
 asttokens==3.0.0
+certifi==2025.1.31
 cfgv==3.4.0
 decorator==5.2.1
 distlib==0.3.9
 executing==2.2.0
-filelock==3.17.0
+filelock==3.18.0
 identify==2.6.9
 ipdb==0.13.13
-ipython==9.0.2
+ipython==9.1.0
 ipython_pygments_lexers==1.1.1
 jedi==0.19.2
 matplotlib-inline==0.1.7
 nodeenv==1.9.1
 parso==0.8.4
 pexpect==4.9.0
-platformdirs==4.3.6
-pre_commit==4.1.0
+platformdirs==4.3.7
+pre_commit==4.2.0
 prompt_toolkit==3.0.50
 ptyprocess==0.7.0
 pure_eval==0.2.3
@@ -24,5 +25,5 @@ Pygments==2.19.1
 PyYAML==6.0.2
 stack-data==0.6.3
 traitlets==5.14.3
-virtualenv==20.29.3
+virtualenv==20.30.0
 wcwidth==0.2.13

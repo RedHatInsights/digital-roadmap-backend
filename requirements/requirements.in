@@ -5,3 +5,4 @@ psycopg[c]
 pydantic-settings
 sentry-sdk
 sqlalchemy
+app-common-python

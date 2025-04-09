@@ -3,6 +3,8 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from app_common_python import isClowderEnabled, LoadedConfig
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True)
@@ -25,3 +27,12 @@ class Settings(BaseSettings):
 
 
 SETTINGS = Settings()
+
+# True if ACG_CONFIG is set.
+if isClowderEnabled():
+    # ACG_CONFIG must refer to a json file. Its contents populate LoadedConfig.
+    SETTINGS.db_name = LoadedConfig.database.name
+    SETTINGS.db_user = LoadedConfig.database.username
+    SETTINGS.db_password = SecretStr(LoadedConfig.database.password)
+    SETTINGS.db_host = LoadedConfig.database.hostname
+    SETTINGS.db_port = LoadedConfig.database.port

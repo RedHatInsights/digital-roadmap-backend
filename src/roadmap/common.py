@@ -55,8 +55,20 @@ async def query_host_inventory(
 
         return response_data
 
+    query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
+    if major is not None:
+        query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"
+
+    if minor is not None:
+        query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
+
     result_set = await session.execute(
-        text("SELECT * FROM hbi.hosts WHERE org_id = :org_id;"), params={"org_id": org_id}
+        text(query),
+        params={
+            "org_id": org_id,
+            "major": str(major),
+            "minor": str(minor),
+        },
     )
     return result_set.mappings().all()
 

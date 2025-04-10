@@ -226,7 +226,7 @@ async def get_relevant_app_streams(  # noqa: C901
         # Make sure the system is RHEL
         name = system_profile.get("operating_system", {}).get("name")
         if name != "RHEL":
-            logger.info("Unable to get relevant systems due to missing OS from system profile")
+            logger.info(f"Unable to get relevant systems due to missing OS from system profile. ID={system.get('id')}")
             continue
 
         os_major = system_profile.get("operating_system", {}).get("major")

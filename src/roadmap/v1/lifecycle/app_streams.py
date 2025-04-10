@@ -213,6 +213,8 @@ async def get_relevant_app_streams(  # noqa: C901
     # TODO: RBAC check. Is the requester allowed to access Inventory?
     inventory_result = await query_host_inventory(session=session, org_id=org_id)
 
+    logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
+
     module_count = defaultdict(int)
     # Get a count of each module and package based on OS and OS lifecycle
     for system in inventory_result:
@@ -231,6 +233,9 @@ async def get_relevant_app_streams(  # noqa: C901
         os_minor = system_profile.get("operating_system", {}).get("minor")
         os_lifecycle = get_lifecycle_type(system_profile.get("installed_products", [{}]))
         dnf_modules = system_profile.get("dnf_modules", [])
+
+        if not dnf_modules:
+            logger.info("Missing dnf modules")
 
         app_stream_counts = set()
         for dnf_module in dnf_modules:
@@ -254,6 +259,9 @@ async def get_relevant_app_streams(  # noqa: C901
             app_stream_counts.add(count_key)
 
         package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in system_profile.get("installed_packages", "")}
+        if not package_names:
+            logger.info("Missing package names")
+
         for package_name in package_names:
             if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
                 # Ensure os_major on app stream package is same as os_major of system

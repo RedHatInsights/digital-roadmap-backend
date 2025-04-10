@@ -148,3 +148,16 @@ def ensure_date(value: str | date):
         return date.fromisoformat(value)
     except (ValueError, TypeError):
         raise ValueError("Date must be in ISO 8601 format")
+
+
+def decode_header(encoded_header: str | None) -> str:
+    # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
+    if encoded_header is None:
+        return ""
+
+    decoded_id_header = base64.b64decode(encoded_header).decode("utf-8")
+    id_header = json.loads(decoded_id_header)
+    identity = id_header.get("identity", {})
+    org_id = identity.get("org_id", "")
+
+    return org_id

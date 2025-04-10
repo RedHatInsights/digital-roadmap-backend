@@ -14,7 +14,9 @@ from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
@@ -24,6 +26,7 @@ from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.database import get_db
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -203,21 +206,17 @@ relevant = APIRouter(
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
-    authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
-    user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    session: t.Annotated[AsyncSession, Depends(get_db)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ):
-    headers = {
-        "Authorization": authorization,
-        "User-Agent": user_agent,
-        "X-RH-Identity": x_rh_identity,
-    }
-    module_count = defaultdict(int)
-    inventory_result = await query_host_inventory(headers=headers)
+    org_id = decode_header(x_rh_identity)
+    # TODO: RBAC check. Is the requester allowed to access Inventory?
+    inventory_result = await query_host_inventory(session=session, org_id=org_id)
 
+    module_count = defaultdict(int)
     # Get a count of each module and package based on OS and OS lifecycle
-    for system in inventory_result.get("results", []):
-        system_profile = system.get("system_profile")
+    for system in inventory_result:
+        system_profile = system.get("system_profile_facts")
         if not system_profile:
             logger.info(f"Unable to get relevant systems due to missing system profile. ID={system.get('id')}")
             continue

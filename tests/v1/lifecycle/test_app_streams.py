@@ -37,7 +37,7 @@ def test_get_app_streams_by_version(api_prefix, client, version):
 
 
 def test_get_app_streams_by_name(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/", params={"name": "nginx"})
+    result = client.get(f"{api_prefix}/lifecycle/app-streams", params={"name": "nginx"})
     data = result.json().get("data", [])
     names = set(item["name"] for item in data)
 
@@ -65,7 +65,7 @@ def test_get_app_stream_stream_names(api_prefix, client, version):
 
 
 def test_get_app_stream_module_info(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/", params={"name": "nginx"})
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/8", params={"name": "nginx"})
     data = result.json().get("data", "")
     module_names = set(module["name"] for module in data)
 
@@ -75,7 +75,7 @@ def test_get_app_stream_module_info(api_prefix, client):
 
 
 def test_get_app_stream_module_info_not_found(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/8/", params={"name": "NOPE"})
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/8", params={"name": "NOPE"})
     data = result.json().get("data", "")
 
     assert result.status_code == 200
@@ -86,7 +86,7 @@ def test_get_relevant_app_stream(api_prefix, client, mocker, read_json_fixture):
     mock_response = read_json_fixture("inventory_response_packages.json.gz")
     mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
 
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams/")
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     data = result.json().get("data", "")
 
     assert result.status_code == 200
@@ -98,7 +98,7 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker, read_json_fix
     mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
     mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
 
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams/")
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     detail = result.json().get("detail", "")
 
     assert result.status_code == 400

@@ -5,14 +5,18 @@ from collections import defaultdict
 from operator import attrgetter
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Header
 from fastapi import Path
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import sort_attrs
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.database import get_db
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -83,22 +87,18 @@ relevant = APIRouter(
 @relevant.get("/{major}")
 @relevant.get("")
 async def get_relevant_systems(
-    authorization: t.Annotated[str | None, Header(include_in_schema=False)] = None,
-    user_agent: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    session: t.Annotated[AsyncSession, Depends(get_db)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     major: int | None = None,
     minor: int | None = None,
 ) -> RelevantSystemsResponse:
-    headers = {
-        "Authorization": authorization,
-        "User-Agent": user_agent,
-        "X-RH-Identity": x_rh_identity,
-    }
-    systems_response = await query_host_inventory(headers=headers, major=major, minor=minor)
+    org_id = decode_header(x_rh_identity)
+    # TODO: RBAC check. Is the requester allowed to access Inventory?
+    systems_response = await query_host_inventory(session=session, org_id=org_id, major=major, minor=minor)
 
     system_counts = defaultdict(int)
-    for result in systems_response.get("results", []):
-        system_profile = result.get("system_profile")
+    for result in systems_response:
+        system_profile = result.get("system_profile_facts")
         if not system_profile:
             logger.info(f"Unable to get relevant systems due to missing system profile. ID={result.get('id')}")
             continue

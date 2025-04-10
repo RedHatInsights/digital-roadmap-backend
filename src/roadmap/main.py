@@ -11,7 +11,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 
 import roadmap.v1
 
-from roadmap.common import HealtCheckFilter
+from roadmap.common import HealthCheckFilter
 
 
 if os.getenv("SENTRY_DSN"):
@@ -30,7 +30,7 @@ if os.getenv("SENTRY_DSN"):
         ],
     )
 
-logging.getLogger("uvicorn.access").addFilter(HealtCheckFilter())
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
 
 
 # Initialize FastAPI app

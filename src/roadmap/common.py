@@ -18,7 +18,7 @@ from roadmap.models import LifecycleType
 logger = logging.getLogger("uvicorn.error")
 
 
-class HealtCheckFilter(logging.Filter):
+class HealthCheckFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         return record.getMessage().find("/v1/ping") == -1
 

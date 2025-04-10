@@ -7,6 +7,7 @@ import pytest
 
 from fastapi import HTTPException
 
+from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
 
@@ -130,3 +131,16 @@ def test_ensure_date(date_string):
 def test_ensure_date_error(date_string):
     with pytest.raises((ValueError, TypeError), match="Date must be"):
         ensure_date(date_string)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    (
+        (None, ""),
+        (b"eyJpZGVudGl0eSI6IHsib3JnX2lkIjogIjMxNDE1OTcifX0=", "3141597"),
+    ),
+)
+def test_decode_header(value, expected):
+    result = decode_header(value)
+
+    assert result == expected

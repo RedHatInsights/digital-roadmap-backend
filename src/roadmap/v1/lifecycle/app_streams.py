@@ -277,9 +277,29 @@ async def get_relevant_app_streams(  # noqa: C901
                 continue
 
             rolling = get_rolling_value(dnf_module["name"], dnf_module["stream"], os_major)
+
+            for app_stream_module in APP_STREAM_MODULES:
+                if (app_stream_module.name, app_stream_module.os_major, app_stream_module.stream) == (
+                    dnf_module["name"],
+                    os_major,
+                    dnf_module["stream"],
+                ):
+                    matched_module = app_stream_module
+                    break
+            else:
+                logger.debug(
+                    f"Did not find matching app stream module {app_stream_module.name}, {app_stream_module.os_major}, {app_stream_module.stream}"
+                )
+                matched_module = AppStreamEntity(
+                    name=dnf_module["name"],
+                    stream=dnf_module["stream"],
+                    application_stream_name="Unknown",
+                    impl=AppStreamImplementation.module,
+                )
+
             count_key = AppStreamCount(
-                name=dnf_module["name"],
-                stream=dnf_module["stream"],
+                name=matched_module.name,
+                stream=matched_module.stream,
                 application_stream_name=matched_module.application_stream_name,
                 os_major=os_major,
                 os_minor=os_minor if rolling else None,

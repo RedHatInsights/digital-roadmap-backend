@@ -30,7 +30,7 @@ class AppStreamEntity(BaseModel):
     application_stream_name: str
     stream: str
     start_date: Date | None = None
-    end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"))
+    end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
     impl: AppStreamImplementation
     initial_product_version: str | None = None
     os_major: int | None = None
@@ -50,7 +50,6 @@ class AppStreamEntity(BaseModel):
             try:
                 self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start
             except KeyError:
-                self.start_date = "Unknown"
                 return self
 
         return self

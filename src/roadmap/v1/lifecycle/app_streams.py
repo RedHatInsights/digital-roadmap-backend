@@ -94,8 +94,6 @@ class AppStreamCount(BaseModel):
     stream: str
     impl: AppStreamImplementation
     rolling: bool = False
-    start_date: date | None = None
-    end_date: date | None = None
 
 
 class RelevantAppStream(BaseModel):
@@ -120,6 +118,33 @@ class RelevantAppStream(BaseModel):
         self.support_status = _calculate_support_status(
             start_date=self.start_date, end_date=self.end_date, current_date=today
         )
+
+        return self
+
+    @model_validator(mode="after")
+    def set_dates(self):
+        """Set end_date based on rolling status, OS major/minor, and lifecycle"""
+
+        if self.impl is AppStreamImplementation.package:
+            for app_stream_package in APP_STREAM_PACKAGES.values():
+                if (app_stream_package.application_stream_name, app_stream_package.os_major) == (
+                    self.name,
+                    self.os_major,
+                ):
+                    self.start_date = app_stream_package.start_date
+                    self.end_date = app_stream_package.end_date
+                    break
+
+        elif self.impl is AppStreamImplementation.module:
+            for app_stream_module in APP_STREAM_MODULES:
+                if (app_stream_module.name, app_stream_module.os_major, app_stream_module.stream) == (
+                    self.name,
+                    self.os_major,
+                    self.stream,
+                ):
+                    self.start_date = app_stream_module.start_date
+                    self.end_date = app_stream_module.end_date
+                    break
 
         return self
 
@@ -283,8 +308,6 @@ async def get_relevant_app_streams(  # noqa: C901
                     os_lifecycle=os_lifecycle if app_stream_package.rolling else None,
                     rolling=app_stream_package.rolling,
                     impl=AppStreamImplementation.package,
-                    start_date=app_stream_package.start_date,
-                    end_date=app_stream_package.end_date,
                 )
                 app_stream_counts.add(count_key)
 
@@ -308,8 +331,6 @@ async def get_relevant_app_streams(  # noqa: C901
                 impl=count_key.impl,
                 count=count,
                 rolling=count_key.rolling,
-                start_date=count_key.start_date,
-                end_date=count_key.end_date,
             )
             response.append(value_to_add)
         except Exception as exc:

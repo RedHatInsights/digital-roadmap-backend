@@ -1,5 +1,7 @@
+import os
+
 from app_common_python import isClowderEnabled
-from app_common_python import LoadedConfig
+from app_common_python import loadConfig
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -40,7 +42,11 @@ class Settings(BaseSettings):
         if isClowderEnabled():
             # ACG_CONFIG must refer to a json file.
             # Its contents populate LoadedConfig.
-            db = LoadedConfig.database
+
+            # This is how Clowder docs tell you to do it:
+            # db = LoadedConfig.database
+            # However, that confounds our testing, so instead we do this:
+            db = loadConfig(os.environ.get("ACG_CONFIG")).database
             return cls(
                 db_name=db.name,
                 db_user=db.username,

@@ -88,6 +88,7 @@ class AppStreamCount(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     name: str
+    application_stream_name: str
     os_major: int | None
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
@@ -100,6 +101,7 @@ class RelevantAppStream(BaseModel):
     """App stream module or package with calculated support status."""
 
     name: str
+    application_stream_name: str
     os_major: int | None
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
@@ -277,6 +279,7 @@ async def get_relevant_app_streams(  # noqa: C901
             count_key = AppStreamCount(
                 name=dnf_module["name"],
                 stream=dnf_module["stream"],
+                application_stream_name=matched_module.application_stream_name,
                 os_major=os_major,
                 os_minor=os_minor if rolling else None,
                 os_lifecycle=os_lifecycle if rolling else None,
@@ -298,6 +301,7 @@ async def get_relevant_app_streams(  # noqa: C901
 
                 count_key = AppStreamCount(
                     name=app_stream_package.application_stream_name,
+                    application_stream_name=app_stream_package.application_stream_name,
                     stream=app_stream_package.stream,
                     os_major=os_major,
                     os_minor=os_minor if app_stream_package.rolling else None,
@@ -324,6 +328,7 @@ async def get_relevant_app_streams(  # noqa: C901
         try:
             value_to_add = RelevantAppStream(
                 name=count_key.name,
+                application_stream_name=count_key.application_stream_name,
                 stream=count_key.stream,
                 os_major=count_key.os_major,
                 os_minor=count_key.os_minor,

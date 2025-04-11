@@ -244,18 +244,19 @@ async def get_relevant_app_streams(  # noqa: C901
 
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
-    module_count = defaultdict(int)
     # Get a count of each module and package based on OS and OS lifecycle
+    module_count = defaultdict(int)
+    missing = defaultdict(int)
     for system in inventory_result:
         system_profile = system.get("system_profile_facts")
         if not system_profile:
-            logger.info(f"Unable to get relevant systems due to missing system profile. ID={system.get('id')}")
+            missing["system_profile"] += 1
             continue
 
         # Make sure the system is RHEL
         name = system_profile.get("operating_system", {}).get("name")
         if name != "RHEL":
-            logger.info(f"Unable to get relevant systems due to missing OS from system profile. ID={system.get('id')}")
+            missing["os"] += 1
             continue
 
         os_major = system_profile.get("operating_system", {}).get("major")
@@ -264,7 +265,7 @@ async def get_relevant_app_streams(  # noqa: C901
         dnf_modules = system_profile.get("dnf_modules", [])
 
         if not dnf_modules:
-            logger.info("Missing dnf modules")
+            missing["dnf_modules"] += 1
 
         app_stream_counts = set()
         for dnf_module in dnf_modules:
@@ -290,7 +291,7 @@ async def get_relevant_app_streams(  # noqa: C901
 
         package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in system_profile.get("installed_packages", "")}
         if not package_names:
-            logger.info("Missing package names")
+            missing["package_names"] += 1
 
         for package_name in package_names:
             if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
@@ -317,6 +318,10 @@ async def get_relevant_app_streams(  # noqa: C901
 
         for app_stream_count in app_stream_counts:
             module_count[app_stream_count] += 1
+
+    if missing:
+        missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
+        logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
     # Build response
     response = []

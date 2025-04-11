@@ -93,6 +93,8 @@ class AppStreamCount(BaseModel):
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
     stream: str
+    start_date: Date | None = None
+    end_date: Date | None = None
     impl: AppStreamImplementation
     rolling: bool = False
 
@@ -120,33 +122,6 @@ class RelevantAppStream(BaseModel):
         self.support_status = _calculate_support_status(
             start_date=self.start_date, end_date=self.end_date, current_date=today
         )
-
-        return self
-
-    @model_validator(mode="after")
-    def set_dates(self):
-        """Set end_date based on rolling status, OS major/minor, and lifecycle"""
-
-        if self.impl is AppStreamImplementation.package:
-            for app_stream_package in APP_STREAM_PACKAGES.values():
-                if (app_stream_package.application_stream_name, app_stream_package.os_major) == (
-                    self.name,
-                    self.os_major,
-                ):
-                    self.start_date = app_stream_package.start_date
-                    self.end_date = app_stream_package.end_date
-                    break
-
-        elif self.impl is AppStreamImplementation.module:
-            for app_stream_module in APP_STREAM_MODULES:
-                if (app_stream_module.name, app_stream_module.os_major, app_stream_module.stream) == (
-                    self.name,
-                    self.os_major,
-                    self.stream,
-                ):
-                    self.start_date = app_stream_module.start_date
-                    self.end_date = app_stream_module.end_date
-                    break
 
         return self
 
@@ -293,6 +268,8 @@ async def get_relevant_app_streams(  # noqa: C901
                 matched_module = AppStreamEntity(
                     name=dnf_module["name"],
                     stream=dnf_module["stream"],
+                    start_date=None,
+                    end_date=None,
                     application_stream_name="Unknown",
                     impl=AppStreamImplementation.module,
                 )
@@ -300,6 +277,8 @@ async def get_relevant_app_streams(  # noqa: C901
             count_key = AppStreamCount(
                 name=matched_module.name,
                 stream=matched_module.stream,
+                start_date=matched_module.start_date,
+                end_date=matched_module.start_date,
                 application_stream_name=matched_module.application_stream_name,
                 os_major=os_major,
                 os_minor=os_minor if rolling else None,
@@ -324,6 +303,8 @@ async def get_relevant_app_streams(  # noqa: C901
                     name=app_stream_package.application_stream_name,
                     application_stream_name=app_stream_package.application_stream_name,
                     stream=app_stream_package.stream,
+                    start_date=app_stream_package.start_date,
+                    end_date=app_stream_package.end_date,
                     os_major=os_major,
                     os_minor=os_minor if app_stream_package.rolling else None,
                     # TODO: Ask Brian if we want rolling releases to be displayed individually
@@ -355,6 +336,8 @@ async def get_relevant_app_streams(  # noqa: C901
                 name=count_key.name,
                 application_stream_name=count_key.application_stream_name,
                 stream=count_key.stream,
+                start_date=count_key.start_date,
+                end_date=count_key.end_date,
                 os_major=count_key.os_major,
                 os_minor=count_key.os_minor,
                 os_lifecycle=count_key.os_lifecycle,

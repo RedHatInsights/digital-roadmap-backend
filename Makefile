@@ -72,7 +72,7 @@ clean:
 
 .PHONY: freeze
 freeze:
-	@$(PROJECT_DIR)/scripts/freeze.py
+	@$(PYTHON) $(PROJECT_DIR)/scripts/freeze.py
 
 .PHONY: lint
 lint:

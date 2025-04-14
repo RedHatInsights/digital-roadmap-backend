@@ -56,6 +56,8 @@ async def query_host_inventory(
         for item in response_data:
             yield item
 
+        return
+
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
     if major is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"

@@ -174,4 +174,19 @@ OS_LIFECYCLE_DATES = {
         end=date(2032, 5, 31),
         end_els=date(2035, 5, 31),
     ),
+    "10.1": RHELLifecycle(
+        major=10,
+        minor=1,
+        start=date(2025, 11, 1),
+        end=date(2026, 5, 31),
+    ),
+    "10.2": RHELLifecycle(
+        major=10,
+        minor=2,
+        start=date(2026, 5, 15),
+        end=date(2026, 11, 30),
+        end_eus=date(2028, 5, 30),
+        end_e4s=date(2030, 5, 30),
+    ),
 }
+

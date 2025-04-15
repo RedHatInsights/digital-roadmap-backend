@@ -27,23 +27,25 @@ class HealthCheckFilter(logging.Filter):
 
 
 async def query_rbac(
-    x_rh_identity: dict[str, str | None] | None,
-):
-    if not x_rh_identity:
-        # If we don't have a token, do not try to query the API.
-        # This could be a dev/test environment.
-        logger.info("Missing authorization header. Unable to get inventory.")
-        # TODO: Maybe this should be an error with a useful message the UI could display.
-        return {}
+    x_rh_identity: dict[str, str] | None,
+) -> list[dict[t.Any, t.Any]]:
+    if SETTINGS.dev:
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
 
     params = {
         "application": "inventory",
         "limit": 1000,
     }
 
+    headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
     req = urllib.request.Request(
         f"{SETTINGS.rbac_url}/api/rbac/v1/access/{urllib.parse.urlencode(params, doseq=True)}",
-        headers={"X-RH-Identity"},  # pyright: ignore [reportArgumentType]
+        headers=headers,
     )
 
     try:
@@ -53,16 +55,33 @@ async def query_rbac(
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.code, detail=err.msg)
 
-    # TODO:
-    #  - Does the requster have access?
-    #  - What groups are they allowed to access?
-    return data
+    return data.get("data", [])
+
+
+async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple[bool, list[str]]:
+    """Check the given permissions for inventory access.
+
+    Return a boolean as well as any detailed access definitions.
+    """
+    inventory_access_perms = {"inventory:*:*", "inventory:hosts:read"}
+
+    has_access = False
+    resource_definitions = []
+    for permission in permissions:
+        if perm := permission["resourceDefinitions"]:
+            resource_definitions.append(perm)
+        else:
+            if permission["permission"] in inventory_access_perms:
+                has_access = True
+
+    return has_access, resource_definitions
 
 
 # FIXME: This should be cached
 async def query_host_inventory(
     session: AsyncSession,
     org_id: str,
+    groups: list[str] | None = None,
     major: int | None = None,
     minor: int | None = None,
 ):
@@ -94,6 +113,10 @@ async def query_host_inventory(
             yield item
 
         return
+
+    if groups:
+        # TODO: Implement group filtering
+        raise HTTPException(501, detail="Group filtering is not yet implemented")
 
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
     if major is not None:

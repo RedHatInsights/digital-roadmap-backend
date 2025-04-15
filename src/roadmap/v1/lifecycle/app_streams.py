@@ -16,10 +16,12 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
+from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
@@ -211,11 +213,19 @@ relevant = APIRouter(
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     session: t.Annotated[AsyncSession, Depends(get_db)],
-    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    x_rh_identity: t.Annotated[dict[str, str] | None, Header(include_in_schema=False)] = None,
 ):
     org_id = decode_header(x_rh_identity)
-    # TODO: RBAC check. Is the requester allowed to access Inventory?
-    inventory_result = query_host_inventory(session=session, org_id=org_id)
+    rbac_response = await query_rbac(x_rh_identity)
+    # Do you have access to inventory?
+    #   - match on inventory:*:*
+    #   - match on inventory:hosts:read
+    #   - match on inventory:*:read
+    can_access_inventory, resource_groups = await check_inventory_access(rbac_response)
+    if not can_access_inventory:
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
+
+    inventory_result = query_host_inventory(session=session, org_id=org_id, groups=resource_groups)
 
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 

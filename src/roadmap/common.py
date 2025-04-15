@@ -3,10 +3,14 @@ import gzip
 import json
 import logging
 import typing as t
+import urllib.parse
+import urllib.request
 
 from datetime import date
 from pathlib import Path
+from urllib.error import HTTPError
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -20,6 +24,39 @@ logger = logging.getLogger("uvicorn.error")
 class HealthCheckFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         return record.getMessage().find("/v1/ping") == -1
+
+
+async def query_rbac(
+    x_rh_identity: dict[str, str | None] | None,
+):
+    if not x_rh_identity:
+        # If we don't have a token, do not try to query the API.
+        # This could be a dev/test environment.
+        logger.info("Missing authorization header. Unable to get inventory.")
+        # TODO: Maybe this should be an error with a useful message the UI could display.
+        return {}
+
+    params = {
+        "application": "inventory",
+        "limit": 1000,
+    }
+
+    req = urllib.request.Request(
+        f"{SETTINGS.rbac_url}/api/rbac/v1/access/{urllib.parse.urlencode(params, doseq=True)}",
+        headers={"X-RH-Identity"},  # pyright: ignore [reportArgumentType]
+    )
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            data = json.load(response)
+    except HTTPError as err:
+        logger.error(f"Problem querying RBAC: {err}")
+        raise HTTPException(status_code=err.code, detail=err.msg)
+
+    # TODO:
+    #  - Does the requster have access?
+    #  - What groups are they allowed to access?
+    return data
 
 
 # FIXME: This should be cached

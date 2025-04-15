@@ -20,12 +20,21 @@ class Settings(BaseSettings):
     dev: bool = False
     host_inventory_url: str = "https://console.redhat.com"
     test: bool = False
+    rbac_hostname: str = ""
+    rbac_port: int = 8000
 
     @property
     def database_url(self) -> PostgresDsn:
         return PostgresDsn(
             url=f"postgresql+psycopg://{self.db_user}:{self.db_password.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}"
         )
+
+    @property
+    def rbac_url(self) -> str:
+        if not self.rbac_hostname:
+            return ""
+
+        return f"http://{self.rbac_hostname}:{self.rbac_port}"
 
     @classmethod
     def create(cls):
@@ -46,13 +55,25 @@ class Settings(BaseSettings):
             # This is how Clowder docs tell you to do it:
             # db = LoadedConfig.database
             # However, that confounds our testing, so instead we do this:
-            db = loadConfig(os.environ.get("ACG_CONFIG")).database
+            config = loadConfig(os.environ.get("ACG_CONFIG"))
+            db = config.database
+            endpoints = config.endpoints
+            rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
+            rbac_kwargs = {}
+            if rbac:
+                rbac = rbac.pop()
+                rbac_kwargs = {
+                    "rbac_hostname": rbac.hostname,
+                    "rbac_port": rbac.port,
+                }
+
             return cls(
                 db_name=db.name,
                 db_user=db.username,
                 db_password=SecretStr(db.password),
                 db_host=db.hostname,
                 db_port=db.port,
+                **rbac_kwargs,
             )
 
         return cls()

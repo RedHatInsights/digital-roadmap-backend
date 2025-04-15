@@ -83,8 +83,15 @@ def test_get_app_stream_module_info_not_found(api_prefix, client):
 
 
 def test_get_relevant_app_stream(api_prefix, client, mocker, yield_json_fixture):
-    mock_response = yield_json_fixture("inventory_db_response.json.gz")
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
+    mock_inventory_response = yield_json_fixture("inventory_db_response.json.gz")
+    mock_rbac_response = [
+        {
+            "permission": "inventory:*:*",
+            "resourceDefinitions": [],
+        }
+    ]
+    mocker.patch("roadmap.v1.lifecycle.app_streams.query_rbac", return_value=mock_rbac_response)
+    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_inventory_response)
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     data = result.json().get("data", "")
@@ -94,8 +101,15 @@ def test_get_relevant_app_stream(api_prefix, client, mocker, yield_json_fixture)
 
 
 def test_get_relevant_app_stream_error(api_prefix, client, mocker, yield_json_fixture):
-    mock_response = yield_json_fixture("inventory_db_response.json.gz")
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_response)
+    mock_inventory_response = yield_json_fixture("inventory_db_response.json.gz")
+    mock_rbac_response = [
+        {
+            "permission": "inventory:*:*",
+            "resourceDefinitions": [],
+        }
+    ]
+    mocker.patch("roadmap.v1.lifecycle.app_streams.query_rbac", return_value=mock_rbac_response)
+    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_inventory_response)
     mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")

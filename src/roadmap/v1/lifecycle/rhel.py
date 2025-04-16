@@ -7,13 +7,16 @@ from operator import attrgetter
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
+from fastapi import HTTPException
 from fastapi import Path
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
+from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.database import get_db
@@ -93,8 +96,14 @@ async def get_relevant_systems(
     minor: int | None = None,
 ) -> RelevantSystemsResponse:
     org_id = decode_header(x_rh_identity)
-    # TODO: RBAC check. Is the requester allowed to access Inventory?
-    systems_response = query_host_inventory(session=session, org_id=org_id, major=major, minor=minor)
+    rbac_response = await query_rbac(x_rh_identity)
+    can_access_inventory, resource_groups = await check_inventory_access(rbac_response)
+    if not can_access_inventory:
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
+
+    systems_response = query_host_inventory(
+        session=session, org_id=org_id, major=major, minor=minor, groups=resource_groups
+    )
 
     system_counts = defaultdict(int)
     async for result in systems_response:

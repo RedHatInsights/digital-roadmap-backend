@@ -44,7 +44,7 @@ async def query_rbac(
 
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
     req = urllib.request.Request(
-        f"{SETTINGS.rbac_url}/api/rbac/v1/access/{urllib.parse.urlencode(params, doseq=True)}",
+        f"{SETTINGS.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
         headers=headers,
     )
 

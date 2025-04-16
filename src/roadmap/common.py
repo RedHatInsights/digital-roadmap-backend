@@ -27,7 +27,7 @@ class HealthCheckFilter(logging.Filter):
 
 
 async def query_rbac(
-    x_rh_identity: dict[str, str] | None,
+    x_rh_identity: str | None,
 ) -> list[dict[t.Any, t.Any]]:
     if SETTINGS.dev:
         return [

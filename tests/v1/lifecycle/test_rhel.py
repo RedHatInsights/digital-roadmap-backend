@@ -1,5 +1,7 @@
 import pytest
 
+from roadmap.models import System
+
 
 def test_rhel_lifecycle(client, api_prefix):
     response = client.get(f"{api_prefix}/lifecycle/rhel")
@@ -38,10 +40,17 @@ def test_rhel_lifecycle_major_minor_version(client, api_prefix, params):
 
 
 def test_rhel_relevant(client, api_prefix, mocker, yield_json_fixture):
-    mock_response = yield_json_fixture("inventory_db_response.json.gz")
-    mocker.patch("roadmap.v1.lifecycle.rhel.query_host_inventory", return_value=mock_response)
-
+    mock_inventory_response = yield_json_fixture("inventory_db_response.json.gz")
+    mock_rbac_response = [
+        {
+            "permission": "inventory:*:*",
+            "resourceDefinitions": [],
+        }
+    ]
+    mocker.patch("roadmap.v1.lifecycle.rhel.query_rbac", return_value=mock_rbac_response)
+    mocker.patch("roadmap.v1.lifecycle.rhel.query_host_inventory", return_value=mock_inventory_response)
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
     data = response.json()["data"]
 
     assert len(data) > 1
+    assert data[0].keys() == System.model_fields.keys()

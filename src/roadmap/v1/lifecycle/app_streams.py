@@ -213,7 +213,7 @@ relevant = APIRouter(
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     session: t.Annotated[AsyncSession, Depends(get_db)],
-    x_rh_identity: t.Annotated[dict[str, str] | None, Header(include_in_schema=False)] = None,
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ):
     org_id = decode_header(x_rh_identity)
     rbac_response = await query_rbac(x_rh_identity)

@@ -89,7 +89,7 @@ relevant = APIRouter(
 @relevant.get("/{major}/{minor}")
 @relevant.get("/{major}")
 @relevant.get("")
-async def get_relevant_systems(
+async def get_relevant_systems(  # noqa: C901
     session: t.Annotated[AsyncSession, Depends(get_db)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
     major: int | None = None,
@@ -106,15 +106,16 @@ async def get_relevant_systems(
     )
 
     system_counts = defaultdict(int)
+    missing = defaultdict(int)
     async for result in systems_response:
         system_profile = result.get("system_profile_facts")
         if not system_profile:
-            logger.info(f"Unable to get relevant systems due to missing system profile. ID={result.get('id')}")
+            missing["system_profile"] += 1
             continue
 
         name = system_profile.get("operating_system", {}).get("name")
         if name is None:
-            logger.info("Unable to get relevant systems due to missing OS from system profile")
+            missing["os_profile"] += 1
             continue
 
         installed_products = system_profile.get("installed_products", [{}])
@@ -155,6 +156,10 @@ async def get_relevant_systems(
                 count=count,
             )
         )
+
+    if missing:
+        missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
+        logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
     return RelevantSystemsResponse(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),

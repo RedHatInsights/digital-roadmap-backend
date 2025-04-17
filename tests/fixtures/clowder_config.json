@@ -75,6 +75,17 @@
             "hostname": "endpoint2.svc",
             "port": 8000,
             "apiPath": "app2-api-path"
+        },
+        {
+          "apiPath": "/api/rbac/",
+          "apiPaths": [
+            "/api/rbac/"
+          ],
+          "app": "rbac",
+          "hostname": "rbac-service.svc",
+          "name": "service",
+          "port": 8123,
+          "tlsPort": 0
         }
     ],
     "privateEndpoints": [

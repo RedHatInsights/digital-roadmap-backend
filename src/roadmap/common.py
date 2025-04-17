@@ -69,7 +69,7 @@ async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple
     resource_definitions = []
     for permission in permissions:
         if perm := permission["resourceDefinitions"]:
-            resource_definitions.append(perm)
+            resource_definitions.append(*perm)
         else:
             if permission["permission"] in inventory_access_perms:
                 has_access = True

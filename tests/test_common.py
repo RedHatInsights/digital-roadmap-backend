@@ -7,9 +7,11 @@ import pytest
 
 from fastapi import HTTPException
 
+from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
+from roadmap.common import query_rbac
 
 
 @pytest.mark.xfail
@@ -142,5 +144,51 @@ def test_ensure_date_error(date_string):
 )
 def test_decode_header(value, expected):
     result = decode_header(value)
+
+    assert result == expected
+
+
+async def test_query_rbac(mocker, read_fixture_file):
+    mocker.patch("roadmap.common.SETTINGS.rbac_hostname", "example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(read_fixture_file("rbac_response.json", mode="rb")),
+    )
+
+    result = await query_rbac(None)
+
+    assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
+
+
+async def test_query_rbac_error(mocker):
+    mocker.patch("roadmap.common.SETTINGS.rbac_hostname", "example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
+    )
+
+    with pytest.raises(HTTPException, match="Raised intentionally"):
+        await query_rbac(None)
+
+
+async def test_query_rbac_dev_mode(mocker):
+    mocker.patch("roadmap.common.SETTINGS.dev", True)
+
+    result = await query_rbac(None)
+
+    assert result == [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+
+
+@pytest.mark.parametrize(
+    ("permissions", "expected"),
+    (
+        ([], (False, [])),
+        ([{"resourceDefinitions": ["def1"]}], (False, ["def1"])),
+        ([{"resourceDefinitions": [], "permission": "inventory:*:*"}], (True, [])),
+        ([{"resourceDefinitions": [], "permission": "nope"}], (False, [])),
+    ),
+)
+async def test_check_inventory_access(permissions, expected):
+    result = await check_inventory_access(permissions)
 
     assert result == expected

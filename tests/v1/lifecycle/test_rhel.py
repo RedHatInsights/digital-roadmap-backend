@@ -54,3 +54,13 @@ def test_rhel_relevant(client, api_prefix, mocker, yield_json_fixture):
 
     assert len(data) > 1
     assert data[0].keys() == System.model_fields.keys()
+
+
+def test_get_relevant_rhel_no_rbac_access(api_prefix, client, mocker):
+    mock_rbac_response = []
+    mocker.patch("roadmap.v1.lifecycle.rhel.query_rbac", return_value=mock_rbac_response)
+    mocker.patch("roadmap.v1.lifecycle.rhel.check_inventory_access", return_value=(False, []))
+
+    result = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert result.status_code == 403

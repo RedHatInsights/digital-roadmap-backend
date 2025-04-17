@@ -1,4 +1,5 @@
 import logging
+import string
 import typing as t
 
 from collections import defaultdict
@@ -13,6 +14,7 @@ from fastapi.params import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,6 +108,7 @@ class RelevantAppStream(BaseModel):
 
     name: str
     application_stream_name: str
+    display_name: str = Field(init=False, default="")
     os_major: int | None
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
@@ -116,6 +119,54 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
+
+    @model_validator(mode="after")
+    def set_display_name(self):
+        """Create a normalized name field for presentation"""
+
+        special_case = {
+            "apache httpd": "Apache HTTPD",
+            "llvm": "LLVM",
+            "mariadb": "MariaDB",
+            "mod_auth_openidc": "Mod Auth OpenIDC",
+            "mysql": "MySQL",
+            "nginx": "NGINX",
+            "node.js": "Node.js",
+            "nodejs": "Node.js",
+            "osinfo-db": "OSInfo DB",
+            "php": "PHP",
+            "postgresql": "PostgreSQL",
+            "rhn-tools": "RHN Tools",
+        }
+
+        self.display_name = self.name
+        if self.application_stream_name and self.application_stream_name != "Unknown":
+            self.display_name = self.application_stream_name
+
+        # Ensure the version number is in the display name
+        if self.display_name[-1] not in (string.digits):
+            try:
+                version = ".".join(self.stream.split(".")[:2])
+            except IndexError:
+                logger.debug(f"Error parsing stream version '{self.stream}' for '{self.name}'")
+                version = self.stream
+
+            # Avoid putting a duplicate string at the end
+            if self.display_name[-len(version) :] != version:
+                self.display_name = f"{self.display_name.rstrip()} {version}"
+
+        # Correct capitalization
+        for name, cased_name in special_case.items():
+            lower_name = self.display_name.lower()
+            if name in lower_name:
+                self.display_name = lower_name.replace(name, cased_name)
+                break
+        else:
+            self.display_name = self.display_name.title()
+
+        self.display_name = self.display_name.replace("-", " ").replace("Rhel", "RHEL")
+
+        return self
 
     @model_validator(mode="after")
     def update_support_status(self):

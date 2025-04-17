@@ -1,0 +1,172 @@
+[
+  {
+    "ticket": "No training ticket",
+    "title": "Node.js 22 included in RHEL 9 Application Streams TEST",
+    "summary": "RHEL 9.5 is tentatively planned to include Node.js 22. Nodejs 22 is currently available in RHEL's unsupported upstream distributions: CentOS Stream 9 and Fedora 41.  For more information on RHEL’s development process and upstream, see What is CentOS Stream?",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2024-10-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": ".NET 6 retirement",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Deprecation",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.x",
+    "release_date": "2024-11-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "gcc-toolset 12 retirement",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Deprecation",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.x",
+    "release_date": "2024-11-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Ruby 3.1 retirement",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Deprecation",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.x",
+    "release_date": "2025-03-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Node.js 18 retirement",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Deprecation",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.x",
+    "release_date": "2025-04-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "6.11 kernel version",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Change",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "gcc-toolset 14",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "gcc-toolset 14",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "MariaDB 11.0",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "MariaDB 11.0",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "PHP 8.1 retirement",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Deprecation",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.x",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "PHP 8.3",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "PHP 8.3",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Python 3.12",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Python 3.12",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Ruby 3.4",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "9.5",
+    "release_date": "2025-05-17"
+  },
+  {
+    "ticket": "No training ticket",
+    "title": "Ruby 3.5",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
+    "type": "Addition",
+    "package": "<unknown>",
+    "architecture": "<unknown>",
+    "release": "10.0",
+    "release_date": "2025-06-17"
+  }
+]

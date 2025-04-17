@@ -1,3 +1,4 @@
+import os
 import typing as t
 
 from datetime import date
@@ -27,7 +28,9 @@ class Upcoming(BaseModel):
     release_date: Date
 
 
-filename = Path(__file__).parent.parent.joinpath("data").resolve().joinpath("upcoming.json")
+if not (filename := os.environ.get("ROADMAP_UPCOMING_JSON_PATH")):
+    filename = Path(__file__).parent.parent.joinpath("data").resolve().joinpath("upcoming.json")
+
 with open(filename, "r") as file:
     upcomings = TypeAdapter(list[Upcoming]).validate_json(file.read())
 

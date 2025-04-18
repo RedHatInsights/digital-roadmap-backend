@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     debug: bool = False
     dev: bool = False
     host_inventory_url: str = "https://console.redhat.com"
-    upcoming_json_path: FilePath = str(Path(__file__).parent.joinpath("data").resolve().joinpath("upcoming.json"))
+    upcoming_json_path: FilePath = str(Path(__file__).parent.joinpath("data").joinpath("upcoming.json"))
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000

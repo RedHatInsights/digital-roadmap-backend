@@ -132,7 +132,7 @@ async def get_relevant_systems(  # noqa: C901
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
-            logger.error(f"Missing lifecycle data for RHEL {key}")
+            logger.warning(f"Missing lifecycle data for RHEL {key}")
             release_date = "Unknown"
             retirement_date = "Unknown"
         else:

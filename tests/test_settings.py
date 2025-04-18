@@ -30,7 +30,7 @@ async def test_environment_settings(monkeypatch):
 
 async def test_clowder_settings(monkeypatch):
     monkeypatch.setenv(
-        "ACG_CONFIG", Path(__file__).parent.joinpath("fixtures").resolve().joinpath("clowder_config.json")
+        "ACG_CONFIG", str(Path(__file__).parent.joinpath("fixtures").resolve().joinpath("clowder_config.json"))
     )
     monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
 

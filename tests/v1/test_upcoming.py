@@ -1,5 +1,3 @@
-import importlib
-
 from pathlib import Path
 
 import roadmap.v1.upcoming
@@ -18,7 +16,7 @@ def test_get_upcoming_changes_with_env(client, api_prefix, monkeypatch):
         "ROADMAP_UPCOMING_JSON_PATH",
         str(Path(__file__).parent.parent.joinpath("fixtures").resolve().joinpath("upcoming.json")),
     )
-    importlib.reload(roadmap.v1.upcoming)
+    roadmap.v1.upcoming.get_upcoming_data.cache_clear()
     response = client.get(f"{api_prefix}/upcoming-changes")
     assert response.status_code == 200
     assert response.content.startswith(

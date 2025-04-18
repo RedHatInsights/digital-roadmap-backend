@@ -61,8 +61,6 @@ RUN curl -k \
 --output /srv/roady/roadmap/data/upcoming.json \
 "https://gitlab.cee.redhat.com/api/v4/projects/107966/repository/files/data%2F02_roadmap_jira.json/raw?ref=develop"
 
-RUN cat /srv/roady/roadmap/data/upcoming.json
-
 USER roady
 WORKDIR /srv/roady
 

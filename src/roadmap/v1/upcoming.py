@@ -1,8 +1,7 @@
-import os
 import typing as t
 
 from datetime import date
-from pathlib import Path
+from functools import cache
 
 from fastapi import APIRouter
 from pydantic import AfterValidator
@@ -10,6 +9,8 @@ from pydantic import BaseModel
 from pydantic import TypeAdapter
 
 from roadmap.common import ensure_date
+from roadmap.config import Settings
+from roadmap.models import Meta
 
 
 router = APIRouter(prefix="/upcoming-changes", tags=["Upcoming Changes"])
@@ -26,13 +27,6 @@ class Upcoming(BaseModel):
     architecture: str
     release: str
     release_date: Date
-
-
-if not (filename := os.environ.get("ROADMAP_UPCOMING_JSON_PATH")):
-    filename = Path(__file__).parent.parent.joinpath("data").resolve().joinpath("upcoming.json")
-
-with open(filename, "r") as file:
-    upcomings = TypeAdapter(list[Upcoming]).validate_json(file.read())
 
 
 class UpcomingResponseDetails(BaseModel):
@@ -52,25 +46,36 @@ class UpcomingResponse(BaseModel):
     details: UpcomingResponseDetails
 
 
-UPCOMING_DATA = [
-    UpcomingResponse(
-        name=upcoming.title,
-        type=upcoming.type,
-        release=upcoming.release,
-        date=upcoming.release_date,
-        details=UpcomingResponseDetails(
-            detailFormat=0,
-            summary=upcoming.summary,
-            potentiallyAffectedSystems=5,
-            trainingTicket=upcoming.ticket,
-            dateAdded=date(2024, 10, 29),
-            lastModified=date(2024, 10, 29),
-        ),
-    )
-    for upcoming in upcomings
-]
+class WrappedUpcomingResponse(BaseModel):
+    meta: Meta
+    data: list[UpcomingResponse]
+
+
+@cache
+def get_upcoming_data():
+    with open(Settings.create().upcoming_json_path, "r") as file:
+        upcomings = TypeAdapter(list[Upcoming]).validate_json(file.read())
+
+    return [
+        UpcomingResponse(
+            name=upcoming.title,
+            type=upcoming.type,
+            release=upcoming.release,
+            date=upcoming.release_date,
+            details=UpcomingResponseDetails(
+                detailFormat=0,
+                summary=upcoming.summary,
+                potentiallyAffectedSystems=5,
+                trainingTicket=upcoming.ticket,
+                dateAdded=date(2024, 10, 29),
+                lastModified=date(2024, 10, 29),
+            ),
+        )
+        for upcoming in upcomings
+    ]
 
 
 @router.get("")
-async def get_upcoming() -> list[UpcomingResponse]:
-    return UPCOMING_DATA
+async def get_upcoming() -> WrappedUpcomingResponse:
+    data = get_upcoming_data()
+    return {"meta": {"total": len(data), "count": len(data)}, "data": data}

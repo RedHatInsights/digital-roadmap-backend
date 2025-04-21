@@ -5,7 +5,6 @@ from collections import defaultdict
 from datetime import date
 
 from fastapi import APIRouter
-from fastapi import Header
 from fastapi import Path
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
@@ -14,22 +13,17 @@ from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
-from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
-from roadmap.config import Settings
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
-from roadmap.database import get_db
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -213,28 +207,15 @@ relevant = APIRouter(
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
-    session: t.Annotated[AsyncSession, Depends(get_db)],
-    settings: t.Annotated[Settings, Depends(Settings.create)],
-    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    org_id: t.Annotated[str, Depends(decode_header)],
+    inventory_result: t.Annotated[t.Any, Depends(query_host_inventory)],
 ):
-    org_id = decode_header(x_rh_identity)
-    rbac_response = await query_rbac(x_rh_identity, settings)
-    # Do you have access to inventory?
-    #   - match on inventory:*:*
-    #   - match on inventory:hosts:read
-    #   - match on inventory:*:read
-    can_access_inventory, resource_groups = await check_inventory_access(rbac_response)
-    if not can_access_inventory:
-        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
-
-    inventory_result = query_host_inventory(session=session, org_id=org_id, settings=settings, groups=resource_groups)
-
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
     # Get a count of each module and package based on OS and OS lifecycle
     module_count = defaultdict(int)
     missing = defaultdict(int)
-    async for system in inventory_result:
+    for system in inventory_result:
         system_profile = system.get("system_profile_facts")
         if not system_profile:
             missing["system_profile"] += 1

@@ -10,11 +10,14 @@ from datetime import date
 from pathlib import Path
 from urllib.error import HTTPError
 
+from fastapi import Depends
+from fastapi import Header
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
 from roadmap.config import Settings
+from roadmap.database import get_db
 from roadmap.models import LifecycleType
 
 
@@ -26,9 +29,24 @@ class HealthCheckFilter(logging.Filter):
         return record.getMessage().find("/v1/ping") == -1
 
 
+async def decode_header(
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+) -> str:
+    # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
+    if x_rh_identity is None:
+        return ""
+
+    decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
+    id_header = json.loads(decoded_id_header)
+    identity = id_header.get("identity", {})
+    org_id = identity.get("org_id", "")
+
+    return org_id
+
+
 async def query_rbac(
-    x_rh_identity: str | None,
-    settings: Settings,
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> list[dict[t.Any, t.Any]]:
     if settings.dev:
         return [
@@ -59,10 +77,12 @@ async def query_rbac(
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.code, detail=err.msg)
 
-    return data.get("data", [])
+    return data.get("data", [{}])
 
 
-async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple[bool, list[str]]:
+async def check_inventory_access(
+    permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
+) -> list[str]:
     """Check the given permissions for inventory access.
 
     Return a boolean as well as any detailed access definitions.
@@ -78,21 +98,24 @@ async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple
             if permission.get("permission") in inventory_access_perms:
                 has_access = True
 
-    return has_access, resource_definitions
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
+
+    return resource_definitions
 
 
 # FIXME: This should be cached
 async def query_host_inventory(
-    session: AsyncSession,
-    org_id: str,
-    settings: Settings,
-    groups: list[str] | None = None,
+    org_id: t.Annotated[str, Depends(decode_header)],
+    session: t.Annotated[AsyncSession, Depends(get_db)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    groups: t.Annotated[list[str], Depends(check_inventory_access)],
     major: int | None = None,
     minor: int | None = None,
 ):
     if settings.dev:
         if not org_id:
-            org_id = "test"
+            org_id = "1234"
 
         logger.debug("Running in development mode. Returning fixture response data for inventory.")
         file = Path(__file__).resolve()
@@ -114,10 +137,7 @@ async def query_host_inventory(
                 if item.get("system_profile_facts", {}).get("operating_system", {}).get("minor") == minor
             ]
 
-        for item in response_data:
-            yield item
-
-        return
+        return response_data
 
     if groups:
         # TODO: Implement group filtering
@@ -130,7 +150,7 @@ async def query_host_inventory(
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
-    result = await session.stream(
+    result = await session.execute(
         text(query),
         params={
             "org_id": org_id,
@@ -138,8 +158,7 @@ async def query_host_inventory(
             "minor": str(minor),
         },
     )
-    async for row in result.mappings():
-        yield row
+    return result.mappings().all()
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
@@ -188,16 +207,3 @@ def ensure_date(value: str | date):
         return date.fromisoformat(value)
     except (ValueError, TypeError):
         raise ValueError("Date must be in ISO 8601 format")
-
-
-def decode_header(encoded_header: str | None) -> str:
-    # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
-    if encoded_header is None:
-        return ""
-
-    decoded_id_header = base64.b64decode(encoded_header).decode("utf-8")
-    id_header = json.loads(decoded_id_header)
-    identity = id_header.get("identity", {})
-    org_id = identity.get("org_id", "")
-
-    return org_id

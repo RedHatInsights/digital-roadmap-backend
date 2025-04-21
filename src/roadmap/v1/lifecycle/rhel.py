@@ -6,20 +6,14 @@ from operator import attrgetter
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import Header
-from fastapi import HTTPException
 from fastapi import Path
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
-from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
 from roadmap.data.systems import OS_LIFECYCLE_DATES
-from roadmap.database import get_db
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -90,24 +84,12 @@ relevant = APIRouter(
 @relevant.get("/{major}")
 @relevant.get("")
 async def get_relevant_systems(  # noqa: C901
-    session: t.Annotated[AsyncSession, Depends(get_db)],
-    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
-    major: int | None = None,
-    minor: int | None = None,
+    org_id: t.Annotated[str, Depends(decode_header)],
+    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
 ) -> RelevantSystemsResponse:
-    org_id = decode_header(x_rh_identity)
-    rbac_response = await query_rbac(x_rh_identity)
-    can_access_inventory, resource_groups = await check_inventory_access(rbac_response)
-    if not can_access_inventory:
-        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
-
-    systems_response = query_host_inventory(
-        session=session, org_id=org_id, major=major, minor=minor, groups=resource_groups
-    )
-
     system_counts = defaultdict(int)
     missing = defaultdict(int)
-    async for result in systems_response:
+    for result in systems:
         system_profile = result.get("system_profile_facts")
         if not system_profile:
             missing["system_profile"] += 1

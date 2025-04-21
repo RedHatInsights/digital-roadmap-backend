@@ -1,172 +1,272 @@
 [
   {
-    "ticket": "No training ticket",
-    "title": "Node.js 22 included in RHEL 9 Application Streams TEST",
-    "summary": "RHEL 9.5 is tentatively planned to include Node.js 22. Nodejs 22 is currently available in RHEL's unsupported upstream distributions: CentOS Stream 9 and Fedora 41.  For more information on RHEL’s development process and upstream, see What is CentOS Stream?",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2024-10-17"
+    "name": "New CLI experience for RHEL Image Builder TEST",
+    "type": "enhancement",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "New image-builder-cli provides a better command line experience that is more compatible with automation and CI/CD pipelines.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3011",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": ".NET 6 retirement",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Deprecation",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.x",
-    "release_date": "2024-11-17"
+    "name": "Add Python 3.14 to RHEL 10 AppStream",
+    "type": "addition",
+    "release": "10.2",
+    "date": "2026-05-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Python 3.14 is tentatively planned to be available in RHEL 10.2.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3035",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "gcc-toolset 12 retirement",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Deprecation",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.x",
-    "release_date": "2024-11-17"
+    "name": "Add Python 3.14 to RHEL 9 AppStream",
+    "type": "addition",
+    "release": "9.8.0",
+    "date": "2026-05-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Python 3.14 is tentatively planned to be available in RHEL 9.8.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3034",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Ruby 3.1 retirement",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Deprecation",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.x",
-    "release_date": "2025-03-17"
+    "name": "Add Node.js v24 module to RHEL9 AppStream",
+    "type": "addition",
+    "release": "9.7",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Node.js version 24 is tentatively planned to be available in RHEL 9.7",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3030",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Node.js 18 retirement",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Deprecation",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.x",
-    "release_date": "2025-04-17"
+    "name": "Add Node.js v24 to RHEL10 AppStream",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Node.js version 24 is tentatively planned to be available in RHEL 10.1",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3029",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "6.11 kernel version",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Change",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-05-17"
+    "name": "Rust Toolset in RHEL 9.7, RHEL 10.1",
+    "type": "addition",
+    "release": "9.7.0",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Rust 1.88 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2631",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "gcc-toolset 14",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2025-05-17"
+    "name": "Rust Toolset in RHEL 9.7, RHEL 10.1",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Rust 1.88 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2631",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "gcc-toolset 14",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-05-17"
+    "name": "LLVM Toolset in RHEL 9.7, RHEL 10.1",
+    "type": "addition",
+    "release": "9.7.0",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "LLVM 20.0.1 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2633",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "MariaDB 11.0",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2025-05-17"
+    "name": "LLVM Toolset in RHEL 9.7, RHEL 10.1",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "LLVM 20.0.1 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2633",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "MariaDB 11.0",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-05-17"
+    "name": "Go Toolset 1.24 in RHEL 9.7, RHEL 10.1, 8.10.z",
+    "type": "addition",
+    "release": "9.7.0",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Go 1.24 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2632",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "PHP 8.1 retirement",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Deprecation",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.x",
-    "release_date": "2025-05-17"
+    "name": "Go Toolset 1.24 in RHEL 9.7, RHEL 10.1, 8.10.z",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Go 1.24 is tentatively planned to be available in RHEL 9.7 and RHEL 10.1.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2632",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "PHP 8.3",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2025-05-17"
+    "name": "Add GCC Toolset 15.0 to RHEL 9.7, RHEL 10.1, 8.10.z",
+    "type": "addition",
+    "release": "8.10.z",
+    "date": "2024-05-22",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "gcc-toolset 15 is tentatively planned to be available in RHEL 9.7 and 10.1",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2636",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "PHP 8.3",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-05-17"
+    "name": "Add GCC Toolset 15.0 to RHEL 9.7, RHEL 10.1, 8.10.z",
+    "type": "addition",
+    "release": "9.7.0",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "gcc-toolset 15 is tentatively planned to be available in RHEL 9.7 and 10.1",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2636",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Python 3.12",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2025-05-17"
+    "name": "Add GCC Toolset 15.0 to RHEL 9.7, RHEL 10.1, 8.10.z",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "gcc-toolset 15 is tentatively planned to be available in RHEL 9.7 and 10.1",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2636",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Python 3.12",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-05-17"
+    "name": "Universal FIPS provider module for streamlined certification ",
+    "type": "addition",
+    "release": "10.2",
+    "date": "2026-05-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "FIPS module work (single file) - Simplifying the FIPS validation process through a single module provides the FIPS validated algorithms to the crypto libraries within the RHEL OS. This allows for a longer validation lifecycle and makes UBI and other faster-moving versions of RHEL benefit by having a valid FIPS certificate at all times.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2568",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Ruby 3.4",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "9.5",
-    "release_date": "2025-05-17"
+    "name": "Test feature for digital roadmap testing",
+    "type": "change",
+    "release": "9.1.0",
+    "date": "2022-11-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "This is some example text so we can test that the summary field is being properly parsed given a long summary paragraph. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3064",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   },
   {
-    "ticket": "No training ticket",
-    "title": "Ruby 3.5",
-    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!",
-    "type": "Addition",
-    "package": "<unknown>",
-    "architecture": "<unknown>",
-    "release": "10.0",
-    "release_date": "2025-06-17"
+    "name": "Test feature for digital roadmap testing",
+    "type": "change",
+    "release": "9.2.0.z",
+    "date": "2023-05-10",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "This is some example text so we can test that the summary field is being properly parsed given a long summary paragraph. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-3064",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
+  },
+  {
+    "name": "Support for soft-reboots",
+    "type": "addition",
+    "release": "10.1",
+    "date": "2025-11-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "The new \"\"soft reboot\"\" feature in systemd for Red Hat Enterprise Linux 10 enhances system management with minimal downtime. Unlike a traditional reboot that restarts both the kernel and userspace, a soft reboot targets only the userspace, shutting down and restarting all services and units without rebooting the kernel itself. This process begins by terminating running services and then re-executing the systemd service manager to bring the system back online—all in a fraction of the time a full reboot requires. This feature is particularly valuable for enterprise environments where rapid updates or resets of userspace components, such as applications or libraries, are needed without disrupting kernel-level operations, making it ideal for scenarios like applying security patches, updating software stacks, or resetting system states in high-availability setups, all while maintaining continuous kernel uptime and reducing service interruptions.",
+      "potentiallyAffectedSystems": 0,
+      "trainingTicket": "RHELBU-2932",
+      "dateAdded": "2024-01-01",
+      "lastModified": "2024-01-01"
+    }
   }
 ]

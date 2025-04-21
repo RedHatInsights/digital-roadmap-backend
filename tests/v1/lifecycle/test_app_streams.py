@@ -1,7 +1,13 @@
 from datetime import date
+from email.message import Message
+from io import BytesIO
+from urllib.error import HTTPError
 
 import pytest
 
+from roadmap.common import query_host_inventory
+from roadmap.common import query_rbac
+from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
@@ -82,17 +88,21 @@ def test_get_app_stream_module_info_not_found(api_prefix, client):
     assert len(data) == 0
 
 
-def test_get_relevant_app_stream(api_prefix, client, mocker, yield_json_fixture):
-    mock_inventory_response = yield_json_fixture("inventory_db_response.json.gz")
-    mock_rbac_response = [
-        {
-            "permission": "inventory:*:*",
-            "resourceDefinitions": [],
-        }
-    ]
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_rbac", return_value=mock_rbac_response)
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_inventory_response)
+def test_get_relevant_app_stream(api_prefix, client, read_json_fixture):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
 
+    async def query_host_inventory_override():
+        return read_json_fixture("inventory_db_response.json.gz")
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[query_host_inventory] = query_host_inventory_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     data = result.json().get("data", "")
 
@@ -100,17 +110,16 @@ def test_get_relevant_app_stream(api_prefix, client, mocker, yield_json_fixture)
     assert len(data) > 0
 
 
-def test_get_relevant_app_stream_error(api_prefix, client, mocker, yield_json_fixture):
-    mock_inventory_response = yield_json_fixture("inventory_db_response.json.gz")
-    mock_rbac_response = [
-        {
-            "permission": "inventory:*:*",
-            "resourceDefinitions": [],
-        }
-    ]
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_rbac", return_value=mock_rbac_response)
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_host_inventory", return_value=mock_inventory_response)
-    mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
+def test_get_relevant_app_stream_error(api_prefix, client, mocker):
+    def settings_override():
+        return Settings(rbac_hostname="example.com")
+
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=HTTPError(url="url", code=400, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
+    )
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[Settings.create] = settings_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     detail = result.json().get("detail", "")
@@ -119,10 +128,12 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker, yield_json_fi
     assert detail == "Raised intentionally"
 
 
-def test_get_relevant_app_stream_no_rbac_access(api_prefix, client, mocker):
-    mock_rbac_response = []
-    mocker.patch("roadmap.v1.lifecycle.app_streams.query_rbac", return_value=mock_rbac_response)
-    mocker.patch("roadmap.v1.lifecycle.app_streams.check_inventory_access", return_value=(False, []))
+def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
+    async def query_rbac_override():
+        return [{}]
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 

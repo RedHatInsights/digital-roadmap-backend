@@ -2,24 +2,38 @@ import os
 
 from pathlib import Path
 
+import pytest
+
 from roadmap.config import Settings
 
 
-async def test_default_settings(monkeypatch):
+@pytest.fixture(autouse=True)
+def unset_acg_config(monkeypatch):
     monkeypatch.delenv("ACG_CONFIG", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    Settings.create.cache_clear()
+
+
+def test_default_settings(monkeypatch):
     monkeypatch.delenv("ROADMAP_DB_USER", raising=False)
 
     assert Settings.create().db_user == "postgres"
 
+
+def test_settings_db_user(monkeypatch):
     monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
     assert Settings.create().db_user == "test_db_user"
 
+
+def test_setting_from_clowder(monkeypatch):
     monkeypatch.setenv("ACG_CONFIG", os.path.join(os.getcwd(), "tests", "fixtures", "clowder_config.json"))
     assert Settings.create().db_user == "username"
 
 
 async def test_environment_settings(monkeypatch):
-    monkeypatch.delenv("ACG_CONFIG", raising=False)
     monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
 
     assert Settings.create().db_user == "test_db_user"

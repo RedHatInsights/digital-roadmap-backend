@@ -43,6 +43,9 @@ async def query_rbac(
     }
 
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
+    if not SETTINGS.rbac_url:
+        return [{}]
+
     req = urllib.request.Request(
         f"{SETTINGS.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
         headers=headers,
@@ -68,10 +71,10 @@ async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple
     has_access = False
     resource_definitions = []
     for permission in permissions:
-        if perm := permission["resourceDefinitions"]:
+        if perm := permission.get("resourceDefinitions"):
             resource_definitions.append(*perm)
         else:
-            if permission["permission"] in inventory_access_perms:
+            if permission.get("permission") in inventory_access_perms:
                 has_access = True
 
     return has_access, resource_definitions

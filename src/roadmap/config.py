@@ -1,5 +1,7 @@
 import os
 
+from functools import lru_cache
+
 from app_common_python import isClowderEnabled
 from app_common_python import loadConfig
 from pydantic import PostgresDsn
@@ -37,6 +39,7 @@ class Settings(BaseSettings):
         return f"http://{self.rbac_hostname}:{self.rbac_port}"
 
     @classmethod
+    @lru_cache
     def create(cls):
         """
         Create a settings object populated from presets, env and Clowder.
@@ -77,6 +80,3 @@ class Settings(BaseSettings):
             )
 
         return cls()
-
-
-SETTINGS = Settings.create()

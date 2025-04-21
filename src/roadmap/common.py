@@ -14,7 +14,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
-from roadmap.config import SETTINGS
+from roadmap.config import Settings
 from roadmap.models import LifecycleType
 
 
@@ -28,8 +28,9 @@ class HealthCheckFilter(logging.Filter):
 
 async def query_rbac(
     x_rh_identity: str | None,
+    settings: Settings,
 ) -> list[dict[t.Any, t.Any]]:
-    if SETTINGS.dev:
+    if settings.dev:
         return [
             {
                 "permission": "inventory:*:*",
@@ -43,11 +44,11 @@ async def query_rbac(
     }
 
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
-    if not SETTINGS.rbac_url:
+    if not settings.rbac_url:
         return [{}]
 
     req = urllib.request.Request(
-        f"{SETTINGS.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
+        f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
         headers=headers,
     )
 
@@ -84,11 +85,12 @@ async def check_inventory_access(permissions: list[dict[t.Any, t.Any]]) -> tuple
 async def query_host_inventory(
     session: AsyncSession,
     org_id: str,
+    settings: Settings,
     groups: list[str] | None = None,
     major: int | None = None,
     minor: int | None = None,
 ):
-    if SETTINGS.dev:
+    if settings.dev:
         if not org_id:
             org_id = "test"
 

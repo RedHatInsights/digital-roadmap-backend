@@ -23,6 +23,7 @@ from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
+from roadmap.config import Settings
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
@@ -213,10 +214,11 @@ relevant = APIRouter(
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     session: t.Annotated[AsyncSession, Depends(get_db)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ):
     org_id = decode_header(x_rh_identity)
-    rbac_response = await query_rbac(x_rh_identity)
+    rbac_response = await query_rbac(x_rh_identity, settings)
     # Do you have access to inventory?
     #   - match on inventory:*:*
     #   - match on inventory:hosts:read
@@ -225,7 +227,7 @@ async def get_relevant_app_streams(  # noqa: C901
     if not can_access_inventory:
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    inventory_result = query_host_inventory(session=session, org_id=org_id, groups=resource_groups)
+    inventory_result = query_host_inventory(session=session, org_id=org_id, settings=settings, groups=resource_groups)
 
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 

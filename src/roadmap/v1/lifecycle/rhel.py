@@ -89,7 +89,7 @@ async def get_relevant_systems(  # noqa: C901
 ) -> RelevantSystemsResponse:
     system_counts = defaultdict(int)
     missing = defaultdict(int)
-    for result in systems:
+    async for result in systems.mappings():
         system_profile = result.get("system_profile_facts")
         if not system_profile:
             missing["system_profile"] += 1

@@ -126,7 +126,7 @@ async def query_host_inventory(
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
-    result = await session.execute(
+    result = await session.stream(
         text(query),
         params={
             "org_id": org_id,
@@ -134,7 +134,7 @@ async def query_host_inventory(
             "minor": str(minor),
         },
     )
-    return result.mappings().all()
+    yield result
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

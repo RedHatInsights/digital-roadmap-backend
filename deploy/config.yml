@@ -102,6 +102,9 @@ objects:
               - name: DROP_SUBSCRIPTION
                 value: ${DROP_SUBSCRIPTION}
 
+              - name: DROP_HBI_TABLE
+                value: ${DROP_HBI_TABLE}
+
               - name: DB_NAME
                 valueFrom:
                   secretKeyRef:
@@ -237,6 +240,9 @@ parameters:
     value: ''
 
   - name: DROP_SUBSCRIPTION
+    value: ''
+
+  - name: DROP_HBI_TABLE
     value: ''
 
   - name: INVENTORY_SYNC_COUNTER

@@ -252,12 +252,23 @@ def drop_subscription(logger, engine):
         logger.info(f"{hbi_subscription} was dropped.")
 
 
+def drop_table(logger, engine):
+    if not os.getenv("DROP_HBI_TABLE"):
+        return
+
+    statement = "DROP TABLE IF EXISTS hosts"
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        connection.execute(sa_text(statement))
+        logger.info("hosts table was dropped.")
+
+
 def run(logger, session, engine):
     logger.info("Starting replication subcription runner")
+    drop_table(logger, engine)
+    drop_subscription(logger, engine)
     check_or_create_schema(logger, session, engine)
     check_or_create_subscription(logger, session, engine)
     alter_subscription(logger, engine)
-    drop_subscription(logger, engine)
     logger.info("Finishing replication subcription runner")
 
 

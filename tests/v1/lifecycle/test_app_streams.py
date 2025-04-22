@@ -128,6 +128,30 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
     assert detail == "Raised intentionally"
 
 
+def test_get_relevant_app_stream_error_building_response(api_prefix, client, read_json_fixture, mocker):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
+
+    async def query_host_inventory_override():
+        return read_json_fixture("inventory_db_response.json.gz")
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[query_host_inventory] = query_host_inventory_override
+    mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
+
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+    detail = result.json().get("detail", "")
+
+    assert result.status_code == 400
+    assert detail == "Raised intentionally"
+
+
 def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
     async def query_rbac_override():
         return [{}]

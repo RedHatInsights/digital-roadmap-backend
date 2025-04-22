@@ -156,7 +156,7 @@ async def test_query_rbac(mocker, read_fixture_file):
         return_value=BytesIO(read_fixture_file("rbac_response.json", mode="rb")),
     )
 
-    result = await query_rbac(settings, None)
+    result = await query_rbac(settings)
 
     assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
 
@@ -169,15 +169,23 @@ async def test_query_rbac_error(mocker):
     )
 
     with pytest.raises(HTTPException, match="Raised intentionally"):
-        await query_rbac(settings, None)
+        await query_rbac(settings)
 
 
 async def test_query_rbac_dev_mode():
     settings = Settings(dev=True)
 
-    result = await query_rbac(settings, None)
+    result = await query_rbac(settings)
 
     assert result == [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+
+
+async def test_query_rbac_no_url():
+    settings = Settings(rbac_hostname="")
+
+    result = await query_rbac(settings)
+
+    assert result == [{}]
 
 
 async def test_check_inventory_access():

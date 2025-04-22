@@ -1,7 +1,5 @@
 import os
 
-from pathlib import Path
-
 import pytest
 
 from roadmap.config import Settings
@@ -30,23 +28,7 @@ def test_settings_db_user(monkeypatch):
 
 def test_setting_from_clowder(monkeypatch):
     monkeypatch.setenv("ACG_CONFIG", os.path.join(os.getcwd(), "tests", "fixtures", "clowder_config.json"))
-    assert Settings.create().db_user == "username"
-
-
-async def test_environment_settings(monkeypatch):
-    monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
-
-    assert Settings.create().db_user == "test_db_user"
-
-
-async def test_clowder_settings(monkeypatch):
-    monkeypatch.setenv(
-        "ACG_CONFIG", Path(__file__).parent.joinpath("fixtures").resolve().joinpath("clowder_config.json")
-    )
-    monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
-
     settings = Settings.create()
-
     assert settings.db_user == "username"
     assert settings.rbac_url == "http://rbac-service.svc:8123"
 

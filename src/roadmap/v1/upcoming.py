@@ -1,11 +1,13 @@
-import typing as t
-
 from datetime import date
 from enum import auto
 from enum import StrEnum
-from functools import cache
+from functools import lru_cache
+from pathlib import Path
+from typing import Annotated
+from typing import Any
 
 from fastapi import APIRouter
+from fastapi import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Field
@@ -18,7 +20,7 @@ from roadmap.models import Meta
 
 router = APIRouter(prefix="/upcoming-changes", tags=["Upcoming Changes"])
 
-Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
+Date = Annotated[str | date | None, AfterValidator(ensure_date)]
 
 
 class UpcomingType(StrEnum):
@@ -59,13 +61,16 @@ class WrappedUpcoming(BaseModel):
     data: list[Upcoming]
 
 
-@cache
-def get_upcoming_data():
-    with open(Settings.create().upcoming_json_path, "r") as file:
+@lru_cache
+def read_upcoming_file(file: str | Path) -> list[Upcoming]:
+    with open(file, "r") as file:
         return TypeAdapter(list[Upcoming]).validate_json(file.read())
 
 
+def get_upcoming_data(settings: Annotated[Settings, Depends(Settings.create)]) -> list[Upcoming]:
+    return read_upcoming_file(settings.upcoming_json_path)
+
+
 @router.get("")
-async def get_upcoming() -> WrappedUpcoming:
-    data = get_upcoming_data()
+async def get_upcoming(data: Annotated[Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
     return {"meta": {"total": len(data), "count": len(data)}, "data": data}

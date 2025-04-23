@@ -209,10 +209,7 @@ relevant = APIRouter(
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
-    permissions: t.Annotated[t.Any, Depends(check_inventory_access)],
-    session: t.Annotated[AsyncSession, Depends(get_db)],
-    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    systems: t.Annotated[t.Any, Depends(query_host_inventory)]
 ):
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 

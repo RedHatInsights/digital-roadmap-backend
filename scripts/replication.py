@@ -135,7 +135,7 @@ def check_or_create_hosts_tables(logger, session):
     if not _db_exists(logger, session, check_table):
         logger.info("hbi.hosts not found.")
         hosts_table_create = """CREATE TABLE hbi.hosts (
-            id uuid NOT NULL,
+            id uuid NOT NULL PRIMARY KEY,
             account character varying(10),
             display_name character varying(200),
             created_on timestamp with time zone NOT NULL,

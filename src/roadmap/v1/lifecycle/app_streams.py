@@ -7,7 +7,6 @@ from datetime import date
 from fastapi import APIRouter
 from fastapi import Header
 from fastapi import Path
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
 from fastapi.params import Depends
 from pydantic import AfterValidator
@@ -16,24 +15,24 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from roadmap.common import decode_header
 from roadmap.common import check_inventory_access
+from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import sort_attrs
-from roadmap.data import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_BY_KEY
-from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.database import get_db
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
+
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -49,8 +48,10 @@ def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
         return False
     return asm.rolling
 
+
 def get_module_os_major_versions(name: str) -> set[int]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
+
 
 async def filter_app_stream_results(data, filter_params):
     if name := filter_params.get("name"):
@@ -202,6 +203,7 @@ relevant = APIRouter(
     tags=["Relevant", "App Streams"],
 )
 
+
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
@@ -213,8 +215,15 @@ async def get_relevant_app_streams(  # noqa: C901
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
     missing = defaultdict(int)
+    # on main this is -    async for system in inventory_result.mappings():
+    # and my systems is their inventory_result. WUWD?
+
+    # import pprint
+    # pprint.pprint(systems)
+
     systems_by_stream = defaultdict(list)
-    for system in systems:
+#    for system in systems:
+    for system in systems.mappings():
         system_profile = system.get("system_profile_facts")
         if not system_profile:
             missing["system_profile"] += 1
@@ -233,11 +242,13 @@ async def get_relevant_app_streams(  # noqa: C901
             missing["dnf_modules"] += 1
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle)
-        package_app_streams = app_streams_from_packages(system_profile.get("installed_packages", ""), os_major, os_minor, os_lifecycle)
+        package_app_streams = app_streams_from_packages(
+            system_profile.get("installed_packages", ""), os_major, os_minor, os_lifecycle
+        )
 
         if not package_app_streams:
             missing["package_names"] += 1
-        
+
         app_streams = module_app_streams | package_app_streams
 
         system_id = system["id"]
@@ -253,20 +264,22 @@ async def get_relevant_app_streams(  # noqa: C901
         if app_stream.rolling:
             continue
 
-        response.append(RelevantAppStream(
-            name=app_stream.name,
-            application_stream_name=app_stream.application_stream_name,
-            stream=app_stream.stream,
-            start_date=app_stream.start_date,
-            end_date=app_stream.end_date,
-            os_major=app_stream.os_major,
-            os_minor=app_stream.os_minor,
-            os_lifecycle=app_stream.os_lifecycle,
-            impl=app_stream.impl,
-            count=len(systems),
-            rolling=app_stream.rolling,
-            systems=systems
-        ))
+        response.append(
+            RelevantAppStream(
+                name=app_stream.name,
+                application_stream_name=app_stream.application_stream_name,
+                stream=app_stream.stream,
+                start_date=app_stream.start_date,
+                end_date=app_stream.end_date,
+                os_major=app_stream.os_major,
+                os_minor=app_stream.os_minor,
+                os_lifecycle=app_stream.os_lifecycle,
+                impl=app_stream.impl,
+                count=len(systems),
+                rolling=app_stream.rolling,
+                systems=systems,
+            )
+        )
 
     return {
         "meta": {
@@ -275,6 +288,7 @@ async def get_relevant_app_streams(  # noqa: C901
         },
         "data": sorted(response, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
     }
+
 
 def app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle):
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -291,9 +305,7 @@ def app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle):
         stream = dnf_module["stream"]
         matched_module = APP_STREAM_MODULES_BY_KEY.get((name, os_major, stream))
         if not matched_module:
-            logger.debug(
-                f"Did not find matching app stream module {name}, {os_major}, {stream}"
-            )
+            logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
             matched_module = AppStreamEntity(
                 name=name,
                 stream=stream,
@@ -317,8 +329,9 @@ def app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle):
             impl=AppStreamImplementation.module,
         )
         app_streams.add(app_key)
-    
+
     return app_streams
+
 
 def app_streams_from_packages(package_names_string, os_major, os_minor, os_lifecycle):
     package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in package_names_string}
@@ -348,5 +361,5 @@ def app_streams_from_packages(package_names_string, os_major, os_minor, os_lifec
                 impl=AppStreamImplementation.package,
             )
             app_streams.add(app_key)
-    
+
     return app_streams

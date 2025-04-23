@@ -7766,9 +7766,7 @@ APP_STREAM_MODULES = [
     ),
 ]
 
-APP_STREAM_MODULES_BY_KEY = {
-    (asm.name, asm.os_major, asm.stream): asm for asm in APP_STREAM_MODULES
-}
+APP_STREAM_MODULES_BY_KEY = {(asm.name, asm.os_major, asm.stream): asm for asm in APP_STREAM_MODULES}
 
 OS_MAJORS_BY_APP_NAME = {}
 for asm in APP_STREAM_MODULES:

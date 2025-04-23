@@ -90,7 +90,6 @@ async def check_inventory_access(
     has_access = False
     resource_definitions = []
     for permission in permissions:
-        print(f"permission: {permission}")
         if perm := permission.get("resourceDefinitions"):
             resource_definitions.append(*perm)
         else:

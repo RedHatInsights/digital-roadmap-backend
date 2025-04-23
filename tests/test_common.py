@@ -1,7 +1,6 @@
 from datetime import date
 from email.message import Message
 from io import BytesIO
-from operator import eq
 from operator import ge
 from urllib.error import HTTPError
 

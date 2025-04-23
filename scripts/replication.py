@@ -256,7 +256,7 @@ def drop_table(logger, engine):
     if not os.getenv("DROP_HBI_TABLE"):
         return
 
-    statement = "DROP TABLE IF EXISTS hosts"
+    statement = "DROP TABLE IF EXISTS hbi.hosts CASCADE"
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
         connection.execute(sa_text(statement))
         logger.info("hosts table was dropped.")

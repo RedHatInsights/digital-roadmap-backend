@@ -1,7 +1,6 @@
 from datetime import date
 from email.message import Message
 from io import BytesIO
-from operator import ge
 from urllib.error import HTTPError
 
 import pytest
@@ -90,13 +89,13 @@ async def test_query_host_inventory_dev(base_args):
 
 
 @pytest.mark.parametrize(
-    ("org_id", "operator", "expected"),
+    ("org_id", "expected"),
     (
-        ("8765309", ge, 20),
-        (None, ge, 20),
+        ("8765309", 20),
+        (None, 20),
     ),
 )
-async def test_query_host_inventory_dev_org_id(base_args, org_id, operator, expected):
+async def test_query_host_inventory_dev_org_id(base_args, org_id, expected):
     """In dev mode with an org_id, test that expected records are returnd
 
     The test data only has records for org_id 1234, which should be always set as default in dev mode.
@@ -105,7 +104,7 @@ async def test_query_host_inventory_dev_org_id(base_args, org_id, operator, expe
     records = await anext(query_host_inventory(**base_args | {"settings": settings, "org_id": org_id}))
     results = [item async for item in records.mappings()]
 
-    assert operator(len(results), expected)
+    assert len(results) > expected
 
 
 @pytest.mark.parametrize("date_string", ("20250101", "2025-01-01"))

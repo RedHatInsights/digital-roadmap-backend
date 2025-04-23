@@ -40,11 +40,10 @@ RHELMajorVersion = t.Annotated[int, Path(description="Major RHEL version", ge=8,
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
     try:
-        asm = APP_STREAM_MODULES_BY_KEY[(name, os_major, stream)]
+        return APP_STREAM_MODULES_BY_KEY[(name, os_major, stream)].rolling
     except KeyError:
         logger.debug(f"No match for rolling RHEL {os_major} {name} {stream}")
         return False
-    return asm.rolling
 
 
 def get_module_os_major_versions(name: str) -> set[int]:

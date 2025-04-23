@@ -6,7 +6,6 @@ from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter
-from fastapi import Header
 from fastapi import Path
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
@@ -15,9 +14,7 @@ from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_lifecycle_type
@@ -29,7 +26,6 @@ from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
-from roadmap.database import get_db
 from roadmap.models import _calculate_support_status
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -208,8 +204,7 @@ relevant = APIRouter(
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(  # noqa: C901
-    org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)]
+    org_id: t.Annotated[str, Depends(decode_header)], systems: t.Annotated[t.Any, Depends(query_host_inventory)]
 ):
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 

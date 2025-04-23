@@ -21,7 +21,7 @@ objects:
         version: 16
 
       deployments:
-        - name: roadmap-api  # Would changing this to just API break 3scale?
+        - name: api
           minReplicas: ${{MIN_REPLICAS}}
           deploymentStrategy:
             privateStrategy: RollingUpdate

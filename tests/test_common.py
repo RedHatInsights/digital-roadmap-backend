@@ -93,14 +93,14 @@ async def test_query_host_inventory_dev(base_args):
 @pytest.mark.parametrize(
     ("org_id", "operator", "expected"),
     (
-        ("8765309", eq, 0),
+        ("8765309", ge, 20),
         (None, ge, 20),
     ),
 )
 async def test_query_host_inventory_dev_org_id(base_args, org_id, operator, expected):
     """In dev mode with an org_id, test that expected records are returnd
 
-    The test data only has records for org_id 1234.
+    The test data only has records for org_id 1234, which should be always set as default in dev mode.
     """
     settings = Settings(dev=True)
     records = await anext(query_host_inventory(**base_args | {"settings": settings, "org_id": org_id}))

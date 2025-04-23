@@ -46,7 +46,7 @@ def test_rbac_config_defaults(monkeypatch):
 
 def test_rbac_config_env(monkeypatch):
     monkeypatch.setenv("ROADMAP_RBAC_HOSTNAME", "example.com")
-    monkeypatch.setenv("ROADMAP_RBAC_PORT", 8080)
+    monkeypatch.setenv("ROADMAP_RBAC_PORT", "8080")
     settings = Settings.create()
 
     assert settings.rbac_hostname == "example.com"

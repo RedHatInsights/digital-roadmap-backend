@@ -3,11 +3,12 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
-import uuid
+from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Header
 from fastapi import Path
+from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Query
 from fastapi.params import Depends
 from pydantic import AfterValidator
@@ -110,7 +111,7 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
-    systems: list[uuid.UUID]
+    systems: list[UUID]
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -258,22 +259,25 @@ async def get_relevant_app_streams(  # noqa: C901
         if app_stream.rolling:
             continue
 
-        response.append(
-            RelevantAppStream(
-                name=app_stream.name,
-                application_stream_name=app_stream.application_stream_name,
-                stream=app_stream.stream,
-                start_date=app_stream.start_date,
-                end_date=app_stream.end_date,
-                os_major=app_stream.os_major,
-                os_minor=app_stream.os_minor,
-                os_lifecycle=app_stream.os_lifecycle,
-                impl=app_stream.impl,
-                count=len(systems),
-                rolling=app_stream.rolling,
-                systems=systems,
+        try:
+            response.append(
+                RelevantAppStream(
+                    name=app_stream.name,
+                    application_stream_name=app_stream.application_stream_name,
+                    stream=app_stream.stream,
+                    start_date=app_stream.start_date,
+                    end_date=app_stream.end_date,
+                    os_major=app_stream.os_major,
+                    os_minor=app_stream.os_minor,
+                    os_lifecycle=app_stream.os_lifecycle,
+                    impl=app_stream.impl,
+                    count=len(systems),
+                    rolling=app_stream.rolling,
+                    systems=systems,
+                )
             )
-        )
+        except Exception as exc:
+            raise HTTPException(detail=str(exc), status_code=400)
 
     return {
         "meta": {

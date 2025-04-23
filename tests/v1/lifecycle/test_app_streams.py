@@ -6,7 +6,6 @@ from urllib.error import HTTPError
 import pytest
 
 from roadmap.common import decode_header
-from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
@@ -181,6 +180,7 @@ def test_app_stream_missing_lifecycle_data():
         count=4,
         impl=AppStreamImplementation.package,
         rolling=True,
+        systems=[]
     )
 
     assert app_stream.start_date is None
@@ -312,6 +312,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         rolling=False,
         start_date=app_stream_start,
         end_date=app_stream_end,
+        systems=[]
     )
 
     assert app_stream.support_status == status

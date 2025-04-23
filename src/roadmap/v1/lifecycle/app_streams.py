@@ -3,6 +3,7 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
+import uuid
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -109,7 +110,7 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
-    systems: list[str]
+    systems: list[uuid.UUID]
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -215,15 +216,8 @@ async def get_relevant_app_streams(  # noqa: C901
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
     missing = defaultdict(int)
-    # on main this is -    async for system in inventory_result.mappings():
-    # and my systems is their inventory_result. WUWD?
-
-    # import pprint
-    # pprint.pprint(systems)
-
     systems_by_stream = defaultdict(list)
-#    for system in systems:
-    for system in systems.mappings():
+    async for system in systems.mappings():
         system_profile = system.get("system_profile_facts")
         if not system_profile:
             missing["system_profile"] += 1

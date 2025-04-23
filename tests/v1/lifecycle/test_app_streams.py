@@ -89,9 +89,8 @@ def test_get_app_stream_module_info_not_found(api_prefix, client):
     assert len(data) == 0
 
 
-def test_get_relevant_app_streamx(api_prefix, client, read_json_fixture):
+def test_get_relevant_app_stream(api_prefix, client):
     async def query_rbac_override():
-        print("xxx aaa  bbbb questry_rbac_override")
         return [
             {
                 "permission": "inventory:*:*",
@@ -99,34 +98,13 @@ def test_get_relevant_app_streamx(api_prefix, client, read_json_fixture):
             }
         ]
 
-    import typing as t
-
-    from fastapi import Depends
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from roadmap.common import check_inventory_access
-    from roadmap.common import decode_header
-    from roadmap.database import get_db
-
-    async def query_host_inventory_override(
-        org_id: t.Annotated[str, Depends(decode_header)],
-        session: t.Annotated[AsyncSession, Depends(get_db)],
-        settings: t.Annotated[Settings, Depends(Settings.create)],
-        groups: t.Annotated[list[str], Depends(check_inventory_access)],
-        major: int | None = None,
-        minor: int | None = None,
-    ):
-        return read_json_fixture("inventory_db_response.json.gz")
-
-    import base64
-    import json
-
-    x_rh_identity = base64.b64encode(json.dumps({"identity": {"org_id": "12345"}}).encode("utf-8"))
+    async def decode_header_override():
+        return "1234"
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[query_rbac] = query_rbac_override
-    client.app.dependency_overrides[query_host_inventory] = query_host_inventory_override
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", headers={"X-RH-Identity": x_rh_identity})
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     data = result.json().get("data", "")
 
     assert result.status_code == 200

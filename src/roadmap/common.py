@@ -112,8 +112,7 @@ async def query_host_inventory(
     minor: int | None = None,
 ):
     if settings.dev:
-        if not org_id:
-            org_id = "1234"
+        org_id = "1234"
 
     if groups:
         # TODO: Implement group filtering

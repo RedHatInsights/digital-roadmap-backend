@@ -11,6 +11,7 @@ from urllib.error import HTTPError
 from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
+from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -20,6 +21,9 @@ from roadmap.models import LifecycleType
 
 
 logger = logging.getLogger("uvicorn.error")
+
+MajorVersion = t.Annotated[int | None, Query(description="Major version number", ge=8, le=10)]
+MinorVersion = t.Annotated[int | None, Query(description="Minor version number", ge=0, le=10)]
 
 
 class HealthCheckFilter(logging.Filter):
@@ -108,8 +112,8 @@ async def query_host_inventory(
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     groups: t.Annotated[list[str], Depends(check_inventory_access)],
-    major: int | None = None,
-    minor: int | None = None,
+    major: MajorVersion = None,
+    minor: MinorVersion = None,
 ):
     if settings.dev:
         org_id = "1234"

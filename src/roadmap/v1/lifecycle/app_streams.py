@@ -6,10 +6,10 @@ from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Path
+from fastapi import Query
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Query
-from fastapi.params import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -35,7 +35,7 @@ from roadmap.models import SupportStatus
 logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
-RHELMajorVersion = t.Annotated[int, Path(description="Major RHEL version", ge=8, le=10)]
+MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
@@ -154,7 +154,7 @@ async def get_app_streams(filter_params: AppStreamFilter):
 
 @router.get("/{major_version}", response_model=AppStreamsResponse)
 async def get_major_version(
-    major_version: RHELMajorVersion,
+    major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
     result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
@@ -168,7 +168,7 @@ async def get_major_version(
 
 @router.get("/{major_version}/packages", response_model=AppStreamsNamesResponse)
 async def get_app_stream_item_names(
-    major_version: RHELMajorVersion,
+    major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
     result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
@@ -182,7 +182,7 @@ async def get_app_stream_item_names(
 
 @router.get("/{major_version}/streams", response_model=AppStreamsNamesResponse)
 async def get_app_stream_names(
-    major_version: RHELMajorVersion,
+    major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
     result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]

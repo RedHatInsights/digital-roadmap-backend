@@ -342,10 +342,6 @@ def app_streams_from_packages(package_names_string, os_major, os_minor, os_lifec
                 end_date=app_stream_package.end_date,
                 os_major=os_major,
                 os_minor=os_minor if app_stream_package.rolling else None,
-                # TODO: Ask Brian if we want rolling releases to be displayed individually
-                #   Setting os_minor=None for rolling streams will combine all items into one result
-                #   This probably looks better and makes more sense.
-                # os_minor=os_minor,
                 os_lifecycle=os_lifecycle if app_stream_package.rolling else None,
                 rolling=app_stream_package.rolling,
                 impl=AppStreamImplementation.package,

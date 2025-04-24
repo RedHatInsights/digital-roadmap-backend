@@ -281,7 +281,7 @@ async def get_relevant_app_streams(  # noqa: C901
     }
 
 
-def app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle):
+def app_streams_from_modules(dnf_modules: list[dict], os_major: str, os_minor: str, os_lifecycle: str):
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
@@ -324,7 +324,7 @@ def app_streams_from_modules(dnf_modules, os_major, os_minor, os_lifecycle):
     return app_streams
 
 
-def app_streams_from_packages(package_names_string, os_major, os_minor, os_lifecycle):
+def app_streams_from_packages(package_names_string: str, os_major: str, os_minor: str, os_lifecycle: str):
     package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in package_names_string}
 
     app_streams = set()

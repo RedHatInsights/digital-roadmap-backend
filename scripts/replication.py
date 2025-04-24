@@ -264,8 +264,8 @@ def drop_table(logger, engine):
 
 def run(logger, session, engine):
     logger.info("Starting replication subcription runner")
-    drop_table(logger, engine)
     drop_subscription(logger, engine)
+    drop_table(logger, engine)
     check_or_create_schema(logger, session, engine)
     check_or_create_subscription(logger, session, engine)
     alter_subscription(logger, engine)

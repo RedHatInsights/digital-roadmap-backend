@@ -1,5 +1,6 @@
 import logging
 import os
+import structlog
 
 import sentry_sdk
 

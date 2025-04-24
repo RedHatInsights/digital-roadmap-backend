@@ -1,6 +1,6 @@
-from collections import defaultdict
 import typing as t
 
+from collections import defaultdict
 from datetime import date
 from enum import StrEnum
 

@@ -80,8 +80,6 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("/{major}/{minor}")
-@relevant.get("/{major}")
 @relevant.get("")
 async def get_relevant_systems(
     org_id: t.Annotated[str, Depends(decode_header)],

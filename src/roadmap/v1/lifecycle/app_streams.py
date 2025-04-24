@@ -247,6 +247,7 @@ async def get_relevant_app_streams(  # noqa: C901
 
     response = []
     for app_stream, systems in systems_by_stream.items():
+        # Omit rolling app streams.
         if app_stream.rolling:
             continue
 

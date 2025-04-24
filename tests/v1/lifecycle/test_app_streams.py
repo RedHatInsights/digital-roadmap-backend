@@ -164,6 +164,28 @@ def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
     assert result.status_code == 403
 
 
+def test_get_revelent_app_stream_related(api_prefix, client):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
+    data = result.json().get("data", "")
+
+    assert result.status_code == 200
+    assert len(data) > 0
+
+
 def test_app_stream_missing_lifecycle_data():
     """Given a RHEL major version that there is no lifecycle data for,
     ensure the dates are set as expected.

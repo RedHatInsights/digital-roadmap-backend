@@ -74,3 +74,26 @@ def test_get_relevant_rhel_no_rbac_access(api_prefix, client):
     result = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
 
     assert result.status_code == 403
+
+
+def test_rhel_relevant_related(client, api_prefix):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    response = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")
+    data = response.json()["data"]
+
+    assert len(data) > 1
+    assert data[0].keys() == System.model_fields.keys()

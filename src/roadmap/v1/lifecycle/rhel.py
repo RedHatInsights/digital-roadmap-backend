@@ -84,6 +84,7 @@ relevant = APIRouter(
 async def get_relevant_systems(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
+    related: bool = False,
 ) -> RelevantSystemsResponse:
     system_counts = defaultdict(int)
     missing = defaultdict(int)

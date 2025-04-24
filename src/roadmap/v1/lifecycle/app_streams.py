@@ -15,6 +15,7 @@ from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
+from sqlalchemy.ext.asyncio.result import AsyncResult
 
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
@@ -152,7 +153,9 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
-    systems: list[UUID]
+    systems: t.Optional[list[UUID]]
+    # TODO: Is AppStreamEntity ok? It doesn't have support_status
+    related: t.Optional[list[AppStreamEntity]] 
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -250,10 +253,61 @@ relevant = APIRouter(
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(
     org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
+    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
+    related: bool = False,
 ):
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
+    systems_by_stream = await systems_by_app_stream(systems, org_id)
+
+    relevant_app_streams = []
+    for app_stream, systems in systems_by_stream.items():
+        # Omit rolling app streams.
+        if app_stream.rolling:
+            continue
+
+        try:
+            relevant_app_streams.append(
+                RelevantAppStream(
+                    name=app_stream.name,
+                    application_stream_name=app_stream.application_stream_name,
+                    stream=app_stream.stream,
+                    start_date=app_stream.start_date,
+                    end_date=app_stream.end_date,
+                    os_major=app_stream.os_major,
+                    os_minor=app_stream.os_minor,
+                    os_lifecycle=app_stream.os_lifecycle,
+                    impl=app_stream.impl,
+                    count=len(systems),
+                    rolling=app_stream.rolling,
+                    systems=systems,
+                    related=related_app_streams(app_stream) if related else [],
+                )
+            )
+        except Exception as exc:
+            raise HTTPException(detail=str(exc), status_code=400)
+
+    return {
+        "meta": {
+            "count": len(relevant_app_streams),
+            "total": sum(item.count for item in relevant_app_streams),
+        },
+        "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
+    }
+
+def related_app_streams(app_stream: RelevantAppStream):
+    relateds = []
+    from roadmap.data.app_streams import APP_STREAM_MODULES
+    for app in APP_STREAM_MODULES:
+        if app.name == app_stream.name:
+            if app.os_major == app_stream.os_major:
+                if app.stream != app_stream.stream:
+                    if app.end_date is None or app.end_date > date.today():
+                        relateds.append(app)
+    return relateds
+
+async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None):
+    """Return a mapping of AppStreams to ids of systems using that stream."""
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
     async for system in systems.mappings():

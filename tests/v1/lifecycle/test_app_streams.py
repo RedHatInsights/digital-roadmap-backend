@@ -170,10 +170,10 @@ def test_app_stream_missing_lifecycle_data():
     """
     app_stream = RelevantAppStream(
         name="something",
+        display_name="Something 1",
         application_stream_name="App Stream Name",
         start_date=None,
         end_date=None,
-        stream="1",
         os_major=1,
         os_lifecycle=LifecycleType.mainline,
         support_status=SupportStatus.supported,
@@ -302,8 +302,8 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
 
     app_stream = RelevantAppStream(
         name="pkg-name",
+        display_name="Pkg Name 1",
         application_stream_name="Pkg Name",
-        stream="1",
         os_major=1,
         os_minor=1,
         os_lifecycle=LifecycleType.mainline,

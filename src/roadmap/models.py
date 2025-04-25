@@ -49,6 +49,7 @@ class System(BaseModel):
     support_status: SupportStatus = SupportStatus.unknown
     count: int = 0
     lifecycle_type: LifecycleType
+    related: bool = False
 
     @model_validator(mode="after")
     def update_support_status(self):

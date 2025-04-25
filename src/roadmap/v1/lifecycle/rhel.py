@@ -81,7 +81,7 @@ relevant = APIRouter(
 
 
 @relevant.get("")
-async def get_relevant_systems(
+async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
     related: bool = False,
@@ -108,8 +108,10 @@ async def get_relevant_systems(
         system_counts[count_key] += 1
 
     results = []
+    system_keys = set()
     for count_key, count in system_counts.items():
         key = str(count_key.major) if count_key.minor is None else f"{count_key.major}.{count_key.minor}"
+        system_keys.add(key)
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
@@ -135,8 +137,43 @@ async def get_relevant_systems(
                 release_date=release_date,
                 retirement_date=retirement_date,
                 count=count,
+                related=False,
             )
         )
+
+    if related:
+        founds = set()
+        from datetime import date
+
+        today = date.today()
+        for count_key, count in system_counts.items():
+            minor = count_key.minor if count_key.minor is not None else -1
+            for key, rhel in OS_LIFECYCLE_DATES.items():
+                rhel_minor = rhel.minor if rhel.minor is not None else -1
+                if rhel.major == count_key.major and rhel_minor > minor and rhel.end > today:
+                    founds.add(key)
+        founds -= system_keys
+        for key in founds:
+            os = OS_LIFECYCLE_DATES[key]
+            lifecycle_type = LifecycleType.mainline
+            if hasattr(os, "end_eus"):
+                lifecycle_type = LifecycleType.eus
+            if hasattr(os, "end_e4s"):
+                lifecycle_type = LifecycleType.e4s
+            if hasattr(os, "end_els"):
+                lifecycle_type = LifecycleType.els
+            results.append(
+                System(
+                    name=os.name,
+                    major=os.major,
+                    minor=os.minor,
+                    lifecycle_type=lifecycle_type,
+                    release_date=os.start,
+                    retirement_date=os.end,
+                    count=0,
+                    related=True,
+                )
+            )
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

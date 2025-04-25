@@ -39,14 +39,6 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
-    try:
-        return APP_STREAM_MODULES_BY_KEY[(name, os_major, stream)].rolling
-    except KeyError:
-        logger.debug(f"No match for rolling RHEL {os_major} {name} {stream}")
-        return False
-
-
 def get_module_os_major_versions(name: str) -> set[int]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
@@ -75,6 +67,9 @@ async def filter_params(
 AppStreamFilter = t.Annotated[dict, Depends(filter_params)]
 
 
+# Question: is it true the purpose of this is to normalize between Modules
+# and Packages? 
+# Why does this exist when we have AppStreamEntity?
 class AppStreamKey(BaseModel):
     """All these things must match in order for a module to be considered the same."""
 
@@ -291,6 +286,7 @@ def related_app_streams(app_streams: list[RelevantAppStream]):
 
 
 async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None):
+#-> dict[AppStreamEntity, list[UUID]]:  # note: python does not validate this
     """Return a mapping of AppStreams to ids of systems using that stream."""
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
@@ -363,7 +359,10 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        rolling = get_rolling_value(name, stream, os_major)
+        assert isinstance(matched_module, AppStreamEntity), f"was {type(matched_module)}"
+
+        # todo: Why are we returning an AppStreamKey and not an AppStreamEntity?
+        rolling = matched_module.rolling
         app_key = AppStreamKey(
             name=name,
             display_name=matched_module.display_name,

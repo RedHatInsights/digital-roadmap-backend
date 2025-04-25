@@ -154,8 +154,7 @@ class RelevantAppStream(BaseModel):
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
     systems: t.Optional[list[UUID]]
-    # TODO: Is AppStreamEntity ok? It doesn't have support_status
-    related: t.Optional[list[AppStreamEntity]] 
+    related: bool = False
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -281,11 +280,34 @@ async def get_relevant_app_streams(
                     count=len(systems),
                     rolling=app_stream.rolling,
                     systems=systems,
-                    related=related_app_streams(app_stream) if related else [],
+                    related=False,
                 )
             )
         except Exception as exc:
             raise HTTPException(detail=str(exc), status_code=400)
+
+    if related:
+        for app_stream in related_app_streams(relevant_app_streams.copy()):
+            try:
+                relevant_app_streams.append(
+                    RelevantAppStream(
+                        name=app_stream.name,
+                        application_stream_name=app_stream.application_stream_name,
+                        stream=app_stream.stream,
+                        start_date=app_stream.start_date,
+                        end_date=app_stream.end_date,
+                        os_major=app_stream.os_major,
+                        os_minor=app_stream.os_minor,
+                        os_lifecycle=app_stream.lifecycle,
+                        impl=app_stream.impl,
+                        count=0,
+                        rolling=app_stream.rolling,
+                        systems=[],
+                        related=True,
+                    )
+                )
+            except Exception as exc:
+                raise HTTPException(detail=str(exc), status_code=400)
 
     return {
         "meta": {
@@ -295,16 +317,26 @@ async def get_relevant_app_streams(
         "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
     }
 
-def related_app_streams(app_stream: RelevantAppStream):
-    relateds = []
+
+def related_app_streams(app_streams: list[RelevantAppStream]):
+    """Return unique list of related apps that do not appear in app_streams."""
+    relateds = {}
     from roadmap.data.app_streams import APP_STREAM_MODULES
-    for app in APP_STREAM_MODULES:
-        if app.name == app_stream.name:
-            if app.os_major == app_stream.os_major:
-                if app.stream != app_stream.stream:
-                    if app.end_date is None or app.end_date > date.today():
-                        relateds.append(app)
-    return relateds
+
+    for app_stream in app_streams:
+        for app in APP_STREAM_MODULES:
+            if app.name == app_stream.name:
+                if app.os_major == app_stream.os_major:
+                    if app.stream != app_stream.stream:
+                        if app.end_date is None or app.end_date > date.today():
+                            relateds[(app.name, app.os_major, app.stream)] = app
+    for app_stream in app_streams:
+        try:
+            del relateds[(app_stream.name, app_stream.os_major, app_stream.stream)]
+        except KeyError:
+            pass
+    return relateds.values()
+
 
 async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None):
     """Return a mapping of AppStreams to ids of systems using that stream."""

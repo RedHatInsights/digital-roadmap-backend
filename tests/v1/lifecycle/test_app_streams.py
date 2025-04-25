@@ -181,7 +181,6 @@ def test_get_revelent_app_stream_related(api_prefix, client):
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
-
     assert result.status_code == 200
     assert len(data) > 0
 

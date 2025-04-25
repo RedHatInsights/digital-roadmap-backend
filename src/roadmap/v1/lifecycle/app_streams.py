@@ -63,11 +63,7 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
 
     # Ensure the version number is in the display name
     if display_name[-1] not in (string.digits):
-        try:
-            version = ".".join(app_stream.stream.split(".")[:2])
-        except (IndexError, AttributeError):
-            logger.debug(f"Error parsing stream version '{app_stream.stream}' for '{app_stream.name}'")
-            version = app_stream.stream
+        version = ".".join(app_stream.stream.split(".")[:2])
 
         # Avoid putting a duplicate string at the end
         if version and display_name[-len(version) :] != version:

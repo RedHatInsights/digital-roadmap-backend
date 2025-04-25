@@ -27,7 +27,7 @@ class AppStreamImplementation(StrEnum):
 class AppStreamEntity(BaseModel):
     """An application stream module or package."""
 
-    name: str
+    name: str = Field(min_length=1)
     application_stream_name: str
     stream: str
     start_date: Date | None = None

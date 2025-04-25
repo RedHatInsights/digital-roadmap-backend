@@ -46,7 +46,7 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
         "apache httpd": "Apache HTTPD",
         "llvm": "LLVM",
         "mariadb": "MariaDB",
-        "mod_auth_openidc": "Mod Auth OpenIDC",
+        "mod_auth_openidc for apache": "Mod Auth OpenIDC for Apache",
         "mysql": "MySQL",
         "nginx": "NGINX",
         "node.js": "Node.js",
@@ -57,7 +57,6 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
         "postgresql": "PostgreSQL",
         "rhn-tools": "RHN Tools",
     }
-
     display_name = app_stream.name
     if app_stream.application_stream_name and app_stream.application_stream_name != "Unknown":
         display_name = app_stream.application_stream_name
@@ -67,7 +66,7 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
         version = ".".join(app_stream.stream.split(".")[:2])
 
         # Avoid putting a duplicate string at the end
-        if version and display_name[-len(version) :] != version:
+        if version and display_name[-len(version) :].lower() != version:
             display_name = f"{display_name.rstrip()} {version}"
 
     # Correct capitalization

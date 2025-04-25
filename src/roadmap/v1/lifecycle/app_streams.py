@@ -14,7 +14,6 @@ from fastapi.exceptions import HTTPException
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
 from pydantic import model_validator
 
 from roadmap.common import decode_header
@@ -38,6 +37,54 @@ logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
+
+
+def get_display_name(app_stream: AppStreamEntity) -> str:
+    """Create a normalized name field for presentation"""
+
+    special_case = {
+        "apache httpd": "Apache HTTPD",
+        "llvm": "LLVM",
+        "mariadb": "MariaDB",
+        "mod_auth_openidc": "Mod Auth OpenIDC",
+        "mysql": "MySQL",
+        "nginx": "NGINX",
+        "node.js": "Node.js",
+        "nodejs": "Node.js",
+        "osinfo-db": "OSInfo DB",
+        "php": "PHP",
+        "postgresql": "PostgreSQL",
+        "rhn-tools": "RHN Tools",
+    }
+
+    display_name = app_stream.name
+    if app_stream.application_stream_name and app_stream.application_stream_name != "Unknown":
+        display_name = app_stream.application_stream_name
+
+    # Ensure the version number is in the display name
+    if display_name[-1] not in (string.digits):
+        try:
+            version = ".".join(app_stream.stream.split(".")[:2])
+        except (IndexError, AttributeError):
+            logger.debug(f"Error parsing stream version '{app_stream.stream}' for '{app_stream.name}'")
+            version = app_stream.stream
+
+        # Avoid putting a duplicate string at the end
+        if version and display_name[-len(version) :] != version:
+            display_name = f"{display_name.rstrip()} {version}"
+
+    # Correct capitalization
+    for name, cased_name in special_case.items():
+        lower_name = display_name.lower()
+        if name in lower_name:
+            display_name = lower_name.replace(name, cased_name)
+            break
+    else:
+        display_name = display_name.title()
+
+    display_name = display_name.replace("-", " ").replace("Rhel", "RHEL")
+
+    return display_name
 
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
@@ -82,11 +129,11 @@ class AppStreamKey(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     name: str
+    display_name: str
     application_stream_name: str
     os_major: int | None
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
-    stream: str
     start_date: Date | None = None
     end_date: Date | None = None
     impl: AppStreamImplementation
@@ -98,11 +145,10 @@ class RelevantAppStream(BaseModel):
 
     name: str
     application_stream_name: str
-    display_name: str = Field(init=False, default="")
+    display_name: str
     os_major: int | None
     os_minor: int | None = None
     os_lifecycle: LifecycleType | None
-    stream: str
     start_date: Date | None = None
     end_date: Date | None = None
     count: int
@@ -110,54 +156,6 @@ class RelevantAppStream(BaseModel):
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
     systems: list[UUID]
-
-    @model_validator(mode="after")
-    def set_display_name(self):
-        """Create a normalized name field for presentation"""
-
-        special_case = {
-            "apache httpd": "Apache HTTPD",
-            "llvm": "LLVM",
-            "mariadb": "MariaDB",
-            "mod_auth_openidc": "Mod Auth OpenIDC",
-            "mysql": "MySQL",
-            "nginx": "NGINX",
-            "node.js": "Node.js",
-            "nodejs": "Node.js",
-            "osinfo-db": "OSInfo DB",
-            "php": "PHP",
-            "postgresql": "PostgreSQL",
-            "rhn-tools": "RHN Tools",
-        }
-
-        self.display_name = self.name
-        if self.application_stream_name and self.application_stream_name != "Unknown":
-            self.display_name = self.application_stream_name
-
-        # Ensure the version number is in the display name
-        if self.display_name[-1] not in (string.digits):
-            try:
-                version = ".".join(self.stream.split(".")[:2])
-            except IndexError:
-                logger.debug(f"Error parsing stream version '{self.stream}' for '{self.name}'")
-                version = self.stream
-
-            # Avoid putting a duplicate string at the end
-            if self.display_name[-len(version) :] != version:
-                self.display_name = f"{self.display_name.rstrip()} {version}"
-
-        # Correct capitalization
-        for name, cased_name in special_case.items():
-            lower_name = self.display_name.lower()
-            if name in lower_name:
-                self.display_name = lower_name.replace(name, cased_name)
-                break
-        else:
-            self.display_name = self.display_name.title()
-
-        self.display_name = self.display_name.replace("-", " ").replace("Rhel", "RHEL")
-
-        return self
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -307,8 +305,8 @@ async def get_relevant_app_streams(
             response.append(
                 RelevantAppStream(
                     name=app_stream.name,
+                    display_name=app_stream.display_name,
                     application_stream_name=app_stream.application_stream_name,
-                    stream=app_stream.stream,
                     start_date=app_stream.start_date,
                     end_date=app_stream.end_date,
                     os_major=app_stream.os_major,
@@ -332,7 +330,12 @@ async def get_relevant_app_streams(
     }
 
 
-def app_streams_from_modules(dnf_modules: list[dict], os_major: str, os_minor: str, os_lifecycle: str):
+def app_streams_from_modules(
+    dnf_modules: list[dict],
+    os_major: str,
+    os_minor: str,
+    os_lifecycle: str,
+) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
@@ -357,10 +360,11 @@ def app_streams_from_modules(dnf_modules: list[dict], os_major: str, os_minor: s
                 impl=AppStreamImplementation.module,
             )
 
+        display_name = get_display_name(matched_module)
         rolling = get_rolling_value(name, stream, os_major)
         app_key = AppStreamKey(
             name=name,
-            stream=stream,
+            display_name=display_name,
             start_date=matched_module.start_date,
             end_date=matched_module.end_date,
             application_stream_name=matched_module.application_stream_name,
@@ -375,7 +379,12 @@ def app_streams_from_modules(dnf_modules: list[dict], os_major: str, os_minor: s
     return app_streams
 
 
-def app_streams_from_packages(package_names_string: str, os_major: str, os_minor: str, os_lifecycle: str):
+def app_streams_from_packages(
+    package_names_string: str,
+    os_major: str,
+    os_minor: str,
+    os_lifecycle: str,
+) -> set[AppStreamKey]:
     package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in package_names_string}
 
     app_streams = set()
@@ -386,10 +395,11 @@ def app_streams_from_packages(package_names_string: str, os_major: str, os_minor
             if app_stream_package.os_major != os_major:
                 continue
 
+            display_name = get_display_name(app_stream_package)
             app_key = AppStreamKey(
                 name=app_stream_package.application_stream_name,
+                display_name=display_name,
                 application_stream_name=app_stream_package.application_stream_name,
-                stream=app_stream_package.stream,
                 start_date=app_stream_package.start_date,
                 end_date=app_stream_package.end_date,
                 os_major=os_major,

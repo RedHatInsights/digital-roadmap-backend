@@ -269,8 +269,8 @@ async def get_relevant_app_streams(
             relevant_app_streams.append(
                 RelevantAppStream(
                     name=app_stream.name,
+                    display_name=app_stream.display_name,
                     application_stream_name=app_stream.application_stream_name,
-                    stream=app_stream.stream,
                     start_date=app_stream.start_date,
                     end_date=app_stream.end_date,
                     os_major=app_stream.os_major,
@@ -292,8 +292,8 @@ async def get_relevant_app_streams(
                 relevant_app_streams.append(
                     RelevantAppStream(
                         name=app_stream.name,
+                        display_name=app_stream.display_name,
                         application_stream_name=app_stream.application_stream_name,
-                        stream=app_stream.stream,
                         start_date=app_stream.start_date,
                         end_date=app_stream.end_date,
                         os_major=app_stream.os_major,

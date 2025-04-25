@@ -153,7 +153,7 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
-    systems: t.Optional[list[UUID]]
+    systems: list[UUID]
     related: bool = False
 
     @model_validator(mode="after")

@@ -44,6 +44,7 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
 
     special_case = {
         "apache httpd": "Apache HTTPD",
+        "freeradius": "FreeRADIUS",
         "llvm": "LLVM",
         "mariadb": "MariaDB",
         "mod_auth_openidc for apache": "Mod Auth OpenIDC for Apache",

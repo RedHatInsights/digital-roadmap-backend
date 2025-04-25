@@ -1,5 +1,4 @@
 import logging
-import string
 import typing as t
 
 from collections import defaultdict
@@ -38,51 +37,6 @@ logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
-
-
-def get_display_name(app_stream: AppStreamEntity) -> str:
-    """Create a normalized name field for presentation"""
-
-    special_case = {
-        "apache httpd": "Apache HTTPD",
-        "freeradius": "FreeRADIUS",
-        "llvm": "LLVM",
-        "mariadb": "MariaDB",
-        "mod_auth_openidc for apache": "Mod Auth OpenIDC for Apache",
-        "mysql": "MySQL",
-        "nginx": "NGINX",
-        "node.js": "Node.js",
-        "nodejs": "Node.js",
-        "openjdk": "OpenJDK",
-        "osinfo-db": "OSInfo DB",
-        "php": "PHP",
-        "postgresql": "PostgreSQL",
-        "rhn-tools": "RHN Tools",
-    }
-    display_name = app_stream.name
-    if app_stream.application_stream_name and app_stream.application_stream_name != "Unknown":
-        display_name = app_stream.application_stream_name
-
-    # Ensure the version number is in the display name
-    if display_name[-1] not in (string.digits):
-        version = ".".join(app_stream.stream.split(".")[:2])
-
-        # Avoid putting a duplicate string at the end
-        if version and display_name[-len(version) :].lower() != version:
-            display_name = f"{display_name.rstrip()} {version}"
-
-    # Correct capitalization
-    for name, cased_name in special_case.items():
-        lower_name = display_name.lower()
-        if name in lower_name:
-            display_name = lower_name.replace(name, cased_name)
-            break
-    else:
-        display_name = display_name.title()
-
-    display_name = display_name.replace("-", " ").replace("Rhel", "RHEL")
-
-    return display_name
 
 
 def get_rolling_value(name: str, stream: str, os_major: int) -> bool:
@@ -325,14 +279,12 @@ def related_app_streams(app_streams: list[RelevantAppStream]):
 
     for app_stream in app_streams:
         for app in APP_STREAM_MODULES:
-            if app.name == app_stream.name:
-                if app.os_major == app_stream.os_major:
-                    if app.stream != app_stream.stream:
-                        if app.end_date is None or app.end_date > date.today():
-                            relateds[(app.name, app.os_major, app.stream)] = app
+            if app.display_name == app_stream.display_name:
+                if app.end_date is None or app.end_date > date.today():
+                    relateds[(app.display_name, app.os_major)] = app
     for app_stream in app_streams:
         try:
-            del relateds[(app_stream.name, app_stream.os_major, app_stream.stream)]
+            del relateds[(app_stream.name, app_stream.os_major, app_stream.display_name)]
         except KeyError:
             pass
     return relateds.values()
@@ -378,39 +330,7 @@ async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None)
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
-    response = []
-    for app_stream, systems in systems_by_stream.items():
-        # Omit rolling app streams.
-        if app_stream.rolling:
-            continue
-
-        try:
-            response.append(
-                RelevantAppStream(
-                    name=app_stream.name,
-                    display_name=app_stream.display_name,
-                    application_stream_name=app_stream.application_stream_name,
-                    start_date=app_stream.start_date,
-                    end_date=app_stream.end_date,
-                    os_major=app_stream.os_major,
-                    os_minor=app_stream.os_minor,
-                    os_lifecycle=app_stream.os_lifecycle,
-                    impl=app_stream.impl,
-                    count=len(systems),
-                    rolling=app_stream.rolling,
-                    systems=systems,
-                )
-            )
-        except Exception as exc:
-            raise HTTPException(detail=str(exc), status_code=400)
-
-    return {
-        "meta": {
-            "count": len(response),
-            "total": sum(item.count for item in response),
-        },
-        "data": sorted(response, key=sort_attrs("name", "os_major", "os_minor", "os_lifecycle")),
-    }
+    return systems_by_stream
 
 
 def app_streams_from_modules(
@@ -443,11 +363,10 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        display_name = get_display_name(matched_module)
         rolling = get_rolling_value(name, stream, os_major)
         app_key = AppStreamKey(
             name=name,
-            display_name=display_name,
+            display_name=matched_module.display_name,
             start_date=matched_module.start_date,
             end_date=matched_module.end_date,
             application_stream_name=matched_module.application_stream_name,
@@ -478,10 +397,9 @@ def app_streams_from_packages(
             if app_stream_package.os_major != os_major:
                 continue
 
-            display_name = get_display_name(app_stream_package)
             app_key = AppStreamKey(
                 name=app_stream_package.application_stream_name,
-                display_name=display_name,
+                display_name=app_stream_package.display_name,
                 application_stream_name=app_stream_package.application_stream_name,
                 start_date=app_stream_package.start_date,
                 end_date=app_stream_package.end_date,

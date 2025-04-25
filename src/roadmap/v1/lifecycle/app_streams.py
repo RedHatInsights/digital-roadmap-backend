@@ -51,6 +51,7 @@ def get_display_name(app_stream: AppStreamEntity) -> str:
         "nginx": "NGINX",
         "node.js": "Node.js",
         "nodejs": "Node.js",
+        "openjdk": "OpenJDK",
         "osinfo-db": "OSInfo DB",
         "php": "PHP",
         "postgresql": "PostgreSQL",

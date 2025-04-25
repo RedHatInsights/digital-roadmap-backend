@@ -155,19 +155,12 @@ async def get_relevant_systems(  # noqa: C901
         founds -= system_keys
         for key in founds:
             os = OS_LIFECYCLE_DATES[key]
-            lifecycle_type = LifecycleType.mainline
-            if hasattr(os, "end_eus"):
-                lifecycle_type = LifecycleType.eus
-            if hasattr(os, "end_e4s"):
-                lifecycle_type = LifecycleType.e4s
-            if hasattr(os, "end_els"):
-                lifecycle_type = LifecycleType.els
             results.append(
                 System(
                     name=os.name,
                     major=os.major,
                     minor=os.minor,
-                    lifecycle_type=lifecycle_type,
+                    lifecycle_type=LifecycleType.mainline,
                     release_date=os.start,
                     retirement_date=os.end,
                     count=0,

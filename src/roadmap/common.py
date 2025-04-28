@@ -200,4 +200,7 @@ def _split_stream(stream: str):
 
 def streams_lt(a: str, b: str):
     """Return True if stream a is less than stream b."""
-    return _split_stream(a) < _split_stream(b)
+    try:
+        return _split_stream(a) < _split_stream(b)
+    except ValueError:
+        return a < b

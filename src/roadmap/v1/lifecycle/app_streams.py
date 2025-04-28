@@ -325,8 +325,6 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        assert isinstance(matched_module, AppStreamEntity), f"was {type(matched_module)}"
-
         app_streams.add(matched_module)
 
     return app_streams

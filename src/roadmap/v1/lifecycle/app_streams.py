@@ -254,8 +254,8 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
     for app_stream in app_streams:
-        for app in APP_STREAM_MODULES:
-            if app.name == app_stream.name:
+        for app in APP_STREAM_MODULES_PACKAGES:
+            if app.match_name == app_stream.match_name:
                 if streams_lt(app_stream.stream, app.stream):
                     if app.end_date is None or app.end_date > date.today():
                         relateds.add(app)

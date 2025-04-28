@@ -131,8 +131,6 @@ class AppStreamEntity(BaseModel):
         match_name = self.name
         match_name = match_name.replace(self.stream, "")
         self.match_name = match_name.replace(self.stream.replace(".", ""), "")
-        if match_name != self.name:
-            print(f"changed {self.name} -> {self.match_name}")
         return self
 
     def __hash__(self):

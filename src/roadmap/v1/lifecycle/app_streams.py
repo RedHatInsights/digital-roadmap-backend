@@ -259,7 +259,7 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
                 if streams_lt(app_stream.stream, app.stream):
                     if app.end_date is None or app.end_date > date.today():
                         relateds.add(app)
-    return relateds - set(app_stream)
+    return relateds - set(app_streams)
 
 
 async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None) -> dict[AppStreamEntity, list[UUID]]:

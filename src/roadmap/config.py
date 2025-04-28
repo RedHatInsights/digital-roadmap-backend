@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     rbac_hostname: str = ""
     rbac_port: int = 8000
 
+    log_level: str = "info"
+    json_logging: bool = False
+
     @property
     def database_url(self) -> PostgresDsn:
         return PostgresDsn(

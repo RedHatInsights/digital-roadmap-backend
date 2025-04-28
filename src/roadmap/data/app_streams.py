@@ -14,6 +14,7 @@ from pydantic import model_validator
 
 from roadmap.common import ensure_date
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.models import LifecycleType
 
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
@@ -123,6 +124,19 @@ class AppStreamEntity(BaseModel):
         self.display_name = display_name.replace("-", " ").replace("Rhel", "RHEL")
 
         return self
+
+    def __hash__(self):
+        return (
+            self.name,
+            self.display_name,
+            self.application_stream_name,
+            self.os_major,
+            self.os_minor,
+            self.start_date,
+            self.end_date,
+            self.impl,
+            self.rolling,
+        ).__hash__()
 
 
 APP_STREAM_PACKAGES = {

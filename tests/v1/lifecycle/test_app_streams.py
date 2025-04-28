@@ -9,7 +9,6 @@ from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
-from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
@@ -196,7 +195,7 @@ def test_app_stream_missing_lifecycle_data():
         start_date=None,
         end_date=None,
         os_major=1,
-#        os_lifecycle=LifecycleType.mainline,
+        #        os_lifecycle=LifecycleType.mainline,
         support_status=SupportStatus.supported,
         count=4,
         impl=AppStreamImplementation.package,

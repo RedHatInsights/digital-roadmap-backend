@@ -12,17 +12,14 @@ from fastapi import Query
 from fastapi.exceptions import HTTPException
 from pydantic import AfterValidator
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio.result import AsyncResult
 
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
-from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
-from roadmap.data.app_streams import APP_STREAM_MODULES
 from roadmap.data.app_streams import APP_STREAM_MODULES_BY_KEY
 from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
@@ -30,7 +27,6 @@ from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.models import _calculate_support_status
-from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
 
@@ -277,8 +273,6 @@ async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None)
             continue
 
         os_major = system_profile.get("operating_system", {}).get("major")
-        os_minor = system_profile.get("operating_system", {}).get("minor")
-        os_lifecycle = get_lifecycle_type(system_profile.get("installed_products", [{}]))
         dnf_modules = system_profile.get("dnf_modules", [])
 
         if not dnf_modules:

@@ -190,7 +190,7 @@ def ensure_date(value: str | date):
 
 def _split_stream(stream: str):
     """Returns a tuple of major, minor and micro for given stream."""
-    versions = stream.split('.')
+    versions = stream.split(".")
     versions.reverse()
     major = int(versions.pop())
     minor = int(versions.pop()) if versions else 0
@@ -200,4 +200,4 @@ def _split_stream(stream: str):
 
 def streams_lt(a: str, b: str):
     """Return True if stream a is less than stream b."""
-    return _split_stream(a) <  _split_stream(b)
+    return _split_stream(a) < _split_stream(b)

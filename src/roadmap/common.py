@@ -192,9 +192,9 @@ def _split_stream(stream: str):
     """Returns a tuple of major, minor and micro for given stream."""
     versions = stream.split('.')
     versions.reverse()
-    major = versions.pop()
-    minor = versions.pop() if versions else ""
-    micro = versions.pop() if versions else ""
+    major = int(versions.pop())
+    minor = int(versions.pop()) if versions else 0
+    micro = int(versions.pop()) if versions else 0
     return (major, minor, micro)
 
 

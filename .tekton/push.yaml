@@ -37,9 +37,11 @@ spec:
         - latest
         - '{{ target_branch }}'
 
-
   pipelineRef:
     name: pipeline-build
+
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-roadmap
 
   workspaces:
     - name: git-auth

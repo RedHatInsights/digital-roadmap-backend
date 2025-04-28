@@ -186,3 +186,18 @@ def ensure_date(value: str | date):
         return date.fromisoformat(value)
     except (ValueError, TypeError):
         raise ValueError("Date must be in ISO 8601 format")
+
+
+def _split_stream(stream: str):
+    """Returns a tuple of major, minor and micro for given stream."""
+    versions = stream.split('.')
+    versions.reverse()
+    major = versions.pop()
+    minor = versions.pop() if versions else ""
+    micro = versions.pop() if versions else ""
+    return (major, minor, micro)
+
+
+def streams_lt(a: str, b: str):
+    """Return True if stream a is less than stream b."""
+    return _split_stream(a) <  _split_stream(b)

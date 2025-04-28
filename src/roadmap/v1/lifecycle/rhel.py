@@ -2,6 +2,7 @@ import logging
 import typing as t
 
 from collections import defaultdict
+from datetime import date
 from operator import attrgetter
 
 from fastapi import APIRouter
@@ -142,18 +143,16 @@ async def get_relevant_systems(  # noqa: C901
         )
 
     if related:
-        founds = set()
-        from datetime import date
-
+        relateds = set()
         today = date.today()
         for count_key, count in system_counts.items():
             minor = count_key.minor if count_key.minor is not None else -1
             for key, rhel in OS_LIFECYCLE_DATES.items():
                 rhel_minor = rhel.minor if rhel.minor is not None else -1
                 if rhel.major == count_key.major and rhel_minor > minor and rhel.end > today:
-                    founds.add(key)
-        founds -= system_keys
-        for key in founds:
+                    relateds.add(key)
+        relateds -= system_keys
+        for key in relateds:
             os = OS_LIFECYCLE_DATES[key]
             results.append(
                 System(

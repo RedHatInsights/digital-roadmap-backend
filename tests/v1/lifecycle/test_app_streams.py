@@ -181,9 +181,10 @@ def test_get_revelent_app_stream_related(api_prefix, client):
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
-    if result.status_code == 400:
-        import pprint
-        pprint.pprint(result.json())
+
+    import pprint
+    pprint.pprint(result.json())
+
     assert result.status_code == 200
     assert len(data) > 0
 
@@ -199,7 +200,7 @@ def test_app_stream_missing_lifecycle_data():
         start_date=None,
         end_date=None,
         os_major=1,
-        os_lifecycle=LifecycleType.mainline,
+#        os_lifecycle=LifecycleType.mainline,
         support_status=SupportStatus.supported,
         count=4,
         impl=AppStreamImplementation.package,
@@ -330,7 +331,6 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         application_stream_name="Pkg Name",
         os_major=1,
         os_minor=1,
-        os_lifecycle=LifecycleType.mainline,
         count=4,
         impl=AppStreamImplementation.package,
         rolling=False,

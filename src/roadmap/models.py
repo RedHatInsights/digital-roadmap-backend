@@ -21,7 +21,6 @@ class LifecycleType(StrEnum):
     els = "ELS"
     e4s = "E4S"
 
-
 class SupportStatus(StrEnum):
     supported = "Supported"
     six_months = "Support ends within 6 months"

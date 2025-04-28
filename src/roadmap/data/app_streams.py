@@ -14,7 +14,6 @@ from pydantic import model_validator
 
 from roadmap.common import ensure_date
 from roadmap.data.systems import OS_LIFECYCLE_DATES
-from roadmap.models import LifecycleType
 
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
@@ -28,7 +27,7 @@ class AppStreamImplementation(StrEnum):
 
 class AppStreamEntity(BaseModel):
     """An application stream module or package."""
-    
+
     name: str = Field(min_length=1)
     display_name: str | None = None
     match_name: str | None = None
@@ -80,7 +79,7 @@ class AppStreamEntity(BaseModel):
                 self.os_minor = None
 
         return self
-    
+
     @model_validator(mode="after")
     def set_display_name(self):
         """Create a normalized name field for presentation"""
@@ -133,7 +132,7 @@ class AppStreamEntity(BaseModel):
         match_name = match_name.replace(self.stream, "")
         self.match_name = match_name.replace(self.stream.replace(".", ""), "")
         if match_name != self.name:
-            print(f'changed {self.name} -> {self.match_name}')
+            print(f"changed {self.name} -> {self.match_name}")
         return self
 
     def __hash__(self):

@@ -31,6 +31,7 @@ class AppStreamEntity(BaseModel):
     
     name: str = Field(min_length=1)
     display_name: str | None = None
+    match_name: str | None = None
     application_stream_name: str
     stream: str
     start_date: Date | None = None
@@ -123,6 +124,16 @@ class AppStreamEntity(BaseModel):
 
         self.display_name = display_name.replace("-", " ").replace("Rhel", "RHEL")
 
+        return self
+
+    @model_validator(mode="after")
+    def set_match_name(self):
+        """Create a normalized name field for matching across versions"""
+        match_name = self.name
+        match_name = match_name.replace(self.stream, "")
+        self.match_name = match_name.replace(self.stream.replace(".", ""), "")
+        if match_name != self.name:
+            print(f'changed {self.name} -> {self.match_name}')
         return self
 
     def __hash__(self):

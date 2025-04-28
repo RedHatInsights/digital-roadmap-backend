@@ -195,7 +195,6 @@ def test_app_stream_missing_lifecycle_data():
         start_date=None,
         end_date=None,
         os_major=1,
-        #        os_lifecycle=LifecycleType.mainline,
         support_status=SupportStatus.supported,
         count=4,
         impl=AppStreamImplementation.package,

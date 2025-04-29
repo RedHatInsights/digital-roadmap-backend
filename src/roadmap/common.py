@@ -188,7 +188,7 @@ def ensure_date(value: str | date):
         raise ValueError("Date must be in ISO 8601 format")
 
 
-def _split_stream(stream: str):
+def _split_stream(stream: str) -> t.Tuple[int, int, int]:
     """Returns a tuple of major, minor and micro for given stream."""
     versions = stream.split(".")
     versions.reverse()

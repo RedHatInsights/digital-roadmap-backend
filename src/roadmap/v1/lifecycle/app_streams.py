@@ -258,7 +258,10 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
     return relateds - set(app_streams)
 
 
-async def systems_by_app_stream(systems: AsyncResult, org_id: str | None = None) -> dict[AppStreamEntity, list[UUID]]:
+async def systems_by_app_stream(
+    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
+    org_id: t.Annotated[str, Depends(decode_header)],
+) -> dict[AppStreamEntity, list[UUID]]:
     """Return a mapping of AppStreams to ids of systems using that stream."""
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)

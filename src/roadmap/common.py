@@ -84,26 +84,23 @@ async def query_rbac(
 
 async def check_inventory_access(
     permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
-) -> list[str]:
+) -> list[dict]:
     """Check the given permissions for inventory access.
 
-    Return a boolean as well as any detailed access definitions.
+    Raise HTTPException if no permissions allow access.
+
+    Return list of resource definitions and permission.
     """
     inventory_access_perms = {"inventory:*:*", "inventory:hosts:read"}
 
     has_access = False
-    resource_definitions = []
-    for permission in permissions:
-        if perm := permission.get("resourceDefinitions"):
-            resource_definitions.append(*perm)
-        else:
-            if permission.get("permission") in inventory_access_perms:
-                has_access = True
+    if any(permission.get("permission") in inventory_access_perms for permission in permissions):
+        has_access = True
 
     if not has_access:
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    return resource_definitions
+    return permissions
 
 
 # FIXME: This should be cached
@@ -111,14 +108,14 @@ async def query_host_inventory(
     org_id: t.Annotated[str, Depends(decode_header)],
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    resource_definitions: t.Annotated[list[str], Depends(check_inventory_access)],
+    permissions: t.Annotated[list[dict], Depends(check_inventory_access)],
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):
     if settings.dev:
         org_id = "1234"
 
-    if resource_definitions:
+    if any(perm.get("resourceDefinitions") for perm in permissions):
         # TODO: Implement workspace filtering
         raise HTTPException(501, detail="Workspace filtering is not yet implemented")
 

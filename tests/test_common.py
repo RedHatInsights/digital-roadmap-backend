@@ -24,7 +24,7 @@ async def base_args():
         "org_id": "1234",
         "session": session,
         "settings": settings,
-        "resource_definitions": [],
+        "permissions": [],
     }
 
 
@@ -76,7 +76,21 @@ async def test_query_host_inventory_major_minor(base_args, major, minor):
 
 async def test_query_host_inventory_resource_definitions(base_args):
     with pytest.raises(HTTPException, match="not yet implemented"):
-        await anext(query_host_inventory(**base_args | {"resource_definitions": ["some_workspaces"]}))
+        permissions = [
+            {
+                "permission": "inventory:hosts:read",
+                "resourceDefinitions": [
+                    {
+                        "attributeFilter": {
+                            "key": "group.id",
+                            "value": ["3c4a757d-a38e-4c17-89ab-4694249f751b"],
+                            "operation": "in",
+                        }
+                    }
+                ],
+            }
+        ]
+        await anext(query_host_inventory(**base_args | {"permissions": permissions}))
 
 
 async def test_query_host_inventory_dev(base_args):
@@ -173,19 +187,20 @@ async def test_query_rbac_no_url():
 
 
 async def test_check_inventory_access():
-    result = await check_inventory_access([{"resourceDefinitions": [], "permission": "inventory:*:*"}])
+    perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
+    result = await check_inventory_access(perms)
 
-    assert result == []
+    assert result == perms
 
 
 @pytest.mark.parametrize(
     "permissions",
     (
         [],
-        [{"resourceDefinitions": ["def1"]}],
+        [{"resourceDefinitions": []}],
         [{"resourceDefinitions": [], "permission": "nope"}],
     ),
 )
 async def test_check_inventory_no_access(permissions):
-    with pytest.raises(HTTPException):
+    with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
         await check_inventory_access(permissions)

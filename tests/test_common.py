@@ -24,7 +24,7 @@ async def base_args():
         "org_id": "1234",
         "session": session,
         "settings": settings,
-        "groups": [],
+        "resource_definitions": [],
     }
 
 
@@ -74,9 +74,9 @@ async def test_query_host_inventory_major_minor(base_args, major, minor):
     assert minor_versions == {minor}, "Minor version mismatch"
 
 
-async def test_query_host_inventory_groups(base_args):
+async def test_query_host_inventory_resource_definitions(base_args):
     with pytest.raises(HTTPException, match="not yet implemented"):
-        await anext(query_host_inventory(**base_args | {"groups": ["some_groups"]}))
+        await anext(query_host_inventory(**base_args | {"resource_definitions": ["some_workspaces"]}))
 
 
 async def test_query_host_inventory_dev(base_args):

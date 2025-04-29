@@ -111,16 +111,16 @@ async def query_host_inventory(
     org_id: t.Annotated[str, Depends(decode_header)],
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    groups: t.Annotated[list[str], Depends(check_inventory_access)],
+    resource_definitions: t.Annotated[list[str], Depends(check_inventory_access)],
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):
     if settings.dev:
         org_id = "1234"
 
-    if groups:
-        # TODO: Implement group filtering
-        raise HTTPException(501, detail="Group filtering is not yet implemented")
+    if resource_definitions:
+        # TODO: Implement workspace filtering
+        raise HTTPException(501, detail="Workspace filtering is not yet implemented")
 
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
     if major is not None:

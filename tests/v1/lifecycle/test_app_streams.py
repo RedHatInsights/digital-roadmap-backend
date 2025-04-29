@@ -5,6 +5,7 @@ from urllib.error import HTTPError
 
 import pytest
 
+from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
@@ -161,6 +162,31 @@ def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 
     assert result.status_code == 403
+
+
+def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [
+                    {
+                        "attributeFilter": {
+                            "key": "group_id",
+                            "value": ["ebeaf62a-9713-4dad-8d63-32b51cadbda3"],
+                            "operation": "in",
+                        },
+                    }
+                ],
+            }
+        ]
+
+    async def check_inventory_access_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[check_inventory_access] = check_inventory_access_override
 
 
 def test_get_revelent_app_stream_related(api_prefix, client):

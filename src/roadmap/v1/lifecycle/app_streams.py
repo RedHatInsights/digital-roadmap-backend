@@ -168,84 +168,6 @@ async def get_app_stream_names(
     }
 
 
-## Relevant ##
-relevant = APIRouter(
-    prefix="/relevant/lifecycle/app-streams",
-    tags=["Relevant", "App Streams"],
-)
-
-
-@relevant.get("", response_model=RelevantAppStreamsResponse)
-async def get_relevant_app_streams(
-    org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
-    related: bool = False,
-):
-    logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
-
-    systems_by_stream = await systems_by_app_stream(systems, org_id)
-
-    relevant_app_streams = []
-    for app_stream, systems in systems_by_stream.items():
-        # Omit rolling app streams.
-        if app_stream.rolling:
-            continue
-
-        try:
-            relevant_app_streams.append(
-                RelevantAppStream(
-                    name=app_stream.name,
-                    display_name=app_stream.display_name,
-                    application_stream_name=app_stream.application_stream_name,
-                    start_date=app_stream.start_date,
-                    end_date=app_stream.end_date,
-                    os_major=app_stream.os_major,
-                    os_minor=app_stream.os_minor,
-                    impl=app_stream.impl,
-                    count=len(systems),
-                    rolling=app_stream.rolling,
-                    systems=systems,
-                    related=False,
-                )
-            )
-        except Exception as exc:
-            raise HTTPException(detail=str(exc), status_code=400)
-
-    if related:
-        for app_stream in related_app_streams(systems_by_stream.keys()):
-            # Omit rolling app streams.
-            if app_stream.rolling:
-                continue
-
-            try:
-                relevant_app_streams.append(
-                    RelevantAppStream(
-                        name=app_stream.name,
-                        display_name=app_stream.display_name,
-                        application_stream_name=app_stream.application_stream_name,
-                        start_date=app_stream.start_date,
-                        end_date=app_stream.end_date,
-                        os_major=app_stream.os_major,
-                        os_minor=app_stream.os_minor,
-                        impl=app_stream.impl,
-                        count=0,
-                        rolling=app_stream.rolling,
-                        systems=[],
-                        related=True,
-                    )
-                )
-            except Exception as exc:
-                raise HTTPException(detail=str(exc), status_code=400)
-
-    return {
-        "meta": {
-            "count": len(relevant_app_streams),
-            "total": sum(item.count for item in relevant_app_streams),
-        },
-        "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor")),
-    }
-
-
 def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEntity]:
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
@@ -259,10 +181,12 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
 
 
 async def systems_by_app_stream(
-    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
     org_id: t.Annotated[str, Depends(decode_header)],
+    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
 ) -> dict[AppStreamEntity, list[UUID]]:
     """Return a mapping of AppStreams to ids of systems using that stream."""
+    logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
+
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
     async for system in systems.mappings():
@@ -346,3 +270,76 @@ def app_streams_from_packages(
                 app_streams.add(app_stream_package)
 
     return app_streams
+
+
+## Relevant ##
+relevant = APIRouter(
+    prefix="/relevant/lifecycle/app-streams",
+    tags=["Relevant", "App Streams"],
+)
+
+
+@relevant.get("", response_model=RelevantAppStreamsResponse)
+async def get_relevant_app_streams(
+    systems_by_stream: t.Annotated[dict[AppStreamEntity, list[UUID]], Depends(systems_by_app_stream)],
+    related: bool = False,
+):
+    relevant_app_streams = []
+    for app_stream, systems in systems_by_stream.items():
+        # Omit rolling app streams.
+        if app_stream.rolling:
+            continue
+
+        try:
+            relevant_app_streams.append(
+                RelevantAppStream(
+                    name=app_stream.name,
+                    display_name=app_stream.display_name,
+                    application_stream_name=app_stream.application_stream_name,
+                    start_date=app_stream.start_date,
+                    end_date=app_stream.end_date,
+                    os_major=app_stream.os_major,
+                    os_minor=app_stream.os_minor,
+                    impl=app_stream.impl,
+                    count=len(systems),
+                    rolling=app_stream.rolling,
+                    systems=systems,
+                    related=False,
+                )
+            )
+        except Exception as exc:
+            raise HTTPException(detail=str(exc), status_code=400)
+
+    if related:
+        for app_stream in related_app_streams(systems_by_stream.keys()):
+            # Omit rolling app streams.
+            if app_stream.rolling:
+                continue
+
+            try:
+                relevant_app_streams.append(
+                    RelevantAppStream(
+                        name=app_stream.name,
+                        display_name=app_stream.display_name,
+                        application_stream_name=app_stream.application_stream_name,
+                        start_date=app_stream.start_date,
+                        end_date=app_stream.end_date,
+                        os_major=app_stream.os_major,
+                        os_minor=app_stream.os_minor,
+                        impl=app_stream.impl,
+                        count=0,
+                        rolling=app_stream.rolling,
+                        systems=[],
+                        related=True,
+                    )
+                )
+            except Exception as exc:
+                raise HTTPException(detail=str(exc), status_code=400)
+
+    return {
+        "meta": {
+            "count": len(relevant_app_streams),
+            "total": sum(item.count for item in relevant_app_streams),
+        },
+        "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor")),
+    }

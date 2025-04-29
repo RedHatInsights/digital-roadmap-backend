@@ -68,7 +68,7 @@ load-host-data:
 
 .PHONY: run
 run:
-	$(VENV)/bin/uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug
+	$(VENV)/bin/uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug --log-config uvicorn_disable_logging.json
 
 .PHONY: clean
 clean:

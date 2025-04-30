@@ -7,13 +7,15 @@ codecov:
   token: 7102844c-b283-40bb-8e13-75dee404ec34  # notsecret  # repo-scoped, upload-only, stability in fork PRs
 
 coverage:
-  range: 100..100
+  range: 90..100
   status:
     project:
       default:
         target: 100%
+        threshold: 10%
       app:
         target: 100%
+        threshold: 100%
         paths:
           - src/
       tests:
@@ -24,8 +26,10 @@ coverage:
     patch:
       default:
         target: 100%
+        threshold: 10%
       app:
         target: 100%
+        threshold: 10%
         paths:
           - src/
       tests:

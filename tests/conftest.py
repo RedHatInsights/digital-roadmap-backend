@@ -15,6 +15,14 @@ def client():
     return TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def clean_env(monkeypatch):
+    """Unset these environment variables during testing"""
+    unset = ("ROADMAP_DEV",)
+    for var in unset:
+        monkeypatch.delenv(var, raising=False)
+
+
 @pytest.fixture
 def read_json_fixture():
     fixture_path = Path(__file__).parent.joinpath("fixtures").resolve()

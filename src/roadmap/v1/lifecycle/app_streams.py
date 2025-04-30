@@ -168,18 +168,6 @@ async def get_app_stream_names(
     }
 
 
-def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEntity]:
-    """Return unique list of related apps that do not appear in app_streams."""
-    relateds = set()
-    for app_stream in app_streams:
-        for app in APP_STREAM_MODULES_PACKAGES:
-            if app.match_name == app_stream.match_name:
-                if streams_lt(app_stream.stream, app.stream):
-                    if app.end_date is None or app.end_date > date.today():
-                        relateds.add(app)
-    return relateds - set(app_streams)
-
-
 class AppStreamKey:
     """Wraps AppStreamEntity objects in"""
 
@@ -204,10 +192,22 @@ class AppStreamKey:
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
 
 
+def related_app_streams(app_streams: list[AppStreamKey]) -> list[AppStreamKey]:
+    """Return unique list of related apps that do not appear in app_streams."""
+    relateds = set()
+    for app_stream_key in app_streams:
+        for app in APP_STREAM_MODULES_PACKAGES:
+            if app.match_name == app_stream_key.app_stream_entity.match_name:
+                if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
+                    if app.end_date is None or app.end_date > date.today():
+                        relateds.add(AppStreamKey(app, app_stream_key.name))
+    return relateds - set(app_streams)
+
+
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
-) -> dict[AppStreamEntity, list[UUID]]:
+) -> dict[AppStreamKey, list[UUID]]:
     """Return a mapping of AppStreams to ids of systems using that stream."""
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
@@ -305,7 +305,7 @@ relevant = APIRouter(
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
 async def get_relevant_app_streams(
-    systems_by_stream: t.Annotated[dict[AppStreamEntity, list[UUID]], Depends(systems_by_app_stream)],
+    systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
     relevant_app_streams = []

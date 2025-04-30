@@ -180,6 +180,29 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
     return relateds - set(app_streams)
 
 
+class AppStreamKey:
+    """Wraps AppStreamEntity objects in  """
+    def __init__(self, app_stream_entity: AppStreamEntity, name: str):
+        self.app_stream_entity = app_stream_entity
+        self.name = name
+
+    def __hash__(self):
+        return (
+            self.name,
+            self.app_stream_entity.display_name,
+            self.app_stream_entity.application_stream_name,
+            self.app_stream_entity.os_major,
+            self.app_stream_entity.os_minor,
+            self.app_stream_entity.start_date,
+            self.app_stream_entity.end_date,
+            str(self.app_stream_entity.impl),
+            self.app_stream_entity.rolling,
+        ).__hash__()
+    
+    def __eq__(self, other):
+        return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
+    
+
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
@@ -227,7 +250,7 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: str,
-) -> set[AppStreamEntity]:
+) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
@@ -252,7 +275,7 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        app_streams.add(matched_module)
+        app_streams.add(AppStreamKey(matched_module, name))
 
     return app_streams
 
@@ -260,14 +283,14 @@ def app_streams_from_modules(
 def app_streams_from_packages(
     package_names_string: str,
     os_major: str,
-) -> set[AppStreamEntity]:
+) -> set[AppStreamKey]:
     package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in package_names_string}
 
     app_streams = set()
     for package_name in package_names:
         if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
             if app_stream_package.os_major == os_major:
-                app_streams.add(app_stream_package)
+                app_streams.add(AppStreamKey(app_stream_package, app_stream_package.application_stream_name))
 
     return app_streams
 
@@ -287,22 +310,22 @@ async def get_relevant_app_streams(
     relevant_app_streams = []
     for app_stream, systems in systems_by_stream.items():
         # Omit rolling app streams.
-        if app_stream.rolling:
+        if app_stream.app_stream_entity.rolling:
             continue
 
         try:
             relevant_app_streams.append(
                 RelevantAppStream(
                     name=app_stream.name,
-                    display_name=app_stream.display_name,
-                    application_stream_name=app_stream.application_stream_name,
-                    start_date=app_stream.start_date,
-                    end_date=app_stream.end_date,
-                    os_major=app_stream.os_major,
-                    os_minor=app_stream.os_minor,
-                    impl=app_stream.impl,
+                    display_name=app_stream.app_stream_entity.display_name,
+                    application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                    start_date=app_stream.app_stream_entity.start_date,
+                    end_date=app_stream.app_stream_entity.end_date,
+                    os_major=app_stream.app_stream_entity.os_major,
+                    os_minor=app_stream.app_stream_entity.os_minor,
+                    impl=app_stream.app_stream_entity.impl,
                     count=len(systems),
-                    rolling=app_stream.rolling,
+                    rolling=app_stream.app_stream_entity.rolling,
                     systems=systems,
                     related=False,
                 )
@@ -313,22 +336,22 @@ async def get_relevant_app_streams(
     if related:
         for app_stream in related_app_streams(systems_by_stream.keys()):
             # Omit rolling app streams.
-            if app_stream.rolling:
+            if app_stream.app_stream_entity.rolling:
                 continue
 
             try:
                 relevant_app_streams.append(
                     RelevantAppStream(
                         name=app_stream.name,
-                        display_name=app_stream.display_name,
-                        application_stream_name=app_stream.application_stream_name,
-                        start_date=app_stream.start_date,
-                        end_date=app_stream.end_date,
-                        os_major=app_stream.os_major,
-                        os_minor=app_stream.os_minor,
-                        impl=app_stream.impl,
+                        display_name=app_stream.app_stream_entity.display_name,
+                        application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                        start_date=app_stream.app_stream_entity.start_date,
+                        end_date=app_stream.app_stream_entity.end_date,
+                        os_major=app_stream.app_stream_entity.os_major,
+                        os_minor=app_stream.app_stream_entity.os_minor,
+                        impl=app_stream.app_stream_entity.impl,
                         count=0,
-                        rolling=app_stream.rolling,
+                        rolling=app_stream.app_stream_entity.rolling,
                         systems=[],
                         related=True,
                     )

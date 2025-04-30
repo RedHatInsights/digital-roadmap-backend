@@ -167,6 +167,22 @@ async def get_relevant_systems(  # noqa: C901
                 )
             )
 
+    if len(results) == 0:
+        for version in ["9.10", "10.2"]:
+            os = OS_LIFECYCLE_DATES[version]
+            results.append(
+                System(
+                    name=os.name,
+                    major=os.major,
+                    minor=os.minor,
+                    lifecycle_type=LifecycleType.mainline,
+                    release_date=os.start,
+                    retirement_date=os.end,
+                    count=0,
+                    related=True,
+                )
+            )
+
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")

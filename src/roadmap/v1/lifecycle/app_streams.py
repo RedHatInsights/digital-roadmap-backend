@@ -304,7 +304,7 @@ relevant = APIRouter(
 
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
-async def get_relevant_app_streams(
+async def get_relevant_app_streams(  # noqa C901
     systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
@@ -359,6 +359,30 @@ async def get_relevant_app_streams(
                 )
             except Exception as exc:
                 raise HTTPException(detail=str(exc), status_code=400)
+
+    if len(relevant_app_streams) == 0:
+        for package_name in ["httpd", "python3", "postgresql"]:
+            if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
+                if app_stream_package.os_major == 9:
+                    try:
+                        relevant_app_streams.append(
+                            RelevantAppStream(
+                                name=app_stream_package.application_stream_name,
+                                display_name=app_stream_package.display_name,
+                                application_stream_name=app_stream_package.application_stream_name,
+                                start_date=app_stream_package.start_date,
+                                end_date=app_stream_package.end_date,
+                                os_major=app_stream_package.os_major,
+                                os_minor=app_stream_package.os_minor,
+                                impl=app_stream_package.impl,
+                                count=0,
+                                rolling=app_stream_package.rolling,
+                                systems=[],
+                                related=True,
+                            )
+                        )
+                    except Exception as exc:
+                        raise HTTPException(detail=str(exc), status_code=400)
 
     return {
         "meta": {

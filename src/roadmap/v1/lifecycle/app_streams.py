@@ -181,7 +181,8 @@ def related_app_streams(app_streams: list[AppStreamEntity]) -> list[AppStreamEnt
 
 
 class AppStreamKey:
-    """Wraps AppStreamEntity objects in  """
+    """Wraps AppStreamEntity objects in"""
+
     def __init__(self, app_stream_entity: AppStreamEntity, name: str):
         self.app_stream_entity = app_stream_entity
         self.name = name
@@ -198,10 +199,10 @@ class AppStreamKey:
             str(self.app_stream_entity.impl),
             self.app_stream_entity.rolling,
         ).__hash__()
-    
+
     def __eq__(self, other):
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
-    
+
 
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],

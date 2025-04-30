@@ -40,11 +40,7 @@ if os.getenv("SENTRY_DSN"):
         ],
     )
 
-# logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
-
-
-logger = logging.getLogger(__name__)
-
+# Setup logging
 settings = Settings.create()
 setup_logging(
     json_logs=settings.json_logging,
@@ -62,6 +58,7 @@ app = FastAPI(
 app.openapi = extend_openapi(app)
 
 
+# Setup logging
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next) -> Response:
     structlog.contextvars.clear_contextvars()
@@ -104,10 +101,8 @@ async def logging_middleware(request: Request, call_next) -> Response:
         return response
 
 
-# This middleware must be placed after the logging, to populate the context with the request ID
-# NOTE: Why last??
-# Answer: middlewares are applied in the reverse order of when they are added (you can verify this
-# by debugging `app.middleware_stack` and recursively drilling down the `app` property).
+# This middleware must be placed after the logging, to populate the context with the request ID,
+# because middlewares are applied in the reverse order of when they are added.
 app.add_middleware(CorrelationIdMiddleware)
 
 

@@ -1,3 +1,4 @@
+import json
 import os
 
 import pytest
@@ -31,6 +32,19 @@ def test_setting_from_clowder(monkeypatch):
     settings = Settings.create()
     assert settings.db_user == "username"
     assert settings.rbac_url == "http://rbac-service.svc:8123"
+
+
+def test_setting_from_clowder_no_rbac(monkeypatch, tmp_path, read_json_fixture):
+    clowder_config = read_json_fixture("clowder_config.json")
+    clowder_config.pop("endpoints")
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps(clowder_config))
+    monkeypatch.setenv("ACG_CONFIG", str(config))
+
+    settings = Settings.create()
+
+    assert settings.db_user == "username"
+    assert settings.rbac_url == ""
 
 
 def test_rbac_config_defaults(monkeypatch):

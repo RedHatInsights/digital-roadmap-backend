@@ -1,3 +1,10 @@
+import sys
+
+import pytest
+
+from sentry_sdk.utils import BadDsn
+
+
 def test_ping(client):
     response = client.get("/api/roadmap/v1/ping")
 
@@ -24,3 +31,14 @@ def test_openapi_docs_v1(client):
 
     assert response.status_code == 200
     assert "paths" in response.json()
+
+
+def test_sentry_sdk_init(monkeypatch):
+    try:
+        sys.modules.pop("roadmap.main")
+    except KeyError:
+        pass
+
+    monkeypatch.setenv("SENTRY_DSN", "foo")
+    with pytest.raises(BadDsn):
+        import roadmap.main  # noqa: F401

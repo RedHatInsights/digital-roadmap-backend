@@ -188,8 +188,10 @@ def ensure_date(value: str | date):
         raise ValueError("Date must be in ISO 8601 format")
 
 
-def _split_stream(stream: str) -> t.Tuple[int, int, int]:
-    """Returns a tuple of major, minor and micro for given stream."""
+def _normalize_version(stream: str) -> t.Tuple[int, int, int]:
+    """Returns a tuple of major, minor and micro for a given stream."""
+    if stream == "Rhel8":
+        return (8, 0, 0)
     versions = stream.split(".")
     versions.reverse()
     major = int(versions.pop())
@@ -201,8 +203,6 @@ def _split_stream(stream: str) -> t.Tuple[int, int, int]:
 def streams_lt(a: str, b: str):
     """Return True if stream a is less than stream b."""
     try:
-        return _split_stream(a) < _split_stream(b)
+        return _normalize_version(a) < _normalize_version(b)
     except ValueError:
-        # The one observed instance of a non-numerical stream is "Rhel8".
-        # In such case we want "Rhel8" to be less than "9.1".
-        return a > b
+        return a < b

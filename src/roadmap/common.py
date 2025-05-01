@@ -190,7 +190,7 @@ def ensure_date(value: str | date):
 
 def _normalize_version(stream: str) -> t.Tuple[int, int, int]:
     """Returns a tuple of major, minor and micro for a given stream."""
-    if stream == "Rhel8":
+    if stream.casefold() == "rhel8":
         return (8, 0, 0)
     versions = stream.split(".")
     versions.reverse()

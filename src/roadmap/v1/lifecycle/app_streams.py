@@ -194,7 +194,7 @@ class AppStreamKey:
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
 
 
-def related_app_streams(app_streams: list[AppStreamKey]) -> list[AppStreamKey]:
+def related_app_streams(app_streams: list[AppStreamKey]) -> set[AppStreamKey]:
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
     for app_stream_key in app_streams:

@@ -169,7 +169,7 @@ async def get_app_stream_names(
 
 
 class AppStreamKey:
-    """Wraps AppStreamEntity objects in"""
+    """Wraps AppStreamEntitys to facilitate grouping by name."""
 
     def __init__(self, app_stream_entity: AppStreamEntity, name: str):
         self.app_stream_entity = app_stream_entity

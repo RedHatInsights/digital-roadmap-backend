@@ -306,7 +306,7 @@ relevant = APIRouter(
 
 
 @relevant.get("", response_model=RelevantAppStreamsResponse)
-async def get_relevant_app_streams(  # noqa C901
+async def get_relevant_app_streams(
     systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):

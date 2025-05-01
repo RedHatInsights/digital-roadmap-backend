@@ -203,7 +203,7 @@ def related_app_streams(app_streams: list[AppStreamKey]) -> list[AppStreamKey]:
                 if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
                     if app.end_date is None or app.end_date > date.today():
                         relateds.add(AppStreamKey(app, app_stream_key.name))
-    return relateds - set(app_streams)
+    return relateds.difference(app_streams)
 
 
 async def systems_by_app_stream(

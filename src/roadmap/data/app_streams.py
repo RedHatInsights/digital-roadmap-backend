@@ -45,8 +45,8 @@ class AppStreamEntity(BaseModel):
     """An application stream module or package."""
 
     name: str = Field(min_length=1)
-    display_name: str | None = None
-    match_name: str | None = None
+    display_name: str = ""
+    match_name: str = ""
     application_stream_name: str
     stream: str
     start_date: Date | None = None

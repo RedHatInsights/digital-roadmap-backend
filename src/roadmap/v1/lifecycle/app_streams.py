@@ -168,12 +168,11 @@ async def get_app_stream_names(
     }
 
 
-class AppStreamKey:
+class AppStreamKey(BaseModel):
     """Wraps AppStreamEntitys to facilitate grouping by name."""
 
-    def __init__(self, app_stream_entity: AppStreamEntity, name: str):
-        self.app_stream_entity = app_stream_entity
-        self.name = name
+    name: str
+    app_stream_entity: AppStreamEntity
 
     def __hash__(self):
         return hash(
@@ -202,7 +201,7 @@ def related_app_streams(app_streams: list[AppStreamKey]) -> set[AppStreamKey]:
             if app.match_name == app_stream_key.app_stream_entity.match_name:
                 if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
                     if app.end_date is None or app.end_date > date.today():
-                        relateds.add(AppStreamKey(app, app_stream_key.name))
+                        relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
     return relateds.difference(app_streams)
 
 
@@ -278,7 +277,7 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        app_streams.add(AppStreamKey(matched_module, name))
+        app_streams.add(AppStreamKey(app_stream_entity=matched_module, name=name))
 
     return app_streams
 
@@ -293,7 +292,8 @@ def app_streams_from_packages(
     for package_name in package_names:
         if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
             if app_stream_package.os_major == os_major:
-                app_streams.add(AppStreamKey(app_stream_package, app_stream_package.application_stream_name))
+                app_streams.add(AppStreamKey(app_stream_entity=app_stream_package,
+                                             name=app_stream_package.application_stream_name))
 
     return app_streams
 

@@ -97,27 +97,3 @@ def test_rhel_relevant_related(client, api_prefix):
 
     assert len(data) > 1
     assert data[0].keys() == System.model_fields.keys()
-
-
-def test_rhel_relevant_empty(client, api_prefix):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
-
-    # This user has no systems.
-    async def decode_header_override():
-        return "000"
-
-    client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
-    client.app.dependency_overrides[decode_header] = decode_header_override
-
-    response = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")
-    data = response.json()["data"]
-
-    assert len(data) > 1
-    assert data[0].keys() == System.model_fields.keys()

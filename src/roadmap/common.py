@@ -203,4 +203,6 @@ def streams_lt(a: str, b: str):
     try:
         return _split_stream(a) < _split_stream(b)
     except ValueError:
-        return a < b
+        # The one observed instance of a non-numerical stream is "Rhel8".
+        # In such case we want "Rhel8" to be less than "9.1".
+        return a > b

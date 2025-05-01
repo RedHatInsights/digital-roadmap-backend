@@ -134,7 +134,7 @@ class AppStreamEntity(BaseModel):
         return self
 
     def __hash__(self):
-        return (
+        return hash((
             self.name,
             self.display_name,
             self.application_stream_name,
@@ -144,7 +144,7 @@ class AppStreamEntity(BaseModel):
             self.end_date,
             self.impl,
             self.rolling,
-        ).__hash__()
+        ))
 
 
 APP_STREAM_PACKAGES = {

@@ -176,17 +176,19 @@ class AppStreamKey:
         self.name = name
 
     def __hash__(self):
-        return (
-            self.name,
-            self.app_stream_entity.display_name,
-            self.app_stream_entity.application_stream_name,
-            self.app_stream_entity.os_major,
-            self.app_stream_entity.os_minor,
-            self.app_stream_entity.start_date,
-            self.app_stream_entity.end_date,
-            str(self.app_stream_entity.impl),
-            self.app_stream_entity.rolling,
-        ).__hash__()
+        return hash(
+            (
+                self.name,
+                self.app_stream_entity.display_name,
+                self.app_stream_entity.application_stream_name,
+                self.app_stream_entity.os_major,
+                self.app_stream_entity.os_minor,
+                self.app_stream_entity.start_date,
+                self.app_stream_entity.end_date,
+                self.app_stream_entity.impl,
+                self.app_stream_entity.rolling,
+            )
+        )
 
     def __eq__(self, other):
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()

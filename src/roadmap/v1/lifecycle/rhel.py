@@ -167,7 +167,7 @@ async def get_relevant_systems(  # noqa: C901
                 )
             )
 
-    if len(results) == 0:
+    if not results:
         for version in ["9.10", "10.2"]:
             os = OS_LIFECYCLE_DATES[version]
             results.append(

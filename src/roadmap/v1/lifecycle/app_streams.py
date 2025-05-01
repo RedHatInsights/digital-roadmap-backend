@@ -362,7 +362,7 @@ async def get_relevant_app_streams(  # noqa C901
             except Exception as exc:
                 raise HTTPException(detail=str(exc), status_code=400)
 
-    if len(relevant_app_streams) == 0:
+    if not relevant_app_streams:
         for package_name in ["httpd", "python3", "postgresql"]:
             if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
                 if app_stream_package.os_major == 9:

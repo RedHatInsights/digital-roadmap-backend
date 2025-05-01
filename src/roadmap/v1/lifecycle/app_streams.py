@@ -193,7 +193,7 @@ class AppStreamKey(BaseModel):
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
 
 
-def related_app_streams(app_streams: list[AppStreamKey]) -> set[AppStreamKey]:
+def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamKey]:
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
     for app_stream_key in app_streams:
@@ -292,8 +292,9 @@ def app_streams_from_packages(
     for package_name in package_names:
         if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
             if app_stream_package.os_major == os_major:
-                app_streams.add(AppStreamKey(app_stream_entity=app_stream_package,
-                                             name=app_stream_package.application_stream_name))
+                app_streams.add(
+                    AppStreamKey(app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name)
+                )
 
     return app_streams
 

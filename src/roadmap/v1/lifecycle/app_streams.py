@@ -198,10 +198,17 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     relateds = set()
     for app_stream_key in app_streams:
         for app in APP_STREAM_MODULES_PACKAGES:
-            if app.match_name == app_stream_key.app_stream_entity.match_name:
-                if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
+            add = False
+            if app.display_name == app_stream_key.app_stream_entity.display_name:
+                if app.start_date and app_stream_key.app_stream_entity.start_date:
+                    if app.start_date > app_stream_key.app_stream_entity.start_date:
+                        add = True
+                elif streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
                     if app.end_date is None or app.end_date > date.today():
-                        relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
+                        add = True
+            if add:
+                relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
+
     return relateds.difference(app_streams)
 
 

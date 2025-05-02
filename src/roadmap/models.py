@@ -75,11 +75,21 @@ class Lifecycle(BaseModel):
 
 class RHELLifecycle(Lifecycle):
     name: str = "RHEL"
+    display_name: str = ""
     major: int
     minor: int | None = None
     end_e4s: date | None = None
     end_els: date | None = None
     end_eus: date | None = None
+
+    @model_validator(mode="after")
+    def set_display_name(self):
+        if not self.display_name:
+            self.display_name = f"{self.name} {self.major}"
+            if self.minor is not None:
+                self.display_name += f".{self.minor}"
+
+        return self
 
 
 class ReleaseModel(BaseModel):

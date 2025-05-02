@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+from roadmap.models import _get_rhel_display_name
 from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
 from roadmap.models import System
@@ -78,3 +79,14 @@ def test_calculate_support_status_system(mocker, current_date, system_start, sys
     )
 
     assert app_stream.support_status == status
+
+
+@pytest.mark.parametrize(
+    ("name", "major", "minor", "expected"),
+    (
+        ("RHEL", 8, None, "RHEL 8"),
+        ("RHEL", 9, 0, "RHEL 9.0"),
+    ),
+)
+def test_get_rhel_display_name(name, major, minor, expected):
+    assert _get_rhel_display_name(name, major, minor) == expected

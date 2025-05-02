@@ -42,6 +42,7 @@ class HostCount(BaseModel):
 
 class System(BaseModel):
     name: str
+    display_name: str = ""
     major: int
     minor: int | None = None
     release_date: date | t.Literal["Unknown"] | None
@@ -66,6 +67,13 @@ class System(BaseModel):
 
         return self
 
+    @model_validator(mode="after")
+    def set_display_name(self):
+        if not self.display_name:
+            self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
+
+        return self
+
 
 class Lifecycle(BaseModel):
     name: str
@@ -85,9 +93,7 @@ class RHELLifecycle(Lifecycle):
     @model_validator(mode="after")
     def set_display_name(self):
         if not self.display_name:
-            self.display_name = f"{self.name} {self.major}"
-            if self.minor is not None:
-                self.display_name += f".{self.minor}"
+            self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
 
         return self
 
@@ -123,3 +129,11 @@ def _calculate_support_status(
         return SupportStatus.supported
 
     return support_status
+
+
+def _get_rhel_display_name(name: str, major: int, minor: int | None):
+    display_name = f"{name} {major}"
+    if minor is not None:
+        display_name += f".{minor}"
+
+    return display_name

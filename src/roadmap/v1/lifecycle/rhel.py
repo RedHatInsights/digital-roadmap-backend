@@ -117,17 +117,17 @@ async def get_relevant_systems(  # noqa: C901
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
             logger.warning(f"Missing lifecycle data for RHEL {key}")
-            release_date = "Unknown"
-            retirement_date = "Unknown"
+            start_date = "Unknown"
+            end_date = "Unknown"
         else:
-            release_date = lifecycle_info.release_date
-            retirement_date = lifecycle_info.retirement_date
+            start_date = lifecycle_info.start_date
+            end_date = lifecycle_info.end_date
 
             if count_key.lifecycle == LifecycleType.els:
-                retirement_date = lifecycle_info.end_els
+                end_date = lifecycle_info.end_els
 
             if count_key.lifecycle == LifecycleType.e4s:
-                retirement_date = lifecycle_info.end_e4s
+                end_date = lifecycle_info.end_e4s
 
         results.append(
             System(
@@ -135,8 +135,8 @@ async def get_relevant_systems(  # noqa: C901
                 major=count_key.major,
                 minor=count_key.minor,
                 lifecycle_type=count_key.lifecycle,
-                release_date=release_date,
-                retirement_date=retirement_date,
+                start_date=start_date,
+                end_date=end_date,
                 count=count,
                 related=False,
             )
@@ -149,7 +149,7 @@ async def get_relevant_systems(  # noqa: C901
             minor = count_key.minor if count_key.minor is not None else -1
             for key, rhel in OS_LIFECYCLE_DATES.items():
                 rhel_minor = rhel.minor if rhel.minor is not None else -1
-                if rhel.major == count_key.major and rhel_minor > minor and rhel.retirement_date > today:
+                if rhel.major == count_key.major and rhel_minor > minor and rhel.end_date > today:
                     relateds.add(key)
         relateds -= system_keys
         for key in relateds:
@@ -160,8 +160,8 @@ async def get_relevant_systems(  # noqa: C901
                     major=os.major,
                     minor=os.minor,
                     lifecycle_type=LifecycleType.mainline,
-                    release_date=os.release_date,
-                    retirement_date=os.retirement_date,
+                    start_date=os.start_date,
+                    end_date=os.end_date,
                     count=0,
                     related=True,
                 )

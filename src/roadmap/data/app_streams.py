@@ -67,7 +67,7 @@ class AppStreamEntity(BaseModel):
         """If no start_date is supplied, get it from the OS lifecycle date"""
         if self.start_date is None:
             try:
-                self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].release_date
+                self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start_date
             except KeyError:
                 return self
 

@@ -42,8 +42,8 @@ class HostCount(BaseModel):
 
 class Lifecycle(BaseModel):
     name: str
-    release_date: date
-    retirement_date: date
+    start_date: date
+    end_date: date
     support_status: SupportStatus = SupportStatus.unknown
 
     @model_validator(mode="after")
@@ -56,7 +56,7 @@ class Lifecycle(BaseModel):
         """
         today = date.today()
         self.support_status = _calculate_support_status(
-            start_date=self.release_date, end_date=self.retirement_date, current_date=today
+            start_date=self.start_date, end_date=self.end_date, current_date=today
         )
 
         return self
@@ -67,8 +67,8 @@ class System(Lifecycle):
     display_name: str = ""
     major: int
     minor: int | None = None
-    release_date: date | t.Literal["Unknown"] | None
-    retirement_date: date | t.Literal["Unknown"] | None
+    start_date: date | t.Literal["Unknown"] | None
+    end_date: date | t.Literal["Unknown"] | None
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False

@@ -74,8 +74,8 @@ def test_calculate_support_status_system(mocker, current_date, system_start, sys
         minor=6,
         lifecycle_type=LifecycleType.mainline,
         count=4,
-        release_date=system_start,
-        retirement_date=system_end,
+        start_date=system_start,
+        end_date=system_end,
     )
 
     assert app_stream.support_status == status

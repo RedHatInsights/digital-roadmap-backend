@@ -14,6 +14,8 @@ from pydantic import model_validator
 
 from roadmap.common import ensure_date
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.models import _calculate_support_status
+from roadmap.models import SupportStatus
 
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
@@ -52,6 +54,7 @@ class AppStreamEntity(BaseModel):
     end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
     impl: AppStreamImplementation
     initial_product_version: str | None = None
+    support_status: SupportStatus = SupportStatus.unknown
     os_major: int | None = None
     os_minor: int | None = None
     lifecycle: int | None = None
@@ -121,6 +124,16 @@ class AppStreamEntity(BaseModel):
             display_name = display_name.title()
 
         self.display_name = display_name.replace("-", " ").replace("Rhel", "RHEL")
+
+        return self
+
+    @model_validator(mode="after")
+    def update_support_status(self):
+        """Validator for setting status."""
+        today = date.today()
+        self.support_status = _calculate_support_status(
+            start_date=self.start_date, end_date=self.end_date, current_date=today
+        )
 
         return self
 

@@ -120,8 +120,8 @@ async def get_relevant_systems(  # noqa: C901
             release_date = "Unknown"
             retirement_date = "Unknown"
         else:
-            release_date = lifecycle_info.start
-            retirement_date = lifecycle_info.end
+            release_date = lifecycle_info.release_date
+            retirement_date = lifecycle_info.retirement_date
 
             if count_key.lifecycle == LifecycleType.els:
                 retirement_date = lifecycle_info.end_els
@@ -149,7 +149,7 @@ async def get_relevant_systems(  # noqa: C901
             minor = count_key.minor if count_key.minor is not None else -1
             for key, rhel in OS_LIFECYCLE_DATES.items():
                 rhel_minor = rhel.minor if rhel.minor is not None else -1
-                if rhel.major == count_key.major and rhel_minor > minor and rhel.end > today:
+                if rhel.major == count_key.major and rhel_minor > minor and rhel.retirement_date > today:
                     relateds.add(key)
         relateds -= system_keys
         for key in relateds:
@@ -160,8 +160,8 @@ async def get_relevant_systems(  # noqa: C901
                     major=os.major,
                     minor=os.minor,
                     lifecycle_type=LifecycleType.mainline,
-                    release_date=os.start,
-                    retirement_date=os.end,
+                    release_date=os.release_date,
+                    retirement_date=os.retirement_date,
                     count=0,
                     related=True,
                 )

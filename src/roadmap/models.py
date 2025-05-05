@@ -40,17 +40,11 @@ class HostCount(BaseModel):
     lifecycle: LifecycleType
 
 
-class System(BaseModel):
+class Lifecycle(BaseModel):
     name: str
-    display_name: str = ""
-    major: int
-    minor: int | None = None
-    release_date: date | t.Literal["Unknown"] | None
-    retirement_date: date | t.Literal["Unknown"] | None
+    release_date: date
+    retirement_date: date
     support_status: SupportStatus = SupportStatus.unknown
-    count: int = 0
-    lifecycle_type: LifecycleType
-    related: bool = False
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -67,18 +61,24 @@ class System(BaseModel):
 
         return self
 
+
+class System(Lifecycle):
+    name: str
+    display_name: str = ""
+    major: int
+    minor: int | None = None
+    release_date: date | t.Literal["Unknown"] | None
+    retirement_date: date | t.Literal["Unknown"] | None
+    count: int = 0
+    lifecycle_type: LifecycleType
+    related: bool = False
+
     @model_validator(mode="after")
     def set_display_name(self):
         if not self.display_name:
             self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
 
         return self
-
-
-class Lifecycle(BaseModel):
-    name: str
-    start: date
-    end: date
 
 
 class RHELLifecycle(Lifecycle):

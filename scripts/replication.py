@@ -221,6 +221,7 @@ def check_or_create_subscription(logger, session, engine):
         + connection
         + " PUBLICATION "
         + hbi_publication
+        + " WITH (streaming=parallel)"
         + ";"
     )
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:

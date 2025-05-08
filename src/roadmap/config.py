@@ -43,14 +43,20 @@ class Settings(BaseSettings):
 
     @classmethod
     @lru_cache
-    def create(cls):
+    def create(cls) -> "Settings":
         """
         Create a settings object populated from presets, env and Clowder.
 
         Settings precedence:
-        * Clowder's injected configuration json.
         * Environment variables with ROADMAP prefix. ex: ROADMAP_DB_NAME
+        * Clowder's injected configuration json.
         * Default values defined in the class attributes.
+
+        The resason environment variables are preferred over the Clowder config file
+        is because we want to use the database setting for the Host Inventory
+        read replica as defined in the environment variables. We do not want
+        to use the settings for the Roadmap database, which are inthe Clowder
+        generated config.
 
         """
         # True if env var ACG_CONFIG is set.
@@ -64,6 +70,8 @@ class Settings(BaseSettings):
             config = loadConfig(os.environ.get("ACG_CONFIG"))
             db = config.database
             endpoints = config.endpoints
+            # FIXME: Make RBAC setting in the environment override the clowder
+            #        config file for consistency
             rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
             rbac_kwargs = {}
             if rbac:
@@ -73,12 +81,29 @@ class Settings(BaseSettings):
                     "rbac_port": rbac.port,
                 }
 
+            db_kwargs = {
+                "db_name": db.name,
+                "db_user": db.username,
+                "db_password": SecretStr(db.password),
+                "db_host": db.hostname,
+                "db_port": db.port,
+            }
+
+            env_check = {
+                "db_name": "ROADMAP_DB_NAME",
+                "db_user": "ROADMAP_DB_USER",
+                "db_password": "ROADMAP_DB_PASSWORD",
+                "db_host": "ROADMAP_DB_HOST",
+                "db_port": "ROADMAP_DB_PORT",
+            }
+            # If the value is set as an env var, remove it from the kwargs so
+            # that the default behavior of using the env var will take precedence.
+            for k, v in env_check.items():
+                if os.getenv(v) is not None:
+                    db_kwargs.pop(k)
+
             return cls(
-                db_name=db.name,
-                db_user=db.username,
-                db_password=SecretStr(db.password),
-                db_host=db.hostname,
-                db_port=db.port,
+                **db_kwargs,
                 **rbac_kwargs,
             )
 

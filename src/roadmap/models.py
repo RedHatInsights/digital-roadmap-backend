@@ -41,6 +41,8 @@ class HostCount(BaseModel):
 
 
 class Lifecycle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     start_date: date
     end_date: date

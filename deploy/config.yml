@@ -195,16 +195,6 @@ objects:
                     - key: rds-cacert
                       path: rds_cacert
 
-  - apiVersion: cloud.redhat.com/v1alpha1
-    kind: ClowdJobInvocation
-    metadata:
-      name: inventory-sync-${INVENTORY_SYNC_COUNTER}
-
-    spec:
-      appName: ${APP_NAME}
-      jobs:
-        - inventory-sync
-
 parameters:
   - name: IMAGE_TAG
     description: Image tag

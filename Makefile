@@ -89,3 +89,7 @@ test:
 .PHONY: build
 build: check-container-runtime
 	$(CONTAINER_RUNTIME) build -t roadmap:latest -f Containerfile .
+
+.PHONY: get-release-commit
+get-release-commit:
+	@$(PYTHON) $(PROJECT_DIR)/scripts/get-release-commit.py

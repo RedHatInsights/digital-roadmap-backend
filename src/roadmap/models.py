@@ -3,6 +3,7 @@ import typing as t
 from datetime import date
 from datetime import timedelta
 from enum import StrEnum
+from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -74,6 +75,7 @@ class System(Lifecycle):
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False
+    systems: list[UUID] = []
 
     @model_validator(mode="after")
     def set_display_name(self):

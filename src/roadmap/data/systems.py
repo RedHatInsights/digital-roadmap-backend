@@ -10,7 +10,87 @@ from roadmap.models import RHELLifecycle
 # EELS - Enhanced Extended Updated Support
 #
 # FIXME: This needs to be in the database
+
+# https://access.redhat.com/articles/3078
 OS_LIFECYCLE_DATES = {
+    "7": RHELLifecycle(
+        major=7,
+        start_date=date(2014, 6, 9),
+        end_date=date(2024, 6, 30),
+        end_date_els=date(2028, 6, 30),
+    ),
+    "7.0": RHELLifecycle(
+        major=7,
+        minor=0,
+        start_date=date(2014, 6, 9),
+        end_date=date(2015, 3, 5),
+    ),
+    "7.1": RHELLifecycle(
+        major=7,
+        minor=1,
+        start_date=date(2015, 3, 5),
+        end_date=date(2015, 11, 19),
+        end_date_eus=date(2017, 3, 31),
+    ),
+    "7.2": RHELLifecycle(
+        major=7,
+        minor=2,
+        start_date=date(2015, 11, 19),
+        end_date=date(2016, 11, 3),
+        end_date_eus=date(2017, 11, 30),
+        end_date_e4s=date(2019, 11, 30),
+    ),
+    "7.3": RHELLifecycle(
+        major=7,
+        minor=3,
+        start_date=date(2016, 11, 3),
+        end_date=date(2017, 7, 31),
+        end_date_eus=date(2018, 11, 30),
+        end_date_e4s=date(2020, 11, 30),
+    ),
+    "7.4": RHELLifecycle(
+        major=7,
+        minor=4,
+        start_date=date(2017, 7, 31),
+        end_date=date(2018, 4, 10),
+        end_date_eus=date(2019, 8, 31),
+        end_date_e4s=date(2021, 8, 31),
+    ),
+    "7.5": RHELLifecycle(
+        major=7,
+        minor=5,
+        start_date=date(2018, 4, 10),
+        end_date=date(2018, 10, 30),
+        end_date_eus=date(2020, 4, 30),
+    ),
+    "7.6": RHELLifecycle(
+        major=7,
+        minor=6,
+        start_date=date(2018, 10, 30),
+        end_date=date(2019, 8, 6),
+        end_date_eus=date(2021, 5, 31),
+        end_date_e4s=date(2022, 10, 31),
+    ),
+    "7.7": RHELLifecycle(
+        major=7,
+        minor=7,
+        start_date=date(2019, 8, 6),
+        end_date=date(2020, 3, 31),
+        end_date_eus=date(2021, 8, 30),
+    ),
+    "7.8": RHELLifecycle(
+        major=7,
+        minor=8,
+        start_date=date(2020, 3, 31),
+        end_date=date(2020, 9, 29),
+    ),
+    "7.9": RHELLifecycle(
+        major=7,
+        minor=8,
+        start_date=date(2020, 9, 29),
+        end_date=date(2024, 6, 30),
+        end_date_els=date(2028, 6, 30),
+    ),
     "8": RHELLifecycle(
         major=8,
         start_date=date(2019, 5, 7),

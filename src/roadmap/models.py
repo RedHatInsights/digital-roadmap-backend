@@ -86,9 +86,9 @@ class RHELLifecycle(Lifecycle):
     display_name: str = ""
     major: int
     minor: int | None = None
-    end_e4s: date | None = None
-    end_els: date | None = None
-    end_eus: date | None = None
+    end_date_e4s: date | None = None
+    end_date_els: date | None = None
+    end_date_eus: date | None = None
 
     @model_validator(mode="after")
     def set_display_name(self):

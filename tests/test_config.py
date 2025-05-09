@@ -11,11 +11,6 @@ def unset_acg_config(monkeypatch):
     monkeypatch.delenv("ACG_CONFIG", raising=False)
 
 
-@pytest.fixture(autouse=True)
-def clear_settings_cache():
-    Settings.create.cache_clear()
-
-
 def test_default_settings(monkeypatch):
     monkeypatch.delenv("ROADMAP_DB_USER", raising=False)
 
@@ -76,7 +71,6 @@ def test_rbac_config_env_override_clowder(monkeypatch):
     monkeypatch.setenv("ROADMAP_DB_HOST", "WOOF.com")
     monkeypatch.setenv("ROADMAP_DB_PORT", "6753")
     settings = Settings.create()
-    Settings.create.cache_clear()
 
     assert settings.db_name == "roadtrip-db"
     assert settings.db_user == "thelma"

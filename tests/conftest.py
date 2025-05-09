@@ -7,6 +7,7 @@ import pytest
 
 from fastapi.testclient import TestClient
 
+from roadmap.config import Settings
 from roadmap.main import app
 
 
@@ -21,6 +22,11 @@ def clean_env(monkeypatch):
     unset = ("ROADMAP_DEV",)
     for var in unset:
         monkeypatch.delenv(var, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    Settings.create.cache_clear()
 
 
 @pytest.fixture

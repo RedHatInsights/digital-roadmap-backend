@@ -66,6 +66,8 @@ def test_rhel_relevant(client, api_prefix):
     assert data[0].keys() == System.model_fields.keys()
     assert len(data[0]["systems"]) > 0  # There should be system IDs
     assert uuid.UUID(data[0]["systems"][0])  # The system ID should be a valid UUID
+    for item in data:
+        assert item["count"] == len(item["systems"]), "Mismatch between count and number of system IDs"
 
 
 def test_get_relevant_rhel_no_rbac_access(api_prefix, client):

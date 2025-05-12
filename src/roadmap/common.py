@@ -166,10 +166,24 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
 
 
 def sort_attrs(attr, /, *attrs) -> t.Callable:
+    """Return a callable that gets the specific attributes and returns them
+    as a tuple for the purpose of sorting.
+
+    Values of None and "" are sorted lower than other integers
+    """
+
     def _getter(item):
-        # If an attribute is None, use a 0 instead of None for the purpose of sorting
-        # FIXME: There is a bug if getatter() is an empty string "", a 0 is used instead of an empty string.
-        return tuple(getattr(item, a) or 0 for a in (attr, *attrs))
+        sort_order = []
+        for a in (attr, *attrs):
+            current_attr = getattr(item, a)
+            if current_attr is None:
+                sort_order.append(-2)
+            elif current_attr == "":
+                sort_order.append(-1)
+            else:
+                sort_order.append(current_attr)
+
+        return tuple(sort_order)
 
     return _getter
 

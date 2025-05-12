@@ -43,6 +43,27 @@ def test_rhel_lifecycle_major_minor_version(client, api_prefix, params):
     assert (major, minor) == tuple(int(v) for v in params.split("/"))
 
 
+def test_rhel_lifecycle_full(client, api_prefix):
+    response = client.get(f"{api_prefix}/lifecycle/rhel/full")
+    data = response.json()["data"]
+    minor_versions = set(item["minor"] for item in data)
+
+    assert response.status_code == 200
+    assert minor_versions == {None}
+
+
+@pytest.mark.parametrize("os_major", (8, 9))
+def test_rhel_lifecycle_full_major(client, api_prefix, os_major):
+    response = client.get(f"{api_prefix}/lifecycle/rhel/full/{os_major}")
+    data = response.json()["data"]
+    major_versions = set(item["major"] for item in data)
+    minor_versions = set(item["minor"] for item in data)
+
+    assert response.status_code == 200
+    assert major_versions == {os_major}
+    assert minor_versions == {None}
+
+
 def test_rhel_relevant(client, api_prefix):
     async def query_rbac_override():
         return [

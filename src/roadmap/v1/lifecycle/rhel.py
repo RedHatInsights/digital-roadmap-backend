@@ -47,7 +47,7 @@ def get_lifecycle_data(
     minor: int | None = None,
     reverse: bool = True,
 ):
-    lifecycles = (item for item in OS_LIFECYCLE_DATES.values() if item.minor)
+    lifecycles = (item for item in OS_LIFECYCLE_DATES.values())
 
     if major and minor is not None:
         lifecycles = (item for item in lifecycles if (item.major, item.minor) == (major, minor))

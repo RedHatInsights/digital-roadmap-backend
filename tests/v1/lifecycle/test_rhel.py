@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from roadmap.common import decode_header
@@ -62,6 +64,8 @@ def test_rhel_relevant(client, api_prefix):
 
     assert len(data) > 1
     assert data[0].keys() == System.model_fields.keys()
+    assert len(data[0]["systems"]) > 0  # There should be system IDs
+    assert uuid.UUID(data[0]["systems"][0])  # The system ID should be a valid UUID
 
 
 def test_get_relevant_rhel_no_rbac_access(api_prefix, client):
@@ -94,6 +98,7 @@ def test_rhel_relevant_related(client, api_prefix):
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")
     data = response.json()["data"]
+    related_hosts = [item for item in data if not item["count"]]
 
     assert len(data) > 1
-    assert data[0].keys() == System.model_fields.keys()
+    assert len(related_hosts) > 1

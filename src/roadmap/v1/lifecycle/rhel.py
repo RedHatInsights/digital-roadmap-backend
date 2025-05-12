@@ -89,7 +89,7 @@ async def get_relevant_systems(  # noqa: C901
 ) -> RelevantSystemsResponse:
     system_counts = defaultdict(int)
     missing = defaultdict(int)
-    systems_by_version = defaultdict(list)
+    systems_by_version_lifecycle = defaultdict(list)
     async for result in systems.mappings():
         system_profile = result.get("system_profile_facts")
         if not system_profile:
@@ -106,10 +106,10 @@ async def get_relevant_systems(  # noqa: C901
         os_minor = system_profile.get("operating_system", {}).get("minor")
         lifecycle_type = get_lifecycle_type(installed_products)
 
-        # Collect system IDs by major minor version so we can return those in the response
+        # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response
         system_id = result["id"]
-        key = str(os_major) if os_minor is None else f"{os_major}.{os_minor}"
-        systems_by_version[key].append(system_id)
+        system_id_key = (str(os_major) if os_minor is None else f"{os_major}.{os_minor}", lifecycle_type)
+        systems_by_version_lifecycle[system_id_key].append(system_id)
 
         count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
@@ -118,6 +118,7 @@ async def get_relevant_systems(  # noqa: C901
     system_keys = set()
     for count_key, count in system_counts.items():
         key = str(count_key.major) if count_key.minor is None else f"{count_key.major}.{count_key.minor}"
+        system_id_key = (key, count_key.lifecycle)
         system_keys.add(key)
         try:
             lifecycle_info = OS_LIFECYCLE_DATES[key]
@@ -145,7 +146,7 @@ async def get_relevant_systems(  # noqa: C901
                 end_date=end_date,
                 count=count,
                 related=False,
-                systems=systems_by_version[key],
+                systems=systems_by_version_lifecycle[system_id_key],
             )
         )
 

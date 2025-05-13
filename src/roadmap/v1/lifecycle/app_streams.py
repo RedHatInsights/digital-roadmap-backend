@@ -288,6 +288,7 @@ def app_streams_from_modules(
 
     return app_streams
 
+
 class StringPackage(BaseModel):
     name: str
     major: str
@@ -308,8 +309,7 @@ def app_streams_from_packages(
     app_streams = set()
     for package in packages:
         if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
-            if app_stream_package.os_major == os_major and \
-               app_stream_package.stream.split(".")[0] == package.major:
+            if app_stream_package.os_major == os_major and app_stream_package.stream.split(".")[0] == package.major:
                 app_streams.add(
                     AppStreamKey(app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name)
                 )

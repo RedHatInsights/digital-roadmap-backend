@@ -10,6 +10,7 @@ from time import sleep
 from uuid import uuid4
 
 from app_common_python import json
+from app_common_python import os
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy import delete
@@ -67,6 +68,17 @@ def wait_for_database(engine):
     sys.exit("Unable to connect to database")
 
 
+def get_host_data(data_file: Path):
+    # Use data in the file to populate the database
+    if data_file.suffix == ".gz":
+        with gzip.open(data_file) as gzfile:
+            host_data = json.load(gzfile)
+    else:
+        host_data = json.loads(data_file.read_bytes())
+
+    return host_data
+
+
 def main():
     fake = Faker()
     Faker.seed(8675309)  # Generate consistent data
@@ -81,10 +93,14 @@ def main():
     # Create the table and table schema
     Host.metadata.create_all(engine)
 
-    # Use data in the file to populate the database
-    response_data_file = Path(__file__).parent.parent / "tests" / "fixtures" / "inventory_db_response.json.gz"
-    with gzip.open(response_data_file) as gzfile:
-        host_data = json.load(gzfile)
+    # Allow overriding the host inventory data file
+    data_file = Path(
+        os.getenv(
+            "ROADMAP_HOST_DATA_FILE",
+            Path(__file__).parent.parent / "tests" / "fixtures" / "inventory_db_response.json.gz",
+        ),
+    )
+    host_data = get_host_data(data_file)
 
     # Build the records
     records = []

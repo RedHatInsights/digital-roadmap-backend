@@ -91,6 +91,18 @@ pip install -r requirements/requirements-dev-{Python version}.txt
 uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug
 ```
 
+### Host Inventory ###
+
+Running `make load-host-data` loads inventory host data from `tests/fixtures/inventory_db_response.json.gz`. It's possible to use a different file to load specific hosts into inventory for testing.
+
+Unzip and modify the existing file or create your own. The file does not have to be gzipped but it must be valid JSON.
+
+```
+ROADMAP_HOST_DATA_FILE=path/to/file.json make load-host-data
+```
+
+### Database ###
+
 The database runs in a container and contains data already. To specify a different container image, set `DB_IMAGE`.
 
 ```shell

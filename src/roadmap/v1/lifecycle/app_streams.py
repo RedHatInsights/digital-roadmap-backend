@@ -288,21 +288,31 @@ def app_streams_from_modules(
 
     return app_streams
 
+class StringPackage(BaseModel):
+    name: str
+    major: str
+
+    @classmethod
+    def from_string(cls, s):
+        name, major = s.split(":")
+        name = name.rsplit("-", 1)[0]
+        major = major.split(".")[0]
+        return cls(name=name, major=major)
+
 
 def app_streams_from_packages(
-    package_names_string: str,
+    package_names_string: list[str],
     os_major: str,
 ) -> set[AppStreamKey]:
-    package_names = {pkg.split(":")[0].rsplit("-", 1)[0] for pkg in package_names_string}
-
+    packages = [StringPackage.from_string(s) for s in package_names_string]
     app_streams = set()
-    for package_name in package_names:
-        if app_stream_package := APP_STREAM_PACKAGES.get(package_name):
-            if app_stream_package.os_major == os_major:
+    for package in packages:
+        if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
+            if app_stream_package.os_major == os_major and \
+               app_stream_package.stream.split(".")[0] == package.major:
                 app_streams.add(
                     AppStreamKey(app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name)
                 )
-
     return app_streams
 
 

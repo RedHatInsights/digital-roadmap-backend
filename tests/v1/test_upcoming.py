@@ -23,7 +23,7 @@ def test_get_upcoming_changes(client, api_prefix):
 
     response = client.get(f"{api_prefix}/upcoming-changes")
     assert response.status_code == 200
-    assert response.json()["data"][0]["name"] == "New CLI experience for RHEL Image Builder"
+    assert response.json()["data"][0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA"
 
 
 def test_get_upcoming_changes_with_env(client, api_prefix):
@@ -48,4 +48,4 @@ def test_get_upcoming_changes_with_env(client, api_prefix):
 
     response = client.get(f"{api_prefix}/upcoming-changes")
     assert response.status_code == 200
-    assert response.json()["data"][0]["name"] == "New CLI experience for RHEL Image Builder TEST"
+    assert response.json()["data"][0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST"

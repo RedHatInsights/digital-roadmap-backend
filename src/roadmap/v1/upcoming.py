@@ -85,9 +85,8 @@ class WrappedUpcoming(BaseModel):
 
 
 @lru_cache
-def read_upcoming_file(file: str | Path) -> list[UpcomingInput]:
-    with open(file, "r") as file:
-        return TypeAdapter(list[UpcomingInput]).validate_json(file.read())
+def read_upcoming_file(file: Path) -> list[UpcomingInput]:
+    return TypeAdapter(list[UpcomingInput]).validate_json(file.read_text())
 
 
 def get_upcoming_data(

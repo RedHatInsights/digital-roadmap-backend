@@ -71,7 +71,10 @@ def get_upcoming_data(settings: t.Annotated[Settings, Depends(Settings.create)])
     return read_upcoming_file(settings.upcoming_json_path)
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="Upcoming changes, deprecations, additions, and enhancements",
+)
 async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
     return {
         "meta": {

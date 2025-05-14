@@ -3,7 +3,6 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
-from operator import attrgetter
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -43,27 +42,11 @@ class LifecycleResponse(BaseModel):
     data: list[RHELLifecycle]
 
 
-@router.get("", summary="Return lifecycle data for all RHEL versions", response_model=LifecycleResponse)
-async def get_systems():
-    return {"data": get_lifecycle_data()}
-
-
-@router.get("/{major}", response_model=LifecycleResponse)
-async def get_systems_major(
-    major: MajorVersion,
+def get_lifecycle_data(
+    major: int | None = None,
+    minor: int | None = None,
+    reverse: bool = True,
 ):
-    return {"data": get_lifecycle_data(major)}
-
-
-@router.get("/{major}/{minor}", response_model=LifecycleResponse)
-async def get_systems_major_minor(
-    major: MajorVersion,
-    minor: MinorVersion,
-):
-    return {"data": get_lifecycle_data(major, minor)}
-
-
-def get_lifecycle_data(major: int | None = None, minor: int | None = None, reverse: bool = True):
     lifecycles = (item for item in OS_LIFECYCLE_DATES.values() if item.minor is not None)
 
     if major and minor is not None:
@@ -71,7 +54,47 @@ def get_lifecycle_data(major: int | None = None, minor: int | None = None, rever
     elif major:
         lifecycles = (item for item in lifecycles if item.major == major)
 
-    return sorted(lifecycles, key=attrgetter("major", "minor"), reverse=reverse)
+    return sorted(lifecycles, key=sort_attrs("major", "minor"), reverse=reverse)
+
+
+@router.get(
+    "",
+    summary="Return lifecycle data for all RHEL versions",
+    response_model=LifecycleResponse,
+)
+async def get_systems():
+    """
+    Note: When the minor version is null, that represents the lifecycle dates for the
+    entire major version.
+    """
+    return {"data": get_lifecycle_data()}
+
+
+@router.get(
+    "/{major}",
+    summary="RHEL lifecycle dates for a specific major version",
+    response_model=LifecycleResponse,
+)
+async def get_systems_major(
+    major: MajorVersion,
+):
+    """
+    Note: When the minor version is null, that represents the lifecycle dates for the
+    entire major version.
+    """
+    return {"data": get_lifecycle_data(major)}
+
+
+@router.get(
+    "/{major}/{minor}",
+    summary="RHEL lifecycle dates for a specific major and minor version",
+    response_model=LifecycleResponse,
+)
+async def get_systems_major_minor(
+    major: MajorVersion,
+    minor: MinorVersion,
+):
+    return {"data": get_lifecycle_data(major, minor)}
 
 
 ## Relevant ##
@@ -81,7 +104,10 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("")
+@relevant.get(
+    "",
+    summary="RHEL lifecycle dates for systems in inventory",
+)
 async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],

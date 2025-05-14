@@ -115,7 +115,11 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=AppStreamsResponse)
+@router.get(
+    "",
+    summary="Lifecycle dates for app stream modules and packages",
+    response_model=AppStreamsResponse,
+)
 async def get_app_streams(filter_params: AppStreamFilter):
     result = APP_STREAM_MODULES_PACKAGES
     result = await filter_app_stream_results(result, filter_params)
@@ -126,7 +130,11 @@ async def get_app_streams(filter_params: AppStreamFilter):
     }
 
 
-@router.get("/{major_version}", response_model=AppStreamsResponse)
+@router.get(
+    "/{major_version}",
+    summary="App stream modules and packages for a specific RHEL version",
+    response_model=AppStreamsResponse,
+)
 async def get_major_version(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
@@ -140,7 +148,11 @@ async def get_major_version(
     }
 
 
-@router.get("/{major_version}/packages", response_model=AppStreamsNamesResponse)
+@router.get(
+    "/{major_version}/packages",
+    summary="List package names for a specific RHEL version",
+    response_model=AppStreamsNamesResponse,
+)
 async def get_app_stream_item_names(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
@@ -154,7 +166,11 @@ async def get_app_stream_item_names(
     }
 
 
-@router.get("/{major_version}/streams", response_model=AppStreamsNamesResponse)
+@router.get(
+    "/{major_version}/streams",
+    summary="List app stream names for a specific RHEL version",
+    response_model=AppStreamsNamesResponse,
+)
 async def get_app_stream_names(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
@@ -313,7 +329,11 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("", response_model=RelevantAppStreamsResponse)
+@relevant.get(
+    "",
+    summary="App streams based on hosts in inventory",
+    response_model=RelevantAppStreamsResponse,
+)
 async def get_relevant_app_streams(
     systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
     related: bool = False,

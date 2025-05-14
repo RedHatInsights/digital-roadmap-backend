@@ -137,3 +137,19 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> 
         },
         "data": data,
     }
+
+relevant = APIRouter(
+    prefix="/relevant/upcoming-changes",
+    tags=["Relevant", "Upcoming Changes"],
+)
+
+@relevant.get("")
+async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
+    data = [d for d in data if d.details.potentiallyAffectedSystems]
+    return {
+        "meta": {
+            "total": len(data),
+            "count": len(data),
+        },
+        "data": data,
+    }

@@ -28,5 +28,20 @@
       "dateAdded": "2025-04-22",
       "lastModified": "2025-04-22"
     }
+  },
+  {
+    "name": "Test package that nobody has",
+    "type": "addition",
+    "package": "nobodyhasthis",
+    "release": "10.1",
+    "date": "2025-08-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "lorem ipsum nobody has",
+      "trainingTicket": "RHELBU-4321",
+      "dateAdded": "2025-04-22",
+      "lastModified": "2025-04-22"
+    }
   }
 ]

@@ -28,7 +28,12 @@ MinorVersion = t.Annotated[int | None, Query(description="Minor version number",
 
 class HealthCheckFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        return record.getMessage().find("/v1/ping") == -1
+        message = record.getMessage()
+        filters = (
+            "/v1/ping",
+            "/metrics",
+        )
+        return not any(filter in message for filter in filters)
 
 
 async def decode_header(

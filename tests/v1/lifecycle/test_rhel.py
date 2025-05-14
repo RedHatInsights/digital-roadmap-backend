@@ -14,6 +14,7 @@ def test_rhel_lifecycle(client, api_prefix):
 
     assert len(data) > 0
     assert names == {"RHEL"}
+    assert any(item["minor"] is None for item in data), "Full lifecycle data is missing from the response"
     assert response.status_code == 200
 
 

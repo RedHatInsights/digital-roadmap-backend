@@ -12,6 +12,7 @@ from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
+from roadmap.common import sort_attrs
 from roadmap.config import Settings
 from roadmap.database import get_db
 
@@ -204,3 +205,14 @@ async def test_check_inventory_access():
 async def test_check_inventory_no_access(permissions):
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
         await check_inventory_access(permissions)
+
+
+def test_sort_attrs(mocker):
+    """Given an object with attributes that are an empty string, None, and non-null
+    value, ensure the expected tuple of values are returned."""
+
+    obj = mocker.Mock(empty="", none=None, real="real")
+    sorter = sort_attrs("empty", "none", "real")
+    result = sorter(obj)
+
+    assert result == (-1, -2, "real")

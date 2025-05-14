@@ -1,10 +1,12 @@
 import typing as t
 
+from collections import defaultdict
 from datetime import date
 from enum import auto
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -16,6 +18,8 @@ from pydantic import TypeAdapter
 from roadmap.common import ensure_date
 from roadmap.config import Settings
 from roadmap.models import Meta
+from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
 
 router = APIRouter(prefix="/upcoming-changes", tags=["Upcoming Changes"])
@@ -38,37 +42,88 @@ class Architecture(StrEnum):
     none = ""
 
 
-class UpcomingDetails(BaseModel):
+class UpcomingInputDetails(BaseModel):
     architecture: Architecture | None
     detailFormat: int
     summary: str
-    potentiallyAffectedSystems: int
     trainingTicket: str
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
 
 
-class Upcoming(BaseModel):
+class UpcomingInput(BaseModel):
+    name: str
+    type: UpcomingType
+    package: str
+    release: str
+    date: Date
+    details: UpcomingInputDetails
+
+
+class UpcomingOutputDetails(BaseModel):
+    architecture: Architecture | None
+    detailFormat: int
+    summary: str
+    trainingTicket: str
+    dateAdded: date = Field(default_factory=date.today)
+    lastModified: Date
+    potentiallyAffectedSystemsCount: int
+    potentiallyAffectedSystems: list[UUID]
+
+
+class UpcomingOutput(BaseModel):
     name: str
     type: UpcomingType
     release: str
     date: Date
-    details: UpcomingDetails
+    details: UpcomingOutputDetails
 
 
 class WrappedUpcoming(BaseModel):
     meta: Meta
-    data: list[Upcoming]
+    data: list[UpcomingOutput]
 
 
 @lru_cache
-def read_upcoming_file(file: str | Path) -> list[Upcoming]:
+def read_upcoming_file(file: str | Path) -> list[UpcomingInput]:
     with open(file, "r") as file:
-        return TypeAdapter(list[Upcoming]).validate_json(file.read())
+        return TypeAdapter(list[UpcomingInput]).validate_json(file.read())
 
 
-def get_upcoming_data(settings: t.Annotated[Settings, Depends(Settings.create)]) -> list[Upcoming]:
-    return read_upcoming_file(settings.upcoming_json_path)
+def get_upcoming_data(
+    systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+) -> list[UpcomingOutput]:
+    keys_by_name = defaultdict(list)
+    [keys_by_name[a.name].append(a) for a in systems_by_stream.keys()]
+
+    result = []
+    for upcoming in read_upcoming_file(settings.upcoming_json_path):
+        systems = set()
+        for key in keys_by_name[upcoming.package]:
+            systems.update(systems_by_stream[key])
+
+        details = UpcomingOutputDetails(
+            architecture=upcoming.details.architecture,
+            detailFormat=upcoming.details.detailFormat,
+            summary=upcoming.details.summary,
+            trainingTicket=upcoming.details.trainingTicket,
+            dateAdded=upcoming.details.dateAdded,
+            lastModified=upcoming.details.lastModified,
+            potentiallyAffectedSystemsCount=len(systems),
+            potentiallyAffectedSystems=systems,
+        )
+
+        result.append(
+            UpcomingOutput(
+                name=upcoming.name,
+                type=upcoming.type,
+                release=upcoming.release,
+                date=upcoming.date,
+                details=details,
+            )
+        )
+    return result
 
 
 @router.get("")

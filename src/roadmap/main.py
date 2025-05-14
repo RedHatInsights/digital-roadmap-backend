@@ -39,7 +39,7 @@ app = FastAPI(redirect_slashes=False)
 # Add Prometheus metrics
 instrumentor = Instrumentator()
 instrumentor.instrument(app, metric_namespace="roadmap")
-instrumentor.expose(app, tags=["Status"])
+instrumentor.expose(app, include_in_schema=False)
 
 # Create a main API router with the base prefix
 api_router = APIRouter(prefix="/api/roadmap", tags=["Roadmap"])
@@ -51,7 +51,7 @@ roadmap.v1.router.add_api_route("/openapi.json", app.openapi, include_in_schema=
 api_router.include_router(roadmap.v1.router)
 
 
-@api_router.get("/v1/ping", tags=["Status"])
+@api_router.get("/v1/ping", include_in_schema=False)
 async def ping():
     return {"status": "pong"}
 

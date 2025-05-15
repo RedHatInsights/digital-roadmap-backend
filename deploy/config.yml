@@ -70,6 +70,12 @@ objects:
                     name: ${ROADMAP_DB_SECRET_NAME}
                     key: db.password
 
+              - name: ROADMAP_DB_POOL_SIZE
+                value: ${ROADMAP_DB_POOL_SIZE}
+
+              - name: ROADMAP_DB_MAX_OVERFLOW
+                value: ${ROADMAP_DB_MAX_OVERFLOW}
+
               - name: SENTRY_DSN
                 valueFrom:
                   secretKeyRef:
@@ -234,6 +240,12 @@ parameters:
 
   - name: ROADMAP_DB_SECRET_NAME
     value: host-inventory-db-readonly
+
+  - name: ROADMAP_DB_POOL_SIZE
+    value: ""
+
+  - name: ROADMAP_DB_MAX_OVERFLOW
+    value: ""
 
   - name: DB_NAME
     required: true

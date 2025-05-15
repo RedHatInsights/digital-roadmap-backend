@@ -289,7 +289,7 @@ def app_streams_from_modules(
     return app_streams
 
 
-class StringPackage(BaseModel):
+class StringPackage(BaseModel, frozen=True):
     name: str
     major: str
 
@@ -305,7 +305,7 @@ def app_streams_from_packages(
     package_names_string: list[str],
     os_major: str,
 ) -> set[AppStreamKey]:
-    packages = [StringPackage.from_string(s) for s in package_names_string]
+    packages = set(StringPackage.from_string(s) for s in package_names_string)
     app_streams = set()
     for package in packages:
         if app_stream_package := APP_STREAM_PACKAGES.get(package.name):

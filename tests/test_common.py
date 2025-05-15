@@ -20,7 +20,7 @@ from roadmap.database import get_db
 @pytest.fixture(scope="module")
 async def base_args():
     settings = Settings.create()
-    session = await anext(get_db(settings))
+    session = await anext(get_db())
     return {
         "org_id": "1234",
         "session": session,

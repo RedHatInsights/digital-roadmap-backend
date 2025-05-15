@@ -74,6 +74,7 @@ class UpcomingOutputDetails(BaseModel):
 class UpcomingOutput(BaseModel):
     name: str
     type: UpcomingType
+    package: str
     release: str
     date: Date
     details: UpcomingOutputDetails
@@ -117,6 +118,7 @@ def get_upcoming_data(
             UpcomingOutput(
                 name=upcoming.name,
                 type=upcoming.type,
+                package=upcoming.package,
                 release=upcoming.release,
                 date=upcoming.date,
                 details=details,
@@ -138,13 +140,15 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> 
         "data": data,
     }
 
+
 relevant = APIRouter(
     prefix="/relevant/upcoming-changes",
     tags=["Relevant", "Upcoming Changes"],
 )
 
+
 @relevant.get("")
-async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
+async def get_upcoming_relevant(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
     data = [d for d in data if d.details.potentiallyAffectedSystems]
     return {
         "meta": {

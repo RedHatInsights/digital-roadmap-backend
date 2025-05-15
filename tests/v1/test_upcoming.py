@@ -7,12 +7,16 @@ from roadmap.config import Settings
 
 def test_get_upcoming_changes(client, api_prefix):
     response = client.get(f"{api_prefix}/upcoming-changes")
-    assert response.status_code == 200
     data = response.json()["data"]
+
+    assert response.status_code == 200
     assert data[0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA"
-    for d in data:
-        assert "potentiallyAffectedSystems" not in d["details"]
-        assert "potentiallyAffectedSystemsCount" not in d["details"]
+    assert not any("potentiallyAffectedSystems" in d["details"] for d in data), (
+        "/upcoming-changes should have no 'potentiallyAffectedSystems' field, that is in /relevent/upcoming-changes only"
+    )
+    assert not any("potentiallyAffectedSystemsCount" in d["details"] for d in data), (
+        "/upcoming-changes should have no 'potentiallyAffectedSystemsCount' field, that is in /relevent/upcoming-changes only"
+    )
 
 
 def test_get_upcoming_changes_with_env(client, api_prefix):
@@ -47,15 +51,12 @@ def test_get_relevant_upcoming_changes_all(client, api_prefix):
     assert response.status_code == 200
     data = response.json()["data"]
     assert data[0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA"
-    found_systems = False
-    found_empty_systems = False
-    for record in data:
-        if len(record["details"]["potentiallyAffectedSystems"]) == 0:
-            found_empty_systems = True
-        else:
-            found_systems = True
-    assert found_systems
-    assert found_empty_systems
+    assert any(len(record["details"]["potentiallyAffectedSystems"]) == 0 for record in data), (
+        "/relevant/upcoming-changes?all=true should have records with no affected systems"
+    )
+    assert any(len(record["details"]["potentiallyAffectedSystems"]) > 0 for record in data), (
+        "/relevant/upcoming-changes?all=true should have records with affected systems"
+    )
 
 
 def test_get_relevant_upcoming_changes(client, api_prefix):
@@ -78,12 +79,9 @@ def test_get_relevant_upcoming_changes(client, api_prefix):
     assert response.status_code == 200
     data = response.json()["data"]
     assert data[0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA"
-    found_systems = False
-    found_empty_systems = False
-    for record in data:
-        if len(record["details"]["potentiallyAffectedSystems"]) == 0:
-            found_empty_systems = True
-        else:
-            found_systems = True
-    assert found_systems
-    assert not found_empty_systems
+    assert not any(len(record["details"]["potentiallyAffectedSystems"]) == 0 for record in data), (
+        "/relevant/upcoming-changes?all=true should have no records with no affected systems"
+    )
+    assert any(len(record["details"]["potentiallyAffectedSystems"]) > 0 for record in data), (
+        "/relevant/upcoming-changes?all=true should have records with affected systems"
+    )

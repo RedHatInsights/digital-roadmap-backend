@@ -121,6 +121,7 @@ async def query_host_inventory(
         org_id = "1234"
 
     if any(perm.get("resourceDefinitions") for perm in permissions):
+        logger.info(f"RBAC {permissions}")
         # TODO: Implement workspace filtering
         raise HTTPException(501, detail="Workspace filtering is not yet implemented")
 

@@ -80,9 +80,14 @@ class UpcomingOutput(BaseModel):
     details: UpcomingOutputDetails
 
 
-class WrappedUpcoming(BaseModel):
+class WrappedUpcomingOutput(BaseModel):
     meta: Meta
     data: list[UpcomingOutput]
+
+
+class WrappedUpcomingInput(BaseModel):
+    meta: Meta
+    data: list[UpcomingInput]
 
 
 @lru_cache
@@ -90,7 +95,25 @@ def read_upcoming_file(file: Path) -> list[UpcomingInput]:
     return TypeAdapter(list[UpcomingInput]).validate_json(file.read_text())
 
 
-def get_upcoming_data(
+def get_upcoming_data_no_hosts(settings: t.Annotated[Settings, Depends(Settings.create)]) -> list[UpcomingInput]:
+    return read_upcoming_file(settings.upcoming_json_path)
+
+
+@router.get(
+    "",
+    summary="Upcoming changes, deprecations, additions, and enhancements",
+)
+async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hosts)]) -> WrappedUpcomingInput:
+    return {
+        "meta": {
+            "total": len(data),
+            "count": len(data),
+        },
+        "data": data,
+    }
+
+
+def get_upcoming_data_with_hosts(
     systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
 ) -> list[UpcomingOutput]:
@@ -127,20 +150,6 @@ def get_upcoming_data(
     return result
 
 
-@router.get(
-    "",
-    summary="Upcoming changes, deprecations, additions, and enhancements",
-)
-async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
-    return {
-        "meta": {
-            "total": len(data),
-            "count": len(data),
-        },
-        "data": data,
-    }
-
-
 relevant = APIRouter(
     prefix="/relevant/upcoming-changes",
     tags=["Relevant", "Upcoming Changes"],
@@ -148,8 +157,11 @@ relevant = APIRouter(
 
 
 @relevant.get("")
-async def get_upcoming_relevant(data: t.Annotated[t.Any, Depends(get_upcoming_data)]) -> WrappedUpcoming:
-    data = [d for d in data if d.details.potentiallyAffectedSystems]
+async def get_upcoming_relevant(
+    data: t.Annotated[t.Any, Depends(get_upcoming_data_with_hosts)], all: bool = False
+) -> WrappedUpcomingOutput:
+    if not all:
+        data = [d for d in data if d.details.potentiallyAffectedSystems]
     return {
         "meta": {
             "total": len(data),

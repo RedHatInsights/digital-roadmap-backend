@@ -156,10 +156,19 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("")
+@relevant.get("", summary="Upcoming changes, deprecations, additions, and enhancements relevant to requester's systems")
 async def get_upcoming_relevant(
     data: t.Annotated[t.Any, Depends(get_upcoming_data_with_hosts)], all: bool = False
 ) -> WrappedUpcomingOutput:
+    """
+    Returns a list of upcoming changes to packages.
+
+    Data includes requester's potentially affected systems.
+
+    If 'all' is True, all known changes are returned, not just those
+    potentially affecting the requester's systems.
+
+    """
     if not all:
         data = [d for d in data if d.details.potentiallyAffectedSystems]
     return {

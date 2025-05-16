@@ -96,16 +96,13 @@ async def check_inventory_access(
 
     Return list of resource definitions and permission.
     """
-    inventory_access_perms = {"inventory:*:*", "inventory:hosts:read"}
+    inventory_access_perms = {"inventory:*:*", "inventory:*:read", "inventory:hosts:read"}
+    host_permissions = [p for p in permissions if p.get("permission") in inventory_access_perms]
 
-    has_access = False
-    if any(permission.get("permission") in inventory_access_perms for permission in permissions):
-        has_access = True
-
-    if not has_access:
+    if not host_permissions:
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    return permissions
+    return host_permissions
 
 
 # FIXME: This should be cached

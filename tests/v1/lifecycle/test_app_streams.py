@@ -189,6 +189,35 @@ def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
     assert "not yet implemented" in result.json()["detail"].casefold()
 
 
+def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api_prefix, client):
+    """Testing a specific case that used to cause 501s"""
+    async def query_rbac_override():
+        return [
+            {"permission": "inventory:hosts:read", "resourceDefinitions": []},
+            {"permission": "inventory:groups:write", "resourceDefinitions": []},
+            {"permission": "inventory:groups:read", "resourceDefinitions": []},
+            {
+                "permission": "inventory:groups:read",
+                "resourceDefinitions": [
+                    {
+                        "attributeFilter": {
+                            "key": "group.id",
+                            "operation": "in",
+                            "value": ["c22abc43-62f9-4a03-94e0-2a49d0e3c3d8"],
+                        }
+                    }
+                ],
+            },
+        ]
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+
+    assert result.status_code == 200
+
+
 def test_get_revelent_app_stream_related(api_prefix, client):
     async def query_rbac_override():
         return [

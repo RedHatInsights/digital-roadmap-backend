@@ -193,6 +193,7 @@ def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
 
 def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api_prefix, client):
     """Testing a specific case that used to cause 501s"""
+
     async def query_rbac_override():
         return [
             {"permission": "inventory:hosts:read", "resourceDefinitions": []},

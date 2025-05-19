@@ -311,7 +311,12 @@ class StringPackage(BaseModel, frozen=True):
 
     @classmethod
     def from_string(cls, s):
-        name, major = s.split(":")
+        name, _, major = s.partition(":")
+        if not major:
+            # Missing ':' in the expected package name. Partition on '-' instead.
+            #   Example: cairo-1.15.12-3.el8.x86_64
+            name, _, major = s.partition("-")
+
         name = name.rsplit("-", 1)[0]
         major = major.split(".")[0]
         return cls(name=name, major=major)

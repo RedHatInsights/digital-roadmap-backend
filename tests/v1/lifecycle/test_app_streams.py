@@ -12,6 +12,7 @@ from roadmap.data.app_streams import AppStreamEntity
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
+from roadmap.v1.lifecycle.app_streams import StringPackage
 
 
 def test_get_app_streams(api_prefix, client):
@@ -390,3 +391,16 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
     )
 
     assert app_stream.support_status == status
+
+
+@pytest.mark.parametrize(
+    ("package", "expected"),
+    (
+        ("cairo-1.15.12-3.el8.x86_64", ("cairo", "1")),
+        ("rpm-build-libs-0:4.16.1.3-29.el9.x86_64", ("rpm-build-libs", "4")),
+    ),
+)
+def test_from_string(package, expected):
+    package = StringPackage.from_string(package)
+
+    assert (package.name, package.major) == expected

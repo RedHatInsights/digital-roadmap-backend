@@ -104,6 +104,7 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
                     if gid is not None:
                         UUID(gid)
             except (ValueError, TypeError):
+                logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
                 raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
 
             if not group_list:

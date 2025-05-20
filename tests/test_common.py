@@ -7,9 +7,9 @@ import pytest
 
 from fastapi import HTTPException
 
-from roadmap.common import get_allowed_host_groups
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
+from roadmap.common import get_allowed_host_groups
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.common import sort_attrs

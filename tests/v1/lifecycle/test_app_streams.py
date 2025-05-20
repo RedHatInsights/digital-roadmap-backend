@@ -268,8 +268,7 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
                         "attributeFilter": {
                             "key": "group.id",
                             "operation": "in",
-                            "value": ["aec18a86-3593-11f0-8426-5e43c8b8aa2f",
-                                      "397e1696-34f2-11f0-a718-5e43c8b8aa2f"],
+                            "value": ["aec18a86-3593-11f0-8426-5e43c8b8aa2f", "397e1696-34f2-11f0-a718-5e43c8b8aa2f"],
                         }
                     }
                 ],
@@ -288,7 +287,7 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     assert len(data) == 1
     # In the test data there is an eligible system from another group (for
     # which the requset does not have permission) that shows NGINX 1.14
-    assert data[0]['display_name'] == 'NGINX 1.22'
+    assert data[0]["display_name"] == "NGINX 1.22"
 
 
 def test_app_stream_missing_lifecycle_data():

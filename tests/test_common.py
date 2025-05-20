@@ -25,7 +25,7 @@ async def base_args():
         "org_id": "1234",
         "session": session,
         "settings": settings,
-        "permissions": [],
+        "host_groups": [],
     }
 
 
@@ -73,25 +73,6 @@ async def test_query_host_inventory_major_minor(base_args, major, minor):
 
     assert major_versions == {major}, "Major version mismatch"
     assert minor_versions == {minor}, "Minor version mismatch"
-
-
-async def test_query_host_inventory_resource_definitions(base_args):
-    with pytest.raises(HTTPException, match="not yet implemented"):
-        permissions = [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "value": ["3c4a757d-a38e-4c17-89ab-4694249f751b"],
-                            "operation": "in",
-                        }
-                    }
-                ],
-            }
-        ]
-        await anext(query_host_inventory(**base_args | {"permissions": permissions}))
 
 
 async def test_query_host_inventory_dev(base_args):
@@ -191,7 +172,8 @@ async def test_get_allowed_host_groups():
     perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
     result = await get_allowed_host_groups(perms)
 
-    assert result == perms
+    # Empty set means unrestricted access.
+    assert result == set()
 
 
 @pytest.mark.parametrize(

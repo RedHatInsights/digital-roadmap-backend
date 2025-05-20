@@ -187,8 +187,7 @@ def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 
-    assert result.status_code == 501
-    assert "not yet implemented" in result.json()["detail"].casefold()
+    assert result.status_code == 200
 
 
 def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api_prefix, client):

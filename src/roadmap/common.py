@@ -187,7 +187,7 @@ async def query_host_inventory(
         # eligible host group ids.
         string_ids = [f"'{u}'" for u in host_groups]
         id_string = ",".join(string_ids)
-        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN ({id_string}));"
+        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN ({id_string}))"
 
     result = await session.stream(
         text(query),

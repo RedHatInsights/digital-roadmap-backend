@@ -141,6 +141,7 @@ async def get_allowed_host_groups(
             if len(resourceDefinition) == 0:
                 # Any record with an empty resourceDefinition means
                 # unrestricted access.
+                # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions
                 return []
 
             group_list = _get_group_list_from_resource_definition(resourceDefinition)

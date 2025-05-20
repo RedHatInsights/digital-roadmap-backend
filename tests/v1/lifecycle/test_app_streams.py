@@ -173,7 +173,7 @@ def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
                 "resourceDefinitions": [
                     {
                         "attributeFilter": {
-                            "key": "group_id",
+                            "key": "group.id",
                             "value": ["ebeaf62a-9713-4dad-8d63-32b51cadbda3"],
                             "operation": "in",
                         },
@@ -186,7 +186,6 @@ def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
     client.app.dependency_overrides[query_rbac] = query_rbac_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
-
     assert result.status_code == 200
 
 

@@ -168,6 +168,23 @@ async def query_host_inventory(
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
     if host_groups:
+        # the hosts database keeps groups data in a JSONB field, with contents
+        # like this:
+        # [
+        #    {
+        #     "account": "123456",
+        #     "created": "2025-01-07T12:58:59.569065+00:00",
+        #     "host_count": 1,
+        #     "id": "f770fbf4-359d-11f0-b21b-5e43c8b8aa2f",
+        #     "name": "GroupTwo",
+        #     "org_id": "1234",
+        #     "ungrouped": false,
+        #     "updated": "2025-01-07T12:59:52.471612+00:00"
+        #    }
+        # ]
+        # This addition to the query will query into that field's list of group
+        # info. It searches for any record with an id that matches any of our
+        # eligible host group ids.
         string_ids = [f"'{u}'" for u in host_groups]
         id_string = ",".join(string_ids)
         query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN ({id_string}));"

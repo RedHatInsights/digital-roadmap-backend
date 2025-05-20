@@ -120,7 +120,7 @@ def main():
                 reporter="toast loader",
                 per_reporter_staleness={},
                 org_id="1234",
-                groups=[],
+                groups=host_data[n].get("groups", []),
                 tags_alt=[],
                 last_check_in=datetime.now(),
             )

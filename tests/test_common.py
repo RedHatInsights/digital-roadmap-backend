@@ -7,7 +7,7 @@ import pytest
 
 from fastapi import HTTPException
 
-from roadmap.common import check_inventory_access
+from roadmap.common import get_allowed_host_groups
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
@@ -187,9 +187,9 @@ async def test_query_rbac_no_url():
     assert result == [{}]
 
 
-async def test_check_inventory_access():
+async def test_get_allowed_host_groups():
     perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
-    result = await check_inventory_access(perms)
+    result = await get_allowed_host_groups(perms)
 
     assert result == perms
 
@@ -202,9 +202,9 @@ async def test_check_inventory_access():
         [{"resourceDefinitions": [], "permission": "nope"}],
     ),
 )
-async def test_check_inventory_no_access(permissions):
+async def test_get_allowed_host_groups_no_access(permissions):
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await check_inventory_access(permissions)
+        await get_allowed_host_groups(permissions)
 
 
 def test_sort_attrs(mocker):

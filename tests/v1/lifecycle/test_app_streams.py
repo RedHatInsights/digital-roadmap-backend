@@ -286,6 +286,9 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     data = result.json().get("data", "")
     assert result.status_code == 200
     assert len(data) == 1
+    # In the test data there is an eligible system from another group (for
+    # which the requset does not have permission) that shows NGINX 1.14
+    assert data[0]['display_name'] == 'NGINX 1.22'
 
 
 def test_app_stream_missing_lifecycle_data():

@@ -141,7 +141,7 @@ async def get_allowed_host_groups(
     for perm in host_permissions:
         # Get the list of allowed Group IDs from the attribute filter.
         for resourceDefinition in perm["resourceDefinitions"]:
-            if not resourceDefinition:
+            if len(resourceDefinition) == 0:
                 # Any record with an empty resourceDefinition means
                 # unrestricted access.
                 # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions

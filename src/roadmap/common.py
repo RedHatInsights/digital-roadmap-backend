@@ -101,6 +101,9 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
             group_list = resource_definition["attributeFilter"]["value"]
             try:
                 for gid in group_list:
+                    # Checking for None is a special case.
+                    # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
+                    # https://issues.redhat.com/browse/RHINENG-16842
                     if gid is not None:
                         UUID(gid)
             except (ValueError, TypeError):

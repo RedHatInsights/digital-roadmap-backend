@@ -7,6 +7,7 @@ import urllib.request
 
 from datetime import date
 from urllib.error import HTTPError
+from uuid import UUID
 
 from fastapi import Depends
 from fastapi import Header
@@ -87,40 +88,76 @@ async def query_rbac(
     return data.get("data", [{}])
 
 
-async def check_inventory_access(
+def _get_group_list_from_resource_definition(resource_definition: dict) -> list[str]:
+    if "attributeFilter" in resource_definition:
+        if resource_definition["attributeFilter"].get("key") != "group.id":
+            raise HTTPException(501, detail="Invalid value for attributeFilter.key in RBAC response.")
+        elif resource_definition["attributeFilter"].get("operation") != "in":
+            raise HTTPException(501, detail="Invalid value for attributeFilter.operation in RBAC response.")
+        elif not isinstance(resource_definition["attributeFilter"]["value"], list):
+            raise HTTPException(501, detail="Did not receive a list for attributeFilter.value in RBAC response.")
+        else:
+            # Validate that all values in the filter are UUIDs.
+            group_list = resource_definition["attributeFilter"]["value"]
+            try:
+                for gid in group_list:
+                    if gid is not None:
+                        UUID(gid)
+            except (ValueError, TypeError):
+                raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
+
+            if not group_list:
+                raise HTTPException(501, detail="Received no valid contents of attributeFilter.value in RBAC response.")
+            return group_list
+    # In this case there were resourceDefinitions but there was not
+    # an attributeFilter. Ensure downstream usage of this result is not
+    # interpreted as unrestricted access!
+    return []
+
+
+async def get_allowed_host_groups(
     permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
-) -> list[dict]:
+) -> t.Iterable[UUID]:
     """Check the given permissions for inventory access.
 
     Raise HTTPException if no permissions allow access.
 
-    Return list of resource definitions and permission.
+    Return list of groups hosts may belong to, if restricted, otherwise returns
+    an empty list, meaning unrestricted access to the org's hosts.
+
     """
-    inventory_access_perms = {"inventory:*:*", "inventory:*:read", "inventory:hosts:read"}
+    allowed_group_ids = set()  # If populated, limits the allowed resources to specific group IDs
+
+    inventory_access_perms = {"inventory:*:*", "inventory:*:read", "inventory:hosts:read", "inventory:hosts:*"}
     host_permissions = [p for p in permissions if p.get("permission") in inventory_access_perms]
 
     if not host_permissions:
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    return host_permissions
+    for perm in host_permissions:
+        # Get the list of allowed Group IDs from the attribute filter.
+        for resourceDefinition in perm["resourceDefinitions"]:
+            if len(resourceDefinition) == 0:
+                # Any record with an empty resourceDefinition means
+                # unrestricted access.
+                return []
+
+            group_list = _get_group_list_from_resource_definition(resourceDefinition)
+            allowed_group_ids.update(group_list)
+
+    return allowed_group_ids
 
 
-# FIXME: This should be cached
 async def query_host_inventory(
     org_id: t.Annotated[str, Depends(decode_header)],
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    permissions: t.Annotated[list[dict], Depends(check_inventory_access)],
+    host_groups: t.Annotated[list[dict], Depends(get_allowed_host_groups)],
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):
     if settings.dev:
         org_id = "1234"
-
-    if any(perm.get("resourceDefinitions") for perm in permissions):
-        logger.info(f"RBAC {permissions}")
-        # TODO: Implement workspace filtering
-        raise HTTPException(501, detail="Workspace filtering is not yet implemented")
 
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
     if major is not None:
@@ -128,6 +165,11 @@ async def query_host_inventory(
 
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
+
+    if host_groups:
+        string_ids = [f"'{u}'" for u in host_groups]
+        id_string = ",".join(string_ids)
+        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN ({id_string}));"
 
     result = await session.stream(
         text(query),

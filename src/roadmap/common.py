@@ -14,6 +14,7 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import bindparam
 from sqlalchemy.sql import text
 
 from roadmap.config import Settings
@@ -96,11 +97,13 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
         if op not in ("in", "equal"):
             raise HTTPException(501, detail="Invalid value for attributeFilter.operation in RBAC response.")
         val = attributeFilter.get("value")
-        if op == "in" and not isinstance(val, list):
-            raise HTTPException(501, detail="Did not receive a list for attributeFilter.value in RBAC response.")
-        elif not isinstance(val, str):
-            raise HTTPException(501, detail="Did not receive a str for attributeFilter.value in RBAC response.")
-        if op == "equal":
+        print(f"op: {op}, val: {val}, valtype: {type(val)} {isinstance(val, list)}")
+        if op == "in":
+            if not isinstance(val, list):
+                raise HTTPException(501, detail="Did not receive a list for attributeFilter.value in RBAC response.")
+        else:
+            if not isinstance(val, str):
+                raise HTTPException(501, detail="Did not receive a str for attributeFilter.value in RBAC response.")
             val = [val]
 
         group_list = val
@@ -113,8 +116,10 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
                 # Notes update:
                 # I have a conversation from #team-insights-inventory that explains
                 # that we should treat a None as if it were the ID of a group called
-                # "ungrouped", and it is identified by the field 'ungrouped: true' 
+                # "ungrouped", and it is identified by the field 'ungrouped: true'
                 # in the group data.
+                if gid is None:
+                    raise NotImplementedError
                 if gid is not None:
                     UUID(gid)
         except (ValueError, TypeError):
@@ -123,8 +128,9 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
 
         if not group_list:
             # This would happen if the value is [None], is that supposed to mean unrestricted access?
-            # I have a question pending on #team-insights-inventory
+            # I have a question pending on #team-insights-inventory (I HAVE ANSWERS - FIX THIS)
             raise HTTPException(501, detail="Received no valid contents of attributeFilter.value in RBAC response.")
+        print(f"group list {group_list}")
         return group_list
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
@@ -160,6 +166,7 @@ async def get_allowed_host_groups(
             group_list = _get_group_list_from_resource_definition(resourceDefinition)
             allowed_group_ids.update(group_list)
 
+    print(f"allowed groups: {allowed_group_ids}")
     return allowed_group_ids
 
 
@@ -181,7 +188,6 @@ async def query_host_inventory(
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
-    id_string = ""
     if host_groups:
         # the hosts database keeps groups data in a JSONB field, with contents
         # like this:
@@ -200,18 +206,14 @@ async def query_host_inventory(
         # This addition to the query will query into that field's list of group
         # info. It searches for any record with an id that matches any of our
         # eligible host group ids.
-        string_ids = [f"'{u}'" for u in host_groups]
-        id_string = ",".join(string_ids)
-        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN (:id_string))"
+        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN :string_ids)"
+        statement = text(query).bindparams(bindparam("string_ids", expanding=True))
+    else:
+        statement = text(query)
 
     result = await session.stream(
-        text(query),
-        params={
-            "org_id": org_id,
-            "major": str(major),
-            "minor": str(minor),
-            "id_string": id_string
-        },
+        statement,
+        params={"org_id": org_id, "major": str(major), "minor": str(minor), "string_ids": list(host_groups)},
     )
     yield result
 

@@ -199,7 +199,7 @@ async def query_host_inventory(
         ungrouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE (group_obj->>'ungrouped')::boolean = true)"
         # This query searches for any group record with an id that matches any
         # of our eligible host group ids.
-        grouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN :string_ids)"
+        grouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN :host_groups)"
         if None in host_groups:
             if len(host_groups) > 1:
                 query = f"{query} AND ({ungrouped_query} OR {grouped_query})"
@@ -208,14 +208,14 @@ async def query_host_inventory(
         else:
             query = f"{query} AND {grouped_query}"
 
-    if ":string_ids" in query:
-        statement = text(query).bindparams(bindparam("string_ids", expanding=True))
+    if ":host_groups" in query:
+        statement = text(query).bindparams(bindparam("host_groups", expanding=True))
     else:
         statement = text(query)
 
     result = await session.stream(
         statement,
-        params={"org_id": org_id, "major": str(major), "minor": str(minor), "string_ids": list(host_groups)},
+        params={"org_id": org_id, "major": str(major), "minor": str(minor), "host_groups": list(host_groups)},
     )
     yield result
 

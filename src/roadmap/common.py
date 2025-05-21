@@ -89,45 +89,55 @@ async def query_rbac(
 
 
 def _get_group_list_from_resource_definition(resource_definition: dict) -> list[str]:
-    if "attributeFilter" in resource_definition:
-        if resource_definition["attributeFilter"].get("key") != "group.id":
+    if attributeFilter := resource_definition.get("attributeFilter"):
+        if attributeFilter.get("key") != "group.id":
             raise HTTPException(501, detail="Invalid value for attributeFilter.key in RBAC response.")
-        elif resource_definition["attributeFilter"].get("operation") != "in":
+        op = attributeFilter.get("operation")
+        if op not in ("in", "equal"):
             raise HTTPException(501, detail="Invalid value for attributeFilter.operation in RBAC response.")
-        elif not isinstance(resource_definition["attributeFilter"]["value"], list):
+        val = attributeFilter.get("value")
+        if op == "in" and not isinstance(val, list):
             raise HTTPException(501, detail="Did not receive a list for attributeFilter.value in RBAC response.")
-        else:
-            # Validate that all values in the filter are UUIDs.
-            group_list = resource_definition["attributeFilter"]["value"]
-            try:
-                for gid in group_list:
-                    # Checking for None is a special case.
-                    # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
-                    # https://issues.redhat.com/browse/RHINENG-16842
-                    if gid is not None:
-                        UUID(gid)
-            except (ValueError, TypeError):
-                logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
-                raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
+        elif not isinstance(val, str):
+            raise HTTPException(501, detail="Did not receive a str for attributeFilter.value in RBAC response.")
+        if op == "equal":
+            val = [val]
 
-            if not group_list:
-                raise HTTPException(501, detail="Received no valid contents of attributeFilter.value in RBAC response.")
-            return group_list
-    # In this case there were resourceDefinitions but there was not
-    # an attributeFilter. Ensure downstream usage of this result is not
-    # interpreted as unrestricted access!
-    return []
+        group_list = val
+        # Validate that all values in the filter are UUIDs.
+        try:
+            for gid in group_list:
+                # Checking for None is a special case.
+                # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
+                # https://issues.redhat.com/browse/RHINENG-16842
+                # Notes update:
+                # I have a conversation from #team-insights-inventory that explains
+                # that we should treat a None as if it were the ID of a group called
+                # "ungrouped", and it is identified by the field 'ungrouped: true' 
+                # in the group data.
+                if gid is not None:
+                    UUID(gid)
+        except (ValueError, TypeError):
+            logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
+            raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
+
+        if not group_list:
+            # This would happen if the value is [None], is that supposed to mean unrestricted access?
+            # I have a question pending on #team-insights-inventory
+            raise HTTPException(501, detail="Received no valid contents of attributeFilter.value in RBAC response.")
+        return group_list
+    raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
 
 async def get_allowed_host_groups(
     permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
-) -> t.Iterable[UUID]:
+) -> set[UUID]:
     """Check the given permissions for inventory access.
 
     Raise HTTPException if no permissions allow access.
 
-    Return list of groups hosts may belong to, if restricted, otherwise returns
-    an empty list, meaning unrestricted access to the org's hosts.
+    Return set of groups hosts may belong to, if restricted, otherwise returns
+    an empty set, meaning unrestricted access to the org's hosts.
 
     """
     allowed_group_ids = set()  # If populated, limits the allowed resources to specific group IDs
@@ -141,7 +151,7 @@ async def get_allowed_host_groups(
     for perm in host_permissions:
         # Get the list of allowed Group IDs from the attribute filter.
         for resourceDefinition in perm["resourceDefinitions"]:
-            if len(resourceDefinition) == 0:
+            if isinstance(resourceDefinition, list) and len(resourceDefinition) == 0:
                 # Any record with an empty resourceDefinition means
                 # unrestricted access.
                 # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions
@@ -157,7 +167,7 @@ async def query_host_inventory(
     org_id: t.Annotated[str, Depends(decode_header)],
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    host_groups: t.Annotated[list[dict], Depends(get_allowed_host_groups)],
+    host_groups: t.Annotated[set[UUID], Depends(get_allowed_host_groups)],
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):
@@ -171,6 +181,7 @@ async def query_host_inventory(
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
+    id_string = ""
     if host_groups:
         # the hosts database keeps groups data in a JSONB field, with contents
         # like this:
@@ -191,7 +202,7 @@ async def query_host_inventory(
         # eligible host group ids.
         string_ids = [f"'{u}'" for u in host_groups]
         id_string = ",".join(string_ids)
-        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN ({id_string}))"
+        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN (:id_string))"
 
     result = await session.stream(
         text(query),
@@ -199,6 +210,7 @@ async def query_host_inventory(
             "org_id": org_id,
             "major": str(major),
             "minor": str(minor),
+            "id_string": id_string
         },
     )
     yield result

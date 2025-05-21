@@ -97,7 +97,6 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
         if op not in ("in", "equal"):
             raise HTTPException(501, detail="Invalid value for attributeFilter.operation in RBAC response.")
         val = attributeFilter.get("value")
-        print(f"op: {op}, val: {val}, valtype: {type(val)} {isinstance(val, list)}")
         if op == "in":
             if not isinstance(val, list):
                 raise HTTPException(501, detail="Did not receive a list for attributeFilter.value in RBAC response.")
@@ -110,40 +109,32 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
         # Validate that all values in the filter are UUIDs.
         try:
             for gid in group_list:
-                # Checking for None is a special case.
+                # It is possible that the group id is None, which means
+                # permission to access a host who belongs to a group which
+                # has its "ungrouped" attribute set to True.
                 # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
                 # https://issues.redhat.com/browse/RHINENG-16842
-                # Notes update:
-                # I have a conversation from #team-insights-inventory that explains
-                # that we should treat a None as if it were the ID of a group called
-                # "ungrouped", and it is identified by the field 'ungrouped: true'
-                # in the group data.
-                if gid is None:
-                    raise NotImplementedError
                 if gid is not None:
                     UUID(gid)
         except (ValueError, TypeError):
             logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
             raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
-
-        if not group_list:
-            # This would happen if the value is [None], is that supposed to mean unrestricted access?
-            # I have a question pending on #team-insights-inventory (I HAVE ANSWERS - FIX THIS)
-            raise HTTPException(501, detail="Received no valid contents of attributeFilter.value in RBAC response.")
-        print(f"group list {group_list}")
         return group_list
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
 
 async def get_allowed_host_groups(
     permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
-) -> set[UUID]:
+) -> set[str | None]:
     """Check the given permissions for inventory access.
 
     Raise HTTPException if no permissions allow access.
 
     Return set of groups hosts may belong to, if restricted, otherwise returns
     an empty set, meaning unrestricted access to the org's hosts.
+
+    It is possible the set of groups may contain a None. This refers to a group
+    whose 'ungrouped' attribute is True.
 
     """
     allowed_group_ids = set()  # If populated, limits the allowed resources to specific group IDs
@@ -157,7 +148,7 @@ async def get_allowed_host_groups(
     for perm in host_permissions:
         # Get the list of allowed Group IDs from the attribute filter.
         for resourceDefinition in perm["resourceDefinitions"]:
-            if isinstance(resourceDefinition, list) and len(resourceDefinition) == 0:
+            if not resourceDefinition:
                 # Any record with an empty resourceDefinition means
                 # unrestricted access.
                 # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions
@@ -166,7 +157,6 @@ async def get_allowed_host_groups(
             group_list = _get_group_list_from_resource_definition(resourceDefinition)
             allowed_group_ids.update(group_list)
 
-    print(f"allowed groups: {allowed_group_ids}")
     return allowed_group_ids
 
 
@@ -203,10 +193,22 @@ async def query_host_inventory(
         #     "updated": "2025-01-07T12:59:52.471612+00:00"
         #    }
         # ]
-        # This addition to the query will query into that field's list of group
-        # info. It searches for any record with an id that matches any of our
-        # eligible host group ids.
-        query = f"{query} AND EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN :string_ids)"
+
+        # There is a special case. If None is in host_groups, we must query
+        # for a group that has ungrouped == True.
+        ungrouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE (group_obj->>'ungrouped')::boolean = true)"
+        # This query searches for any group record with an id that matches any
+        # of our eligible host group ids.
+        grouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' IN :string_ids)"
+        if None in host_groups:
+            if len(host_groups) > 1:
+                query = f"{query} AND ({ungrouped_query} OR {grouped_query})"
+            else:
+                query = f"{query} AND {ungrouped_query}"
+        else:
+            query = f"{query} AND {grouped_query}"
+
+    if ":string_ids" in query:
         statement = text(query).bindparams(bindparam("string_ids", expanding=True))
     else:
         statement = text(query)

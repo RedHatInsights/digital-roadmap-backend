@@ -7,9 +7,9 @@ import pytest
 
 from fastapi import HTTPException
 
-from roadmap.common import check_inventory_access
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
+from roadmap.common import get_allowed_host_groups
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.common import sort_attrs
@@ -25,7 +25,7 @@ async def base_args():
         "org_id": "1234",
         "session": session,
         "settings": settings,
-        "permissions": [],
+        "host_groups": [],
     }
 
 
@@ -73,25 +73,6 @@ async def test_query_host_inventory_major_minor(base_args, major, minor):
 
     assert major_versions == {major}, "Major version mismatch"
     assert minor_versions == {minor}, "Minor version mismatch"
-
-
-async def test_query_host_inventory_resource_definitions(base_args):
-    with pytest.raises(HTTPException, match="not yet implemented"):
-        permissions = [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "value": ["3c4a757d-a38e-4c17-89ab-4694249f751b"],
-                            "operation": "in",
-                        }
-                    }
-                ],
-            }
-        ]
-        await anext(query_host_inventory(**base_args | {"permissions": permissions}))
 
 
 async def test_query_host_inventory_dev(base_args):
@@ -187,11 +168,12 @@ async def test_query_rbac_no_url():
     assert result == [{}]
 
 
-async def test_check_inventory_access():
+async def test_get_allowed_host_groups():
     perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
-    result = await check_inventory_access(perms)
+    result = await get_allowed_host_groups(perms)
 
-    assert result == perms
+    # Empty set means unrestricted access.
+    assert result == set()
 
 
 @pytest.mark.parametrize(
@@ -202,9 +184,9 @@ async def test_check_inventory_access():
         [{"resourceDefinitions": [], "permission": "nope"}],
     ),
 )
-async def test_check_inventory_no_access(permissions):
+async def test_get_allowed_host_groups_no_access(permissions):
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await check_inventory_access(permissions)
+        await get_allowed_host_groups(permissions)
 
 
 def test_sort_attrs(mocker):

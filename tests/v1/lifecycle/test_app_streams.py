@@ -220,12 +220,12 @@ def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api
 
 
 def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(api_prefix, client):
-    """Testing a case with group None means 'ungrouped'"""
-
+    """Testing a case with group None, which means 'ungrouped'"""
     async def query_rbac_override():
         return [
-            {"permission": "inventory:hosts:read",
-             "resourceDefinitions": [
+            {
+                "permission": "inventory:hosts:read",
+                "resourceDefinitions": [
                     {
                         "attributeFilter": {
                             "key": "group.id",
@@ -236,13 +236,21 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
                 ],
             },
         ]
-    
+
+    async def decode_header_override():
+        return "1234"
+
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[query_rbac] = query_rbac_override
-
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
-
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
+    data = result.json().get("data", "")
     assert result.status_code == 200
+    assert len(data) == 1
+    # In the test data there is an eligible system from another group (for
+    # which the request does not have permission) that shows NGINX 1.14,
+    # and another with nodejs 18.
+    assert data[0]["display_name"] == "NodeJS 18"
 
 
 def test_get_revelent_app_stream_related(api_prefix, client):
@@ -263,7 +271,7 @@ def test_get_revelent_app_stream_related(api_prefix, client):
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) > 0
+    assert len(data) > 1
 
 
 def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, client):
@@ -294,7 +302,8 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     assert result.status_code == 200
     assert len(data) == 1
     # In the test data there is an eligible system from another group (for
-    # which the requset does not have permission) that shows NGINX 1.14
+    # which the request does not have permission) that shows NGINX 1.14,
+    # and another with nodejs 18.
     assert data[0]["display_name"] == "NGINX 1.22"
 
 

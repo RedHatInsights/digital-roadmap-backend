@@ -55,6 +55,7 @@ RUN microdnf install -y --nodocs \
 RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
 COPY /src/roadmap/ /srv/roady/roadmap/
+COPY uvicorn_disable_logging.son /srv/roady/uvicorn_disable_logging.json
 COPY /scripts/replication.py /usr/local/bin/replication.py
 
 RUN curl \
@@ -66,4 +67,4 @@ RUN curl \
 USER roady
 WORKDIR /srv/roady
 
-CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--port", "8000", "--host", "0.0.0.0", "--log-config", "uvicorn_disable_logging.json"]

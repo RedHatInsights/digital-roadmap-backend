@@ -252,7 +252,43 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
     # and another with nodejs 18.
-    assert data[0]["display_name"] == "NodeJS 18"
+    assert data[0]["display_name"] == "Node.js 18"
+
+
+def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped_permission(api_prefix, client):
+    """Testing a case with group None, which means 'ungrouped', and another non-None group id"""
+
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:hosts:read",
+                "resourceDefinitions": [
+                    {
+                        "attributeFilter": {
+                            "key": "group.id",
+                            "operation": "in",
+                            "value": [None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"],
+                        }
+                    }
+                ],
+            },
+        ]
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
+    data = result.json().get("data", "")
+    assert result.status_code == 200
+    assert len(data) == 2
+    # In the test data there is an eligible system from another group (for
+    # which the request does not have permission) that shows NGINX 1.14.
+    display_names = {d["display_name"] for d in data}
+    assert "Node.js 18" in display_names
+    assert "NGINX 1.22" in display_names
 
 
 def test_get_revelent_app_stream_related(api_prefix, client, mocker):

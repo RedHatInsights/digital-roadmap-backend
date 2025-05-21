@@ -215,7 +215,12 @@ async def query_host_inventory(
 
     result = await session.stream(
         statement,
-        params={"org_id": org_id, "major": str(major), "minor": str(minor), "host_groups": list(host_groups)},
+        params={
+            "org_id": org_id,
+            "major": str(major),
+            "minor": str(minor),
+            "host_groups": list(host_groups),
+        },
     )
     yield result
 

@@ -78,7 +78,6 @@ class RelevantAppStream(BaseModel):
     count: int
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
-    impl: AppStreamImplementation
     systems: list[UUID]
     related: bool = False
 
@@ -193,15 +192,10 @@ class AppStreamKey(BaseModel):
     def __hash__(self):
         return hash(
             (
-                self.name,
                 self.app_stream_entity.display_name,
                 self.app_stream_entity.application_stream_name,
                 self.app_stream_entity.os_major,
                 self.app_stream_entity.os_minor,
-                self.app_stream_entity.start_date,
-                self.app_stream_entity.end_date,
-                self.app_stream_entity.impl,
-                self.app_stream_entity.rolling,
             )
         )
 
@@ -259,10 +253,10 @@ async def systems_by_app_stream(
         if not package_app_streams:
             missing["package_names"] += 1
 
-        app_streams = module_app_streams | package_app_streams
+        module_app_streams.update(package_app_streams)
 
         system_id = system["id"]
-        for app_stream in app_streams:
+        for app_stream in module_app_streams:
             systems_by_stream[app_stream].append(system_id)
 
     if missing:
@@ -369,7 +363,6 @@ async def get_relevant_app_streams(
                     end_date=app_stream.app_stream_entity.end_date,
                     os_major=app_stream.app_stream_entity.os_major,
                     os_minor=app_stream.app_stream_entity.os_minor,
-                    impl=app_stream.app_stream_entity.impl,
                     count=len(systems),
                     rolling=app_stream.app_stream_entity.rolling,
                     systems=systems,
@@ -395,7 +388,6 @@ async def get_relevant_app_streams(
                         end_date=app_stream.app_stream_entity.end_date,
                         os_major=app_stream.app_stream_entity.os_major,
                         os_minor=app_stream.app_stream_entity.os_minor,
-                        impl=app_stream.app_stream_entity.impl,
                         count=0,
                         rolling=app_stream.app_stream_entity.rolling,
                         systems=[],

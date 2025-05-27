@@ -164,7 +164,7 @@ async def query_host_inventory(
     org_id: t.Annotated[str, Depends(decode_header)],
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    host_groups: t.Annotated[set[UUID], Depends(get_allowed_host_groups)],
+    host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):

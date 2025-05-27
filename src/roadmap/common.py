@@ -208,13 +208,8 @@ async def query_host_inventory(
         else:
             query = f"{query} AND {grouped_query}"
 
-    if ":host_groups" in query:
-        statement = text(query).bindparams(bindparam("host_groups"))
-    else:
-        statement = text(query)
-
     result = await session.stream(
-        statement,
+        text(query),
         params={
             "org_id": org_id,
             "major": str(major),

@@ -190,7 +190,7 @@ async def query_host_inventory(
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
 
     # #>> '{{operating_system,major}}' fetches the attribute "major" from the
-    # "operating_system" suboject in the host's record. This subobject is kept
+    # "operating_system" subobject in the host's record. This subobject is kept
     # as JSON, and the #>> operator decodes and accesses into it.
     if major is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"

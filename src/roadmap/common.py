@@ -218,7 +218,7 @@ async def query_host_inventory(
         # ]
 
         # The following two lines of SQL efficiently search for a match on
-        # criteria, and return TRUE f a match is found, FALSE otherwise. Here
+        # criteria, and return TRUE if a match is found, FALSE otherwise. Here
         # is how the lines work:
         #
         # * "jsonb_array_elements" queries into the denormalized JSON present

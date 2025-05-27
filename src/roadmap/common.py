@@ -194,6 +194,20 @@ async def query_host_inventory(
         #    }
         # ]
 
+        # The following two lines of SQL efficiently search for a match on
+        # criteria, and return TRUE or FALSE if a match is found. Here is how
+        # the lines work:
+        #
+        # * "jsonb_array_elements" queries into the denormalized JSON present
+        #   in the "groups" field. In each line it is testing a condition on a 
+        #   certain field of that json data. The first line is searching for an
+        #   "ungrouped" field to have a value of "true", and the second line is 
+        #   searching for the value held in the "id" field to be present in a
+        #   given set of ids.
+        # * "SELECT 1" causes the query to stop at the first match it
+        #   finds. 
+        # * "EXISTS" returns a BOOLEAN instead of the result of the query.
+
         # There is a special case. If None is in host_groups, we must query
         # for a group that has ungrouped == True.
         ungrouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE (group_obj->>'ungrouped')::boolean = true)"

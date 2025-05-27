@@ -177,7 +177,7 @@ async def query_host_inventory(
 
     Note there is a special case in the result "get_allowed_host_groups"
     returns, in that the return value may contain (with or without other group
-    data) a None value. If None is present in "host_groups", one of the
+    ids) a None value. If None is present in "host_groups", one of the
     permitted  groups is the "ungrouped" group. While other groups are
     identified by the value of their "id" field, the "ungrouped" group is
     identified by the fact that the value of its "ungrouped" field is `true`.
@@ -186,7 +186,9 @@ async def query_host_inventory(
     if settings.dev:
         org_id = "1234"
 
+    # Build up a query for this org's hosts.
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
+
     if major is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"
 

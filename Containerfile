@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9-minimal:latest AS builder
+FROM registry.access.redhat.com/ubi10-minimal:latest AS builder
 
 LABEL com.redhat.component=rhel-roadmap-api
 LABEL description="Red Hat Enterprise Linux Roadmap API"
@@ -22,7 +22,7 @@ RUN microdnf install -y --nodocs \
     gcc \
     libpq-devel \
     "python${PYTHON_VERSION}" \
-    "python${PYTHON_VERSION}-devel" \
+    python3-devel \
     && rm -rf /var/cache/yum/*
 
 COPY "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
@@ -36,7 +36,7 @@ RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && /opt/venvs/replication/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-replication.txt
 
 
-FROM registry.access.redhat.com/ubi9-minimal:latest AS final
+FROM registry.access.redhat.com/ubi10-minimal:latest AS final
 
 ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"

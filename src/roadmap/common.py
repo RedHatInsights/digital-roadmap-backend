@@ -199,7 +199,7 @@ async def query_host_inventory(
         # the lines work:
         #
         # * "jsonb_array_elements" queries into the denormalized JSON present
-        #   in the "groups" field. In each line it is testing a condition on a 
+        #   in the "groups" field. In each line the code tests a condition on a 
         #   certain field of that json data. The first line is searching for an
         #   "ungrouped" field to have a value of "true", and the second line is 
         #   searching for the value held in the "id" field to be present in a

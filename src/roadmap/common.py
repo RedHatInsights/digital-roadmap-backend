@@ -14,8 +14,8 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import bindparam
 from sqlalchemy.sql import text
+from sqlalchemy.sql import textwrap
 
 from roadmap.config import Settings
 from roadmap.database import get_db
@@ -168,6 +168,21 @@ async def query_host_inventory(
     major: MajorVersion = None,
     minor: MinorVersion = None,
 ):
+    """
+    Query the Hosts database for system information on this org's hosts.
+
+    Only return data the authenticated user is permitted to read. Specifically,
+    if "host_groups" is not empty (which implies unrestricted access), only
+    return hosts that belong to a group present in "host_groups"
+
+    Note there is a special case in the result "get_allowed_host_groups"
+    returns, in that the return value may contain (with or without other group
+    data) a None value. If None is present in "host_groups", one of the
+    permitted  groups is the "ungrouped" group. While other groups are
+    identified by the value of their "id" field, the "ungrouped" group is
+    identified by the fact that the value of its "ungrouped" field is `true`.
+
+    """
     if settings.dev:
         org_id = "1234"
 
@@ -199,21 +214,29 @@ async def query_host_inventory(
         # the lines work:
         #
         # * "jsonb_array_elements" queries into the denormalized JSON present
-        #   in the "groups" field. In each line the code tests a condition on a 
+        #   in the "groups" field. In each line the code tests a condition on a
         #   certain field of that json data. The first line is searching for an
-        #   "ungrouped" field to have a value of "true", and the second line is 
+        #   "ungrouped" field to have a value of "true", and the second line is
         #   searching for the value held in the "id" field to be present in a
         #   given set of ids.
         # * "SELECT 1" causes the query to stop at the first match it
-        #   finds. 
+        #   finds.
         # * "EXISTS" returns a BOOLEAN instead of the result of the query.
 
         # There is a special case. If None is in host_groups, we must query
         # for a group that has ungrouped == True.
-        ungrouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE (group_obj->>'ungrouped')::boolean = true)"
+        ungrouped_query = """
+            EXISTS (
+                SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj
+                    WHERE (group_obj->>'ungrouped')::boolean = true)
+        """
         # This query searches for any group record with an id that matches any
         # of our eligible host group ids.
-        grouped_query = "EXISTS (SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj WHERE group_obj->>'id' = ANY(:host_groups))"
+        grouped_query = """
+            EXISTS (
+                SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj
+                    WHERE group_obj->>'id' = ANY(:host_groups))
+        """
         if None in host_groups:
             if len(host_groups) > 1:
                 query = f"{query} AND ({ungrouped_query} OR {grouped_query})"
@@ -223,7 +246,7 @@ async def query_host_inventory(
             query = f"{query} AND {grouped_query}"
 
     result = await session.stream(
-        text(query),
+        text(textwrap.dedent(query)),
         params={
             "org_id": org_id,
             "major": str(major),

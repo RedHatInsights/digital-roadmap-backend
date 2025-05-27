@@ -251,7 +251,7 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
     assert len(data) == 1
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
-    # and another with nodejs 18.
+    # and another with NGINX 1.22.
     assert data[0]["display_name"] == "Node.js 18"
 
 

@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import textwrap
 import typing as t
 import urllib.parse
 import urllib.request
@@ -15,7 +16,6 @@ from fastapi import HTTPException
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
-from sqlalchemy.sql import textwrap
 
 from roadmap.config import Settings
 from roadmap.database import get_db
@@ -189,12 +189,18 @@ async def query_host_inventory(
     # Build up a query for this org's hosts.
     query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
 
+    # #>> '{{operating_system,major}}' fetches the attribute "major" from the
+    # "operating_system" suboject in the host's record. This subobject is kept
+    # as JSON, and the #>> operator decodes and accesses into it.
     if major is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"
 
     if minor is not None:
         query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
 
+    # If host group data is given, we need to filter out hosts that this user
+    # is not permitted to see. To do this we add more WHERE clauses to our
+    # query.
     if host_groups:
         # the hosts database keeps groups data in a JSONB field, with contents
         # like this:
@@ -212,8 +218,8 @@ async def query_host_inventory(
         # ]
 
         # The following two lines of SQL efficiently search for a match on
-        # criteria, and return TRUE or FALSE if a match is found. Here is how
-        # the lines work:
+        # criteria, and return TRUE f a match is found, FALSE otherwise. Here
+        # is how the lines work:
         #
         # * "jsonb_array_elements" queries into the denormalized JSON present
         #   in the "groups" field. In each line the code tests a condition on a

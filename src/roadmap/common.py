@@ -245,8 +245,14 @@ async def query_host_inventory(
                 SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj
                     WHERE group_obj->>'id' = ANY(:host_groups))
         """
+
+        # Here we add our "group" subqueries to the WHERE clause of our final
+        # query. If the query contains both a None and string-based group id
+        # then the clauses that detect them must be comibined with on OR
+        # statement.
         if None in host_groups:
             if len(host_groups) > 1:
+                # Accept either a group id match or ungrouped = true.
                 query = f"{query} AND ({ungrouped_query} OR {grouped_query})"
             else:
                 query = f"{query} AND {ungrouped_query}"

@@ -221,7 +221,7 @@ def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api
     assert result.status_code == 200
 
 
-def test_get_revelent_app_stream_related(api_prefix, client):
+def test_get_revelent_app_stream_related(api_prefix, client, mocker):
     async def query_rbac_override():
         return [
             {
@@ -233,11 +233,27 @@ def test_get_revelent_app_stream_related(api_prefix, client):
     async def decode_header_override():
         return "1234"
 
+    # Set a specific date for today in order to test that app streams that are
+    # already retired are not returned in the results.
+    #
+    # This test is specifically using the end_date of a FreeRADIUS 3.0
+    # app stream that is 2029-05-31.
+    #
+    # The test data has a host with FreeRADIUS 2.8.
+    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date", wraps=date)
+    mock_date.today.return_value = date(2030, 6, 1)
+
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[query_rbac] = query_rbac_override
     client.app.dependency_overrides[decode_header] = decode_header_override
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
+
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": True})
     data = result.json().get("data", "")
+    related_count = sum(1 for item in data if item["related"])
+    free_radius_streams = [n for n in data if "freeradius" in n["display_name"].casefold()]
+
+    assert len(free_radius_streams) <= 2, "Got too many related app streams for FreeRADIUS"
+    assert related_count, "No related items were returned"
     assert result.status_code == 200
     assert len(data) > 0
 

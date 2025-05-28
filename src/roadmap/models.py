@@ -113,9 +113,7 @@ class TaggedParagraph(BaseModel):
     tag: str = Field(description="The paragraph htmltag")
 
 
-def _calculate_support_status(
-    start_date: date | str | None, end_date: date | str | None, current_date: date
-) -> SupportStatus:
+def _calculate_support_status(start_date: date | None, end_date: date | None, current_date: date) -> SupportStatus:
     support_status = SupportStatus.unknown
 
     if start_date not in (None, SupportStatus.unknown):

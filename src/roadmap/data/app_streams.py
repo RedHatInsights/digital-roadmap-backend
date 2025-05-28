@@ -70,7 +70,7 @@ class AppStreamEntity(BaseModel):
         """If no start_date is supplied, get it from the OS lifecycle date"""
         if self.start_date is None:
             try:
-                self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start_date
+                self.start_date = OS_LIFECYCLE_DATES[self.initial_product_version].start_date  # pyright: ignore [reportArgumentType]
             except KeyError:
                 return self
 
@@ -132,7 +132,9 @@ class AppStreamEntity(BaseModel):
         """Validator for setting status."""
         today = date.today()
         self.support_status = _calculate_support_status(
-            start_date=self.start_date, end_date=self.end_date, current_date=today
+            start_date=self.start_date,  # pyright: ignore [reportArgumentType]
+            end_date=self.end_date,  # pyright: ignore [reportArgumentType]
+            current_date=today,  # pyright: ignore [reportArgumentType]
         )
 
         return self

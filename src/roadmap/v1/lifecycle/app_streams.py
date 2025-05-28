@@ -87,7 +87,9 @@ class RelevantAppStream(BaseModel):
         """Validator for setting status."""
         today = date.today()
         self.support_status = _calculate_support_status(
-            start_date=self.start_date, end_date=self.end_date, current_date=today
+            start_date=self.start_date,  # pyright: ignore [reportArgumentType]
+            end_date=self.end_date,  # pyright: ignore [reportArgumentType]
+            current_date=today,  # pyright: ignore [reportArgumentType]
         )
 
         return self
@@ -217,10 +219,10 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
             add = False
             if app.display_name == app_stream_key.app_stream_entity.display_name:
                 if app.start_date and app_stream_key.app_stream_entity.start_date:
-                    if app.start_date > app_stream_key.app_stream_entity.start_date:
+                    if app.start_date > app_stream_key.app_stream_entity.start_date:  # pyright: ignore [reportArgumentType, reportOperatorIssue]
                         add = True
                 elif streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
-                    if app.end_date is None or app.end_date > date.today():
+                    if app.end_date is None or app.end_date > date.today():  # pyright: ignore [reportArgumentType, reportOperatorIssue]
                         add = True
             if add:
                 relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))

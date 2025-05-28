@@ -25,7 +25,7 @@ class LifecycleType(StrEnum):
 
 class SupportStatus(StrEnum):
     supported = "Supported"
-    six_months = "Support ends within 6 months"
+    near_retirement = "Support ends within 3 months"
     retired = "Retired"
     not_installed = "Not installed"
     upcoming = "Upcoming release"

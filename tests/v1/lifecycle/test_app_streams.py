@@ -331,7 +331,7 @@ def test_app_stream_package_single_digit():
             date(2027, 6, 15),
             date(2020, 1, 1),
             date(2027, 12, 1),
-            SupportStatus.six_months,
+            SupportStatus.near_retirement,
         ),
         # Stream retired
         (

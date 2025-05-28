@@ -11,8 +11,8 @@ from roadmap.models import System
 @pytest.mark.parametrize(
     ("current_date", "system_start", "system_end", "status"),
     (
+        # OK situation, stream supported
         (
-            # OK situation, stream supported
             date(2025, 3, 27),
             date(2020, 1, 1),
             date(2027, 12, 31),
@@ -23,7 +23,14 @@ from roadmap.models import System
             date(2027, 6, 15),
             date(2020, 1, 1),
             date(2027, 12, 1),
-            SupportStatus.six_months,
+            SupportStatus.supported,
+        ),
+        # Support ends within 3 months (90 days)
+        (
+            date(2027, 6, 15),
+            date(2020, 1, 1),
+            date(2027, 9, 1),
+            SupportStatus.near_retirement,
         ),
         # Stream retired
         (

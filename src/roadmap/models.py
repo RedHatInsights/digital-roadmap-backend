@@ -113,7 +113,12 @@ class TaggedParagraph(BaseModel):
     tag: str = Field(description="The paragraph htmltag")
 
 
-def _calculate_support_status(start_date: date | None, end_date: date | None, current_date: date) -> SupportStatus:
+def _calculate_support_status(
+    start_date: date | None,
+    end_date: date | None,
+    current_date: date,
+    months: int = 3,
+) -> SupportStatus:
     support_status = SupportStatus.unknown
 
     if start_date not in (None, SupportStatus.unknown):
@@ -124,9 +129,9 @@ def _calculate_support_status(start_date: date | None, end_date: date | None, cu
         if end_date < current_date:
             return SupportStatus.retired
 
-        six_months_date = end_date - timedelta(days=180)
-        if six_months_date <= current_date:
-            return SupportStatus.six_months
+        expiration_date = end_date - timedelta(days=30 * months)
+        if expiration_date <= current_date:
+            return SupportStatus.near_retirement
 
         return SupportStatus.supported
 

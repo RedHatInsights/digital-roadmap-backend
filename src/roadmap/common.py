@@ -250,14 +250,12 @@ async def query_host_inventory(
         # query. If the query contains both a None and string-based group id
         # then the clauses that detect them must be comibined with on OR
         # statement.
+        query = f"{query} AND {grouped_query}"
         if None in host_groups:
+            query = f"{query} AND {ungrouped_query}"
             if len(host_groups) > 1:
                 # Accept either a group id match or ungrouped = true.
-                query = f"{query} AND ({ungrouped_query} OR {grouped_query})"
-            else:
-                query = f"{query} AND {ungrouped_query}"
-        else:
-            query = f"{query} AND {grouped_query}"
+                query = f"{query} OR {grouped_query})"
 
     result = await session.stream(
         text(textwrap.dedent(query)),

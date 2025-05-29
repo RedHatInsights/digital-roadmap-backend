@@ -330,9 +330,10 @@ def test_get_revelent_app_stream_related(api_prefix, client, mocker):
     assert len(data) > 1
 
 
-def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, client):
-    async def query_rbac_override():
-        return [
+@pytest.mark.parametrize(
+    "rbac",
+    (
+        [
             {
                 "permission": "inventory:hosts:read",
                 "resourceDefinitions": [
@@ -345,27 +346,8 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
                     }
                 ],
             },
-        ]
-
-    async def decode_header_override():
-        return "1234"
-
-    client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
-    client.app.dependency_overrides[decode_header] = decode_header_override
-    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
-    data = result.json().get("data", "")
-    assert result.status_code == 200
-    assert len(data) == 1
-    # In the test data there is an eligible system from another group (for
-    # which the request does not have permission) that shows NGINX 1.14,
-    # and another with nodejs 18.
-    assert data[0]["display_name"] == "NGINX 1.22"
-
-
-def test_get_revelent_app_stream_related_with_group_permissions_using_equal(api_prefix, client):
-    async def query_rbac_override():
-        return [
+        ],
+        [
             {
                 "permission": "inventory:hosts:read",
                 "resourceDefinitions": [
@@ -378,7 +360,12 @@ def test_get_revelent_app_stream_related_with_group_permissions_using_equal(api_
                     }
                 ],
             },
-        ]
+        ],
+    ),
+)
+def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, client, rbac):
+    async def query_rbac_override():
+        return rbac
 
     async def decode_header_override():
         return "1234"

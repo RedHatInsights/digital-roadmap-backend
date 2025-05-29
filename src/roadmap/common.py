@@ -107,18 +107,18 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
 
         group_list = val
         # Validate that all values in the filter are UUIDs.
-        try:
-            for gid in group_list:
-                # It is possible that the group id is None, which means
-                # permission to access a host who belongs to a group which
-                # has its "ungrouped" attribute set to True.
-                # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
-                # https://issues.redhat.com/browse/RHINENG-16842
-                if gid is not None:
+        for gid in group_list:
+            # It is possible that the group id is None, which means
+            # permission to access a host who belongs to a group which
+            # has its "ungrouped" attribute set to True.
+            # TODO: Check if this None check can be removed once the Kessel Phase 0 migration is complete.
+            # https://issues.redhat.com/browse/RHINENG-16842
+            if gid is not None:
+                try:
                     UUID(gid)
-        except (ValueError, TypeError):
-            logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
-            raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
+                except (ValueError, TypeError):
+                    logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
+                    raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
         return group_list
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 

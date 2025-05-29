@@ -6,3 +6,4 @@ psycopg[c]
 pydantic-settings
 sentry-sdk
 sqlalchemy
+inventory-grpc-clients-python-kessel-project

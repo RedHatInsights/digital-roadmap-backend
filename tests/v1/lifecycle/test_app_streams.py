@@ -286,13 +286,13 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
-    assert result.status_code == 200
-    assert len(data) == 2
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14.
     display_names = {d["display_name"] for d in data}
     assert "Node.js 18" in display_names
     assert "NGINX 1.22" in display_names
+    assert result.status_code == 200
+    assert len(data) == 2
 
 
 def test_get_revelent_app_stream_related(api_prefix, client, mocker):

@@ -224,7 +224,7 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
     """
     Given a group with value None, which means "ungrouped", assert that only
     the host which belongs to the "ungrouped" group is returned.
-    
+
     """
 
     async def query_rbac_override():

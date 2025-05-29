@@ -118,7 +118,9 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
                     UUID(gid)
                 except (ValueError, TypeError):
                     logger.warning(f"RBAC attributeFilter contained erroneous UUID: '{gid}'")
-                    raise HTTPException(501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response.")
+                    raise HTTPException(
+                        501, detail="Received invalid UUIDs for attributeFilter.value in RBAC response."
+                    )
         return group_list
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
@@ -250,12 +252,14 @@ async def query_host_inventory(
         # query. If the query contains both a None and string-based group id
         # then the clauses that detect them must be comibined with on OR
         # statement.
-        query = f"{query} AND {grouped_query}"
+        suffix = f" AND {grouped_query}"
         if None in host_groups:
-            query = f"{query} AND {ungrouped_query}"
+            suffix = f" AND {ungrouped_query}"
             if len(host_groups) > 1:
                 # Accept either a group id match or ungrouped = true.
-                query = f"{query} OR {grouped_query})"
+                suffix = f" AND ({ungrouped_query} OR {grouped_query})"
+
+        query += suffix
 
     result = await session.stream(
         text(textwrap.dedent(query)),

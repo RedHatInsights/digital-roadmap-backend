@@ -148,14 +148,14 @@ async def get_allowed_host_groups(
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
     for perm in host_permissions:
+        if not (resourceDefinition := perm["resourceDefinitions"]):
+            # Any record with an empty resourceDefinition means
+            # unrestricted access.
+            # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions
+            return set()
+
         # Get the list of allowed Group IDs from the attribute filter.
         for resourceDefinition in perm["resourceDefinitions"]:
-            if not resourceDefinition:
-                # Any record with an empty resourceDefinition means
-                # unrestricted access.
-                # https://insights-rbac.readthedocs.io/en/latest/management.html#resource-definitions
-                return set()
-
             group_list = _get_group_list_from_resource_definition(resourceDefinition)
             allowed_group_ids.update(group_list)
 

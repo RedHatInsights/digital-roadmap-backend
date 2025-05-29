@@ -55,6 +55,7 @@ app = FastAPI(
     title="Insights for RHEL Planning",
     summary="Major RHEL roadmap items as well as lifecycle data for RHEL and app streams.",
     redirect_slashes=False,
+    lifespan=lifespan,
 )
 app.openapi = extend_openapi(app)
 

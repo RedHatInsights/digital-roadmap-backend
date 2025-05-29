@@ -7,6 +7,7 @@ import pytest
 
 from fastapi import HTTPException
 
+from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_allowed_host_groups
@@ -166,6 +167,53 @@ async def test_query_rbac_no_url():
     result = await query_rbac(settings)
 
     assert result == [{}]
+
+
+@pytest.mark.parametrize(
+    ("resource_definition", "expected"),
+    (
+        (
+            {
+                "attributeFilter": {
+                    "key": "group.id",
+                    "operation": "in",
+                    "value": ["80d9581f-e6d9-4b78-aa2c-d0bfdf35fc51", None],
+                }
+            },
+            ["80d9581f-e6d9-4b78-aa2c-d0bfdf35fc51", None],
+        ),
+        (
+            {
+                "attributeFilter": {
+                    "key": "group.id",
+                    "operation": "equal",
+                    "value": "80d9581f-e6d9-4b78-aa2c-d0bfdf35fc51",
+                }
+            },
+            ["80d9581f-e6d9-4b78-aa2c-d0bfdf35fc51"],
+        ),
+    ),
+)
+def test_get_group_list_from_resource_definition(resource_definition, expected):
+    result = _get_group_list_from_resource_definition(resource_definition)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "resource_definition",
+    (
+        {},
+        {"attributeFilter": {"key": "nope"}},
+        {"attributeFilter": {"key": "group.id", "operation": "nope"}},
+        {"attributeFilter": {"key": "group.id", "operation": "in", "value": "should be a list"}},
+        {"attributeFilter": {"key": "group.id", "operation": "equal", "value": ["should be a string"]}},
+        {"attributeFilter": {"key": "group.id", "operation": "equal", "value": "bad UUID"}},
+    ),
+)
+def test_get_group_list_from_resource_definition_error(resource_definition):
+    with pytest.raises(HTTPException):
+        _get_group_list_from_resource_definition(resource_definition)
 
 
 async def test_get_allowed_host_groups():

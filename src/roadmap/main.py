@@ -1,6 +1,8 @@
 import logging
 import os
 
+from contextlib import asynccontextmanager
+
 import sentry_sdk
 
 from fastapi import APIRouter
@@ -12,6 +14,8 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 import roadmap.v1
 
 from roadmap.common import HealthCheckFilter
+from roadmap.config import Settings
+from roadmap.kessel import KesselClient
 
 
 if os.getenv("SENTRY_DSN"):
@@ -31,6 +35,18 @@ if os.getenv("SENTRY_DSN"):
     )
 
 logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = Settings.create()
+    if settings.use_kessel:
+        app.state.kessel_client = KesselClient(settings.kessel_url)
+
+    yield
+
+    if settings.use_kessel:
+        await app.state.kessel_client.close()
 
 
 # Initialize FastAPI app

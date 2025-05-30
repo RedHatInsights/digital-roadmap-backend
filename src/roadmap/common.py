@@ -339,11 +339,13 @@ def _normalize_version(stream: str) -> t.Tuple[int, int, int]:
     """Returns a tuple of major, minor and micro for a given stream."""
     if stream.casefold() == "rhel8":
         return (8, 0, 0)
+
     versions = stream.split(".")
     versions.reverse()
     major = int(versions.pop())
     minor = int(versions.pop()) if versions else 0
     micro = int(versions.pop()) if versions else 0
+
     return (major, minor, micro)
 
 

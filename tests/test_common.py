@@ -246,3 +246,18 @@ def test_sort_attrs(mocker):
     result = sorter(obj)
 
     assert result == (-1, -2, "real")
+
+
+@pytest.mark.parametrize(
+    "stream, expected",
+    [
+        ("rhel8", (8, 0, 0)),
+        ("8", (8, 0, 0)),
+        ("10.7.3", (10, 7, 3)),
+        ("2", (2, 0, 0)),
+    ],
+)
+def test_normalize_version(stream, expected):
+    result = _normalize_version(stream)
+
+    assert result == expected

@@ -24,7 +24,7 @@ def freeze(python_version: str, requirement: Path) -> str:
     freeze_file = repo_root / "requirements" / f"{requirement.stem}-{python_version}.txt"
 
     # Create a fresh virtual environment
-    subprocess.check_output([python_bin, "-m", "venv", "--clear", "--system-site-packages", venv_path])
+    subprocess.check_output([python_bin, "-m", "venv", "--clear", venv_path])
     subprocess.check_output([venv_python, "-m", "pip", "install", "--upgrade", "pip"])
 
     # Install requirements with constraints

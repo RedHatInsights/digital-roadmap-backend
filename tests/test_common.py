@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from datetime import date
 from email.message import Message
 from io import BytesIO
@@ -8,11 +9,13 @@ import pytest
 from fastapi import HTTPException
 
 from roadmap.common import _get_group_list_from_resource_definition
+from roadmap.common import _normalize_version
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_allowed_host_groups
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
+from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.config import Settings
 from roadmap.database import get_db
@@ -261,3 +264,26 @@ def test_normalize_version(stream, expected):
     result = _normalize_version(stream)
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "profile, expected, context",
+    (
+        ({"operating_system": {"major": 9, "minor": 0}}, (9, 0), nullcontext()),
+        ({"operating_system": {"name": "RHEL"}, "os_release": "9.0"}, (9, 0), nullcontext()),
+        ({"operating_system": {"name": "RHEL"}, "os_release": "9.1.10"}, (9, 1), nullcontext()),
+        ({"os_release": "9.2"}, (9, 2), nullcontext()),
+        ({"operating_system": {}}, None, pytest.raises(ValueError)),
+    ),
+)
+def test_rhel_major_minor(profile, expected, context):
+    with context:
+        result = rhel_major_minor(profile)
+
+        # The assert statement is placed inside the context manager so that it
+        # does not execute in scenarios where exceptions are raised.
+        #
+        # It is almost always incorrect to do this, but is intentional in this case.
+        #
+        # https://docs.pytest.org/en/6.2.x/reference.html#pytest.raises
+        assert result == expected

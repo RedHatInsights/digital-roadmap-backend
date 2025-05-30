@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
+from roadmap.common import decode_header_username
 from roadmap.common import ensure_date
 from roadmap.common import get_allowed_host_groups_kessel
 from roadmap.common import get_allowed_host_groups_rbac
@@ -156,13 +157,28 @@ async def test_decode_header(value, expected):
     ("value", "expected"),
     (
         (None, ""),
-        (b"eyJpZGVudGl0eSI6IHsidXNlcm5hbWUiOiB7InVzZXIiOiAiZm9vYmFyIn19fQ==", "foobar"),
+        (b"eyJpZGVudGl0eSI6IHsidHlwZSI6ICJVc2VyIiwgInVzZXIiOiB7InVzZXJuYW1lIjogImZvb2JhciJ9fX0=", "foobar"),  # User
+        (
+            b"eyJpZGVudGl0eSI6eyJvcmdfaWQiOiIzMjEiLCJ0eXBlIjoiU2VydmljZUFjY291bnQiLCJzZXJ2aWNlX2FjY291bnQiOiB7InVzZXJuYW1lIjogInNhIn19fQ==",
+            "sa",
+        ),  # ServiceAccount
     ),
 )
-async def decode_header_username(value, expected):
-    result = await decode_header(value)
+async def test_decode_header_username(value, expected):
+    result = await decode_header_username(value)
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        b"eyJpZGVudGl0eSI6eyJvcmdfaWQiOiIzMjEiLCJ0eXBlIjoiU3lzdGVtIn19",  # System identity
+    ),
+)
+async def test_decode_header_username_unsupported_identity(value):
+    with pytest.raises(HTTPException, match="Unsupported identity type"):
+        await decode_header_username(value)
 
 
 async def test_query_rbac(mocker, read_fixture_file):

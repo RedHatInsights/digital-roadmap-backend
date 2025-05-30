@@ -71,10 +71,16 @@ async def decode_header_username(
     decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
     id_header = json.loads(decoded_id_header)
     identity = id_header.get("identity", {})
-    user = identity.get("user", "")
-    username = user.get("username", "")
 
-    return username
+    identity_type = identity.get("type", None)
+    if identity_type == "User":
+        user = identity.get("user", {})
+        return user.get("username", "")
+    elif identity_type == "ServiceAccount":
+        service_account = identity.get("service_account", {})
+        return service_account.get("username", "")
+
+    raise HTTPException(status_code=403, detail=f"Unsupported identity type: {identity_type}")
 
 
 async def query_rbac(

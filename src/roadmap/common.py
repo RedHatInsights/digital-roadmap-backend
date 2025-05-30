@@ -353,3 +353,20 @@ def streams_lt(a: str, b: str):
         return _normalize_version(a) < _normalize_version(b)
     except ValueError:
         return a < b
+
+
+def rhel_major_minor(system_profile: dict) -> tuple[int, int | None]:
+    # First, try operating_system
+    if (operating_system := system_profile.get("operating_system")) is not None:
+        major = operating_system.get("major")
+        minor = operating_system.get("minor")
+
+        if major is not None:
+            return (major, minor)
+
+    # If we don't have the data in operating_system, fall back to os_release
+    if (os_release := system_profile.get("os_release")) is not None:
+        major, minor = tuple(int(n) for n in os_release.split("."))[:2]
+        return (major, minor)
+
+    raise ValueError

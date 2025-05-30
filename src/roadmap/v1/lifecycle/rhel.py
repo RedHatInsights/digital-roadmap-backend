@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
@@ -139,19 +140,26 @@ async def get_relevant_systems(  # noqa: C901
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(list)
     async for result in systems.mappings():
-        system_profile = result.get("system_profile_facts")
-        if not system_profile:
+        # Make sure we have a system profile with enough data, otherwise continue
+        if not (system_profile := result.get("system_profile_facts")):
             missing["system_profile"] += 1
             continue
 
-        name = system_profile.get("operating_system", {}).get("name")
-        if name is None:
+        if (operating_system := system_profile.get("operating_system")) is None:
             missing["os_profile"] += 1
             continue
 
+        if (name := operating_system.get("name")) is None:
+            missing["name"] += 1
+            continue
+
+        try:
+            os_major, os_minor = rhel_major_minor(system_profile)
+        except ValueError:
+            missing["os_version"] += 1
+            continue
+
         installed_products = system_profile.get("installed_products", [{}])
-        os_major = system_profile.get("operating_system", {}).get("major")
-        os_minor = system_profile.get("operating_system", {}).get("minor")
         lifecycle_type = get_lifecycle_type(installed_products)
 
         # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response

@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio.result import AsyncResult
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
 from roadmap.data.app_streams import APP_STREAM_MODULES_BY_KEY
@@ -240,13 +241,18 @@ async def systems_by_app_stream(
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
     async for system in systems.mappings():
-        system_profile = system.get("system_profile_facts")
-        if not system_profile:
+        if not (system_profile := system.get("system_profile_facts")):
             missing["system_profile"] += 1
             continue
 
         if "RHEL" != system_profile.get("operating_system", {}).get("name"):
             missing["os"] += 1
+            continue
+
+        try:
+            os_major, _ = rhel_major_minor(system_profile)
+        except ValueError:
+            missing["os_version"] += 1
             continue
 
         os_major = system_profile.get("operating_system", {}).get("major")

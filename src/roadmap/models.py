@@ -25,7 +25,7 @@ class LifecycleType(StrEnum):
 
 class SupportStatus(StrEnum):
     supported = "Supported"
-    near_retirement = "Support ends within 3 months"
+    near_retirement = "Support ends within {number} months"
     retired = "Retired"
     not_installed = "Not installed"
     upcoming = "Upcoming release"
@@ -47,7 +47,7 @@ class Lifecycle(BaseModel):
     name: str
     start_date: date
     end_date: date
-    support_status: SupportStatus = SupportStatus.unknown
+    support_status: SupportStatus | str = SupportStatus.unknown
 
     @model_validator(mode="after")
     def update_support_status(self):
@@ -59,7 +59,9 @@ class Lifecycle(BaseModel):
         """
         today = date.today()
         self.support_status = _calculate_support_status(
-            start_date=self.start_date, end_date=self.end_date, current_date=today
+            start_date=self.start_date,
+            end_date=self.end_date,
+            current_date=today,
         )
 
         return self
@@ -118,7 +120,7 @@ def _calculate_support_status(
     end_date: date | None,
     current_date: date,
     months: int = 3,
-) -> SupportStatus:
+) -> SupportStatus | str:
     support_status = SupportStatus.unknown
 
     if start_date not in (None, SupportStatus.unknown):
@@ -131,7 +133,7 @@ def _calculate_support_status(
 
         expiration_date = end_date - timedelta(days=30 * months)
         if expiration_date <= current_date:
-            return SupportStatus.near_retirement
+            return SupportStatus.near_retirement.format(number=months)
 
         return SupportStatus.supported
 

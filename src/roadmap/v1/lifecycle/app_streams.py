@@ -78,7 +78,7 @@ class RelevantAppStream(BaseModel):
     end_date: Date | None = None
     count: int
     rolling: bool = False
-    support_status: SupportStatus = SupportStatus.unknown
+    support_status: SupportStatus | str = SupportStatus.unknown
     impl: AppStreamImplementation
     systems: list[UUID]
     related: bool = False
@@ -91,6 +91,7 @@ class RelevantAppStream(BaseModel):
             start_date=self.start_date,  # pyright: ignore [reportArgumentType]
             end_date=self.end_date,  # pyright: ignore [reportArgumentType]
             current_date=today,  # pyright: ignore [reportArgumentType]
+            months=6,
         )
 
         return self

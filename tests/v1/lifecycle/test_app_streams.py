@@ -459,7 +459,32 @@ def test_app_stream_package_single_digit():
 
 
 @pytest.mark.parametrize(
-    ("current_date", "app_stream_start", "app_stream_end", "expected_status"), SUPPORT_STATUS_TEST_CASES
+    (
+        "current_date",
+        "app_stream_start",
+        "app_stream_end",
+        "expected_status",
+    ),
+    SUPPORT_STATUS_TEST_CASES
+    + (
+        # Support ends within 3 months (90 days)
+        #
+        # Since a module is considered near retirement within six months, this
+        # is also considered near retirement (3 < 6).
+        (
+            date(2027, 6, 15),
+            date(2020, 1, 1),
+            date(2027, 9, 1),
+            SupportStatus.near_retirement.format(number=6),
+        ),
+        # Support ends within 6 months (180 days)
+        (
+            date(2027, 6, 15),
+            date(2020, 1, 1),
+            date(2027, 12, 1),
+            SupportStatus.near_retirement.format(number=6),
+        ),
+    ),
 )
 def test_calculate_support_status_appstream(mocker, current_date, app_stream_start, app_stream_end, expected_status):
     # cannot mock the datetime.date.today directly as it's written in C

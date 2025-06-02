@@ -62,7 +62,7 @@ async def decode_header(
     return org_id
 
 
-async def decode_header_username(
+async def decode_header_user_id(
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> str:
     if x_rh_identity is None:
@@ -75,10 +75,10 @@ async def decode_header_username(
     identity_type = identity.get("type", None)
     if identity_type == "User":
         user = identity.get("user", {})
-        return user.get("username", "")
+        return user.get("user_id", "")
     elif identity_type == "ServiceAccount":
         service_account = identity.get("service_account", {})
-        return service_account.get("username", "")
+        return service_account.get("user_id", "")
 
     raise HTTPException(status_code=403, detail=f"Unsupported identity type: {identity_type}")
 
@@ -167,7 +167,7 @@ async def get_kessel_client(
 async def get_allowed_host_groups_kessel(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     kessel_client: t.Annotated[KesselClient, Depends(get_kessel_client)],
-    username: t.Annotated[str, Depends(decode_header_username)],
+    user_id: t.Annotated[str, Depends(decode_header_user_id)],
 ) -> set[str]:
     """Check the given permissions for inventory access using Kessel API
 
@@ -186,7 +186,7 @@ async def get_allowed_host_groups_kessel(
     workspace_iterator = kessel_client.get_resources(
         object_type=ObjectType.workspace(),
         relation="inventory_host_view",
-        subject=Resource.principal(username),
+        subject=Resource.principal(user_id),
     )
 
     workspaces = [w.resource_id async for w in workspace_iterator]

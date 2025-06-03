@@ -17,18 +17,14 @@ async def kessel_client():
     async def streamed_list_objects(request):
         continuation_token = request.pagination.continuation_token or None
         if continuation_token is None:
-            return [
-                SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="1")),
-                SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="2")),
-            ]
+            yield SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="1"))
+            yield SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="2"))
         elif continuation_token == "2":
-            return [
-                SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="3")),
-            ]
+            yield SimpleNamespace(object=SimpleNamespace(), pagination=SimpleNamespace(continuation_token="3"))
         elif continuation_token == "3":
-            return []
-
-        raise ValueError("Should not reach this point - Test is wrong")
+            pass
+        else:
+            raise ValueError("Should not reach this point - Test is wrong")
 
     kessel_client.stub.StreamedListObjects.side_effect = streamed_list_objects
 

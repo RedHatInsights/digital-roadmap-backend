@@ -135,6 +135,7 @@ class AppStreamEntity(BaseModel):
             start_date=self.start_date,  # pyright: ignore [reportArgumentType]
             end_date=self.end_date,  # pyright: ignore [reportArgumentType]
             current_date=today,  # pyright: ignore [reportArgumentType]
+            months=6,
         )
 
         return self

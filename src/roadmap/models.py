@@ -62,6 +62,7 @@ class Lifecycle(BaseModel):
             start_date=self.start_date,
             end_date=self.end_date,
             current_date=today,
+            months=3,
         )
 
         return self
@@ -119,7 +120,7 @@ def _calculate_support_status(
     start_date: date | None,
     end_date: date | None,
     current_date: date,
-    months: int = 3,
+    months: int,
 ) -> SupportStatus:
     support_status = SupportStatus.unknown
 

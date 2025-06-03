@@ -18,7 +18,7 @@ from tests.utils import SUPPORT_STATUS_TEST_CASES
             date(2027, 6, 15),
             date(2020, 1, 1),
             date(2027, 9, 1),
-            SupportStatus.near_retirement.format(number=3),
+            SupportStatus.near_retirement,
         ),
         # Support ends within 6 months (180 days)
         # The RHEL release should still be considered supported.

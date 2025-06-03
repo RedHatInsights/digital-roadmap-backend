@@ -475,14 +475,14 @@ def test_app_stream_package_single_digit():
             date(2027, 6, 15),
             date(2020, 1, 1),
             date(2027, 9, 1),
-            SupportStatus.near_retirement.format(number=6),
+            SupportStatus.near_retirement,
         ),
         # Support ends within 6 months (180 days)
         (
             date(2027, 6, 15),
             date(2020, 1, 1),
             date(2027, 12, 1),
-            SupportStatus.near_retirement.format(number=6),
+            SupportStatus.near_retirement,
         ),
     ),
 )

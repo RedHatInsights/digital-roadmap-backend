@@ -78,7 +78,7 @@ class RelevantAppStream(BaseModel):
     end_date: Date | None = None
     count: int
     rolling: bool = False
-    support_status: SupportStatus | str = SupportStatus.unknown
+    support_status: SupportStatus = SupportStatus.unknown
     impl: AppStreamImplementation
     systems: list[UUID]
     related: bool = False

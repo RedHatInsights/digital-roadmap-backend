@@ -54,7 +54,7 @@ class AppStreamEntity(BaseModel):
     end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
     impl: AppStreamImplementation
     initial_product_version: str | None = None
-    support_status: SupportStatus | str = SupportStatus.unknown
+    support_status: SupportStatus = SupportStatus.unknown
     os_major: int | None = None
     os_minor: int | None = None
     lifecycle: int | None = None

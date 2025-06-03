@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
-    kessel_hostname: str = ""
-    kessel_port: int = 9000
+    kessel_hostname: str = "127.0.0.1"
+    kessel_port: int = 9081
 
     @property
     def database_url(self) -> PostgresDsn:

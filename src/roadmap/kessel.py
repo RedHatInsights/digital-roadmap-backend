@@ -74,27 +74,27 @@ class KesselClient:
         await self.channel.close()
 
     async def get_resources(
-        self, object_type: ObjectType, relation: str, subject: Resource, limit: Optional[int] = None, fetch_all=True
+        self, object_type: ObjectType, relation: str, subject: Resource, limit: int = 20, fetch_all=True
     ):
-        response = await self._get_resources_internal(object_type, relation, subject, limit=limit)
+        response = self._get_resources_internal(object_type, relation, subject, limit=limit)
         while response is not None:
             continuation_token = None
-            for data in response:
+            async for data in response:
                 yield data.object
                 continuation_token = data.pagination.continuation_token
 
             response = None
             if fetch_all and continuation_token:
-                response = await self._get_resources_internal(
+                response = self._get_resources_internal(
                     object_type, relation, subject, limit=limit, continuation_token=continuation_token
                 )
 
-    async def _get_resources_internal(
+    def _get_resources_internal(
         self,
         object_type: ObjectType,
         relation: str,
         subject: Resource,
-        limit: Optional[int] = None,
+        limit: int,
         continuation_token: Optional[str] = None,
     ):
         request = streamed_list_objects_request_pb2.StreamedListObjectsRequest(
@@ -113,7 +113,7 @@ class KesselClient:
             pagination=request_pagination_pb2.RequestPagination(limit=limit, continuation_token=continuation_token),
         )
 
-        return await self.stub.StreamedListObjects(request)
+        return self.stub.StreamedListObjects(request)
 
     async def check(self, resource: Resource, relation: str, subject: Resource) -> Allowed:
         request = check_request_pb2.CheckRequest(

@@ -304,7 +304,7 @@ async def test_get_allowed_host_groups_kessel_no_access():
     kessel_client = mock_kessel_client([])  # Allowed workspaces are explicit, empty means no access
 
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await get_allowed_host_groups_kessel(settings, kessel_client, "foobar")
+        await get_allowed_host_groups_kessel(settings, kessel_client, "foobar-no-access")
 
 
 def test_sort_attrs(mocker):

@@ -186,7 +186,7 @@ async def get_allowed_host_groups_kessel(
     workspace_iterator = kessel_client.get_resources(
         object_type=ObjectType.workspace(),
         relation="inventory_host_view",
-        subject=Resource.principal(user_id),
+        subject=Resource.principal(f"redhat.com/{user_id}"),
     )
 
     workspaces = [w.resource_id async for w in workspace_iterator]

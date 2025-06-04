@@ -314,35 +314,75 @@ def app_streams_from_modules(
     return app_streams
 
 
-class StringPackage(BaseModel, frozen=True):
+class NEVRA(BaseModel, frozen=True):
     name: str
+    epoch: str
     major: str
+    minor: str
+    z: str | None = None
+    release: str
+    arch: str
 
     @classmethod
-    def from_string(cls, s):
-        name, separator, major = s.partition(":")
-        if not separator:
-            # Missing ':' in the expected package name. Partition on '-' instead.
+    def from_string(cls, package: str) -> "NEVRA":
+        # name-[epoch:]version-release.architecture
+        #
+        # ansible-core-1:2.14.17-1.el9.x86_64
+        # NetworkManager-1:1.46.0-26.el9_4.x86_64
+        # basesystem-0:11-13.el9.noarch
+        # abattis-cantarell-fonts-0:0.301-4.el9.noarch
+        #
+        # Partition into name and version/release/architecture
+        name, sep, vra = package.partition(":")
+        if sep:
+            name, epoch = name.rsplit("-", 1)
+        else:
+            # Missing epoch component, ':' Partition on '-' instead.
             #   Example: cairo-1.15.12-3.el8.x86_64
-            name, separator, major = s.partition("-")
+            epoch = "0"
+            name, _, vra = package.partition("-")
 
-        name = name.rsplit("-", 1)[0]
-        major = major.split(".")[0]
-        return cls(name=name, major=major)
+        arch_idx = vra.rindex(".")
+        arch = vra[arch_idx + 1 :]
+
+        rel_idx = vra.index("-", 0, arch_idx)
+        release = vra[rel_idx + 1 : arch_idx]
+
+        version = vra[:rel_idx]
+        major, _, minor_z = version.partition(".")
+        if not minor_z:
+            minor = ""
+            z = ""
+        else:
+            minor, _, z = minor_z.partition(".")
+
+        return cls(
+            name=name,
+            major=major,
+            minor=minor,
+            z=z,
+            epoch=epoch,
+            release=release,
+            arch=arch,
+        )
 
 
 def app_streams_from_packages(
     package_names_string: list[str],
     os_major: str,
 ) -> set[AppStreamKey]:
-    packages = set(StringPackage.from_string(s) for s in package_names_string)
+    # ansible-core-1:2.14.17-1.el9.x86_64
+    packages = set(NEVRA.from_string(package) for package in package_names_string)
     app_streams = set()
     for package in packages:
         if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
-            if app_stream_package.os_major == os_major and app_stream_package.stream.split(".")[0] == package.major:
-                app_streams.add(
-                    AppStreamKey(app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name)
-                )
+            if app_stream_package.os_major == os_major:
+                if app_stream_package.stream.split(".")[:2] == [package.major, package.major]:
+                    app_streams.add(
+                        AppStreamKey(
+                            app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
+                        )
+                    )
     return app_streams
 
 

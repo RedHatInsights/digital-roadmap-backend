@@ -325,29 +325,38 @@ class NEVRA(BaseModel, frozen=True):
 
     @classmethod
     def from_string(cls, package: str) -> "NEVRA":
-        # name-[epoch:]version-release.architecture
-        #
-        # ansible-core-1:2.14.17-1.el9.x86_64
-        # NetworkManager-1:1.46.0-26.el9_4.x86_64
-        # basesystem-0:11-13.el9.noarch
-        # abattis-cantarell-fonts-0:0.301-4.el9.noarch
-        #
+        """Parse a package string and return an instance of this class.
+
+        The expected string format is name-[epoch:]version-release.architecture.
+
+        Examples:
+
+            cairo-1.15.12-3.el8.x86_64
+            ansible-core-1:2.14.17-1.el9.x86_64
+            NetworkManager-1:1.46.0-26.el9_4.x86_64
+            basesystem-0:11-13.el9.noarch
+            abattis-cantarell-fonts-0:0.301-4.el9.noarch
+
+        """
+
         # Partition into name and version/release/architecture
         name, sep, vra = package.partition(":")
         if sep:
             name, epoch = name.rsplit("-", 1)
         else:
-            # Missing epoch component, ':' Partition on '-' instead.
-            #   Example: cairo-1.15.12-3.el8.x86_64
+            # Missing epoch component. Partition on '-' instead.
+            # Example: cairo-1.15.12-3.el8.x86_64
             epoch = "0"
             name, _, vra = package.partition("-")
 
+        # Extract architecture and release
         arch_idx = vra.rindex(".")
         arch = vra[arch_idx + 1 :]
 
         rel_idx = vra.index("-", 0, arch_idx)
         release = vra[rel_idx + 1 : arch_idx]
 
+        # Get the version then split in into X.Y.Z parts
         version = vra[:rel_idx]
         major, _, minor_z = version.partition(".")
         if not minor_z:

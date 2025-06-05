@@ -512,15 +512,26 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
 @pytest.mark.parametrize(
     ("package", "expected"),
     (
-        ("cairo-1.15.12-3.el8.x86_64", ("cairo", "1", "15")),
-        ("rpm-build-libs-0:4.16.1.3-29.el9.x86_64", ("rpm-build-libs", "4", "16")),
-        ("ansible-core-1:2.14.17-1.el9.x86_64", ("ansible-core", "2", "14")),
-        ("NetworkManager-1:1.46.0-26.el9_4.x86_64", ("NetworkManager", "1", "46")),
-        ("basesystem-0:11-13.el9.noarch", ("basesystem", "11", "")),
-        ("abattis-cantarell-fonts-0:0.301-4.el9.noarch", ("abattis-cantarell-fonts", "0", "301")),
+        ("cairo-1.15.12-3.el8.x86_64", ("cairo", "0", "1", "15", "12", "3.el8", "x86_64")),
+        ("rpm-build-libs-0:4.16.1.3-29.el9.x86_64", ("rpm-build-libs", "0", "4", "16", "1.3", "29.el9", "x86_64")),
+        ("ansible-core-1:2.14.17-1.el9.x86_64", ("ansible-core", "1", "2", "14", "17", "1.el9", "x86_64")),
+        ("NetworkManager-1:1.46.0-26.el9_4.x86_64", ("NetworkManager", "1", "1", "46", "0", "26.el9_4", "x86_64")),
+        ("basesystem-0:11-13.el9.noarch", ("basesystem", "0", "11", "", "", "13.el9", "noarch")),
+        (
+            "abattis-cantarell-fonts-0:0.301-4.el9.noarch",
+            ("abattis-cantarell-fonts", "0", "0", "301", "", "4.el9", "noarch"),
+        ),
     ),
 )
 def test_from_string(package, expected):
     package = NEVRA.from_string(package)
 
-    assert (package.name, package.major, package.minor) == expected
+    assert (
+        package.name,
+        package.epoch,
+        package.major,
+        package.minor,
+        package.z,
+        package.release,
+        package.arch,
+    ) == expected

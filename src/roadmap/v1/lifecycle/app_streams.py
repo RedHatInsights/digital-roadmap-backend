@@ -27,6 +27,7 @@ from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
+from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
@@ -60,7 +61,11 @@ async def filter_params(
     kind: AppStreamImplementation | None = None,
     application_stream_name: t.Annotated[str | None, Query(description="App Stream name")] = None,
 ):
-    return {"name": name, "kind": kind, "application_stream_name": application_stream_name}
+    return {
+        "name": name,
+        "kind": kind,
+        "application_stream_name": application_stream_name,
+    }
 
 
 AppStreamFilter = t.Annotated[dict, Depends(filter_params)]
@@ -110,6 +115,25 @@ class AppStreamsNamesResponse(BaseModel):
 class AppStreamsResponse(BaseModel):
     meta: Meta
     data: list[AppStreamEntity]
+
+    @model_validator(mode="after")
+    def set_end_date_support_status(self):
+        for n in self.data:
+            if n.rolling:
+                if os := OS_LIFECYCLE_DATES.get(str(n.os_major)):
+                    n.end_date = os.end_date
+
+        # Run model validation in order to ensure the support status is accurate.
+        #
+        # This is run on API response, so this ensures the support status is
+        # accurate when the data is on the way out the door and the end date
+        # reflects the correct date for rolling app streams.
+        #
+        # Otherwise, the support status value is what was calculated when
+        # the application started and the AppStreamEntity objects were created.
+        self.data = [n.model_validate(n) for n in self.data]
+
+        return self
 
 
 router = APIRouter(

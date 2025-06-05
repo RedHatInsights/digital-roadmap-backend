@@ -380,7 +380,15 @@ def app_streams_from_packages(
     package_names_string: list[str],
     os_major: str,
 ) -> set[AppStreamKey]:
-    # ansible-core-1:2.14.17-1.el9.x86_64
+    # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
+    #
+    #        The package major/minor are not guaranteed to match the stream major/minor.
+    #        That it matches is a coincidence, one that happens pretty often, giving the illusion
+    #        the code is working as intended.
+    #
+    #        In order to accurately lookup the app stream from a package NEVRA string, we need to
+    #        compile a list of all the versions — at least major/minor — that are in an app stream.
+    #        That data does not exist today in readily available format.
     packages = set(NEVRA.from_string(package) for package in package_names_string)
     app_streams = set()
     for package in packages:

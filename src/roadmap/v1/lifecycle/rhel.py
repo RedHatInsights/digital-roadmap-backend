@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
 from pydantic import BaseModel
+from pydantic import model_validator
 
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
@@ -41,6 +42,13 @@ class RelevantSystemsResponse(BaseModel):
 
 class LifecycleResponse(BaseModel):
     data: list[RHELLifecycle]
+
+    @model_validator(mode="after")
+    def validate(self):
+        # Run model validation in order to ensure the support status is accurate.
+        self.data = [n.model_validate(n) for n in self.data]
+
+        return self
 
 
 def get_lifecycle_data(

@@ -19,9 +19,11 @@ from tests.utils import SUPPORT_STATUS_TEST_CASES
 def test_get_app_streams(api_prefix, client):
     result = client.get(f"{api_prefix}/lifecycle/app-streams")
     data = result.json().get("data", [])
+    end_dates = {n["end_date"] for n in data}
 
     assert result.status_code == 200
     assert len(data) > 0
+    assert "1111-11-11" not in end_dates
 
 
 def test_get_app_streams_filter(api_prefix, client):

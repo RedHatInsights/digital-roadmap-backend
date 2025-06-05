@@ -85,10 +85,6 @@ class AppStreamEntity(BaseModel):
 
     @model_validator(mode="after")
     def set_os_version(self):
-        # Change this to be
-        # if initial_product_version is not None
-        #   then set os_major/minor
-        # Don't override the values if they were set
         if self.initial_product_version is not None:
             self.os_major = int(self.initial_product_version.split(".")[0])
             try:

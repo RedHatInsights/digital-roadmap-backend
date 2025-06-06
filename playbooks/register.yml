@@ -1,0 +1,43 @@
+- name: Register system
+  hosts: all
+  become: yes
+
+  module_defaults:
+    setup:
+      gather_subset: "!all"
+
+  tasks:
+    - name: Register
+      community.general.redhat_subscription:
+        state: present
+        activationkey: "{{ envs[env]['activationkey'] | default(omit) }}"
+        org_id: "{{ envs[env]['org_id'] | default(omit) }}"
+        consumer_name: "{{ display_name | default(inventory_hostname) }}"
+        server_hostname: "{{ envs[env]['server_hostname'] | default(omit) }}"
+        server_proxy_scheme: "{{ envs[env]['server_proxy_scheme'] | default(omit) }}"
+        server_proxy_hostname: "{{ envs[env]['server_proxy_hostname'] | default(omit) }}"
+        server_proxy_port: "{{ envs[env]['server_proxy_port'] | default(omit) }}"
+        rhsm_baseurl: "{{ envs[env]['rhsm_baseurl'] | default(omit) }}"
+
+    - name: Install insights-client
+      dnf:
+        name: insights-client
+        state: present
+
+    - name: Configure insights-client proxy
+      community.general.ini_file:
+        path: /etc/insights-client/insights-client.conf
+        section: insights-client
+        option: proxy
+        value: http://{{ envs[env]['server_proxy_hostname'] }}:{{ envs[env]['server_proxy_port'] }}
+      when: env == "stage"
+
+    - name: Disable insights-client proxy
+      lineinfile:
+        path: /etc/insights-client/insights-client.conf
+        regexp: '^#?proxy'
+        line: '#proxy='
+      when: env == "prod"
+
+    - name: Register with Insights
+      command: insights-client --register --display-name {{ display_name | default(inventory_hostname) }}

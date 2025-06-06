@@ -1,0 +1,26 @@
+- name: Register system
+  hosts: all
+  become: yes
+
+  module_defaults:
+    setup:
+      gather_subset: "!all"
+
+  tasks:
+    - name: Unregister from Insights
+      command: insights-client --unregister
+      ignore_errors: yes
+
+    - name: Unegister
+      community.general.redhat_subscription:
+        state: absent
+
+    - name: Reset rhsm.conf to default values
+      command: >-
+        subscription-manager config
+        --remove server.hostname
+        --remove server.proxy_scheme
+        --remove server.proxy_hostname
+        --remove server.proxy_port
+        --remove server.insecure
+        --remove rhsm.baseurl

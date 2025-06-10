@@ -65,7 +65,7 @@ def test_rhel_lifecycle_full_major(client, api_prefix, os_major):
     assert minor_versions == {None}
 
 
-def test_rhel_relevant(client, api_prefix):
+def test_rhel_relevant(client, api_prefix, ids_by_os):
     async def query_rbac_override():
         return [
             {
@@ -83,11 +83,16 @@ def test_rhel_relevant(client, api_prefix):
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
     data = response.json()["data"]
+    rhel_9_1_mainline = [
+        item for item in data if (9, 1, "mainline") == (item["major"], item["minor"], item["lifecycle_type"])
+    ]
+    rhel_9_1_mainline = set(rhel_9_1_mainline[0]["systems"])
 
     assert len(data) > 1
     assert data[0].keys() == System.model_fields.keys()
-    assert len(data[0]["systems"]) > 0  # There should be system IDs
-    assert uuid.UUID(data[0]["systems"][0])  # The system ID should be a valid UUID
+    assert len(data[0]["systems"]) > 0, "There should be system IDs"
+    assert uuid.UUID(data[0]["systems"][0]), "The system ID should be a valid UUID"
+    assert rhel_9_1_mainline == ids_by_os["9.1"]
     for item in data:
         assert item["count"] == len(item["systems"]), "Mismatch between count and number of system IDs"
 

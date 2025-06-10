@@ -108,9 +108,12 @@ def test_get_relevant_app_stream(api_prefix, client):
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     data = result.json().get("data", "")
+    display_names = {item["display_name"] for item in data}
 
     assert result.status_code == 200
     assert len(data) > 0
+    assert display_names.issuperset(["Redis 5", "Redis 6"]), "Missing expected modules in response"
+    assert not any(item["rolling"] for item in data), "Rolling app streams should not be in the response"
 
 
 def test_get_relevant_app_stream_error(api_prefix, client, mocker):

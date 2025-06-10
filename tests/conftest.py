@@ -1,6 +1,7 @@
 import gzip
 import json
 
+from collections import defaultdict
 from pathlib import Path
 
 import pytest
@@ -29,7 +30,7 @@ def clear_settings_cache():
     Settings.create.cache_clear()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def read_json_fixture():
     fixture_path = Path(__file__).parent.joinpath("fixtures").resolve()
 
@@ -63,3 +64,25 @@ def read_fixture_file():
         return data
 
     return _read_file
+
+
+@pytest.fixture(scope="session")
+def ids_by_os(read_json_fixture):
+    data = read_json_fixture("inventory_db_response.json.gz")
+    systems_by_version = defaultdict(set)
+    for system in data:
+        if system_profile := system.get("system_profile_facts"):
+            key = system_profile.get("os_release")
+            os = system_profile.get("operating_system")
+            if os is not None:
+                if not os.get("name"):
+                    continue
+
+                try:
+                    key = f"{os['major']}.{os['minor']}"
+                except KeyError:
+                    pass
+
+            systems_by_version[key].update([system["id"]])
+
+    return systems_by_version

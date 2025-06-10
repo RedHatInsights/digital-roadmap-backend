@@ -7,7 +7,6 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from time import sleep
-from uuid import uuid4
 
 from app_common_python import json
 from app_common_python import os
@@ -104,8 +103,8 @@ def main():
 
     # Build the records
     records = []
-    for n in range(len(host_data)):
-        id = uuid4()
+    for host in host_data:
+        id = host["id"]
         init_date = fake.date_time_between(start_date="-1w")
 
         records.append(
@@ -114,13 +113,13 @@ def main():
                 display_name=fake.unique.hostname(),
                 created_on=init_date,
                 modified_on=init_date,
-                system_profile_facts=host_data[n].get("system_profile_facts", {}),
+                system_profile_facts=host.get("system_profile_facts", {}),
                 ansible_host="ansible_host",
                 stale_timestamp=init_date + timedelta(30),
                 reporter="toast loader",
                 per_reporter_staleness={},
                 org_id="1234",
-                groups=host_data[n].get("groups", []),
+                groups=host.get("groups", []),
                 tags_alt=[],
                 last_check_in=datetime.now(),
             )

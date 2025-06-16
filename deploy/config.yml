@@ -241,6 +241,9 @@ parameters:
   - name: ROADMAP_DB_SECRET_NAME
     value: host-inventory-db-readonly
 
+  - name: SENTRY_DSN
+    value: sentry
+
   - name: ROADMAP_DB_POOL_SIZE
     value: ""
 

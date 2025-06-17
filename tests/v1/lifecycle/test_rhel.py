@@ -4,6 +4,7 @@ import pytest
 
 from roadmap.common import decode_header
 from roadmap.common import query_rbac
+from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import System
 
 
@@ -95,6 +96,35 @@ def test_rhel_relevant(client, api_prefix, ids_by_os):
     assert rhel_9_1_mainline == ids_by_os["9.1"]
     for item in data:
         assert item["count"] == len(item["systems"]), "Mismatch between count and number of system IDs"
+
+
+def test_rhel_relevant_extended_dates(client, api_prefix):
+    async def query_rbac_override():
+        return [
+            {
+                "permission": "inventory:*:*",
+                "resourceDefinitions": [],
+            }
+        ]
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    data = response.json()["data"]
+    extended_dates = [n for n in data if n["lifecycle_type"] != "mainline"]
+
+    for item in extended_dates:
+        key = f"{item['major']}.{item['minor']}"
+        attr = f"end_date_{item['lifecycle_type'].lower()}"
+        expected = getattr(OS_LIFECYCLE_DATES[key], attr)
+        assert item["end_date"] == expected.isoformat(), (
+            f"Incorrect end_date for a RHEL {key} {item['lifecycle_type']} host"
+        )
 
 
 def test_get_relevant_rhel_no_rbac_access(api_prefix, client):

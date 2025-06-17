@@ -200,6 +200,9 @@ async def get_relevant_systems(  # noqa: C901
             if count_key.lifecycle == LifecycleType.e4s:
                 end_date = lifecycle_info.end_date_e4s
 
+            if count_key.lifecycle == LifecycleType.eus:
+                end_date = lifecycle_info.end_date_eus
+
         results.append(
             System(
                 name=count_key.name,

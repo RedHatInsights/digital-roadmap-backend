@@ -260,7 +260,6 @@ async def systems_by_app_stream(
 
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
-    package_cache = {}
     module_cache = {}
     async for system in systems.mappings():
         if not (system_profile := system.get("system_profile_facts")):
@@ -284,18 +283,18 @@ async def systems_by_app_stream(
             missing["dnf_modules"] += 1
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
-        package_app_streams = app_streams_from_packages(
-            system_profile.get("installed_packages", ""), os_major, package_cache
-        )
 
-        if not package_app_streams:
-            missing["package_names"] += 1
-
-        module_app_streams.update(package_app_streams)
+        # Only store package name and os_major for later processing outside the loop
+        # This substantially reduces the time it takes for this function to return.
+        package_os = set((n, os_major) for n in system_profile.get("installed_packages", []))
 
         system_id = system["id"]
         for app_stream in module_app_streams:
             systems_by_stream[app_stream].append(system_id)
+
+    # Now process the packages
+    package_app_streams = app_streams_from_packages(package_os)
+    module_app_streams.update(package_app_streams)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
@@ -307,7 +306,7 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: str,
-    cache: dict[str | AppStreamKey, AppStreamKey],
+    cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
@@ -408,9 +407,7 @@ class NEVRA(BaseModel, frozen=True):
 
 
 def app_streams_from_packages(
-    package_names_string: list[str],
-    os_major: str,
-    cache: dict[str | AppStreamKey, AppStreamKey],
+    package_os: set[tuple[str, str]],
 ) -> set[AppStreamKey]:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #
@@ -421,20 +418,15 @@ def app_streams_from_packages(
     #        In order to accurately lookup the app stream from a package NEVRA string, we need to
     #        compile a list of all the versions — at least major/minor — that are in an app stream.
     #        That data does not exist today in readily available format.
-    packages = set(NEVRA.from_string(package) for package in package_names_string)
     app_streams = set()
-    for package in packages:
-        if app_stream_key := cache.get(package):
-            app_streams.add(app_stream_key)
-            continue
-
-        if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
+    for package, os_major in package_os:
+        nevra = NEVRA.from_string(package)
+        if app_stream_package := APP_STREAM_PACKAGES.get(nevra.name):
             if app_stream_package.os_major == os_major:
-                if app_stream_package.stream.split(".")[:2] == [package.major, package.major]:
+                if app_stream_package.stream.split(".")[:2] == [nevra.major, nevra.minor]:
                     app_stream_key = AppStreamKey(
                         app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
                     )
-                    cache[package] = app_stream_key
                     app_streams.add(app_stream_key)
 
     return app_streams

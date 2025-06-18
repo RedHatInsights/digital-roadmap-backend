@@ -1,3 +1,4 @@
+import functools
 import logging
 import typing as t
 
@@ -259,6 +260,8 @@ async def systems_by_app_stream(
 
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
+    package_cache = {}
+    module_cache = {}
     async for system in systems.mappings():
         if not (system_profile := system.get("system_profile_facts")):
             missing["system_profile"] += 1
@@ -280,8 +283,10 @@ async def systems_by_app_stream(
         if not dnf_modules:
             missing["dnf_modules"] += 1
 
-        module_app_streams = app_streams_from_modules(dnf_modules, os_major)
-        package_app_streams = app_streams_from_packages(system_profile.get("installed_packages", ""), os_major)
+        module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
+        package_app_streams = app_streams_from_packages(
+            system_profile.get("installed_packages", ""), os_major, package_cache
+        )
 
         if not package_app_streams:
             missing["package_names"] += 1
@@ -302,24 +307,29 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: str,
+    cache: dict[str | AppStreamKey, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
-        if "perl" in dnf_module["name"].lower():
+        module_name = dnf_module["name"]
+        if app_stream_key := cache.get(module_name):
+            app_streams.add(app_stream_key)
+            continue
+
+        if "perl" in module_name.casefold():
             # Bug with Perl data currently. Omit for now.
             continue
 
-        name = dnf_module["name"]
-        if os_major not in get_module_os_major_versions(name):
+        if os_major not in get_module_os_major_versions(module_name):
             continue
 
         stream = dnf_module["stream"]
-        matched_module = APP_STREAM_MODULES_BY_KEY.get((name, os_major, stream))
+        matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
-            logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
+            # logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
             matched_module = AppStreamEntity(
-                name=name,
+                name=module_name,
                 stream=stream,
                 start_date=None,
                 end_date=None,
@@ -327,7 +337,9 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        app_streams.add(AppStreamKey(app_stream_entity=matched_module, name=name))
+        app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
+        cache[module_name] = app_stream_key
+        app_streams.add(app_stream_key)
 
     return app_streams
 
@@ -398,6 +410,7 @@ class NEVRA(BaseModel, frozen=True):
 def app_streams_from_packages(
     package_names_string: list[str],
     os_major: str,
+    cache: dict[str | AppStreamKey, AppStreamKey],
 ) -> set[AppStreamKey]:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #
@@ -411,14 +424,19 @@ def app_streams_from_packages(
     packages = set(NEVRA.from_string(package) for package in package_names_string)
     app_streams = set()
     for package in packages:
+        if app_stream_key := cache.get(package):
+            app_streams.add(app_stream_key)
+            continue
+
         if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
             if app_stream_package.os_major == os_major:
                 if app_stream_package.stream.split(".")[:2] == [package.major, package.major]:
-                    app_streams.add(
-                        AppStreamKey(
-                            app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
-                        )
+                    app_stream_key = AppStreamKey(
+                        app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
                     )
+                    cache[package] = app_stream_key
+                    app_streams.add(app_stream_key)
+
     return app_streams
 
 

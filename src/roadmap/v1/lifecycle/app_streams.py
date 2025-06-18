@@ -261,6 +261,8 @@ async def systems_by_app_stream(
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
     module_cache = {}
+    package_os = set()
+    module_app_streams = set()
     async for system in systems.mappings():
         if not (system_profile := system.get("system_profile_facts")):
             missing["system_profile"] += 1

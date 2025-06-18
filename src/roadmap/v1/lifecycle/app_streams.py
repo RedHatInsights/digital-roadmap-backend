@@ -342,6 +342,7 @@ class NEVRA(BaseModel, frozen=True):
     arch: str
 
     @classmethod
+    @functools.cache
     def from_string(cls, package: str) -> "NEVRA":
         """Parse a package string and return an instance of this class.
 

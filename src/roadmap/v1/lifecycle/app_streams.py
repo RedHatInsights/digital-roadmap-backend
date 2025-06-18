@@ -39,7 +39,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[int]:
+def get_module_os_major_versions(name: str) -> set[str]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 

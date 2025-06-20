@@ -79,7 +79,7 @@ objects:
               - name: SENTRY_DSN
                 valueFrom:
                   secretKeyRef:
-                    name: ${SENTRY_DSN}
+                    name: ${SENTRY_SECRET_NAME}
                     key: dsn
                     optional: true
 

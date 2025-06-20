@@ -314,7 +314,9 @@ def app_streams_from_modules(
     app_streams = set()
     for dnf_module in dnf_modules:
         module_name = dnf_module["name"]
-        if app_stream_key := cache.get(module_name):
+        stream = dnf_module["stream"]
+        cache_key = f"{module_name}_{os_major}_{stream}"
+        if app_stream_key := cache.get(cache_key):
             app_streams.add(app_stream_key)
             continue
 
@@ -325,7 +327,6 @@ def app_streams_from_modules(
         if os_major not in get_module_os_major_versions(module_name):
             continue
 
-        stream = dnf_module["stream"]
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
             # logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
@@ -339,7 +340,7 @@ def app_streams_from_modules(
             )
 
         app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
-        cache[module_name] = app_stream_key
+        cache[cache_key] = app_stream_key
         app_streams.add(app_stream_key)
 
     return app_streams

@@ -1,3 +1,4 @@
+import functools
 import logging
 import typing as t
 
@@ -39,7 +40,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[int]:
+def get_module_os_major_versions(name: str) -> set[str]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 
@@ -259,6 +260,9 @@ async def systems_by_app_stream(
 
     missing = defaultdict(int)
     systems_by_stream = defaultdict(list)
+    module_cache = {}
+    package_data = set()
+    module_app_streams = set()
     async for system in systems.mappings():
         if not (system_profile := system.get("system_profile_facts")):
             missing["system_profile"] += 1
@@ -280,16 +284,18 @@ async def systems_by_app_stream(
         if not dnf_modules:
             missing["dnf_modules"] += 1
 
-        module_app_streams = app_streams_from_modules(dnf_modules, os_major)
-        package_app_streams = app_streams_from_packages(system_profile.get("installed_packages", ""), os_major)
-
-        if not package_app_streams:
-            missing["package_names"] += 1
-
-        module_app_streams.update(package_app_streams)
-
+        # Store package name, os_major, and system ID for later processing outside the loop.
+        # This substantially reduces the time it takes for this function to return.
         system_id = system["id"]
+        package_data = set((package, os_major, system_id) for package in system_profile.get("installed_packages", []))
+
+        module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
         for app_stream in module_app_streams:
+            systems_by_stream[app_stream].append(system_id)
+
+    # Now process the packages outside of the host record loop
+    for package, os_major, system_id in package_data:
+        if app_stream := app_stream_from_package(package, os_major):
             systems_by_stream[app_stream].append(system_id)
 
     if missing:
@@ -302,24 +308,30 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: str,
+    cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
-        if "perl" in dnf_module["name"].lower():
+        module_name = dnf_module["name"]
+        stream = dnf_module["stream"]
+        cache_key = f"{module_name}_{os_major}_{stream}"
+        if app_stream_key := cache.get(cache_key):
+            app_streams.add(app_stream_key)
+            continue
+
+        if "perl" in module_name.casefold():
             # Bug with Perl data currently. Omit for now.
             continue
 
-        name = dnf_module["name"]
-        if os_major not in get_module_os_major_versions(name):
+        if os_major not in get_module_os_major_versions(module_name):
             continue
 
-        stream = dnf_module["stream"]
-        matched_module = APP_STREAM_MODULES_BY_KEY.get((name, os_major, stream))
+        matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
-            logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
+            # logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
             matched_module = AppStreamEntity(
-                name=name,
+                name=module_name,
                 stream=stream,
                 start_date=None,
                 end_date=None,
@@ -327,7 +339,9 @@ def app_streams_from_modules(
                 impl=AppStreamImplementation.module,
             )
 
-        app_streams.add(AppStreamKey(app_stream_entity=matched_module, name=name))
+        app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
+        cache[cache_key] = app_stream_key
+        app_streams.add(app_stream_key)
 
     return app_streams
 
@@ -342,6 +356,7 @@ class NEVRA(BaseModel, frozen=True):
     arch: str
 
     @classmethod
+    @functools.cache
     def from_string(cls, package: str) -> "NEVRA":
         """Parse a package string and return an instance of this class.
 
@@ -394,10 +409,11 @@ class NEVRA(BaseModel, frozen=True):
         )
 
 
-def app_streams_from_packages(
-    package_names_string: list[str],
+@functools.cache
+def app_stream_from_package(
+    package: str,
     os_major: str,
-) -> set[AppStreamKey]:
+) -> AppStreamKey | None:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #
     #        The package major/minor are not guaranteed to match the stream major/minor.
@@ -407,18 +423,13 @@ def app_streams_from_packages(
     #        In order to accurately lookup the app stream from a package NEVRA string, we need to
     #        compile a list of all the versions — at least major/minor — that are in an app stream.
     #        That data does not exist today in readily available format.
-    packages = set(NEVRA.from_string(package) for package in package_names_string)
-    app_streams = set()
-    for package in packages:
-        if app_stream_package := APP_STREAM_PACKAGES.get(package.name):
-            if app_stream_package.os_major == os_major:
-                if app_stream_package.stream.split(".")[:2] == [package.major, package.major]:
-                    app_streams.add(
-                        AppStreamKey(
-                            app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
-                        )
-                    )
-    return app_streams
+    nevra = NEVRA.from_string(package)
+    if app_stream_package := APP_STREAM_PACKAGES.get(nevra.name):
+        if app_stream_package.os_major == os_major:
+            if app_stream_package.stream.split(".")[:2] == [nevra.major, nevra.minor]:
+                return AppStreamKey(
+                    app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
+                )
 
 
 ## Relevant ##

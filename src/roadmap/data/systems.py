@@ -12,6 +12,7 @@ from roadmap.models import RHELLifecycle
 # FIXME: This needs to be in the database
 
 # https://access.redhat.com/articles/3078
+# https://access.redhat.com/articles/4038291
 OS_LIFECYCLE_DATES = {
     "7": RHELLifecycle(
         major=7,
@@ -116,6 +117,7 @@ OS_LIFECYCLE_DATES = {
         minor=2,
         start_date=date(2020, 4, 28),
         end_date=date(2020, 11, 3),
+        end_date_eus=date(2022, 4, 30),
         end_date_e4s=date(2024, 4, 30),
     ),
     "8.3": RHELLifecycle(
@@ -150,7 +152,7 @@ OS_LIFECYCLE_DATES = {
         major=8,
         minor=7,
         start_date=date(2022, 11, 9),
-        end_date=date(2023, 5, 16),
+        end_date=date(2023, 5, 31),
     ),
     "8.8": RHELLifecycle(
         major=8,
@@ -171,6 +173,8 @@ OS_LIFECYCLE_DATES = {
         minor=10,
         start_date=date(2024, 5, 22),
         end_date=date(2029, 5, 17),
+        end_date_eus=date(2032, 5, 31),
+        end_date_e4s=date(2032, 5, 31),
         end_date_els=date(2032, 5, 31),
     ),
     "9": RHELLifecycle(
@@ -191,7 +195,7 @@ OS_LIFECYCLE_DATES = {
         major=9,
         minor=1,
         start_date=date(2022, 11, 15),
-        end_date=date(2023, 5, 10),
+        end_date=date(2023, 5, 31),
     ),
     "9.2": RHELLifecycle(
         major=9,
@@ -254,6 +258,8 @@ OS_LIFECYCLE_DATES = {
         minor=10,
         start_date=date(2027, 5, 15),
         end_date=date(2032, 5, 31),
+        end_date_eus=date(2032, 5, 31),
+        end_date_e4s=date(2035, 5, 31),
         end_date_els=date(2035, 5, 31),
     ),
     "10": RHELLifecycle(

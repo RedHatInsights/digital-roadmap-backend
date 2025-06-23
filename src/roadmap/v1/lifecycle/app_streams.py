@@ -329,7 +329,7 @@ def app_streams_from_modules(
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
-            # logger.debug(f"Did not find matching app stream module {name}, {os_major}, {stream}")
+            logger.debug(f"Did not find matching app stream module {module_name}, {os_major}, {stream}")
             matched_module = AppStreamEntity(
                 name=module_name,
                 stream=stream,

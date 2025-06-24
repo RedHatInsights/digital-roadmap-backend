@@ -1,3 +1,4 @@
+import logging
 import typing as t
 
 from collections import defaultdict
@@ -21,6 +22,8 @@ from roadmap.models import Meta
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/upcoming-changes", tags=["Upcoming Changes"])
 
@@ -56,6 +59,7 @@ class UpcomingInput(BaseModel):
     type: UpcomingType
     package: str
     release: str
+    os_major: int = Field(default_factory=lambda data: int(data["release"].partition(".")[0]))
     date: Date
     details: UpcomingInputDetails
 
@@ -68,7 +72,7 @@ class UpcomingOutputDetails(BaseModel):
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
     potentiallyAffectedSystemsCount: int
-    potentiallyAffectedSystems: list[UUID]
+    potentiallyAffectedSystems: set[UUID]
 
 
 class UpcomingOutput(BaseModel):
@@ -102,8 +106,9 @@ def get_upcoming_data_no_hosts(settings: t.Annotated[Settings, Depends(Settings.
 @router.get(
     "",
     summary="Upcoming changes, deprecations, additions, and enhancements",
+    response_model=WrappedUpcomingInput,
 )
-async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hosts)]) -> WrappedUpcomingInput:
+async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hosts)]):
     return {
         "meta": {
             "total": len(data),
@@ -114,17 +119,32 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
 
 
 def get_upcoming_data_with_hosts(
-    systems_by_stream: t.Annotated[dict[AppStreamKey, list[UUID]], Depends(systems_by_app_stream)],
+    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[UUID]], Depends(systems_by_app_stream)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
+    all: bool = False,
 ) -> list[UpcomingOutput]:
     keys_by_name = defaultdict(list)
-    [keys_by_name[a.name].append(a) for a in systems_by_stream.keys()]
+    os_major_versions = set()
+    for system in systems_by_app_stream:
+        keys_by_name[system.name].append(system)
+        os_major_versions.add(system.app_stream_entity.os_major)
+
+    try:
+        os_major_versions.remove(None)
+    except KeyError:
+        pass
 
     result = []
     for upcoming in read_upcoming_file(settings.upcoming_json_path):
         systems = set()
         for key in keys_by_name[upcoming.package]:
-            systems.update(systems_by_stream[key])
+            systems.update(systems_by_app_stream[key])
+
+        if not all:
+            # If the roadmap item doesn't match the major OS version of a host
+            # in inventory, do not include it.
+            if upcoming.os_major not in os_major_versions:
+                continue
 
         details = UpcomingOutputDetails(
             architecture=upcoming.details.architecture,
@@ -156,10 +176,15 @@ relevant = APIRouter(
 )
 
 
-@relevant.get("", summary="Upcoming changes, deprecations, additions, and enhancements relevant to requester's systems")
+@relevant.get(
+    "",
+    summary="Upcoming changes, deprecations, additions, and enhancements relevant to requester's systems",
+    response_model=WrappedUpcomingOutput,
+)
 async def get_upcoming_relevant(
-    data: t.Annotated[t.Any, Depends(get_upcoming_data_with_hosts)], all: bool = False
-) -> WrappedUpcomingOutput:
+    data: t.Annotated[t.Any, Depends(get_upcoming_data_with_hosts)],
+    all: bool = False,
+):
     """
     Returns a list of upcoming changes to packages.
 
@@ -171,6 +196,7 @@ async def get_upcoming_relevant(
     """
     if not all:
         data = [d for d in data if d.details.potentiallyAffectedSystems]
+
     return {
         "meta": {
             "total": len(data),

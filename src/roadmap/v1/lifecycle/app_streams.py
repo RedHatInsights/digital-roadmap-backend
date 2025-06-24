@@ -254,12 +254,12 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
-) -> dict[AppStreamKey, list[UUID]]:
+) -> dict[AppStreamKey, set[UUID]]:
     """Return a mapping of AppStreams to ids of systems using that stream."""
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
     missing = defaultdict(int)
-    systems_by_stream = defaultdict(list)
+    systems_by_stream = defaultdict(set)
     module_cache = {}
     package_data = set()
     module_app_streams = set()
@@ -291,12 +291,12 @@ async def systems_by_app_stream(
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
         for app_stream in module_app_streams:
-            systems_by_stream[app_stream].append(system_id)
+            systems_by_stream[app_stream].add(system_id)
 
     # Now process the packages outside of the host record loop
     for package, os_major, system_id in package_data:
         if app_stream := app_stream_from_package(package, os_major):
-            systems_by_stream[app_stream].append(system_id)
+            systems_by_stream[app_stream].add(system_id)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

@@ -114,6 +114,9 @@ def test_get_relevant_app_stream(api_prefix, client):
     assert len(data) > 0
     assert display_names.issuperset(["Redis 5", "Redis 6"]), "Missing expected modules in response"
     assert not any(item["rolling"] for item in data), "Rolling app streams should not be in the response"
+    assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
+        "Found duplicate system IDs in results"
+    )
 
 
 def test_get_relevant_app_stream_error(api_prefix, client, mocker):
@@ -504,7 +507,6 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         os_major=1,
         os_minor=1,
         count=4,
-        impl=AppStreamImplementation.package,
         rolling=False,
         start_date=app_stream_start,
         end_date=app_stream_end,

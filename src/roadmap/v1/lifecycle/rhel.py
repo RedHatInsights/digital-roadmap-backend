@@ -146,7 +146,7 @@ async def get_relevant_systems(  # noqa: C901
 ) -> RelevantSystemsResponse:
     system_counts = defaultdict(int)
     missing = defaultdict(int)
-    systems_by_version_lifecycle = defaultdict(list)
+    systems_by_version_lifecycle = defaultdict(set)
     async for result in systems.mappings():
         # Make sure we have a system profile with enough data, otherwise continue
         if not (system_profile := result.get("system_profile_facts")):
@@ -173,7 +173,7 @@ async def get_relevant_systems(  # noqa: C901
         # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response
         system_id = result["id"]
         system_id_key = (str(os_major) if os_minor is None else f"{os_major}.{os_minor}", lifecycle_type)
-        systems_by_version_lifecycle[system_id_key].append(system_id)
+        systems_by_version_lifecycle[system_id_key].add(system_id)
 
         count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1

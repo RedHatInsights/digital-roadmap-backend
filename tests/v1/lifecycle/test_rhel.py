@@ -161,3 +161,6 @@ def test_rhel_relevant_related(client, api_prefix):
 
     assert len(data) > 1
     assert len(related_hosts) > 1
+    assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
+        "Found duplicate system IDs in results"
+    )

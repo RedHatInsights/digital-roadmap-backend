@@ -1,5 +1,35 @@
 [
   {
+    "name": "Add Node.js to RHEL7 AppStream THIS IS TEST DATA",
+    "type": "addition",
+    "package": "nodejs",
+    "release": "7.2",
+    "date": "2019-08-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "lorem ipsum nodejs",
+      "trainingTicket": "RHELBU-1234",
+      "dateAdded": "2025-03-10",
+      "lastModified": "2025-03-10"
+    }
+  },
+  {
+    "name": "Add Node.js to RHEL8 AppStream THIS IS TEST DATA",
+    "type": "addition",
+    "package": "nodejs",
+    "release": "8.1",
+    "date": "2023-08-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "lorem ipsum nodejs",
+      "trainingTicket": "RHELBU-1234",
+      "dateAdded": "2025-03-10",
+      "lastModified": "2025-03-10"
+    }
+  },
+  {
     "name": "Add Node.js to RHEL9 AppStream THIS IS TEST DATA",
     "type": "addition",
     "package": "nodejs",

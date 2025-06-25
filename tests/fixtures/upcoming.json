@@ -1,6 +1,6 @@
 [
   {
-    "name": "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST",
+    "name": "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST FROM FIXTURES",
     "type": "addition",
     "package": "nodejs",
     "release": "9.7",

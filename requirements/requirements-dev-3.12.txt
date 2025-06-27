@@ -5,11 +5,11 @@ cfgv==3.4.0
 decorator==5.2.1
 distlib==0.3.9
 executing==2.2.0
-Faker==37.3.0
+Faker==37.4.0
 filelock==3.18.0
 identify==2.6.12
 ipdb==0.13.13
-ipython==9.2.0
+ipython==9.3.0
 ipython_pygments_lexers==1.1.1
 jedi==0.19.2
 matplotlib-inline==0.1.7
@@ -21,7 +21,7 @@ pre_commit==4.2.0
 prompt_toolkit==3.0.51
 ptyprocess==0.7.0
 pure_eval==0.2.3
-Pygments==2.19.1
+Pygments==2.19.2
 PyYAML==6.0.2
 stack-data==0.6.3
 traitlets==5.14.3

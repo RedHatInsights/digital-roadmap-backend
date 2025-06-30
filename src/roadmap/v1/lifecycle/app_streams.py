@@ -263,7 +263,7 @@ async def systems_by_app_stream(
     module_cache = {}
     package_data = defaultdict(list)
     module_app_streams = set()
-    async for system in systems.mappings():
+    async for system in systems.yield_per(2_000).mappings():
         if not (system_profile := system.get("system_profile_facts")):
             missing["system_profile"] += 1
             continue
@@ -280,14 +280,18 @@ async def systems_by_app_stream(
 
         os_major = system_profile.get("operating_system", {}).get("major")
         dnf_modules = system_profile.get("dnf_modules", [])
+        installed_packages = system_profile.get("installed_packages", [])
 
         if not dnf_modules:
             missing["dnf_modules"] += 1
 
+        if not installed_packages:
+            missing["installed_packages"] += 1
+
         # Store package name, os_major, and system ID for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
         system_id = system["id"]
-        for package in system_profile.get("installed_packages", []):
+        for package in installed_packages:
             package_data[(package, os_major)].append(system_id)
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
@@ -297,7 +301,6 @@ async def systems_by_app_stream(
     # Now process the packages outside of the host record loop
     for args, system_ids in package_data.items():
         package, os_major = args
-        # for package, os_major in args:
         if app_stream := app_stream_from_package(package, os_major):
             systems_by_stream[app_stream].update(system_ids)
 

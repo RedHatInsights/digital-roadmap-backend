@@ -107,12 +107,24 @@ def test_get_relevant_app_stream(api_prefix, client):
     client.app.dependency_overrides[query_rbac] = query_rbac_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
-    data = result.json().get("data", "")
+
+    data = result.json().get("data", {})
+    meta = result.json().get("meta", {})
+    count = meta["count"]
+    total = meta["total"]
     display_names = {item["display_name"] for item in data}
+    names = {item["name"] for item in data}
 
     assert result.status_code == 200
-    assert len(data) > 0
-    assert display_names.issuperset(["Redis 5", "Redis 6"]), "Missing expected modules in response"
+    # Hard coding these numbers isn't ideal, but it will prevent regressions.
+    # Ideally these numbers should be calculated from the fixture data or
+    # defined in one place.
+    assert count == 64, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 508, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
+        "Missing expected items in response"
+    )
+    assert names.issuperset(["Python 3.11", "mysql", "mariadb", "nginx", "nodejs"])
     assert not any(item["rolling"] for item in data), "Rolling app streams should not be in the response"
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"

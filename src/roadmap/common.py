@@ -189,7 +189,7 @@ async def query_host_inventory(
         org_id = "1234"
 
     # Build up a query for this org's hosts.
-    query = "SELECT * FROM hbi.hosts WHERE org_id = :org_id"
+    query = "SELECT id, system_profile_facts FROM hbi.hosts WHERE org_id = :org_id"
 
     # #>> '{{operating_system,major}}' fetches the attribute "major" from the
     # "operating_system" subobject in the host's record. This subobject is kept

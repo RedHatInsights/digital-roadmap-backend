@@ -18,6 +18,17 @@ ENV PYTHON="${VENV}/bin/python"
 ENV PATH="${VENV}/bin:$PATH"
 ENV PYTHON_VERSION="3.12"
 
+# Temporary workaround until new version of librepo is available in base image
+# https://github.com/rpm-software-management/librepo/pull/325
+RUN curl \
+    --insecure \
+    --fail \
+    --silent \
+    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rm -f /tmp/librepo-1.18.0-5.el10.x86_64.rpm
+
 RUN microdnf install -y --nodocs \
     gcc \
     libpq-devel \
@@ -46,6 +57,17 @@ ENV PYTHONPATH=/srv/roady/
 
 COPY LICENSE /licenses/Apache-2.0.txt
 COPY --from=builder /opt/venvs/ /opt/venvs/
+
+# Temporary workaround until new version of librepo is available in base image
+# https://github.com/rpm-software-management/librepo/pull/325
+RUN curl \
+    --insecure \
+    --fail \
+    --silent \
+    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rm -f /tmp/librepo-1.18.0-5.el10.x86_64.rpm
 
 RUN microdnf install -y --nodocs \
     libpq \

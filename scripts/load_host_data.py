@@ -13,12 +13,12 @@ from app_common_python import os
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.ddl import CreateSchema
-from sqlalchemy.types import JSON
 from sqlalchemy.types import String
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.types import UUID
@@ -38,17 +38,17 @@ class Host(HBI):
     display_name: Mapped[str] = mapped_column(String(200))
     created_on: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
     modified_on: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
-    facts: Mapped[JSON] = mapped_column(JSON(), nullable=True, default={})
-    tags: Mapped[JSON] = mapped_column(JSON(), nullable=True, default={})
-    canonical_facts: Mapped[JSON] = mapped_column(JSON(), nullable=True, default={})
-    system_profile_facts: Mapped[JSON] = mapped_column(JSON(), nullable=True, default={})
+    facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
+    tags: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
+    canonical_facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
+    system_profile_facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
     ansible_host: Mapped[str] = mapped_column(String(255))
     stale_timestamp: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
     reporter: Mapped[str] = mapped_column(String(255))
-    per_reporter_staleness: Mapped[JSON] = mapped_column(JSON(), default={})
+    per_reporter_staleness: Mapped[JSONB] = mapped_column(JSONB(), default={})
     org_id: Mapped[str] = mapped_column(String(36))
-    groups: Mapped[JSON] = mapped_column(JSON(), default=[])
-    tags_alt: Mapped[JSON] = mapped_column(JSON(), nullable=True, default=[{}])
+    groups: Mapped[JSONB] = mapped_column(JSONB(), default=[])
+    tags_alt: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[{}])
     last_check_in: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
 
 

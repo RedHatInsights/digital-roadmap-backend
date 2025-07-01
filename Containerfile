@@ -23,9 +23,9 @@ ENV PYTHON_VERSION="3.12"
 RUN curl \
     --insecure \
     --fail \
-    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    --silent \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
-    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm
+    | rpm -Uvh -
 
 RUN microdnf install -y --nodocs \
     gcc \
@@ -61,10 +61,9 @@ COPY --from=builder /opt/venvs/ /opt/venvs/
 RUN curl \
     --insecure \
     --fail \
-    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    --silent \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
-    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm
-
+    | rpm -Uvh -
 RUN microdnf install -y --nodocs \
     libpq \
     "python${PYTHON_VERSION}" \

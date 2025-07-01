@@ -24,8 +24,10 @@ RUN curl \
     --insecure \
     --fail \
     --silent \
+    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
-    | rpm -Uvh -
+    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rm -f /tmp/librepo-1.18.0-5.el10.x86_64.rpm
 
 RUN microdnf install -y --nodocs \
     gcc \
@@ -62,8 +64,11 @@ RUN curl \
     --insecure \
     --fail \
     --silent \
+    --output /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/artifacts/-/raw/main/rpm/librepo-1.18.0-5.el10.x86_64.rpm \
-    | rpm -Uvh -
+    && rpm -Uvh /tmp/librepo-1.18.0-5.el10.x86_64.rpm \
+    && rm -f /tmp/librepo-1.18.0-5.el10.x86_64.rpm
+
 RUN microdnf install -y --nodocs \
     libpq \
     "python${PYTHON_VERSION}" \

@@ -11,9 +11,11 @@ from urllib.error import HTTPError
 from uuid import UUID
 
 from fastapi import Depends
+from fastapi import FastAPI
 from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -372,3 +374,41 @@ def rhel_major_minor(system_profile: dict) -> tuple[int, int | None]:
         return (major, minor)
 
     raise ValueError
+
+
+def extend_openapi(app: FastAPI):
+    def _extend_openapi() -> dict[str, t.Any]:
+        if app.openapi_schema:
+            return app.openapi_schema
+
+        schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            openapi_version=app.openapi_version,
+            summary=app.summary,
+            description=app.description,
+            terms_of_service=app.terms_of_service,
+            contact=app.contact,
+            license_info=app.license_info,
+            routes=app.routes,
+            webhooks=app.webhooks.routes,
+            tags=app.openapi_tags,
+            servers=app.servers,
+            separate_input_output_schemas=app.separate_input_output_schemas,
+        )
+
+        schema["components"]["securitySchemes"] = {
+            "Authorization": {
+                "in": "header",
+                "name": "Authorization",
+                "type": "apiKey",
+            }
+        }
+        # Set the default API security scheme
+        schema["security"] = {}
+        schema["security"]["Authorization"] = []
+
+        app.openapi_schema = schema
+        return app.openapi_schema
+
+    return _extend_openapi

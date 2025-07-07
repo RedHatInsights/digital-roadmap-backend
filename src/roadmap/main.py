@@ -11,6 +11,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 
 import roadmap.v1
 
+from roadmap.common import extend_openapi
 from roadmap.common import HealthCheckFilter
 
 
@@ -39,6 +40,7 @@ app = FastAPI(
     summary="Major RHEL roadmap items as well as lifecycle data for RHEL and app streams.",
     redirect_slashes=False,
 )
+app.openapi = extend_openapi(app)
 
 # Add Prometheus metrics
 instrumentor = Instrumentator()

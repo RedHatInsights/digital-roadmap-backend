@@ -405,8 +405,7 @@ def extend_openapi(app: FastAPI):
             }
         }
         # Set the default API security scheme
-        schema["security"] = {}
-        schema["security"]["Authorization"] = []
+        schema["security"] = [{"Authorization": []}]
 
         app.openapi_schema = schema
         return app.openapi_schema

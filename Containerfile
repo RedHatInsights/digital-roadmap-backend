@@ -1,4 +1,6 @@
-FROM registry.access.redhat.com/ubi10-minimal:10.0-1751880071 AS builder
+FROM registry.access.redhat.com/ubi10-minimal:10.0-1751880071 AS base
+
+FROM base AS builder
 
 LABEL com.redhat.component=rhel-roadmap-api
 LABEL description="Red Hat Enterprise Linux Roadmap API"
@@ -36,7 +38,7 @@ RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && /opt/venvs/replication/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-replication.txt
 
 
-FROM registry.access.redhat.com/ubi10-minimal:10.0-1751880071 AS final
+FROM base AS final
 
 ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"

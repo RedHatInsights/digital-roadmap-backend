@@ -18,7 +18,7 @@ OS_LIFECYCLE_DATES = {
         major=7,
         start_date=date(2014, 6, 9),
         end_date=date(2024, 6, 30),
-        end_date_els=date(2028, 6, 30),
+        end_date_els=date(2029, 5, 31),
     ),
     "7.0": RHELLifecycle(
         major=7,
@@ -90,7 +90,7 @@ OS_LIFECYCLE_DATES = {
         minor=9,
         start_date=date(2020, 9, 29),
         end_date=date(2024, 6, 30),
-        end_date_els=date(2028, 6, 30),
+        end_date_els=date(2029, 5, 31),
     ),
     "8": RHELLifecycle(
         major=8,

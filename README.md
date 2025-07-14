@@ -64,8 +64,14 @@ This runs a server using the default virtual environment. Documentation can be f
 In order to query host inventory, a Red Hat API access token is required. Access tokens are only valid for fifteen minutes and require an [offline token] in order to generate new ones.
 
 ```
-export RH_OFFLINE_TOKEN="[offline token]"
+export RH_OFFLINE_TOKEN_PROD="[offline token]"
 export RH_TOKEN="$(./scripts/get-redhat-access-token.py)"
+```
+
+To query the Stage environment, set an appropriate token and pass in the environment parameter.
+```
+export RH_OFFLINE_TOKEN_STAGE="[offline token]"
+export RH_TOKEN="$(./scripts/get-redhat-access-token.py -e stage)"
 ```
 
 Use the access token in the request header. Here is an example using [httpie].

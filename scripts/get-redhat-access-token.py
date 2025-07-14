@@ -22,10 +22,11 @@ def main():
     )
     args = parser.parse_args()
 
-    offline_token = os.getenv("RH_OFFLINE_TOKEN")
+    token_env_var = f"RH_OFFLINE_TOKEN_{args.env.upper()}"
+    offline_token = os.getenv(token_env_var)
     if offline_token is None:
         sys.exit(
-            "RH_OFFLINE_TOKEN is not set."
+            f"{token_env_var} is not set."
             "\nCreate an offline token by following the directions at "
             "https://access.redhat.com/articles/3626371."
         )

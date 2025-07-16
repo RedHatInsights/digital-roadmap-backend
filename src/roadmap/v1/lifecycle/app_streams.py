@@ -278,7 +278,6 @@ async def systems_by_app_stream(
             missing["os_version"] += 1
             continue
 
-        os_major = system_profile.get("operating_system", {}).get("major")
         dnf_modules = system_profile.get("dnf_modules", [])
         installed_packages = system_profile.get("installed_packages", [])
 

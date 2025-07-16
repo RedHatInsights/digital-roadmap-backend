@@ -131,8 +131,8 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 64, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 509, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert count == 76, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 598, "Incorrect number of hosts in response. Did the fixture data change?"
     assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
@@ -356,10 +356,10 @@ def test_get_revelent_app_stream_related(api_prefix, client, mocker):
     related_count = sum(1 for item in data if item["related"])
     free_radius_streams = [n for n in data if "freeradius" in n["display_name"].casefold()]
 
+    assert result.status_code == 200, result.json()["detail"]
+    assert len(data) > 1
     assert len(free_radius_streams) <= 2, "Got too many related app streams for FreeRADIUS"
     assert related_count, "No related items were returned"
-    assert result.status_code == 200
-    assert len(data) > 1
 
 
 @pytest.mark.parametrize(

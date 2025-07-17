@@ -27,6 +27,7 @@ from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.data.app_streams import AppStreamType
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
@@ -77,6 +78,7 @@ class RelevantAppStream(BaseModel):
 
     name: str
     application_stream_name: str
+    application_stream_type: AppStreamType | None
     display_name: str
     os_major: int | None
     os_minor: int | None = None
@@ -465,6 +467,7 @@ async def get_relevant_app_streams(
                     name=app_stream.name,
                     display_name=app_stream.app_stream_entity.display_name,
                     application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                    application_stream_type=app_stream.app_stream_entity.application_stream_type,
                     start_date=app_stream.app_stream_entity.start_date,
                     end_date=app_stream.app_stream_entity.end_date,
                     os_major=app_stream.app_stream_entity.os_major,
@@ -490,6 +493,7 @@ async def get_relevant_app_streams(
                         name=app_stream.name,
                         display_name=app_stream.app_stream_entity.display_name,
                         application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                        application_stream_type=app_stream.app_stream_entity.application_stream_type,
                         start_date=app_stream.app_stream_entity.start_date,
                         end_date=app_stream.app_stream_entity.end_date,
                         os_major=app_stream.app_stream_entity.os_major,

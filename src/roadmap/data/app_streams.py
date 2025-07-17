@@ -87,7 +87,7 @@ class AppStreamEntity(BaseModel):
 
     @model_validator(mode="after")
     def set_rolling(self):
-        if self.lifecycle == 0 and self.end_date == date(1111, 11, 11):
+        if self.application_stream_type in [AppStreamType.rolling, AppStreamType.dependent]:
             self.rolling = True
 
         return self

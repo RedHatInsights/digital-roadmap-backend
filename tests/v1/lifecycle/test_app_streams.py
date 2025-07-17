@@ -9,6 +9,7 @@ from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamType
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
@@ -131,8 +132,8 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 76, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 598, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert count == 64, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 500, "Incorrect number of hosts in response. Did the fixture data change?"
     assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
@@ -423,6 +424,7 @@ def test_app_stream_missing_lifecycle_data():
         name="something",
         display_name="Something 1",
         application_stream_name="App Stream Name",
+        application_stream_type=AppStreamType.stream,
         start_date=None,
         end_date=None,
         os_major=1,
@@ -528,6 +530,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         name="pkg-name",
         display_name="Pkg Name 1",
         application_stream_name="Pkg Name",
+        application_stream_type=AppStreamType.stream,
         os_major=1,
         os_minor=1,
         count=4,

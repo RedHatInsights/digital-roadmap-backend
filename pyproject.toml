@@ -1,3 +1,11 @@
+[tool.gha-update]
+tag-only = [
+    "actions/checkout",
+    "actions/setup-python",
+    "codecov/codecov-action",
+    "pre-commit/action",
+]
+
 [tool.ruff]
 line-length = 120
 indent-width = 4

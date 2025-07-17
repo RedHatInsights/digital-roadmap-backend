@@ -44,6 +44,7 @@ def test_calculate_support_status_system(mocker, current_date, system_start, sys
         count=4,
         start_date=system_start,
         end_date=system_end,
+        system_names=[],
     )
 
     assert app_stream.support_status == expected_status

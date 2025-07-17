@@ -41,6 +41,13 @@ class HostCount(BaseModel):
     lifecycle: LifecycleType
 
 
+class SystemInfo(BaseModel):
+    """Information about relevant system."""
+
+    id: UUID
+    display_name: str
+
+
 class Lifecycle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -78,12 +85,24 @@ class System(Lifecycle):
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False
+    system_names: list[SystemInfo]
     systems: set[UUID] = set()
 
     @model_validator(mode="after")
     def set_display_name(self):
         if not self.display_name:
             self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
+
+        return self
+
+    @model_validator(mode="after")
+    def populate_systems(self):
+        """
+        Populate systems field using data in system_names.
+
+        Note: this can be removed once the systems field is deprecated.
+        """
+        self.systems = set(system_info.id for system_info in self.system_names)
 
         return self
 

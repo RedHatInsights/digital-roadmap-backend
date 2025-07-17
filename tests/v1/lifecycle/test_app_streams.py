@@ -419,6 +419,7 @@ def test_app_stream_missing_lifecycle_data():
         impl=AppStreamImplementation.package,
         rolling=True,
         systems=[],
+        system_names=[],
     )
 
     assert app_stream.start_date is None
@@ -523,6 +524,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         start_date=app_stream_start,
         end_date=app_stream_end,
         systems=[],
+        system_names=[],
     )
 
     assert app_stream.support_status == expected_status

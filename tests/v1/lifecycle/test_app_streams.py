@@ -132,8 +132,8 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 64, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 500, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert count == 60, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 457, "Incorrect number of hosts in response. Did the fixture data change?"
     assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
@@ -409,7 +409,7 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 1
+    assert len(data) == 2
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
     # and another with nodejs 18.

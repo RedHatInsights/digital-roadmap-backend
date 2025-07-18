@@ -14,11 +14,13 @@ from fastapi import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import model_validator
 from pydantic import TypeAdapter
 
 from roadmap.common import ensure_date
 from roadmap.config import Settings
 from roadmap.models import Meta
+from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
@@ -72,7 +74,19 @@ class UpcomingOutputDetails(BaseModel):
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
     potentiallyAffectedSystemsCount: int
-    potentiallyAffectedSystems: set[UUID]
+    potentiallyAffectedSystemsNames: list[SystemInfo]
+    potentiallyAffectedSystems: set[UUID] = []
+
+    @model_validator(mode="after")
+    def populate_systems(self):
+        """
+        Populate systems field using data in potentiallyAffectedSystemsNames.
+
+        Note: this can be removed once the systems field is deprecated.
+        """
+        self.potentiallyAffectedSystems = set(system_info.id for system_info in self.potentiallyAffectedSystemsNames)
+
+        return self
 
 
 class UpcomingOutput(BaseModel):
@@ -119,7 +133,7 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
 
 
 def get_upcoming_data_with_hosts(
-    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[UUID]], Depends(systems_by_app_stream)],
+    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[tuple[UUID, str]]], Depends(systems_by_app_stream)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     all: bool = False,
 ) -> list[UpcomingOutput]:
@@ -146,6 +160,8 @@ def get_upcoming_data_with_hosts(
             if upcoming.os_major not in os_major_versions:
                 continue
 
+        system_names = [SystemInfo(id=id, display_name=display_name) for id, display_name in systems]
+
         details = UpcomingOutputDetails(
             architecture=upcoming.details.architecture,
             detailFormat=upcoming.details.detailFormat,
@@ -154,7 +170,7 @@ def get_upcoming_data_with_hosts(
             dateAdded=upcoming.details.dateAdded,
             lastModified=upcoming.details.lastModified,
             potentiallyAffectedSystemsCount=len(systems),
-            potentiallyAffectedSystems=systems,
+            potentiallyAffectedSystemsNames=system_names,
         )
 
         result.append(

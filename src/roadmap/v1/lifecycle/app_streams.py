@@ -22,13 +22,13 @@ from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
-from roadmap.data.app_streams import APP_STREAM_MODULES_BY_KEY
-from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
-from roadmap.data.app_streams import APP_STREAM_PACKAGES
+from roadmap.data import APP_STREAM_MODULES_BY_KEY
+from roadmap.data import APP_STREAM_MODULES_PACKAGES
+from roadmap.data import APP_STREAM_PACKAGES
+from roadmap.data import OS_MAJORS_BY_APP_NAME
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import AppStreamType
-from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
 from roadmap.models import Meta

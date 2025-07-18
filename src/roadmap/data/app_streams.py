@@ -55,8 +55,8 @@ class AppStreamEntity(BaseModel):
 
     name: str = Field(min_length=1)
     display_name: str = ""
-    application_stream_name: str
-    application_stream_type: AppStreamType | None = None
+    application_stream_name: str = ""
+    application_stream_type: AppStreamType | str = ""
     stream: str
     start_date: Date | None = None
     end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)

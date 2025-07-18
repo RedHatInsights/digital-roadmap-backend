@@ -1855,6 +1855,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "httpd-core": AppStreamEntity(
@@ -1867,6 +1868,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=1,
         start_date=date(2022, 11, 15),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "httpd-devel": AppStreamEntity(
@@ -1879,6 +1881,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "httpd-filesystem": AppStreamEntity(
@@ -1891,6 +1894,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "httpd-manual": AppStreamEntity(
@@ -1903,6 +1907,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "httpd-tools": AppStreamEntity(
@@ -1915,6 +1920,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "idm-jss": AppStreamEntity(
@@ -3532,6 +3538,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-backup": AppStreamEntity(
@@ -3544,6 +3551,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-common": AppStreamEntity(
@@ -3556,6 +3564,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-devel": AppStreamEntity(
@@ -3567,6 +3576,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-embedded": AppStreamEntity(
@@ -3579,6 +3589,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-embedded-devel": AppStreamEntity(
@@ -3590,6 +3601,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-errmsg": AppStreamEntity(
@@ -3602,6 +3614,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-gssapi-server": AppStreamEntity(
@@ -3614,6 +3627,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-oqgraph-engine": AppStreamEntity(
@@ -3626,6 +3640,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-pam": AppStreamEntity(
@@ -3638,6 +3653,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-server": AppStreamEntity(
@@ -3650,6 +3666,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-server-galera": AppStreamEntity(
@@ -3662,6 +3679,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-server-utils": AppStreamEntity(
@@ -3674,6 +3692,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mariadb-test": AppStreamEntity(
@@ -3685,6 +3704,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mod_jk": AppStreamEntity(
@@ -3710,6 +3730,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mod_lua": AppStreamEntity(
@@ -3722,6 +3743,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mod_proxy_cluster": AppStreamEntity(
@@ -3747,6 +3769,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mod_session": AppStreamEntity(
@@ -3759,6 +3782,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mod_ssl": AppStreamEntity(
@@ -3771,6 +3795,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "mysql": AppStreamEntity(
@@ -3912,6 +3937,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "nodejs": AppStreamEntity(
@@ -4040,6 +4066,7 @@ APP_STREAM_PACKAGES = {
         os_major=8,
         os_minor=0,
         start_date=date(2019, 5, 7),
+        end_date=date(2029, 5, 31),
         rolling=False,
     ),
     "perl": AppStreamEntity(
@@ -4052,6 +4079,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Attribute-Handlers": AppStreamEntity(
@@ -4064,6 +4092,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-AutoLoader": AppStreamEntity(
@@ -4076,6 +4105,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-AutoSplit": AppStreamEntity(
@@ -4088,6 +4118,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-B": AppStreamEntity(
@@ -4100,6 +4131,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Benchmark": AppStreamEntity(
@@ -4112,6 +4144,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Class-Struct": AppStreamEntity(
@@ -4124,6 +4157,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Config-Extensions": AppStreamEntity(
@@ -4136,6 +4170,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-DBM_Filter": AppStreamEntity(
@@ -4148,6 +4183,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Devel-Peek": AppStreamEntity(
@@ -4160,6 +4196,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Devel-SelfStubber": AppStreamEntity(
@@ -4172,6 +4209,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-DirHandle": AppStreamEntity(
@@ -4184,6 +4222,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Dumpvalue": AppStreamEntity(
@@ -4196,6 +4235,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-DynaLoader": AppStreamEntity(
@@ -4208,6 +4248,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-English": AppStreamEntity(
@@ -4220,6 +4261,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Errno": AppStreamEntity(
@@ -4232,6 +4274,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-ExtUtils-Constant": AppStreamEntity(
@@ -4244,6 +4287,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-ExtUtils-Embed": AppStreamEntity(
@@ -4256,6 +4300,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-ExtUtils-Miniperl": AppStreamEntity(
@@ -4268,6 +4313,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Fcntl": AppStreamEntity(
@@ -4280,6 +4326,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-Basename": AppStreamEntity(
@@ -4292,6 +4339,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-Compare": AppStreamEntity(
@@ -4304,6 +4352,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-Copy": AppStreamEntity(
@@ -4316,6 +4365,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-DosGlob": AppStreamEntity(
@@ -4328,6 +4378,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-Find": AppStreamEntity(
@@ -4340,6 +4391,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-File-stat": AppStreamEntity(
@@ -4352,6 +4404,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-FileCache": AppStreamEntity(
@@ -4364,6 +4417,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-FileHandle": AppStreamEntity(
@@ -4376,6 +4430,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-FindBin": AppStreamEntity(
@@ -4388,6 +4443,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-GDBM_File": AppStreamEntity(
@@ -4400,6 +4456,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Getopt-Std": AppStreamEntity(
@@ -4412,6 +4469,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Git": AppStreamEntity(
@@ -4448,6 +4506,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Hash-Util-FieldHash": AppStreamEntity(
@@ -4460,6 +4519,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-I18N-Collate": AppStreamEntity(
@@ -4472,6 +4532,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-I18N-LangTags": AppStreamEntity(
@@ -4484,6 +4545,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-I18N-Langinfo": AppStreamEntity(
@@ -4496,6 +4558,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-IO": AppStreamEntity(
@@ -4508,6 +4571,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-IPC-Open3": AppStreamEntity(
@@ -4520,6 +4584,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Locale-Maketext-Simple": AppStreamEntity(
@@ -4532,6 +4597,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Math-Complex": AppStreamEntity(
@@ -4544,6 +4610,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Memoize": AppStreamEntity(
@@ -4556,6 +4623,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Module-Loaded": AppStreamEntity(
@@ -4568,6 +4636,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-NDBM_File": AppStreamEntity(
@@ -4580,6 +4649,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-NEXT": AppStreamEntity(
@@ -4592,6 +4662,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Net": AppStreamEntity(
@@ -4604,6 +4675,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-ODBM_File": AppStreamEntity(
@@ -4616,6 +4688,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Opcode": AppStreamEntity(
@@ -4628,6 +4701,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-POSIX": AppStreamEntity(
@@ -4640,6 +4714,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Pod-Functions": AppStreamEntity(
@@ -4652,6 +4727,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Pod-Html": AppStreamEntity(
@@ -4664,6 +4740,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Safe": AppStreamEntity(
@@ -4676,6 +4753,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Search-Dict": AppStreamEntity(
@@ -4688,6 +4766,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-SelectSaver": AppStreamEntity(
@@ -4700,6 +4779,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-SelfLoader": AppStreamEntity(
@@ -4712,6 +4792,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Symbol": AppStreamEntity(
@@ -4724,6 +4805,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Sys-Hostname": AppStreamEntity(
@@ -4736,6 +4818,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Term-Complete": AppStreamEntity(
@@ -4748,6 +4831,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Term-ReadLine": AppStreamEntity(
@@ -4760,6 +4844,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Test": AppStreamEntity(
@@ -4772,6 +4857,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Text-Abbrev": AppStreamEntity(
@@ -4784,6 +4870,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Thread": AppStreamEntity(
@@ -4796,6 +4883,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Thread-Semaphore": AppStreamEntity(
@@ -4808,6 +4896,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Tie": AppStreamEntity(
@@ -4820,6 +4909,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Tie-File": AppStreamEntity(
@@ -4832,6 +4922,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Tie-Memoize": AppStreamEntity(
@@ -4844,6 +4935,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Time": AppStreamEntity(
@@ -4856,6 +4948,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Time-Piece": AppStreamEntity(
@@ -4868,6 +4961,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-Unicode-UCD": AppStreamEntity(
@@ -4880,6 +4974,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-User-pwent": AppStreamEntity(
@@ -4892,6 +4987,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-autouse": AppStreamEntity(
@@ -4904,6 +5000,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-base": AppStreamEntity(
@@ -4916,6 +5013,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-blib": AppStreamEntity(
@@ -4928,6 +5026,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-debugger": AppStreamEntity(
@@ -4940,6 +5039,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-deprecate": AppStreamEntity(
@@ -4952,6 +5052,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-devel": AppStreamEntity(
@@ -4964,6 +5065,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-diagnostics": AppStreamEntity(
@@ -4976,6 +5078,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-doc": AppStreamEntity(
@@ -4987,6 +5090,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-encoding-warnings": AppStreamEntity(
@@ -4999,6 +5103,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-fields": AppStreamEntity(
@@ -5011,6 +5116,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-filetest": AppStreamEntity(
@@ -5023,6 +5129,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-if": AppStreamEntity(
@@ -5035,6 +5142,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-interpreter": AppStreamEntity(
@@ -5047,6 +5155,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-less": AppStreamEntity(
@@ -5059,6 +5168,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-lib": AppStreamEntity(
@@ -5071,6 +5181,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-libnetcfg": AppStreamEntity(
@@ -5083,6 +5194,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-libs": AppStreamEntity(
@@ -5095,6 +5207,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-locale": AppStreamEntity(
@@ -5107,6 +5220,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-macros": AppStreamEntity(
@@ -5119,6 +5233,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-meta-notation": AppStreamEntity(
@@ -5131,6 +5246,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-mro": AppStreamEntity(
@@ -5143,6 +5259,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-open": AppStreamEntity(
@@ -5155,6 +5272,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-overload": AppStreamEntity(
@@ -5167,6 +5285,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-overloading": AppStreamEntity(
@@ -5179,6 +5298,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-ph": AppStreamEntity(
@@ -5191,6 +5311,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-sigtrap": AppStreamEntity(
@@ -5203,6 +5324,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-sort": AppStreamEntity(
@@ -5215,6 +5337,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-subs": AppStreamEntity(
@@ -5227,6 +5350,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-utils": AppStreamEntity(
@@ -5239,6 +5363,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-vars": AppStreamEntity(
@@ -5251,6 +5376,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "perl-vmsish": AppStreamEntity(
@@ -5263,6 +5389,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php": AppStreamEntity(
@@ -5275,6 +5402,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-bcmath": AppStreamEntity(
@@ -5287,6 +5415,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-cli": AppStreamEntity(
@@ -5299,6 +5428,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-common": AppStreamEntity(
@@ -5311,6 +5441,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-dba": AppStreamEntity(
@@ -5323,6 +5454,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-dbg": AppStreamEntity(
@@ -5335,6 +5467,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-devel": AppStreamEntity(
@@ -5347,6 +5480,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-embedded": AppStreamEntity(
@@ -5359,6 +5493,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-enchant": AppStreamEntity(
@@ -5371,6 +5506,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-ffi": AppStreamEntity(
@@ -5383,6 +5519,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-fpm": AppStreamEntity(
@@ -5395,6 +5532,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-gd": AppStreamEntity(
@@ -5407,6 +5545,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-gmp": AppStreamEntity(
@@ -5419,6 +5558,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-intl": AppStreamEntity(
@@ -5431,6 +5571,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-ldap": AppStreamEntity(
@@ -5443,6 +5584,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-mbstring": AppStreamEntity(
@@ -5455,6 +5597,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-mysqlnd": AppStreamEntity(
@@ -5467,6 +5610,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-odbc": AppStreamEntity(
@@ -5479,6 +5623,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-opcache": AppStreamEntity(
@@ -5491,6 +5636,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-pdo": AppStreamEntity(
@@ -5503,6 +5649,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-pgsql": AppStreamEntity(
@@ -5515,6 +5662,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-process": AppStreamEntity(
@@ -5527,6 +5675,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-snmp": AppStreamEntity(
@@ -5539,6 +5688,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-soap": AppStreamEntity(
@@ -5551,6 +5701,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "php-xml": AppStreamEntity(
@@ -5563,6 +5714,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "pki-acme": AppStreamEntity(
@@ -5932,6 +6084,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-contrib": AppStreamEntity(
@@ -5944,6 +6097,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-plperl": AppStreamEntity(
@@ -5956,6 +6110,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-plpython3": AppStreamEntity(
@@ -5968,6 +6123,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-pltcl": AppStreamEntity(
@@ -5980,6 +6136,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-private-devel": AppStreamEntity(
@@ -5991,6 +6148,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-private-libs": AppStreamEntity(
@@ -6002,6 +6160,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-server": AppStreamEntity(
@@ -6014,6 +6173,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-server-devel": AppStreamEntity(
@@ -6025,6 +6185,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-test": AppStreamEntity(
@@ -6036,6 +6197,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "postgresql-upgrade": AppStreamEntity(
@@ -6048,6 +6210,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python-unversioned-command": AppStreamEntity(
@@ -6060,6 +6223,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3": AppStreamEntity(
@@ -6072,6 +6236,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-clang": AppStreamEntity(
@@ -6095,6 +6260,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-devel": AppStreamEntity(
@@ -6107,6 +6273,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-idle": AppStreamEntity(
@@ -6118,6 +6285,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-idm-pki": AppStreamEntity(
@@ -6143,6 +6311,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-lit": AppStreamEntity(
@@ -6203,6 +6372,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3-tkinter": AppStreamEntity(
@@ -6215,6 +6385,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11": AppStreamEntity(
@@ -6304,6 +6475,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11-devel": AppStreamEntity(
@@ -6328,6 +6500,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11-idna": AppStreamEntity(
@@ -6469,6 +6642,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11-psycopg2-tests": AppStreamEntity(
@@ -6480,6 +6654,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11-pycparser": AppStreamEntity(
@@ -6634,6 +6809,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.11-tkinter": AppStreamEntity(
@@ -6684,6 +6860,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=2,
         start_date=date(2023, 5, 10),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "python3.12": AppStreamEntity(
@@ -7099,6 +7276,7 @@ APP_STREAM_PACKAGES = {
         os_major=8,
         os_minor=10,
         start_date=date(2024, 5, 22),
+        end_date=date(2029, 5, 31),
         rolling=False,
     ),
     "python3.12-scipy": AppStreamEntity(
@@ -7266,6 +7444,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "ruby-bundled-gems": AppStreamEntity(
@@ -7278,6 +7457,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "ruby-default-gems": AppStreamEntity(
@@ -7290,6 +7470,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "ruby-devel": AppStreamEntity(
@@ -7302,6 +7483,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "ruby-doc": AppStreamEntity(
@@ -7313,6 +7495,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "ruby-libs": AppStreamEntity(
@@ -7325,6 +7508,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-bigdecimal": AppStreamEntity(
@@ -7337,6 +7521,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-bundler": AppStreamEntity(
@@ -7349,6 +7534,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-io-console": AppStreamEntity(
@@ -7361,6 +7547,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-irb": AppStreamEntity(
@@ -7373,6 +7560,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-json": AppStreamEntity(
@@ -7385,6 +7573,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-minitest": AppStreamEntity(
@@ -7397,6 +7586,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-mysql2": AppStreamEntity(
@@ -7409,6 +7599,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "rubygem-mysql2-doc": AppStreamEntity(
@@ -7421,6 +7612,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "rubygem-pg": AppStreamEntity(
@@ -7433,6 +7625,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "rubygem-pg-doc": AppStreamEntity(
@@ -7445,6 +7638,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "rubygem-power_assert": AppStreamEntity(
@@ -7457,6 +7651,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-psych": AppStreamEntity(
@@ -7469,6 +7664,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-racc": AppStreamEntity(
@@ -7481,6 +7677,7 @@ APP_STREAM_PACKAGES = {
         os_major=10,
         os_minor=0,
         start_date=date(2025, 5, 13),
+        end_date=date(2035, 5, 31),
         rolling=False,
     ),
     "rubygem-rake": AppStreamEntity(
@@ -7493,6 +7690,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-rbs": AppStreamEntity(
@@ -7505,6 +7703,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-rdoc": AppStreamEntity(
@@ -7517,6 +7716,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-rexml": AppStreamEntity(
@@ -7529,6 +7729,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-rss": AppStreamEntity(
@@ -7541,6 +7742,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-test-unit": AppStreamEntity(
@@ -7553,6 +7755,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygem-typeprof": AppStreamEntity(
@@ -7565,6 +7768,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygems": AppStreamEntity(
@@ -7577,6 +7781,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "rubygems-devel": AppStreamEntity(
@@ -7589,6 +7794,7 @@ APP_STREAM_PACKAGES = {
         os_major=9,
         os_minor=0,
         start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
         rolling=False,
     ),
     "runc": AppStreamEntity(

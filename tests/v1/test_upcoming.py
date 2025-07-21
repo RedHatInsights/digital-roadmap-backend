@@ -1,12 +1,16 @@
+from datetime import date
 from pathlib import Path
+from uuid import uuid4
 
 from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
+from roadmap.v1.upcoming import UpcomingOutputDetails
 
 
 def test_get_upcoming_changes(client, api_prefix):
@@ -117,3 +121,27 @@ def test_get_upcoming_data_with_hosts():
 
     assert len(result) >= 1
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
+
+
+def test_upcoming_populate_systems_from_system_names():
+    """Check if the systems are correctly set using validator."""
+    system1_id = uuid4()
+    system2_id = uuid4()
+    system_names = [
+        SystemInfo(id=system1_id, display_name="System 1"),
+        SystemInfo(id=system2_id, display_name="System 2"),
+    ]
+
+    upcoming = UpcomingOutputDetails(
+        architecture=None,
+        detailFormat=0,
+        summary="Summary",
+        trainingTicket="Ticket",
+        dateAdded=date.today(),
+        lastModified="2025-01-01",
+        potentiallyAffectedSystemsCount=2,
+        potentiallyAffectedSystemNames=system_names,
+    )
+
+    assert upcoming.potentiallyAffectedSystems == [system1_id, system2_id]
+    assert len(upcoming.potentiallyAffectedSystems) == 2

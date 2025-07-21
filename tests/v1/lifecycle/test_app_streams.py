@@ -2,6 +2,7 @@ from datetime import date
 from email.message import Message
 from io import BytesIO
 from urllib.error import HTTPError
+from uuid import uuid4
 
 import pytest
 
@@ -10,6 +11,7 @@ from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.models import SupportStatus
+from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
@@ -416,7 +418,6 @@ def test_app_stream_missing_lifecycle_data():
         os_major=1,
         support_status=SupportStatus.supported,
         count=4,
-        impl=AppStreamImplementation.package,
         rolling=True,
         systems=[],
         system_names=[],
@@ -556,3 +557,29 @@ def test_from_string(package, expected):
         package.release,
         package.arch,
     ) == expected
+
+
+def test_relevant_app_stream_populate_systems_from_system_names():
+    """Check if the systems are correcly set using validator."""
+    system1_id = uuid4()
+    system2_id = uuid4()
+    system_names = [
+        SystemInfo(id=system1_id, display_name="System 1"),
+        SystemInfo(id=system2_id, display_name="System 2"),
+    ]
+
+    app_stream = RelevantAppStream(
+        name="nginx",
+        display_name="NGINX 1.22",
+        application_stream_name="nginx",
+        os_major=9,
+        os_minor=1,
+        count=2,
+        rolling=False,
+        start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
+        system_names=system_names,
+    )
+
+    assert app_stream.systems == [system1_id, system2_id]
+    assert len(app_stream.systems) == 2

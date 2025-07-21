@@ -75,7 +75,7 @@ class UpcomingOutputDetails(BaseModel):
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
     potentiallyAffectedSystemsCount: int
-    potentiallyAffectedSystemsNames: list[SystemInfo]
+    potentiallyAffectedSystemNames: list[SystemInfo]
     potentiallyAffectedSystems: list[UUID] = []
 
     @model_validator(mode="after")
@@ -85,7 +85,7 @@ class UpcomingOutputDetails(BaseModel):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemsNames)
+        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemNames)
 
         return self
 
@@ -171,7 +171,7 @@ def get_upcoming_data_with_hosts(
             dateAdded=upcoming.details.dateAdded,
             lastModified=upcoming.details.lastModified,
             potentiallyAffectedSystemsCount=len(systems),
-            potentiallyAffectedSystemsNames=system_names,
+            potentiallyAffectedSystemNames=system_names,
         )
 
         result.append(

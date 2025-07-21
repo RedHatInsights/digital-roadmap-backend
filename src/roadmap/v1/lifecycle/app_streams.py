@@ -30,6 +30,7 @@ from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
+from roadmap.models import _get_system_uuids
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
 from roadmap.models import SystemInfo
@@ -110,7 +111,7 @@ class RelevantAppStream(BaseModel):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.systems = list(system_info.id for system_info in self.system_names)
+        self.systems = _get_system_uuids(self.system_names)
 
         return self
 

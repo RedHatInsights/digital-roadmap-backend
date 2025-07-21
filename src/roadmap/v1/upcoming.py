@@ -19,6 +19,7 @@ from pydantic import TypeAdapter
 
 from roadmap.common import ensure_date
 from roadmap.config import Settings
+from roadmap.models import _get_system_uuids
 from roadmap.models import Meta
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
@@ -75,7 +76,7 @@ class UpcomingOutputDetails(BaseModel):
     lastModified: Date
     potentiallyAffectedSystemsCount: int
     potentiallyAffectedSystemsNames: list[SystemInfo]
-    potentiallyAffectedSystems: set[UUID] = []
+    potentiallyAffectedSystems: list[UUID] = []
 
     @model_validator(mode="after")
     def populate_systems(self):
@@ -84,7 +85,7 @@ class UpcomingOutputDetails(BaseModel):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.potentiallyAffectedSystems = set(system_info.id for system_info in self.potentiallyAffectedSystemsNames)
+        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemsNames)
 
         return self
 

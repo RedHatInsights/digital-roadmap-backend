@@ -86,7 +86,7 @@ class System(Lifecycle):
     lifecycle_type: LifecycleType
     related: bool = False
     system_names: list[SystemInfo]
-    systems: set[UUID] = set()
+    systems: list[UUID] = list()
 
     @model_validator(mode="after")
     def set_display_name(self):
@@ -102,7 +102,7 @@ class System(Lifecycle):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.systems = set(system_info.id for system_info in self.system_names)
+        self.systems = _get_system_uuids(self.system_names)
 
         return self
 
@@ -166,3 +166,7 @@ def _get_rhel_display_name(name: str, major: int, minor: int | None):
         display_name += f".{minor}"
 
     return display_name
+
+
+def _get_system_uuids(system_names: list[SystemInfo]) -> list[UUID]:
+    return list(system_info.id for system_info in system_names)

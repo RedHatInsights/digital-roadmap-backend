@@ -87,8 +87,8 @@ class RelevantAppStream(BaseModel):
     count: int
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
-    system_names: list[SystemInfo]
-    systems: list[UUID] = []
+    systems_detail: set[SystemInfo]
+    systems: set[UUID] = set()
     related: bool = False
 
     @model_validator(mode="after")
@@ -111,7 +111,7 @@ class RelevantAppStream(BaseModel):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.systems = _get_system_uuids(self.system_names)
+        self.systems = _get_system_uuids(self.systems_detail)
 
         return self
 
@@ -268,8 +268,8 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
-) -> dict[AppStreamKey, set[tuple[UUID, str]]]:
-    """Return a mapping of AppStreams to ids of systems using that stream."""
+) -> dict[AppStreamKey, set[SystemInfo]]:
+    """Return a mapping of AppStreams to informations about systems using that stream."""
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
 
     missing = defaultdict(int)
@@ -303,13 +303,13 @@ async def systems_by_app_stream(
 
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
-        system_key = (system["id"], system["display_name"])
+        system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
         for package in installed_packages:
-            package_data[(package, os_major)].append(system_key)
+            package_data[(package, os_major)].append(system_info)
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
         for app_stream in module_app_streams:
-            systems_by_stream[app_stream].add(system_key)
+            systems_by_stream[app_stream].add(system_info)
 
     # Now process the packages outside of the host record loop
     for args, system_keys in package_data.items():
@@ -464,7 +464,7 @@ relevant = APIRouter(
     response_model=RelevantAppStreamsResponse,
 )
 async def get_relevant_app_streams(
-    systems_by_stream: t.Annotated[dict[AppStreamKey, set[tuple[UUID, str]]], Depends(systems_by_app_stream)],
+    systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
     relevant_app_streams = []
@@ -472,8 +472,6 @@ async def get_relevant_app_streams(
         # Omit rolling app streams.
         if app_stream.app_stream_entity.rolling:
             continue
-
-        system_names = [SystemInfo(id=id, display_name=display_name) for id, display_name in systems]
 
         try:
             relevant_app_streams.append(
@@ -487,7 +485,7 @@ async def get_relevant_app_streams(
                     os_minor=app_stream.app_stream_entity.os_minor,
                     count=len(systems),
                     rolling=app_stream.app_stream_entity.rolling,
-                    system_names=system_names,
+                    systems_detail=systems,
                     related=False,
                 )
             )
@@ -512,7 +510,7 @@ async def get_relevant_app_streams(
                         os_minor=app_stream.app_stream_entity.os_minor,
                         count=0,
                         rolling=app_stream.app_stream_entity.rolling,
-                        system_names=[],
+                        systems_detail=set(),
                         related=True,
                     )
                 )

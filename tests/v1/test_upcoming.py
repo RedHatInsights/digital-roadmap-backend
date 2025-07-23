@@ -127,10 +127,10 @@ def test_upcoming_populate_systems_from_system_names():
     """Check if the systems are correctly set using validator."""
     system1_id = uuid4()
     system2_id = uuid4()
-    system_names = [
+    systems_detail = {
         SystemInfo(id=system1_id, display_name="System 1"),
         SystemInfo(id=system2_id, display_name="System 2"),
-    ]
+    }
 
     upcoming = UpcomingOutputDetails(
         architecture=None,
@@ -140,8 +140,8 @@ def test_upcoming_populate_systems_from_system_names():
         dateAdded=date.today(),
         lastModified="2025-01-01",
         potentiallyAffectedSystemsCount=2,
-        potentiallyAffectedSystemNames=system_names,
+        potentiallyAffectedSystemsDetail=systems_detail,
     )
 
-    assert upcoming.potentiallyAffectedSystems == [system1_id, system2_id]
+    assert upcoming.potentiallyAffectedSystems == {system1_id, system2_id}
     assert len(upcoming.potentiallyAffectedSystems) == 2

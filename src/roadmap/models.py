@@ -47,6 +47,15 @@ class SystemInfo(BaseModel):
     id: UUID
     display_name: str
 
+    # eq and hash needed for using set() of systems_detail
+    def __eq__(self, other):
+        if not isinstance(other, SystemInfo):
+            return False
+        return self.id == other.id and self.display_name == other.display_name
+
+    def __hash__(self):
+        return hash((self.id, self.display_name))
+
 
 class Lifecycle(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -85,8 +94,8 @@ class System(Lifecycle):
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False
-    system_names: list[SystemInfo]
-    systems: list[UUID] = list()
+    systems_detail: set[SystemInfo]
+    systems: set[UUID] = set()
 
     @model_validator(mode="after")
     def set_display_name(self):
@@ -102,7 +111,7 @@ class System(Lifecycle):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.systems = _get_system_uuids(self.system_names)
+        self.systems = _get_system_uuids(self.systems_detail)
 
         return self
 
@@ -168,5 +177,5 @@ def _get_rhel_display_name(name: str, major: int, minor: int | None):
     return display_name
 
 
-def _get_system_uuids(system_names: list[SystemInfo]) -> list[UUID]:
-    return list(system_info.id for system_info in system_names)
+def _get_system_uuids(systems_detail: set[SystemInfo]) -> set[UUID]:
+    return set(system_info.id for system_info in systems_detail)

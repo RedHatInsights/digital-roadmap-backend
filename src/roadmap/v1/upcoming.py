@@ -75,8 +75,8 @@ class UpcomingOutputDetails(BaseModel):
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
     potentiallyAffectedSystemsCount: int
-    potentiallyAffectedSystemNames: list[SystemInfo]
-    potentiallyAffectedSystems: list[UUID] = []
+    potentiallyAffectedSystemsDetail: set[SystemInfo]
+    potentiallyAffectedSystems: set[UUID] = set()
 
     @model_validator(mode="after")
     def populate_systems(self):
@@ -85,7 +85,7 @@ class UpcomingOutputDetails(BaseModel):
 
         Note: this can be removed once the systems field is deprecated.
         """
-        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemNames)
+        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemsDetail)
 
         return self
 
@@ -134,7 +134,7 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
 
 
 def get_upcoming_data_with_hosts(
-    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[tuple[UUID, str]]], Depends(systems_by_app_stream)],
+    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     all: bool = False,
 ) -> list[UpcomingOutput]:
@@ -161,8 +161,6 @@ def get_upcoming_data_with_hosts(
             if upcoming.os_major not in os_major_versions:
                 continue
 
-        system_names = [SystemInfo(id=id, display_name=display_name) for id, display_name in systems]
-
         details = UpcomingOutputDetails(
             architecture=upcoming.details.architecture,
             detailFormat=upcoming.details.detailFormat,
@@ -171,7 +169,7 @@ def get_upcoming_data_with_hosts(
             dateAdded=upcoming.details.dateAdded,
             lastModified=upcoming.details.lastModified,
             potentiallyAffectedSystemsCount=len(systems),
-            potentiallyAffectedSystemNames=system_names,
+            potentiallyAffectedSystemsDetail=systems,
         )
 
         result.append(

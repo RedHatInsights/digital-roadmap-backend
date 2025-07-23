@@ -47,7 +47,7 @@ def test_calculate_support_status_system(mocker, current_date, system_start, sys
         count=4,
         start_date=system_start,
         end_date=system_end,
-        system_names=[],
+        systems_detail=set(),
     )
 
     assert app_stream.support_status == expected_status
@@ -69,33 +69,33 @@ def test_get_system_uuids_with_multiple_systems():
     system2_id = uuid4()
     system3_id = uuid4()
 
-    system_names = [
+    systems_detail = {
         SystemInfo(id=system1_id, display_name="System 1"),
         SystemInfo(id=system2_id, display_name="System 2"),
         SystemInfo(id=system3_id, display_name="System 3"),
-    ]
+    }
 
-    result = _get_system_uuids(system_names)
+    result = _get_system_uuids(systems_detail)
 
-    assert result == [system1_id, system2_id, system3_id]
+    assert result == {system1_id, system2_id, system3_id}
     assert len(result) == 3
     assert all(isinstance(uuid, type(system1_id)) for uuid in result)
 
 
 def test_get_system_uuids_with_single_system():
     system_id = uuid4()
-    system_names = [SystemInfo(id=system_id, display_name="System")]
+    systems_detail = {SystemInfo(id=system_id, display_name="System")}
 
-    result = _get_system_uuids(system_names)
+    result = _get_system_uuids(systems_detail)
 
-    assert result == [system_id]
+    assert result == {system_id}
     assert len(result) == 1
 
 
 def test_get_system_uuids_with_empty_system_list():
-    result = _get_system_uuids([])
+    result = _get_system_uuids(set())
 
-    assert result == []
+    assert result == set()
     assert len(result) == 0
 
 
@@ -103,10 +103,10 @@ def test_system_populate_systems_from_system_names():
     """Check if the systems are correcly set using validator."""
     system1_id = uuid4()
     system2_id = uuid4()
-    system_names = [
+    systems_detail = {
         SystemInfo(id=system1_id, display_name="System 1"),
         SystemInfo(id=system2_id, display_name="System 2"),
-    ]
+    }
 
     system = System(
         name="RHEL",
@@ -116,8 +116,8 @@ def test_system_populate_systems_from_system_names():
         count=2,
         start_date=date(2022, 5, 17),
         end_date=date(2032, 5, 31),
-        system_names=system_names,
+        systems_detail=systems_detail,
     )
 
-    assert system.systems == [system1_id, system2_id]
+    assert system.systems == {system1_id, system2_id}
     assert len(system.systems) == 2

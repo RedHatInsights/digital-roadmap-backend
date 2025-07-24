@@ -198,7 +198,7 @@ async def get_upcoming_relevant(
 
     """
     if not all:
-        data = [d for d in data if d.details.potentiallyAffectedSystems]
+        data = [d for d in data if d.details.potentiallyAffectedSystemsDetail]
 
     return {
         "meta": {

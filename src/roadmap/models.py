@@ -12,10 +12,11 @@ from pydantic import model_validator
 
 
 def _get_system_uuids(data) -> set[UUID]:
-    if "system_names" not in data:
-        return set()
-
-    return set(system.id for system in data["system_names"])
+    if "system_names" in data:  # System and RelevantAppStream
+        return set(system.id for system in data["system_names"])
+    elif "potentiallyAffectedSystemsDetail" in data:  # UpcomingOutputDetails
+        return set(system.id for system in data["potentiallyAffectedSystemsDetail"])
+    return set()
 
 
 class Meta(BaseModel):

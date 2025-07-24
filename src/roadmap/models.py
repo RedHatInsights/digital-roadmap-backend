@@ -11,6 +11,13 @@ from pydantic import Field
 from pydantic import model_validator
 
 
+def _get_system_uuids(data) -> set[UUID]:
+    if "system_names" not in data:
+        return set()
+
+    return set(system.id for system in data["system_names"])
+
+
 class Meta(BaseModel):
     count: int
     total: int | None = None
@@ -43,6 +50,8 @@ class HostCount(BaseModel):
 
 class SystemInfo(BaseModel):
     """Information about relevant system."""
+
+    model_config = ConfigDict(frozen=True)
 
     id: UUID
     display_name: str
@@ -95,23 +104,12 @@ class System(Lifecycle):
     lifecycle_type: LifecycleType
     related: bool = False
     systems_detail: set[SystemInfo]
-    systems: set[UUID] = set()
+    systems: set[UUID] = Field(default_factory=_get_system_uuids)
 
     @model_validator(mode="after")
     def set_display_name(self):
         if not self.display_name:
             self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
-
-        return self
-
-    @model_validator(mode="after")
-    def populate_systems(self):
-        """
-        Populate systems field using data in system_names.
-
-        Note: this can be removed once the systems field is deprecated.
-        """
-        self.systems = _get_system_uuids(self.systems_detail)
 
         return self
 
@@ -175,7 +173,3 @@ def _get_rhel_display_name(name: str, major: int, minor: int | None):
         display_name += f".{minor}"
 
     return display_name
-
-
-def _get_system_uuids(systems_detail: set[SystemInfo]) -> set[UUID]:
-    return set(system_info.id for system_info in systems_detail)

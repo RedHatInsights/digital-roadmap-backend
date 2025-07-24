@@ -14,7 +14,6 @@ from fastapi import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import model_validator
 from pydantic import TypeAdapter
 
 from roadmap.common import ensure_date
@@ -76,18 +75,7 @@ class UpcomingOutputDetails(BaseModel):
     lastModified: Date
     potentiallyAffectedSystemsCount: int
     potentiallyAffectedSystemsDetail: set[SystemInfo]
-    potentiallyAffectedSystems: set[UUID] = set()
-
-    @model_validator(mode="after")
-    def populate_systems(self):
-        """
-        Populate systems field using data in potentiallyAffectedSystemsNames.
-
-        Note: this can be removed once the systems field is deprecated.
-        """
-        self.potentiallyAffectedSystems = _get_system_uuids(self.potentiallyAffectedSystemsDetail)
-
-        return self
+    potentiallyAffectedSystems: set[UUID] = Field(default_factory=_get_system_uuids)
 
 
 class UpcomingOutput(BaseModel):

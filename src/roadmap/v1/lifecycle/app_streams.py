@@ -13,6 +13,7 @@ from fastapi import Query
 from fastapi.exceptions import HTTPException
 from pydantic import AfterValidator
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio.result import AsyncResult
 
@@ -88,7 +89,7 @@ class RelevantAppStream(BaseModel):
     rolling: bool = False
     support_status: SupportStatus = SupportStatus.unknown
     systems_detail: set[SystemInfo]
-    systems: set[UUID] = set()
+    systems: set[UUID] = Field(default_factory=_get_system_uuids)
     related: bool = False
 
     @model_validator(mode="after")
@@ -101,17 +102,6 @@ class RelevantAppStream(BaseModel):
             current_date=today,  # pyright: ignore [reportArgumentType]
             months=6,
         )
-
-        return self
-
-    @model_validator(mode="after")
-    def populate_systems(self):
-        """
-        Populate systems field using data in system_names.
-
-        Note: this can be removed once the systems field is deprecated.
-        """
-        self.systems = _get_system_uuids(self.systems_detail)
 
         return self
 
@@ -312,10 +302,10 @@ async def systems_by_app_stream(
             systems_by_stream[app_stream].add(system_info)
 
     # Now process the packages outside of the host record loop
-    for args, system_keys in package_data.items():
+    for args, systems in package_data.items():
         package, os_major = args
         if app_stream := app_stream_from_package(package, os_major):
-            systems_by_stream[app_stream].update(system_keys)
+            systems_by_stream[app_stream].update(systems)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

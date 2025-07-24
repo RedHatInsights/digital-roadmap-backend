@@ -21,6 +21,7 @@ Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 _DISPLAY_NAME_SPECIAL_CASES = {
     "apache httpd": "Apache HTTPD",
     "freeradius": "FreeRADIUS",
+    "gcc-toolset": "GCC Toolset",
     "llvm": "LLVM",
     "mariadb": "MariaDB",
     "mod_auth_openidc for apache": "Mod Auth OpenIDC for Apache",

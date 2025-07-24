@@ -1,13 +1,11 @@
 from datetime import date
 from pathlib import Path
-from uuid import uuid4
 
 from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
-from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
 from roadmap.v1.upcoming import UpcomingOutputDetails
@@ -123,14 +121,15 @@ def test_get_upcoming_data_with_hosts():
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
 
 
-def test_upcoming_populate_systems_from_systems_detail():
-    """Check if the systems are correctly set using validator."""
-    system1_id = uuid4()
-    system2_id = uuid4()
-    systems_detail = {
-        SystemInfo(id=system1_id, display_name="System 1"),
-        SystemInfo(id=system2_id, display_name="System 2"),
-    }
+def test_upcoming_populate_systems_from_systems_detail(generate_system_detail, count=2):
+    """Check if the systems are correctly set using generator."""
+    system_ids = set()
+    systems_detail = set()
+
+    for _ in range(0, count):
+        system, system_id = generate_system_detail
+        system_ids.add(system_id)
+        systems_detail.add(system)
 
     upcoming = UpcomingOutputDetails(
         architecture=None,
@@ -139,9 +138,8 @@ def test_upcoming_populate_systems_from_systems_detail():
         trainingTicket="Ticket",
         dateAdded=date.today(),
         lastModified="2025-01-01",
-        potentiallyAffectedSystemsCount=2,
+        potentiallyAffectedSystemsCount=count,
         potentiallyAffectedSystemsDetail=systems_detail,
     )
 
-    assert upcoming.potentiallyAffectedSystems == {system1_id, system2_id}
-    assert len(upcoming.potentiallyAffectedSystems) == 2
+    assert upcoming.potentiallyAffectedSystems == system_ids

@@ -1,13 +1,15 @@
 from datetime import date
-from uuid import uuid4
 
 import pytest
 
+from pydantic import BaseModel
+from pydantic import Field
+
 from roadmap.models import _get_rhel_display_name
+from roadmap.models import _get_system_uuids
 from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
 from roadmap.models import System
-from roadmap.models import SystemInfo
 from tests.utils import SUPPORT_STATUS_TEST_CASES
 
 
@@ -63,63 +65,37 @@ def test_get_rhel_display_name(name, major, minor, expected):
     assert _get_rhel_display_name(name, major, minor) == expected
 
 
-def test_system_populate_systems_from_systems_details_multiple_systems():
-    system1_id = uuid4()
-    system2_id = uuid4()
-    system3_id = uuid4()
+@pytest.mark.parametrize("count", (0, 1, 2))
+def test_system_populate_systems_from_systems_details(generate_system_detail, count):
+    system_ids = set()
+    systems_detail = set()
 
-    systems_detail = {
-        SystemInfo(id=system1_id, display_name="System 1"),
-        SystemInfo(id=system2_id, display_name="System 2"),
-        SystemInfo(id=system3_id, display_name="System 3"),
-    }
+    for _ in range(0, count):
+        system, system_id = generate_system_detail
+        system_ids.add(system_id)
+        systems_detail.add(system)
 
-    system = System(
+    system_lifecycle = System(
         name="RHEL",
         major=9,
         minor=1,
         lifecycle_type=LifecycleType.mainline,
-        count=2,
+        count=count,
         start_date=date(2022, 5, 17),
         end_date=date(2032, 5, 31),
         systems_detail=systems_detail,
     )
 
-    assert system.systems == {system1_id, system2_id, system3_id}
-    assert len(system.systems) == 3
-    assert all(isinstance(uuid, type(system1_id)) for uuid in system.systems)
+    assert system_lifecycle.systems == system_ids
 
 
-def test_system_populate_systems_from_systems_details_single_system():
-    system_id = uuid4()
-    systems_detail = {SystemInfo(id=system_id, display_name="System")}
+def test_get_system_uuids():
+    """Test if nonexisting name for getting UUIDs from result in empty set."""
 
-    system = System(
-        name="RHEL",
-        major=9,
-        minor=1,
-        lifecycle_type=LifecycleType.mainline,
-        count=1,
-        start_date=date(2022, 5, 17),
-        end_date=date(2032, 5, 31),
-        systems_detail=systems_detail,
-    )
+    class Tester(BaseModel):
+        value: str = "aaa"
+        another_value: str = Field(default_factory=_get_system_uuids)
 
-    assert system.systems == {system_id}
-    assert len(system.systems) == 1
+    testing_class = Tester()
 
-
-def test_system_populate_systems_from_systems_details_empty_list():
-    system = System(
-        name="RHEL",
-        major=9,
-        minor=1,
-        lifecycle_type=LifecycleType.mainline,
-        count=0,
-        start_date=date(2022, 5, 17),
-        end_date=date(2032, 5, 31),
-        systems_detail=set(),
-    )
-
-    assert system.systems == set()
-    assert len(system.systems) == 0
+    assert testing_class.another_value == set()

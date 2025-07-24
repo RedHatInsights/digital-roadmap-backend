@@ -2,7 +2,6 @@ from datetime import date
 from email.message import Message
 from io import BytesIO
 from urllib.error import HTTPError
-from uuid import uuid4
 
 import pytest
 
@@ -11,7 +10,6 @@ from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.models import SupportStatus
-from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
@@ -559,14 +557,15 @@ def test_from_string(package, expected):
     ) == expected
 
 
-def test_relevant_app_stream_populate_systems_from_systems_detail():
-    """Check if the systems are correcly set using validator."""
-    system1_id = uuid4()
-    system2_id = uuid4()
-    systems_detail = {
-        SystemInfo(id=system1_id, display_name="System 1"),
-        SystemInfo(id=system2_id, display_name="System 2"),
-    }
+def test_relevant_app_stream_populate_systems_from_systems_detail(generate_system_detail, count=2):
+    """Check if the systems are correcly set using generator."""
+    system_ids = set()
+    systems_detail = set()
+
+    for _ in range(0, count):
+        system, system_id = generate_system_detail
+        system_ids.add(system_id)
+        systems_detail.add(system)
 
     app_stream = RelevantAppStream(
         name="nginx",
@@ -574,12 +573,11 @@ def test_relevant_app_stream_populate_systems_from_systems_detail():
         application_stream_name="nginx",
         os_major=9,
         os_minor=1,
-        count=2,
+        count=count,
         rolling=False,
         start_date=date(2022, 5, 17),
         end_date=date(2032, 5, 31),
         systems_detail=systems_detail,
     )
 
-    assert app_stream.systems == {system1_id, system2_id}
-    assert len(app_stream.systems) == 2
+    assert app_stream.systems == system_ids

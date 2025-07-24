@@ -11,18 +11,59 @@ from pydantic import Field
 from pydantic import model_validator
 
 
+class SupportStatus(StrEnum):
+    supported = "Supported"
+    near_retirement = "Near retirement"
+    retired = "Retired"
+    not_installed = "Not installed"
+    upcoming = "Upcoming release"
+    unknown = "Unknown"
+
+
 def _get_system_uuids(data) -> set[UUID]:
     """
-    Populate systems field using data in systems_detail.
+    Populate systems field using data in systems_detail.id field.
 
     Note: this can be removed once the systems field is deprecated.
     """
 
-    if "systems_detail" in data:  # System and RelevantAppStream
-        return set(system.id for system in data["systems_detail"])
-    elif "potentiallyAffectedSystemsDetail" in data:  # UpcomingOutputDetails
-        return set(system.id for system in data["potentiallyAffectedSystemsDetail"])
+    systems_detail = data.get("systems_detail", []) or data.get("potentiallyAffectedSystemsDetail", [])
+    if systems_detail:
+        return {system.id for system in systems_detail}
     return set()
+
+
+def _calculate_support_status(
+    start_date: date | None,
+    end_date: date | None,
+    current_date: date,
+    months: int,
+) -> SupportStatus:
+    support_status = SupportStatus.unknown
+
+    if start_date not in (None, SupportStatus.unknown):
+        if start_date > current_date:
+            return SupportStatus.upcoming
+
+    if end_date not in (None, SupportStatus.unknown):
+        if end_date < current_date:
+            return SupportStatus.retired
+
+        expiration_date = end_date - timedelta(days=30 * months)
+        if expiration_date <= current_date:
+            return SupportStatus.near_retirement
+
+        return SupportStatus.supported
+
+    return support_status
+
+
+def _get_rhel_display_name(name: str, major: int, minor: int | None):
+    display_name = f"{name} {major}"
+    if minor is not None:
+        display_name += f".{minor}"
+
+    return display_name
 
 
 class Meta(BaseModel):
@@ -35,15 +76,6 @@ class LifecycleType(StrEnum):
     eus = "EUS"
     els = "ELS"
     e4s = "E4S"
-
-
-class SupportStatus(StrEnum):
-    supported = "Supported"
-    near_retirement = "Near retirement"
-    retired = "Retired"
-    not_installed = "Not installed"
-    upcoming = "Upcoming release"
-    unknown = "Unknown"
 
 
 class HostCount(BaseModel):
@@ -147,36 +179,3 @@ class TaggedParagraph(BaseModel):
     title: str = Field(description="The paragraph title")
     text: str = Field(description="The paragraph text")
     tag: str = Field(description="The paragraph htmltag")
-
-
-def _calculate_support_status(
-    start_date: date | None,
-    end_date: date | None,
-    current_date: date,
-    months: int,
-) -> SupportStatus:
-    support_status = SupportStatus.unknown
-
-    if start_date not in (None, SupportStatus.unknown):
-        if start_date > current_date:
-            return SupportStatus.upcoming
-
-    if end_date not in (None, SupportStatus.unknown):
-        if end_date < current_date:
-            return SupportStatus.retired
-
-        expiration_date = end_date - timedelta(days=30 * months)
-        if expiration_date <= current_date:
-            return SupportStatus.near_retirement
-
-        return SupportStatus.supported
-
-    return support_status
-
-
-def _get_rhel_display_name(name: str, major: int, minor: int | None):
-    display_name = f"{name} {major}"
-    if minor is not None:
-        display_name += f".{minor}"
-
-    return display_name

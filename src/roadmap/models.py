@@ -12,8 +12,14 @@ from pydantic import model_validator
 
 
 def _get_system_uuids(data) -> set[UUID]:
-    if "system_names" in data:  # System and RelevantAppStream
-        return set(system.id for system in data["system_names"])
+    """
+    Populate systems field using data in systems_detail.
+
+    Note: this can be removed once the systems field is deprecated.
+    """
+
+    if "systems_detail" in data:  # System and RelevantAppStream
+        return set(system.id for system in data["systems_detail"])
     elif "potentiallyAffectedSystemsDetail" in data:  # UpcomingOutputDetails
         return set(system.id for system in data["potentiallyAffectedSystemsDetail"])
     return set()

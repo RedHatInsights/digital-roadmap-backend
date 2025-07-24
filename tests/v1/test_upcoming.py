@@ -123,7 +123,7 @@ def test_get_upcoming_data_with_hosts():
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
 
 
-def test_upcoming_populate_systems_from_system_names():
+def test_upcoming_populate_systems_from_systems_detail():
     """Check if the systems are correctly set using validator."""
     system1_id = uuid4()
     system2_id = uuid4()

@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 
 from roadmap.models import _get_rhel_display_name
-from roadmap.models import _get_system_uuids
 from roadmap.models import LifecycleType
 from roadmap.models import SupportStatus
 from roadmap.models import System
@@ -64,7 +63,7 @@ def test_get_rhel_display_name(name, major, minor, expected):
     assert _get_rhel_display_name(name, major, minor) == expected
 
 
-def test_get_system_uuids_with_multiple_systems():
+def test_system_populate_systems_from_systems_details_multiple_systems():
     system1_id = uuid4()
     system2_id = uuid4()
     system3_id = uuid4()
@@ -73,39 +72,6 @@ def test_get_system_uuids_with_multiple_systems():
         SystemInfo(id=system1_id, display_name="System 1"),
         SystemInfo(id=system2_id, display_name="System 2"),
         SystemInfo(id=system3_id, display_name="System 3"),
-    }
-
-    result = _get_system_uuids(systems_detail)
-
-    assert result == {system1_id, system2_id, system3_id}
-    assert len(result) == 3
-    assert all(isinstance(uuid, type(system1_id)) for uuid in result)
-
-
-def test_get_system_uuids_with_single_system():
-    system_id = uuid4()
-    systems_detail = {SystemInfo(id=system_id, display_name="System")}
-
-    result = _get_system_uuids(systems_detail)
-
-    assert result == {system_id}
-    assert len(result) == 1
-
-
-def test_get_system_uuids_with_empty_system_list():
-    result = _get_system_uuids(set())
-
-    assert result == set()
-    assert len(result) == 0
-
-
-def test_system_populate_systems_from_system_names():
-    """Check if the systems are correcly set using validator."""
-    system1_id = uuid4()
-    system2_id = uuid4()
-    systems_detail = {
-        SystemInfo(id=system1_id, display_name="System 1"),
-        SystemInfo(id=system2_id, display_name="System 2"),
     }
 
     system = System(
@@ -119,5 +85,41 @@ def test_system_populate_systems_from_system_names():
         systems_detail=systems_detail,
     )
 
-    assert system.systems == {system1_id, system2_id}
-    assert len(system.systems) == 2
+    assert system.systems == {system1_id, system2_id, system3_id}
+    assert len(system.systems) == 3
+    assert all(isinstance(uuid, type(system1_id)) for uuid in system.systems)
+
+
+def test_system_populate_systems_from_systems_details_single_system():
+    system_id = uuid4()
+    systems_detail = {SystemInfo(id=system_id, display_name="System")}
+
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=1,
+        lifecycle_type=LifecycleType.mainline,
+        count=1,
+        start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
+        systems_detail=systems_detail,
+    )
+
+    assert system.systems == {system_id}
+    assert len(system.systems) == 1
+
+
+def test_system_populate_systems_from_systems_details_empty_list():
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=1,
+        lifecycle_type=LifecycleType.mainline,
+        count=0,
+        start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
+        systems_detail=set(),
+    )
+
+    assert system.systems == set()
+    assert len(system.systems) == 0

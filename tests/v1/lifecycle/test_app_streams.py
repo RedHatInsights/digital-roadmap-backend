@@ -559,7 +559,7 @@ def test_from_string(package, expected):
     ) == expected
 
 
-def test_relevant_app_stream_populate_systems_from_system_names():
+def test_relevant_app_stream_populate_systems_from_systems_detail():
     """Check if the systems are correcly set using validator."""
     system1_id = uuid4()
     system2_id = uuid4()

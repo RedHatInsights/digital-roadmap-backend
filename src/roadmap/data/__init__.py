@@ -14,4 +14,7 @@ def _os_majors_by_app_name():
 
 APP_STREAM_MODULES_BY_KEY = {(asm.name, asm.os_major, asm.stream): asm for asm in APP_STREAM_MODULES}
 OS_MAJORS_BY_APP_NAME = _os_majors_by_app_name()
-APP_STREAM_MODULES_PACKAGES = [*APP_STREAM_MODULES, *APP_STREAM_PACKAGES.values()]
+APP_STREAM_MODULES_PACKAGES = [
+    *APP_STREAM_MODULES,
+    *[package for os_packages in APP_STREAM_PACKAGES.values() for package in os_packages.values()],
+]

@@ -435,7 +435,7 @@ def app_stream_from_package(
     #        compile a list of all the versions — at least major/minor — that are in an app stream.
     #        That data does not exist today in readily available format.
     nevra = NEVRA.from_string(package)
-    if app_stream_package := APP_STREAM_PACKAGES.get(nevra.name):
+    if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:
             if app_stream_package.stream.split(".")[:2] == [nevra.major, nevra.minor]:
                 return AppStreamKey(

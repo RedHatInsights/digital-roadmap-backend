@@ -2,9 +2,6 @@ from datetime import date
 
 import pytest
 
-from pydantic import BaseModel
-from pydantic import Field
-
 from roadmap.models import _get_rhel_display_name
 from roadmap.models import _get_system_uuids
 from roadmap.models import LifecycleType
@@ -86,10 +83,6 @@ def test_system_populate_systems_from_systems_details(make_systems, count):
 def test_get_system_uuids_attribute_not_existing():
     """Test if nonexisting name for getting UUIDs from result in empty set."""
 
-    class Tester(BaseModel):
-        value: str = "aaa"
-        another_value: str = Field(default_factory=_get_system_uuids)
+    data = {"value": "value"}
 
-    testing_class = Tester()
-
-    assert testing_class.another_value == set()
+    assert _get_system_uuids(data) == set()

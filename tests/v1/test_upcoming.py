@@ -121,15 +121,9 @@ def test_get_upcoming_data_with_hosts():
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
 
 
-def test_upcoming_populate_systems_from_systems_detail(generate_system_detail, count=2):
+def test_upcoming_populate_systems_from_systems_detail(make_systems, count=2):
     """Check if the systems are correctly set using generator."""
-    system_ids = set()
-    systems_detail = set()
-
-    for _ in range(0, count):
-        system, system_id = generate_system_detail
-        system_ids.add(system_id)
-        systems_detail.add(system)
+    system_ids, systems_detail = make_systems(count)
 
     upcoming = UpcomingOutputDetails(
         architecture=None,

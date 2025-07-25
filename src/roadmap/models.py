@@ -26,9 +26,7 @@ def _get_system_uuids(data) -> set[UUID]:
 
     Note: this can be removed once the systems field is deprecated.
     """
-
-    systems_detail = data.get("systems_detail", []) or data.get("potentiallyAffectedSystemsDetail", [])
-    if systems_detail:
+    if systems_detail := data.get("systems_detail") or data.get("potentiallyAffectedSystemsDetail"):
         return {system.id for system in systems_detail}
     return set()
 

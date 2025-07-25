@@ -66,14 +66,8 @@ def test_get_rhel_display_name(name, major, minor, expected):
 
 
 @pytest.mark.parametrize("count", (0, 1, 2))
-def test_system_populate_systems_from_systems_details(generate_system_detail, count):
-    system_ids = set()
-    systems_detail = set()
-
-    for _ in range(0, count):
-        system, system_id = generate_system_detail
-        system_ids.add(system_id)
-        systems_detail.add(system)
+def test_system_populate_systems_from_systems_details(make_systems, count):
+    system_ids, systems_detail = make_systems(count)
 
     system_lifecycle = System(
         name="RHEL",
@@ -89,7 +83,7 @@ def test_system_populate_systems_from_systems_details(generate_system_detail, co
     assert system_lifecycle.systems == system_ids
 
 
-def test_get_system_uuids():
+def test_get_system_uuids_attribute_not_existing():
     """Test if nonexisting name for getting UUIDs from result in empty set."""
 
     class Tester(BaseModel):

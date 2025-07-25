@@ -352,7 +352,11 @@ def app_streams_from_modules(
 
         app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
         cache[cache_key] = app_stream_key
-        app_streams.add(app_stream_key)
+        if matched_module.start_date:
+            # Only include the matched if there is a start_date.
+            # This adds unmatched modules to the cache (previous line)
+            # but keeps it out of the response.
+            app_streams.add(app_stream_key)
 
     return app_streams
 

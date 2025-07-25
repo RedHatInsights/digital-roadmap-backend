@@ -22,12 +22,13 @@ from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
-from roadmap.data.app_streams import APP_STREAM_MODULES_BY_KEY
-from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
-from roadmap.data.app_streams import APP_STREAM_PACKAGES
+from roadmap.data import APP_STREAM_MODULES_BY_KEY
+from roadmap.data import APP_STREAM_MODULES_PACKAGES
+from roadmap.data import APP_STREAM_PACKAGES
+from roadmap.data import OS_MAJORS_BY_APP_NAME
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
-from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
+from roadmap.data.app_streams import AppStreamType
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
 from roadmap.models import Meta
@@ -77,6 +78,7 @@ class RelevantAppStream(BaseModel):
 
     name: str
     application_stream_name: str
+    application_stream_type: AppStreamType | None
     display_name: str
     os_major: int | None
     os_minor: int | None = None
@@ -334,7 +336,7 @@ def app_streams_from_modules(
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
-            logger.debug(f"Did not find matching app stream module {module_name}, {os_major}, {stream}")
+            logger.debug(f"Did not find matching app stream module {module_name} {stream} on RHEL {os_major}")
             matched_module = AppStreamEntity(
                 name=module_name,
                 stream=stream,
@@ -346,7 +348,11 @@ def app_streams_from_modules(
 
         app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
         cache[cache_key] = app_stream_key
-        app_streams.add(app_stream_key)
+        if matched_module.start_date:
+            # If there is a start_date that means we had a match, so add it to
+            # the response. This is a way of adding unmatched modules to the cache
+            # but keeping them out of the response.
+            app_streams.add(app_stream_key)
 
     return app_streams
 
@@ -427,9 +433,10 @@ def app_stream_from_package(
     #
     #        In order to accurately lookup the app stream from a package NEVRA string, we need to
     #        compile a list of all the versions — at least major/minor — that are in an app stream.
-    #        That data does not exist today in readily available format.
+    #        That data does not exist today in a readily available format.
+    #
     nevra = NEVRA.from_string(package)
-    if app_stream_package := APP_STREAM_PACKAGES.get(nevra.name):
+    if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:
             if app_stream_package.stream.split(".")[:2] == [nevra.major, nevra.minor]:
                 return AppStreamKey(
@@ -465,6 +472,7 @@ async def get_relevant_app_streams(
                     name=app_stream.name,
                     display_name=app_stream.app_stream_entity.display_name,
                     application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                    application_stream_type=app_stream.app_stream_entity.application_stream_type,
                     start_date=app_stream.app_stream_entity.start_date,
                     end_date=app_stream.app_stream_entity.end_date,
                     os_major=app_stream.app_stream_entity.os_major,
@@ -490,6 +498,7 @@ async def get_relevant_app_streams(
                         name=app_stream.name,
                         display_name=app_stream.app_stream_entity.display_name,
                         application_stream_name=app_stream.app_stream_entity.application_stream_name,
+                        application_stream_type=app_stream.app_stream_entity.application_stream_type,
                         start_date=app_stream.app_stream_entity.start_date,
                         end_date=app_stream.app_stream_entity.end_date,
                         os_major=app_stream.app_stream_entity.os_major,

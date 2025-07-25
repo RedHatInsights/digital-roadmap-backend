@@ -340,7 +340,7 @@ def app_streams_from_modules(
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
-            logger.debug(f"Did not find matching app stream module {module_name}, {os_major}, {stream}")
+            logger.debug(f"Did not find matching app stream module {module_name} {stream} on RHEL {os_major}")
             matched_module = AppStreamEntity(
                 name=module_name,
                 stream=stream,
@@ -433,7 +433,8 @@ def app_stream_from_package(
     #
     #        In order to accurately lookup the app stream from a package NEVRA string, we need to
     #        compile a list of all the versions — at least major/minor — that are in an app stream.
-    #        That data does not exist today in readily available format.
+    #        That data does not exist today in a readily available format.
+    #
     nevra = NEVRA.from_string(package)
     if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:

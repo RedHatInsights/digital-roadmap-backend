@@ -21,6 +21,7 @@ from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import RHELLifecycle
 from roadmap.models import System
+from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -171,9 +172,9 @@ async def get_relevant_systems(  # noqa: C901
         lifecycle_type = get_lifecycle_type(installed_products)
 
         # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response
-        system_id = result["id"]
+        system_info = SystemInfo(id=result["id"], display_name=result["display_name"])
         system_id_key = (str(os_major) if os_minor is None else f"{os_major}.{os_minor}", lifecycle_type)
-        systems_by_version_lifecycle[system_id_key].add(system_id)
+        systems_by_version_lifecycle[system_id_key].add(system_info)
 
         count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
@@ -213,7 +214,7 @@ async def get_relevant_systems(  # noqa: C901
                 end_date=end_date,
                 count=count,
                 related=False,
-                systems=systems_by_version_lifecycle[system_id_key],
+                systems_detail=systems_by_version_lifecycle[system_id_key],
             )
         )
 
@@ -239,6 +240,7 @@ async def get_relevant_systems(  # noqa: C901
                     end_date=os.end_date,
                     count=0,
                     related=True,
+                    systems_detail=set(),
                 )
             )
 

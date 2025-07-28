@@ -96,11 +96,9 @@ def make_systems():
         system_ids = set()
         systems_detail = set()
 
-        for n in range(0, count):
-            system_id = uuid4()
-            system = SystemInfo(id=system_id, display_name=f"System {n}")
-            system_ids.add(system_id)
-            systems_detail.add(system)
+        systems = {SystemInfo(id=uuid4(), display_name=f"System {n}") for n in range(count)}
+        system_ids = {system.id for system in systems}
+        systems_detail = set(systems)
 
         return system_ids, systems_detail
 

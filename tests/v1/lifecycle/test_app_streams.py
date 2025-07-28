@@ -558,7 +558,7 @@ def test_from_string(package, expected):
 
 
 def test_relevant_app_stream_populate_systems_from_systems_detail(make_systems, count=2):
-    """Check if the systems are correcly set using generator."""
+    """Check that the systems attribute is set properly by field validation."""
     system_ids, systems_detail = make_systems(count)
 
     app_stream = RelevantAppStream(

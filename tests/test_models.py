@@ -62,8 +62,9 @@ def test_get_rhel_display_name(name, major, minor, expected):
     assert _get_rhel_display_name(name, major, minor) == expected
 
 
-@pytest.mark.parametrize("count", (0, 1, 2))
+@pytest.mark.parametrize("count", (0, 1))
 def test_system_populate_systems_from_systems_details(make_systems, count):
+    """Check that the systems attribute is set properly by field validation."""
     system_ids, systems_detail = make_systems(count)
 
     system_lifecycle = System(

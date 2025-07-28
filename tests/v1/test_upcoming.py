@@ -122,7 +122,7 @@ def test_get_upcoming_data_with_hosts():
 
 
 def test_upcoming_populate_systems_from_systems_detail(make_systems, count=2):
-    """Check if the systems are correctly set using generator."""
+    """Check that the systems attribute is set properly by field validation."""
     system_ids, systems_detail = make_systems(count)
 
     upcoming = UpcomingOutputDetails(

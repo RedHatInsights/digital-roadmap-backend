@@ -67,7 +67,6 @@ async def filter_params(
     application_stream_name: t.Annotated[str | None, Query(description="App Stream name")] = None,
     application_stream_type: t.Annotated[AppStreamType | None, Query(description="App Stream type")] = None,
 ):
-    print(application_stream_type)
     return {
         "name": name,
         "kind": kind,

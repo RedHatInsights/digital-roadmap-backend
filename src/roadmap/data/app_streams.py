@@ -19,7 +19,9 @@ from roadmap.models import SupportStatus
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 _DISPLAY_NAME_SPECIAL_CASES = {
+    ".net": ".NET",
     "apache httpd": "Apache HTTPD",
+    "bind": "BIND",
     "freeradius": "FreeRADIUS",
     "gcc-toolset": "GCC Toolset",
     "idm": "IDM",
@@ -36,6 +38,7 @@ _DISPLAY_NAME_SPECIAL_CASES = {
     "php": "PHP",
     "postgresql": "PostgreSQL",
     "rhn-tools": "RHN Tools",
+    "swig": "SWIG",
 }
 
 

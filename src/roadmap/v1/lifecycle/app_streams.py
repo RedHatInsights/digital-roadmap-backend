@@ -55,7 +55,7 @@ async def filter_app_stream_results(data, filter_params):
 
     if application_stream_name := filter_params.get("application_stream_name"):
         application_stream_name = application_stream_name.casefold()
-        data = [item for item in data if application_stream_name in item.application_stream_name]
+        data = [item for item in data if application_stream_name in item.application_stream_name.casefold()]
 
     if application_stream_type := filter_params.get("application_stream_type"):
         data = [item for item in data if application_stream_type in (item.application_stream_type or "")]

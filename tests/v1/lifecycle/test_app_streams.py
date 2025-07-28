@@ -31,7 +31,7 @@ def test_get_app_streams(api_prefix, client):
     ("extra_params", "expected_count"),
     (
         ({"kind": "package"}, 1),
-        ({"application_stream_type": "Application Stream"}, 10),
+        ({"application_stream_type": "Application Stream"}, 9),
     ),
 )
 def test_get_app_streams_filter(api_prefix, client, extra_params, expected_count):

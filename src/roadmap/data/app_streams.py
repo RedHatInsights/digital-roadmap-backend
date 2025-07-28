@@ -43,12 +43,20 @@ class AppStreamImplementation(StrEnum):
     module = "dnf_module"
 
 
+class AppStreamType(StrEnum):
+    stream = "Application Stream"
+    full = "Full Life Application Stream"
+    rolling = "Rolling Application Stream"
+    dependent = "Dependent Application Stream"
+
+
 class AppStreamEntity(BaseModel):
     """An application stream module or package."""
 
     name: str = Field(min_length=1)
     display_name: str = ""
     application_stream_name: str
+    application_stream_type: AppStreamType | None = None
     stream: str
     start_date: Date | None = None
     end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)

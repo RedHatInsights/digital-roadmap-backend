@@ -27,6 +27,7 @@ from roadmap.data.app_streams import APP_STREAM_MODULES_PACKAGES
 from roadmap.data.app_streams import APP_STREAM_PACKAGES
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.data.app_streams import AppStreamType
 from roadmap.data.app_streams import OS_MAJORS_BY_APP_NAME
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import _calculate_support_status
@@ -54,6 +55,9 @@ async def filter_app_stream_results(data, filter_params):
     if application_stream_name := filter_params.get("application_stream_name"):
         data = [item for item in data if application_stream_name.lower() in item.application_stream_name.lower()]
 
+    if application_stream_type := filter_params.get("application_stream_type"):
+        data = [item for item in data if application_stream_type in (item.application_stream_type or "")]
+
     return data
 
 
@@ -61,11 +65,14 @@ async def filter_params(
     name: t.Annotated[str | None, Query(description="Module or package name")] = None,
     kind: AppStreamImplementation | None = None,
     application_stream_name: t.Annotated[str | None, Query(description="App Stream name")] = None,
+    application_stream_type: t.Annotated[AppStreamType | None, Query(description="App Stream type")] = None,
 ):
+    print(application_stream_type)
     return {
         "name": name,
         "kind": kind,
         "application_stream_name": application_stream_name,
+        "application_stream_type": application_stream_type,
     }
 
 
@@ -77,6 +84,7 @@ class RelevantAppStream(BaseModel):
 
     name: str
     application_stream_name: str
+    application_stream_type: AppStreamType | None = None
     display_name: str
     os_major: int | None
     os_minor: int | None = None
@@ -149,8 +157,7 @@ router = APIRouter(
     response_model=AppStreamsResponse,
 )
 async def get_app_streams(filter_params: AppStreamFilter):
-    result = APP_STREAM_MODULES_PACKAGES
-    result = await filter_app_stream_results(result, filter_params)
+    result = await filter_app_stream_results(APP_STREAM_MODULES_PACKAGES, filter_params)
 
     return {
         "meta": {"total": len(result), "count": len(result)},

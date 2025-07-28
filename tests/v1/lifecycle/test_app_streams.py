@@ -26,14 +26,26 @@ def test_get_app_streams(api_prefix, client):
     assert "1111-11-11" not in end_dates
 
 
-def test_get_app_streams_filter(api_prefix, client):
-    result = client.get(
-        f"{api_prefix}/lifecycle/app-streams", params={"kind": "package", "application_stream_name": "nginx"}
-    )
+@pytest.mark.parametrize(
+    ("extra_params", "expected_count"),
+    (
+        ({}, 1),
+        (
+            {"application_stream_type": "Application Stream"},
+            0,
+        ),  # The expected count needs to change once the data are updated
+    ),
+)
+def test_get_app_streams_filter(api_prefix, client, extra_params, expected_count):
+    params = {
+        "kind": "package",
+        "application_stream_name": "nginx",
+    } | extra_params
+    result = client.get(f"{api_prefix}/lifecycle/app-streams", params=params)
     data = result.json().get("data", [])
 
     assert result.status_code == 200
-    assert len(data) > 0
+    assert len(data) >= expected_count
 
 
 @pytest.mark.parametrize("version", (8, 9))

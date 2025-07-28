@@ -47,13 +47,15 @@ def get_module_os_major_versions(name: str) -> set[str]:
 
 async def filter_app_stream_results(data, filter_params):
     if name := filter_params.get("name"):
-        data = [item for item in data if name.lower() in item.name.lower()]
+        name = name.casefold()
+        data = [item for item in data if name in item.name]
 
     if kind := filter_params.get("kind"):
         data = [item for item in data if kind == item.impl]
 
     if application_stream_name := filter_params.get("application_stream_name"):
-        data = [item for item in data if application_stream_name.lower() in item.application_stream_name.lower()]
+        application_stream_name = application_stream_name.casefold()
+        data = [item for item in data if application_stream_name in item.application_stream_name]
 
     if application_stream_type := filter_params.get("application_stream_type"):
         data = [item for item in data if application_stream_type in (item.application_stream_type or "")]

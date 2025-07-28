@@ -120,10 +120,10 @@ class AppStreamEntity(BaseModel):
                 display_name = f"{display_name.rstrip()} {version}"
 
         # Correct capitalization
-        lower_name = display_name.lower()
+        display_name_lower = display_name.casefold()
         for name, cased_name in _DISPLAY_NAME_SPECIAL_CASES.items():
-            if name in lower_name:
-                display_name = lower_name.replace(name, cased_name)
+            if name in display_name_lower:
+                display_name = display_name_lower.replace(name, cased_name)
                 break
         else:
             display_name = display_name.title()

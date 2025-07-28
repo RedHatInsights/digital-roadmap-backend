@@ -22,6 +22,8 @@ _DISPLAY_NAME_SPECIAL_CASES = {
     "apache httpd": "Apache HTTPD",
     "freeradius": "FreeRADIUS",
     "gcc-toolset": "GCC Toolset",
+    "idm": "IDM",
+    "jboss mod_cluster for apache": "JBoss mod_cluster for Apache",
     "llvm": "LLVM",
     "mariadb": "MariaDB",
     "mod_auth_openidc for apache": "Mod Auth OpenIDC for Apache",

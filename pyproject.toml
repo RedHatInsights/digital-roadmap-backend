@@ -21,12 +21,18 @@ select = [
     # "B",  # flake8-bugbear
     "C90",  # flake8-comprehensions
     "RUF100",  # unused-noqa
+    "T20",
 ]
 mccabe.max-complexity = 12
 
 # Exclude specific rules if needed
 ignore = [
     "E501",  # Ignore line length (similar to flake8's max-line-length)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = [
+    "T20",
 ]
 
 [tool.ruff.lint.isort]

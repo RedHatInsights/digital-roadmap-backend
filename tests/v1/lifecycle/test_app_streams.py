@@ -30,18 +30,12 @@ def test_get_app_streams(api_prefix, client):
 @pytest.mark.parametrize(
     ("extra_params", "expected_count"),
     (
-        ({}, 1),
-        (
-            {"application_stream_type": "Application Stream"},
-            0,
-        ),  # The expected count needs to change once the data are updated
+        ({"kind": "package"}, 1),
+        ({"application_stream_type": "Application Stream"}, 10),
     ),
 )
 def test_get_app_streams_filter(api_prefix, client, extra_params, expected_count):
-    params = {
-        "kind": "package",
-        "application_stream_name": "nginx",
-    } | extra_params
+    params = {"application_stream_name": "nginx"} | extra_params
     result = client.get(f"{api_prefix}/lifecycle/app-streams", params=params)
     data = result.json().get("data", [])
 

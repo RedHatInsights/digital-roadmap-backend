@@ -9,6 +9,7 @@ from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamType
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
@@ -29,18 +30,12 @@ def test_get_app_streams(api_prefix, client):
 @pytest.mark.parametrize(
     ("extra_params", "expected_count"),
     (
-        ({}, 1),
-        (
-            {"application_stream_type": "Application Stream"},
-            0,
-        ),  # The expected count needs to change once the data are updated
+        ({"kind": "package"}, 1),
+        ({"application_stream_type": "Application Stream"}, 9),
     ),
 )
 def test_get_app_streams_filter(api_prefix, client, extra_params, expected_count):
-    params = {
-        "kind": "package",
-        "application_stream_name": "nginx",
-    } | extra_params
+    params = {"application_stream_name": "nginx"} | extra_params
     result = client.get(f"{api_prefix}/lifecycle/app-streams", params=params)
     data = result.json().get("data", [])
 
@@ -131,8 +126,8 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 64, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 509, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert count == 56, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 453, "Incorrect number of hosts in response. Did the fixture data change?"
     assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
@@ -356,10 +351,10 @@ def test_get_revelent_app_stream_related(api_prefix, client, mocker):
     related_count = sum(1 for item in data if item["related"])
     free_radius_streams = [n for n in data if "freeradius" in n["display_name"].casefold()]
 
+    assert result.status_code == 200, result.json()["detail"]
+    assert len(data) > 1
     assert len(free_radius_streams) <= 2, "Got too many related app streams for FreeRADIUS"
     assert related_count, "No related items were returned"
-    assert result.status_code == 200
-    assert len(data) > 1
 
 
 @pytest.mark.parametrize(
@@ -408,7 +403,7 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 1
+    assert len(data) == 2
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
     # and another with nodejs 18.
@@ -423,6 +418,7 @@ def test_app_stream_missing_lifecycle_data():
         name="something",
         display_name="Something 1",
         application_stream_name="App Stream Name",
+        application_stream_type=AppStreamType.stream,
         start_date=None,
         end_date=None,
         os_major=1,
@@ -528,6 +524,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         name="pkg-name",
         display_name="Pkg Name 1",
         application_stream_name="Pkg Name",
+        application_stream_type=AppStreamType.stream,
         os_major=1,
         os_minor=1,
         count=4,

@@ -93,15 +93,6 @@ class SystemInfo(BaseModel):
     id: UUID
     display_name: str
 
-    # eq and hash needed for using set() of systems_detail
-    def __eq__(self, other):
-        if not isinstance(other, SystemInfo):
-            return False
-        return self.id == other.id and self.display_name == other.display_name
-
-    def __hash__(self):
-        return hash((self.id, self.display_name))
-
 
 class Lifecycle(BaseModel):
     model_config = ConfigDict(extra="forbid")

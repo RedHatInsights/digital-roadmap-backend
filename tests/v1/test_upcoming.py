@@ -121,8 +121,10 @@ def test_get_upcoming_data_with_hosts():
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
 
 
-def test_upcoming_populate_systems_from_systems_detail(make_systems, count=2):
+def test_upcoming_populate_systems_from_systems_detail(make_systems):
     """Check that the systems attribute is set properly by field validation."""
+
+    count = 2
     system_ids, systems_detail = make_systems(count)
 
     upcoming = UpcomingOutputDetails(

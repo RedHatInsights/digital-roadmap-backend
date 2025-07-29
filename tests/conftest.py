@@ -93,13 +93,9 @@ def ids_by_os(read_json_fixture):
 @pytest.fixture
 def make_systems():
     def _make_systems(count=3):
-        system_ids = set()
-        systems_detail = set()
-
         systems = {SystemInfo(id=uuid4(), display_name=f"System {n}") for n in range(count)}
         system_ids = {system.id for system in systems}
-        systems_detail = set(systems)
 
-        return system_ids, systems_detail
+        return system_ids, systems
 
     return _make_systems

@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 from roadmap.common import decode_header
@@ -7,6 +8,7 @@ from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
+from roadmap.v1.upcoming import UpcomingOutputDetails
 
 
 def test_get_upcoming_changes(client, api_prefix):
@@ -117,3 +119,21 @@ def test_get_upcoming_data_with_hosts():
 
     assert len(result) >= 1
     assert not any(release.startswith("8") for release in releases), "Something went wrong"
+
+
+def test_upcoming_populate_systems_from_systems_detail(make_systems, count=2):
+    """Check that the systems attribute is set properly by field validation."""
+    system_ids, systems_detail = make_systems(count)
+
+    upcoming = UpcomingOutputDetails(
+        architecture=None,
+        detailFormat=0,
+        summary="Summary",
+        trainingTicket="Ticket",
+        dateAdded=date.today(),
+        lastModified="2025-01-01",
+        potentiallyAffectedSystemsCount=count,
+        potentiallyAffectedSystemsDetail=systems_detail,
+    )
+
+    assert upcoming.potentiallyAffectedSystems == system_ids

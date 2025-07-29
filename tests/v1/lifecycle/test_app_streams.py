@@ -428,9 +428,9 @@ def test_app_stream_missing_lifecycle_data():
         os_major=1,
         support_status=SupportStatus.supported,
         count=4,
-        impl=AppStreamImplementation.package,
         rolling=True,
-        systems=[],
+        systems=set(),
+        systems_detail=set(),
     )
 
     assert app_stream.start_date is None
@@ -535,6 +535,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         start_date=app_stream_start,
         end_date=app_stream_end,
         systems=[],
+        systems_detail=set(),
     )
 
     assert app_stream.support_status == expected_status
@@ -566,3 +567,23 @@ def test_from_string(package, expected):
         package.release,
         package.arch,
     ) == expected
+
+
+def test_relevant_app_stream_populate_systems_from_systems_detail(make_systems, count=2):
+    """Check that the systems attribute is set properly by field validation."""
+    system_ids, systems_detail = make_systems(count)
+
+    app_stream = RelevantAppStream(
+        name="nginx",
+        display_name="NGINX 1.22",
+        application_stream_name="nginx",
+        os_major=9,
+        os_minor=1,
+        count=count,
+        rolling=False,
+        start_date=date(2022, 5, 17),
+        end_date=date(2032, 5, 31),
+        systems_detail=systems_detail,
+    )
+
+    assert app_stream.systems == system_ids

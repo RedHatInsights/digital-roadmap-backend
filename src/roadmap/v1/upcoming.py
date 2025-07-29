@@ -18,7 +18,9 @@ from pydantic import TypeAdapter
 
 from roadmap.common import ensure_date
 from roadmap.config import Settings
+from roadmap.models import _get_system_uuids
 from roadmap.models import Meta
+from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
@@ -72,7 +74,8 @@ class UpcomingOutputDetails(BaseModel):
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
     potentiallyAffectedSystemsCount: int
-    potentiallyAffectedSystems: set[UUID]
+    potentiallyAffectedSystemsDetail: set[SystemInfo]
+    potentiallyAffectedSystems: set[UUID] = Field(default_factory=_get_system_uuids)
 
 
 class UpcomingOutput(BaseModel):
@@ -119,7 +122,7 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
 
 
 def get_upcoming_data_with_hosts(
-    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[UUID]], Depends(systems_by_app_stream)],
+    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     all: bool = False,
 ) -> list[UpcomingOutput]:
@@ -154,7 +157,7 @@ def get_upcoming_data_with_hosts(
             dateAdded=upcoming.details.dateAdded,
             lastModified=upcoming.details.lastModified,
             potentiallyAffectedSystemsCount=len(systems),
-            potentiallyAffectedSystems=systems,
+            potentiallyAffectedSystemsDetail=systems,
         )
 
         result.append(
@@ -195,7 +198,7 @@ async def get_upcoming_relevant(
 
     """
     if not all:
-        data = [d for d in data if d.details.potentiallyAffectedSystems]
+        data = [d for d in data if d.details.potentiallyAffectedSystemsDetail]
 
     return {
         "meta": {

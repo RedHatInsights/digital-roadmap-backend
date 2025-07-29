@@ -11,6 +11,59 @@ from pydantic import Field
 from pydantic import model_validator
 
 
+class SupportStatus(StrEnum):
+    supported = "Supported"
+    near_retirement = "Near retirement"
+    retired = "Retired"
+    not_installed = "Not installed"
+    upcoming = "Upcoming release"
+    unknown = "Unknown"
+
+
+def _get_system_uuids(data) -> set[UUID]:
+    """
+    Populate systems field using data in systems_detail.id field.
+
+    Note: this can be removed once the systems field is deprecated.
+    """
+    if systems_detail := data.get("systems_detail") or data.get("potentiallyAffectedSystemsDetail"):
+        return {system.id for system in systems_detail}
+    return set()
+
+
+def _calculate_support_status(
+    start_date: date | None,
+    end_date: date | None,
+    current_date: date,
+    months: int,
+) -> SupportStatus:
+    support_status = SupportStatus.unknown
+
+    if start_date not in (None, SupportStatus.unknown):
+        if start_date > current_date:
+            return SupportStatus.upcoming
+
+    if end_date not in (None, SupportStatus.unknown):
+        if end_date < current_date:
+            return SupportStatus.retired
+
+        expiration_date = end_date - timedelta(days=30 * months)
+        if expiration_date <= current_date:
+            return SupportStatus.near_retirement
+
+        return SupportStatus.supported
+
+    return support_status
+
+
+def _get_rhel_display_name(name: str, major: int, minor: int | None):
+    display_name = f"{name} {major}"
+    if minor is not None:
+        display_name += f".{minor}"
+
+    return display_name
+
+
 class Meta(BaseModel):
     count: int
     total: int | None = None
@@ -23,15 +76,6 @@ class LifecycleType(StrEnum):
     e4s = "E4S"
 
 
-class SupportStatus(StrEnum):
-    supported = "Supported"
-    near_retirement = "Near retirement"
-    retired = "Retired"
-    not_installed = "Not installed"
-    upcoming = "Upcoming release"
-    unknown = "Unknown"
-
-
 class HostCount(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -39,6 +83,15 @@ class HostCount(BaseModel):
     major: int
     minor: int | None = None
     lifecycle: LifecycleType
+
+
+class SystemInfo(BaseModel):
+    """Information about relevant system."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: UUID
+    display_name: str
 
 
 class Lifecycle(BaseModel):
@@ -78,7 +131,8 @@ class System(Lifecycle):
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False
-    systems: set[UUID] = set()
+    systems_detail: set[SystemInfo]
+    systems: set[UUID] = Field(default_factory=_get_system_uuids)
 
     @model_validator(mode="after")
     def set_display_name(self):
@@ -114,36 +168,3 @@ class TaggedParagraph(BaseModel):
     title: str = Field(description="The paragraph title")
     text: str = Field(description="The paragraph text")
     tag: str = Field(description="The paragraph htmltag")
-
-
-def _calculate_support_status(
-    start_date: date | None,
-    end_date: date | None,
-    current_date: date,
-    months: int,
-) -> SupportStatus:
-    support_status = SupportStatus.unknown
-
-    if start_date not in (None, SupportStatus.unknown):
-        if start_date > current_date:
-            return SupportStatus.upcoming
-
-    if end_date not in (None, SupportStatus.unknown):
-        if end_date < current_date:
-            return SupportStatus.retired
-
-        expiration_date = end_date - timedelta(days=30 * months)
-        if expiration_date <= current_date:
-            return SupportStatus.near_retirement
-
-        return SupportStatus.supported
-
-    return support_status
-
-
-def _get_rhel_display_name(name: str, major: int, minor: int | None):
-    display_name = f"{name} {major}"
-    if minor is not None:
-        display_name += f".{minor}"
-
-    return display_name

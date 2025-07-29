@@ -3,6 +3,7 @@ import json
 
 from collections import defaultdict
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -10,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from roadmap.config import Settings
 from roadmap.main import app
+from roadmap.models import SystemInfo
 
 
 @pytest.fixture(scope="function")
@@ -86,3 +88,18 @@ def ids_by_os(read_json_fixture):
             systems_by_version[key].update([system["id"]])
 
     return systems_by_version
+
+
+@pytest.fixture
+def make_systems():
+    def _make_systems(count=3):
+        system_ids = set()
+        systems_detail = set()
+
+        systems = {SystemInfo(id=uuid4(), display_name=f"System {n}") for n in range(count)}
+        system_ids = {system.id for system in systems}
+        systems_detail = set(systems)
+
+        return system_ids, systems_detail
+
+    return _make_systems

@@ -26,6 +26,7 @@ from roadmap.common import streams_lt
 from roadmap.data import APP_STREAM_MODULES_BY_KEY
 from roadmap.data import APP_STREAM_MODULES_PACKAGES
 from roadmap.data import APP_STREAM_PACKAGES
+from roadmap.data import APP_STREAMS
 from roadmap.data import OS_MAJORS_BY_APP_NAME
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
@@ -159,14 +160,14 @@ router = APIRouter(
 @router.get(
     "",
     summary="Lifecycle dates for app stream modules and packages",
-    response_model=AppStreamsResponse,
+    # response_model=AppStreamsResponse,
 )
 async def get_app_streams(filter_params: AppStreamFilter):
-    result = await filter_app_stream_results(APP_STREAM_MODULES_PACKAGES, filter_params)
+    result = await filter_app_stream_results(APP_STREAMS, filter_params)
 
     return {
         "meta": {"total": len(result), "count": len(result)},
-        "data": sorted(result, key=sort_attrs("name")),
+        "data": sorted(result, key=sort_attrs("display_name")),
     }
 
 

@@ -7,6 +7,7 @@ from enum import StrEnum
 from pydantic import AfterValidator
 from pydantic import AliasChoices
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -53,6 +54,17 @@ class AppStreamType(StrEnum):
     full = "Full Life Application Stream"
     rolling = "Rolling Application Stream"
     dependent = "Dependent Application Stream"
+
+
+class AppStream(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    display_name: str = ""
+    start_date: Date | None = None
+    end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
+    os_major: int | None = None
+    os_minor: int | None = None
+    application_stream_type: AppStreamType | None
 
 
 class AppStreamEntity(BaseModel):

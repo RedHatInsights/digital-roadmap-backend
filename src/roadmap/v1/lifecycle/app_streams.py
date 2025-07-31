@@ -23,6 +23,7 @@ from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
+from roadmap.data import APP_STREAM_MODULES
 from roadmap.data import APP_STREAM_MODULES_BY_KEY
 from roadmap.data import APP_STREAM_MODULES_PACKAGES
 from roadmap.data import APP_STREAM_PACKAGES
@@ -164,7 +165,7 @@ router = APIRouter(
 
 @router.get(
     "",
-    summary="Modules and packages",
+    summary="App stream module and package lifecycle information",
     response_model=AppStreamItemsResponse,
 )
 async def get_app_stream_items(filter_params: AppStreamFilter):
@@ -178,7 +179,7 @@ async def get_app_stream_items(filter_params: AppStreamFilter):
 
 @router.get(
     "/streams",
-    summary="Application streams",
+    summary="Application streams lifecycle information",
     response_model=AppStreamsResponse,
 )
 async def get_app_streams(filter_params: AppStreamFilter):
@@ -199,7 +200,25 @@ async def get_major_version(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
-    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = [item for item in APP_STREAM_MODULES_PACKAGES if item.os_major == major_version]
+    result = await filter_app_stream_results(result, filter_params)
+
+    return {
+        "meta": {"total": len(result), "count": len(result)},
+        "data": sorted(result, key=sort_attrs("name")),
+    }
+
+
+@router.get(
+    "/{major_version}/modules",
+    summary="List app stream modules for a specific RHEL version",
+    response_model=AppStreamsResponse,
+)
+async def get_modules_major_version(
+    major_version: MajorVersion,
+    filter_params: AppStreamFilter,
+):
+    result = [module for module in APP_STREAM_MODULES if module.os_major == major_version]
     result = await filter_app_stream_results(result, filter_params)
 
     return {
@@ -210,37 +229,36 @@ async def get_major_version(
 
 @router.get(
     "/{major_version}/packages",
-    summary="List package names for a specific RHEL version",
-    response_model=AppStreamsNamesResponse,
+    summary="List app stream packages for a specific RHEL version",
+    response_model=AppStreamsResponse,
 )
-async def get_app_stream_item_names(
+async def get_packages_major_version(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
-    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
-    result = await filter_app_stream_results(result, filter_params)
+    result = await filter_app_stream_results(APP_STREAM_PACKAGES[major_version].values(), filter_params)
 
     return {
         "meta": {"total": len(result), "count": len(result)},
-        "data": sorted({item.name for item in result}),
+        "data": sorted(result, key=sort_attrs("name")),
     }
 
 
 @router.get(
     "/{major_version}/streams",
-    summary="List app stream names for a specific RHEL version",
-    response_model=AppStreamsNamesResponse,
+    summary="List app streams for a specific RHEL version",
+    response_model=AppStreamsResponse,
 )
-async def get_app_stream_names(
+async def get_streams_major_version(
     major_version: MajorVersion,
     filter_params: AppStreamFilter,
 ):
-    result = [module for module in APP_STREAM_MODULES_PACKAGES if module.os_major == major_version]
+    result = [stream for stream in APP_STREAMS if stream.os_major == major_version]
     result = await filter_app_stream_results(result, filter_params)
 
     return {
         "meta": {"total": len(result), "count": len(result)},
-        "data": sorted({item.application_stream_name for item in result}),
+        "data": sorted(result, key=sort_attrs("display_name")),
     }
 
 

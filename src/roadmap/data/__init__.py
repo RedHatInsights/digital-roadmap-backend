@@ -1,4 +1,7 @@
 from collections import defaultdict
+from datetime import date
+
+from roadmap.models import _calculate_support_status
 
 from .app_streams import AppStream
 from .app_streams import AppStreamType
@@ -14,7 +17,7 @@ def _os_majors_by_app_name():
     return dict(result)
 
 
-def _only_app_streams(data):
+def _only_app_streams(data) -> set[AppStream]:
     app_streams = set(
         AppStream(
             display_name=n.display_name,
@@ -23,6 +26,8 @@ def _only_app_streams(data):
             start_date=n.start_date,
             end_date=n.end_date,
             application_stream_type=n.application_stream_type,
+            application_stream_name=n.application_stream_name,
+            support_status=_calculate_support_status(n.start_date, n.end_date, date.today(), 6),
         )
         for n in APP_STREAM_MODULES_PACKAGES
         if n.application_stream_type in (AppStreamType.stream, AppStreamType.full)

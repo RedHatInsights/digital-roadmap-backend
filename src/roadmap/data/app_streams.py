@@ -65,7 +65,9 @@ class AppStream(BaseModel):
     end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
     os_major: int | None = None
     os_minor: int | None = None
+    application_stream_name: str = ""
     application_stream_type: AppStreamType | None
+    support_status: SupportStatus = SupportStatus.unknown
 
 
 class AppStreamEntity(BaseModel):

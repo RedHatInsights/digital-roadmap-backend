@@ -8402,7 +8402,7 @@ APP_STREAM_PACKAGES = {
             os_major=10,
             os_minor=0,
             start_date=date(2025, 5, 13),
-            end_date=date(2023, 11, 10),
+            end_date=date(2035, 5, 31),
             rolling=False,
         ),
         "ansible-test": AppStreamEntity(
@@ -8415,7 +8415,7 @@ APP_STREAM_PACKAGES = {
             os_major=10,
             os_minor=0,
             start_date=date(2025, 5, 13),
-            end_date=date(2023, 11, 10),
+            end_date=date(2035, 5, 31),
             rolling=False,
         ),
         "aspnetcore-runtime-8.0": AppStreamEntity(

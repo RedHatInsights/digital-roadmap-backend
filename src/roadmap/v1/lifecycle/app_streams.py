@@ -28,7 +28,6 @@ from roadmap.data import APP_STREAM_MODULES_PACKAGES
 from roadmap.data import APP_STREAM_PACKAGES
 from roadmap.data import APP_STREAMS
 from roadmap.data import OS_MAJORS_BY_APP_NAME
-from roadmap.data.app_streams import AppStream
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import AppStreamType
@@ -129,7 +128,7 @@ class AppStreamsNamesResponse(BaseModel):
 
 class AppStreamsResponse(BaseModel):
     meta: Meta
-    data: list[AppStream]
+    data: list[AppStreamEntity]
 
 
 class AppStreamItemsResponse(BaseModel):
@@ -168,7 +167,7 @@ router = APIRouter(
     summary="Modules and packages",
     response_model=AppStreamItemsResponse,
 )
-async def get_app_items(filter_params: AppStreamFilter):
+async def get_app_stream_items(filter_params: AppStreamFilter):
     result = await filter_app_stream_results(APP_STREAM_MODULES_PACKAGES, filter_params)
 
     return {

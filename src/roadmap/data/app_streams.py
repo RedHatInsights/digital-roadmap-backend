@@ -7,7 +7,6 @@ from enum import StrEnum
 from pydantic import AfterValidator
 from pydantic import AliasChoices
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -57,19 +56,6 @@ class AppStreamType(StrEnum):
     dependent = "Dependent Application Stream"
 
 
-class AppStream(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    display_name: str = ""
-    start_date: Date | None = None
-    end_date: Date | None = Field(validation_alias=AliasChoices("end_date", "enddate"), default=None)
-    os_major: int | None = None
-    os_minor: int | None = None
-    application_stream_name: str = ""
-    application_stream_type: AppStreamType | None
-    support_status: SupportStatus = SupportStatus.unknown
-
-
 class AppStreamEntity(BaseModel):
     """An application stream module or package."""
 
@@ -87,6 +73,12 @@ class AppStreamEntity(BaseModel):
     os_minor: int | None = None
     lifecycle: int | None = None
     rolling: bool = False
+
+    def __hash__(self):
+        return hash((self.display_name, self.application_stream_name, self.os_major, self.os_minor))
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and self.__hash__() == obj.__hash__()
 
     @field_validator("initial_product_version")
     @classmethod

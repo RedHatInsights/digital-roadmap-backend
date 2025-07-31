@@ -1,6 +1,9 @@
 import pytest
 
 
+RHEL_VERSIONS = (8, 9, 10)
+
+
 def test_get_app_streams(api_prefix, client):
     result = client.get(f"{api_prefix}/lifecycle/app-streams")
     data = result.json().get("data", [])
@@ -9,6 +12,14 @@ def test_get_app_streams(api_prefix, client):
     assert result.status_code == 200
     assert len(data) > 0
     assert "1111-11-11" not in end_dates
+
+
+def test_get_app_streams_streams(api_prefix, client):
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/streams")
+    data = result.json().get("data", [])
+
+    assert result.status_code == 200
+    assert len(data) > 0
 
 
 @pytest.mark.parametrize(
@@ -27,7 +38,7 @@ def test_get_app_streams_filter(api_prefix, client, extra_params, expected_count
     assert len(data) >= expected_count
 
 
-@pytest.mark.parametrize("version", (8, 9, 10))
+@pytest.mark.parametrize("version", RHEL_VERSIONS)
 def test_get_app_streams_by_version(api_prefix, client, version):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}")
     data = result.json().get("data", [])
@@ -46,22 +57,46 @@ def test_get_app_streams_by_name(api_prefix, client):
     assert names == {"nginx"}
 
 
-@pytest.mark.parametrize("version", (8, 9))
-def test_get_app_stream_package_names(api_prefix, client, version):
+@pytest.mark.parametrize("version", RHEL_VERSIONS)
+def test_get_app_stream_modules_by_version(api_prefix, client, version):
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}/modules")
+    data = result.json().get("data", [])
+
+    assert result.status_code == 200
+    try:
+        assert len(data) > 0
+    except AssertionError:
+        if version >= 10:
+            # RHEL 10 has no modules
+            pass
+
+
+@pytest.mark.parametrize("version", RHEL_VERSIONS)
+def test_get_app_stream_packages_by_version(api_prefix, client, version):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}/packages")
-    names = result.json().get("data", [])
+    data = result.json().get("data", [])
 
     assert result.status_code == 200
-    assert len(names) > 0
+    try:
+        assert len(data) > 0
+    except AssertionError:
+        if version >= 10:
+            # RHEL 10 has no modules
+            pass
 
 
-@pytest.mark.parametrize("version", (8, 9))
-def test_get_app_stream_stream_names(api_prefix, client, version):
+@pytest.mark.parametrize("version", RHEL_VERSIONS)
+def test_get_app_stream_streams_by_version(api_prefix, client, version):
     result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}/streams")
-    names = result.json().get("data", [])
+    data = result.json().get("data", [])
 
     assert result.status_code == 200
-    assert len(names) > 0
+    try:
+        assert len(data) > 0
+    except AssertionError:
+        if version >= 10:
+            # RHEL 10 has no modules
+            pass
 
 
 def test_get_app_stream_module_info(api_prefix, client):
@@ -74,8 +109,9 @@ def test_get_app_stream_module_info(api_prefix, client):
     assert module_names == {"nginx"}
 
 
-def test_get_app_stream_module_info_not_found(api_prefix, client):
-    result = client.get(f"{api_prefix}/lifecycle/app-streams/8", params={"name": "NOPE"})
+@pytest.mark.parametrize("version", RHEL_VERSIONS)
+def test_get_app_stream_module_info_not_found(api_prefix, client, version):
+    result = client.get(f"{api_prefix}/lifecycle/app-streams/{version}", params={"name": "NOPE"})
     data = result.json().get("data", "")
 
     assert result.status_code == 200

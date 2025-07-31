@@ -44,9 +44,10 @@ _DISPLAY_NAME_SPECIAL_CASES = {
 
 
 class AppStreamImplementation(StrEnum):
-    scl = "scl"
-    package = "package"
     module = "dnf_module"
+    package = "package"
+    scl = "scl"
+    stream = "stream"
 
 
 class AppStreamType(StrEnum):

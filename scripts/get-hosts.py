@@ -5,6 +5,7 @@ import pathlib
 import sys
 import textwrap
 import urllib.request
+import uuid
 
 from urllib.error import HTTPError
 
@@ -61,7 +62,7 @@ def main():
     parser.add_argument("-o", "--org-id", help="Org ID", required=True, type=int)
     parser.add_argument("-e", "--environment", choices=["prod", "stage"], default="prod")
     parser.add_argument("-n", "--display-name", help="Filter by display_name")
-    parser.add_argument("-l", "--limit", type=int, default=100, help="Maximum number of records to retrieve")
+    parser.add_argument("-l", "--limit", type=int, help="Maximum number of records to retrieve")
     parser.add_argument("-s", "--scrub", action="store_true", help="Anonymize the data")
 
     args = parser.parse_args()
@@ -76,7 +77,7 @@ def main():
     total_limit = limit or total_hosts
     print(f"There are {total_hosts:,} hosts in inventory for org {org_id}.")
     if limit:
-        print(f"Limiting to {total_limit} records.")
+        print(f"Limiting to the first {total_limit} records.")
 
     query = f"""
     SELECT
@@ -91,7 +92,6 @@ def main():
         insertion_point = query.index("ORDER BY")
         query = query[:insertion_point] + f"AND display_name = '{display_name}'\n" + query[insertion_point:]
 
-    print(query)
     offset = 0
     remaining = total_limit
     results = []
@@ -106,12 +106,12 @@ def main():
         "operating_system",
         "releasever",
     }
-    while offset < total_limit:
-        print(offset, remaining)
+    while remaining > 0:
+        query_limit = 100
         if remaining < 100:
-            limit = remaining
+            query_limit = remaining
 
-        response = query_gabi(environment, query, offset, limit)
+        response = query_gabi(environment, query, offset, query_limit)
         headers = response[0]
         records = response[1:]
 
@@ -133,7 +133,6 @@ def main():
 
         offset += 100
         remaining -= len(records)
-        # sleep(0.1)
 
     scratch = pathlib.Path(__file__).parents[1] / "scratch"
     scratch.mkdir(exist_ok=True)

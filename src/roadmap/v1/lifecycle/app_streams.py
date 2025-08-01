@@ -20,7 +20,6 @@ from sqlalchemy.ext.asyncio.result import AsyncResult
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
-from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
 from roadmap.data import APP_STREAM_MODULES
@@ -314,33 +313,24 @@ async def systems_by_app_stream(
     package_data = defaultdict(list)
     module_app_streams = set()
     async for system in systems.yield_per(2_000).mappings():
-        if not (system_profile := system.get("system_profile_facts")):
-            missing["system_profile"] += 1
-            continue
+        os_major = system["os_major"]
+        dnf_modules = system["dnf_modules"] or []
+        packages = system["packages"] or []
 
-        if "RHEL" != system_profile.get("operating_system", {}).get("name"):
-            missing["os"] += 1
-            continue
-
-        try:
-            os_major, _ = rhel_major_minor(system_profile)
-        except ValueError:
+        if not os_major:
             missing["os_version"] += 1
             continue
-
-        dnf_modules = system_profile.get("dnf_modules", [])
-        installed_packages = system_profile.get("installed_packages", [])
 
         if not dnf_modules:
             missing["dnf_modules"] += 1
 
-        if not installed_packages:
-            missing["installed_packages"] += 1
+        if not packages:
+            missing["packages"] += 1
 
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
         system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
-        for package in installed_packages:
+        for package in packages:
             package_data[(package, os_major)].append(system_info)
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)

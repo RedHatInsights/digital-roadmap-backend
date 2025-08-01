@@ -191,7 +191,20 @@ async def query_host_inventory(
         org_id = "1234"
 
     # Build up a query for this org's hosts.
-    query = "SELECT id, display_name, system_profile_facts FROM hbi.hosts WHERE org_id = :org_id"
+    query = """
+        SELECT
+            id,
+            display_name,
+            system_profile_facts -> 'operating_system' ->> 'name' AS os_name,
+            (system_profile_facts -> 'operating_system' ->> 'major')::int AS os_major,
+            (system_profile_facts -> 'operating_system' ->> 'minor')::int AS os_minor,
+            system_profile_facts -> 'os_release' AS os_release,
+            system_profile_facts -> 'dnf_modules' AS dnf_modules,
+            system_profile_facts -> 'installed_packages' AS packages,
+            system_profile_facts -> 'installed_products' AS products
+        FROM hbi.hosts
+        WHERE org_id = :org_id
+    """
 
     # #>> '{{operating_system,major}}' fetches the attribute "major" from the
     # "operating_system" subobject in the host's record. This subobject is kept
@@ -359,17 +372,13 @@ def streams_lt(a: str, b: str):
         return a < b
 
 
-def rhel_major_minor(system_profile: dict) -> tuple[int, int | None]:
+def rhel_major_minor(system: dict) -> tuple[int, int | None]:
     # First, try operating_system
-    if (operating_system := system_profile.get("operating_system")) is not None:
-        major = operating_system.get("major")
-        minor = operating_system.get("minor")
-
-        if major is not None:
-            return (major, minor)
+    if system["os_major"] is not None:
+        return (system["os_major"], system["os_minor"])
 
     # If we don't have the data in operating_system, fall back to os_release
-    if (os_release := system_profile.get("os_release")) is not None:
+    if (os_release := system["os_release"]) is not None:
         major, minor = tuple(int(n) for n in os_release.split("."))[:2]
         return (major, minor)
 

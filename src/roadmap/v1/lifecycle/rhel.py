@@ -148,35 +148,26 @@ async def get_relevant_systems(  # noqa: C901
     system_counts = defaultdict(int)
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(set)
-    async for result in systems.mappings():
-        # Make sure we have a system profile with enough data, otherwise continue
-        if not (system_profile := result.get("system_profile_facts")):
-            missing["system_profile"] += 1
-            continue
-
-        if (operating_system := system_profile.get("operating_system")) is None:
-            missing["os_profile"] += 1
-            continue
-
-        if (name := operating_system.get("name")) is None:
-            missing["name"] += 1
+    async for system in systems.mappings():
+        if (os_name := system["os_name"]) is None:
+            missing["os_name"] += 1
             continue
 
         try:
-            os_major, os_minor = rhel_major_minor(system_profile)
+            os_major, os_minor = rhel_major_minor(system)
         except ValueError:
             missing["os_version"] += 1
             continue
 
-        installed_products = system_profile.get("installed_products", [{}])
-        lifecycle_type = get_lifecycle_type(installed_products)
+        products = system["products"] or [{}]
+        lifecycle_type = get_lifecycle_type(products)
 
         # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response
-        system_info = SystemInfo(id=result["id"], display_name=result["display_name"])
+        system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
         system_id_key = (str(os_major) if os_minor is None else f"{os_major}.{os_minor}", lifecycle_type)
         systems_by_version_lifecycle[system_id_key].add(system_info)
 
-        count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
+        count_key = HostCount(name=os_name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
 
     results = []

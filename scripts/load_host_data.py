@@ -110,7 +110,7 @@ def main():
         records.append(
             Host(
                 id=id,
-                display_name=fake.unique.hostname(),
+                display_name=host.get("display_name", fake.unique.hostname()),
                 created_on=init_date,
                 modified_on=init_date,
                 system_profile_facts=host.get("system_profile_facts", {}),

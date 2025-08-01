@@ -30,11 +30,11 @@ RUN microdnf install -y --nodocs \
 COPY "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
 COPY "requirements/requirements-replication-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-replication.txt
 RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
-    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
+    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip \
     && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt \
     # Inventory sync venv setup
     && "python${PYTHON_VERSION}" -m venv /opt/venvs/replication \
-    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip setuptools \
+    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip \
     && /opt/venvs/replication/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-replication.txt
 
 

@@ -119,13 +119,18 @@ def main():
             inner_record = {}
             for idx, data in enumerate(record):
                 field = headers[idx]
-                if scrub and field not in keys_to_keep:
-                    continue
+                if scrub:
+                    if field not in keys_to_keep:
+                        continue
+
+                    if field == "id":
+                        data = str(uuid.uuid4())
 
                 if field == "system_profile_facts":
                     data = json.loads(data)
                     if scrub:
                         data = {key: value for key, value in data.items() if key in keys_to_keep}
+                        data["owner_id"] = str(uuid.uuid4())
 
                 inner_record[field] = data
 

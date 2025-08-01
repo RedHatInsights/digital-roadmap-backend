@@ -43,9 +43,10 @@ _DISPLAY_NAME_SPECIAL_CASES = {
 
 
 class AppStreamImplementation(StrEnum):
-    scl = "scl"
-    package = "package"
     module = "dnf_module"
+    package = "package"
+    scl = "scl"
+    stream = "stream"
 
 
 class AppStreamType(StrEnum):
@@ -72,6 +73,12 @@ class AppStreamEntity(BaseModel):
     os_minor: int | None = None
     lifecycle: int | None = None
     rolling: bool = False
+
+    def __hash__(self):
+        return hash((self.display_name, self.application_stream_name, self.os_major, self.os_minor))
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and self.__hash__() == obj.__hash__()
 
     @field_validator("initial_product_version")
     @classmethod

@@ -2,13 +2,13 @@ PROJECT_DIR=$(shell pwd)
 
 VENV_DIR=.venvs/roadmap
 PYTHON ?= $(shell which python || which python3)
-VENV_PYTHON=$(VENV_DIR)/bin/python
-PYTHON_VERSION = $(shell $(VENV_PYTHON) -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
-PIP=$(VENV_PYTHON) -m pip
+PYTHON_VERSION := $(shell $(PYTHON) -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
+VENV_PYTHON = $(VENV_DIR)/bin/python
+PIP = $(VENV_PYTHON) -m pip
 
-PYTEST=$(VENV_DIR)/bin/pytest
-RUFF=$(VENV_DIR)/bin/ruff
-PRE_COMMIT=$(VENV_DIR)/bin/pre-commit
+PYTEST = $(VENV_DIR)/bin/pytest
+RUFF = $(VENV_DIR)/bin/ruff
+PRE_COMMIT = $(VENV_DIR)/bin/pre-commit
 
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 

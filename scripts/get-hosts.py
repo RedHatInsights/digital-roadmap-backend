@@ -57,7 +57,7 @@ def host_count(environment: str, org_id: int) -> int:
     return int(result[1][0])
 
 
-def main():
+def main():  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--org-id", help="Org ID", required=True, type=int)
     parser.add_argument("-e", "--environment", choices=["prod", "stage"], default="prod")
@@ -138,6 +138,11 @@ def main():
 
         offset += 100
         remaining -= len(records)
+        if display_name:
+            # Avoid an infinite loop when filtering by display name.
+            # If there are more than 100 records with the same display_name, this
+            # will need to be improved to accoun for that.
+            break
 
     scratch = pathlib.Path(__file__).parents[1] / "scratch"
     scratch.mkdir(exist_ok=True)

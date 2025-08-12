@@ -1,4 +1,5 @@
 app-common-python==0.2.8
+greenlet==3.2.3
 psycopg==3.2.9
 psycopg-c==3.2.9
 SQLAlchemy==2.0.42

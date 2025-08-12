@@ -13,6 +13,7 @@ from roadmap.models import RHELLifecycle
 
 # https://access.redhat.com/articles/3078
 # https://access.redhat.com/articles/4038291
+# https://access.redhat.com/support/policy/updates/errata
 OS_LIFECYCLE_DATES = {
     "7": RHELLifecycle(
         major=7,

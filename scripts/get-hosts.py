@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
+
 import argparse
 import base64
 import pathlib
@@ -10,6 +12,26 @@ import uuid
 from urllib.error import HTTPError
 
 from app_common_python import json
+
+
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--org-id", help="Org ID", required=True, type=int)
+    parser.add_argument("-e", "--environment", choices=["prod", "stage"], default="prod")
+    parser.add_argument("-n", "--display-name", help="Filter by display_name")
+    parser.add_argument("-l", "--limit", type=int, help="Maximum number of records to retrieve")
+    parser.add_argument("-s", "--scrub", action="store_true", help="Anonymize the data")
+
+    if argcomplete:
+        argcomplete.autocomplete(parser)
+
+    return parser.parse_args()
 
 
 def get_token(environment: str):
@@ -58,14 +80,7 @@ def host_count(environment: str, org_id: int) -> int:
 
 
 def main():  # noqa: C901
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--org-id", help="Org ID", required=True, type=int)
-    parser.add_argument("-e", "--environment", choices=["prod", "stage"], default="prod")
-    parser.add_argument("-n", "--display-name", help="Filter by display_name")
-    parser.add_argument("-l", "--limit", type=int, help="Maximum number of records to retrieve")
-    parser.add_argument("-s", "--scrub", action="store_true", help="Anonymize the data")
-
-    args = parser.parse_args()
+    args = parse_args()
 
     environment = args.environment
     org_id = args.org_id
@@ -141,7 +156,7 @@ def main():  # noqa: C901
         if display_name:
             # Avoid an infinite loop when filtering by display name.
             # If there are more than 100 records with the same display_name, this
-            # will need to be improved to accoun for that.
+            # will need to be improved to account for that.
             break
 
     scratch = pathlib.Path(__file__).parents[1] / "scratch"

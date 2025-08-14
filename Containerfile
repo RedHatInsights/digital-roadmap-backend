@@ -27,8 +27,8 @@ RUN microdnf install -y --nodocs \
     python3-devel \
     && rm -rf /var/cache/yum/*
 
-COPY "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
-COPY "requirements/requirements-replication-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-replication.txt
+ADD "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
+ADD "requirements/requirements-replication-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-replication.txt
 RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && "$PYTHON" -m pip install --no-cache-dir --upgrade pip \
     && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt \
@@ -46,7 +46,7 @@ ENV PATH="${VENV}/bin:$PATH"
 ENV PYTHON_VERSION="3.12"
 ENV PYTHONPATH=/srv/roady/
 
-COPY LICENSE /licenses/Apache-2.0.txt
+ADD LICENSE /licenses/Apache-2.0.txt
 COPY --from=builder /opt/venvs/ /opt/venvs/
 
 RUN microdnf install -y --nodocs \
@@ -56,8 +56,8 @@ RUN microdnf install -y --nodocs \
 
 RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
-COPY /src/roadmap/ /srv/roady/roadmap/
-COPY /scripts/replication.py /usr/local/bin/replication.py
+ADD /src/roadmap/ /srv/roady/roadmap/
+ADD /scripts/replication.py /usr/local/bin/replication.py
 
 RUN curl \
     --insecure \

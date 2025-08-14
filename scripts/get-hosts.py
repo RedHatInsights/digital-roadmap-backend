@@ -3,9 +3,11 @@
 
 import argparse
 import base64
+import os
 import pathlib
 import sys
 import textwrap
+import tomllib
 import urllib.request
 import uuid
 
@@ -34,6 +36,17 @@ def parse_args():
     return parser.parse_args()
 
 
+def load_config():
+    config_path = pathlib.Path(__file__).parents[1] / ".config.toml"
+    if env_path := os.getenv("ROADMAP_DEV_CONFIG"):
+        config_path = pathlib.Path(env_path).resolve()
+
+    if not config_path.exists():
+        sys.exit(f"Missing config file '{config_path.name}'")
+
+    return tomllib.loads(config_path.read_text())
+
+
 def get_token(environment: str):
     token_file = pathlib.Path(f"~/.config/tokens/openshift-token-{environment}").expanduser()
     if not token_file.exists():
@@ -43,12 +56,9 @@ def get_token(environment: str):
 
 
 def query_gabi(environment: str, query: str, offset: int = 0, limit: int = 100):
-    urls = {
-        "stage": b"aHR0cHM6Ly9nYWJpLWhvc3QtaW52ZW50b3J5LXN0YWdlLmFwcHMuY3JjczAydWUxLnVyYnkucDEub3BlbnNoaWZ0YXBwcy5jb20vcXVlcnk/YmFzZTY0X3F1ZXJ5PXRydWU=",
-        "prod": b"aHR0cHM6Ly9nYWJpLWhvc3QtaW52ZW50b3J5LXByb2QuYXBwcy5jcmNwMDF1ZTEubzltOC5wMS5vcGVuc2hpZnRhcHBzLmNvbS9xdWVyeT9iYXNlNjRfcXVlcnk9dHJ1ZQ==",
-    }
-    url = base64.b64decode(urls[environment]).decode("ascii")
+    config = load_config()
 
+    url = f"{config['environments'][environment]}?base64_query=true"
     headers = {
         "Authorization": f"Bearer {get_token(environment)}",
         "Content-Type": "application/json",

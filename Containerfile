@@ -59,6 +59,7 @@ RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady ro
 ADD /src/roadmap/ /srv/roady/roadmap/
 ADD /scripts/replication.py /usr/local/bin/replication.py
 
+ADD scripts/.release /srv/roady/
 ADD --chmod=0644 \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/data/-/raw/main/data/02_roadmap_jira.json \
     /srv/roady/roadmap/data/upcoming.json

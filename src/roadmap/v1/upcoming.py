@@ -17,13 +17,15 @@ from pydantic import computed_field
 from pydantic import Field
 from pydantic import TypeAdapter
 
+from roadmap.common import decode_header
 from roadmap.common import ensure_date
+from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.config import Settings
 from roadmap.models import _get_system_uuids
 from roadmap.models import Meta
 from roadmap.models import SystemInfo
-from roadmap.v1.lifecycle.app_streams import AppStreamKey
-from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
+from roadmap.v1.lifecycle.app_streams import NEVRA
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -139,17 +141,48 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
     }
 
 
+async def packages_by_system(
+    org_id: t.Annotated[str, Depends(decode_header)],
+    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
+):
+    results = defaultdict(set)
+    missing = defaultdict(int)
+    async for result in systems.mappings():
+        # Make sure we have a system profile with enough data, otherwise continue
+        if not (system_profile := result.get("system_profile_facts")):
+            missing["system_profile"] += 1
+            continue
+
+        try:
+            os_major, os_minor = rhel_major_minor(system_profile)
+        except ValueError:
+            missing["os_version"] += 1
+            continue
+
+        installed_packages = system_profile.get("installed_packages", [])
+        if not installed_packages:
+            missing["installed_packages"] += 1
+            continue
+
+        system = SystemInfo(id=result["id"], display_name=result["display_name"], os_major=os_major, os_minor=os_minor)
+        # TODO: This is probably crazy slow with a large number of hosts.
+        for package in installed_packages:
+            package = NEVRA.from_string(package).name
+            results[system].add(package)
+
+    if missing:
+        missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
+        logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
+
+    return results
+
+
 def get_upcoming_data_with_hosts(
-    systems_by_app_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
+    packages_by_system: t.Annotated[t.Any, Depends(packages_by_system)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     all: bool = False,
 ) -> list[UpcomingOutput]:
-    keys_by_name = defaultdict(list)
-    os_major_versions = set()
-    for system in systems_by_app_stream:
-        keys_by_name[system.name].append(system)
-        os_major_versions.add(system.app_stream_entity.os_major)
-
+    os_major_versions = {system.os_major for system in packages_by_system}
     try:
         os_major_versions.remove(None)
     except KeyError:
@@ -158,9 +191,9 @@ def get_upcoming_data_with_hosts(
     result = []
     for upcoming in read_upcoming_file(settings.upcoming_json_path):
         systems = set()
-        for package_name in upcoming.packages:
-            for key in keys_by_name[package_name]:
-                systems.update(systems_by_app_stream[key])
+        for system, packages in packages_by_system.items():
+            if upcoming.packages.intersection(packages):
+                systems.add(system)
 
         if not all:
             # If the roadmap item doesn't match the major OS version of a host

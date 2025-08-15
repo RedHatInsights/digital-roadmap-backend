@@ -45,7 +45,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[str]:
+def get_module_os_major_versions(name: str) -> set[int]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 
@@ -352,7 +352,7 @@ async def systems_by_app_stream(
 
 def app_streams_from_modules(
     dnf_modules: list[dict],
-    os_major: str,
+    os_major: int,
     cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -461,7 +461,7 @@ class NEVRA(BaseModel, frozen=True):
 @functools.cache
 def app_stream_from_package(
     package: str,
-    os_major: str,
+    os_major: int,
 ) -> AppStreamKey | None:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #

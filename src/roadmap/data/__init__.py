@@ -27,9 +27,9 @@ def _modules_packages():
 def _only_app_streams(data) -> set[AppStreamEntity]:
     app_streams = set(
         stream
-        for stream in APP_STREAM_MODULES_PACKAGES
+        for stream in data
         if stream.application_stream_type in (AppStreamType.stream, AppStreamType.full)
-    )
+    )  # fmt: off
 
     return app_streams
 

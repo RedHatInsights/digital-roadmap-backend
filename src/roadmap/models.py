@@ -92,6 +92,8 @@ class SystemInfo(BaseModel):
 
     id: UUID
     display_name: str
+    os_major: int
+    os_minor: int | None
 
 
 class Lifecycle(BaseModel):

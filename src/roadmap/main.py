@@ -1,6 +1,8 @@
 import logging
 import os
 
+from contextlib import asynccontextmanager
+
 import sentry_sdk
 
 from fastapi import APIRouter
@@ -13,6 +15,8 @@ import roadmap.v1
 
 from roadmap.common import extend_openapi
 from roadmap.common import HealthCheckFilter
+from roadmap.config import Settings
+from roadmap.kessel import KesselClient
 
 
 if os.getenv("SENTRY_DSN"):
@@ -34,11 +38,24 @@ if os.getenv("SENTRY_DSN"):
 logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = Settings.create()
+    if settings.use_kessel:
+        app.state.kessel_client = KesselClient(settings.kessel_url)
+
+    yield
+
+    if settings.use_kessel:
+        await app.state.kessel_client.close()
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Insights for RHEL Planning",
     summary="Major RHEL roadmap items as well as lifecycle data for RHEL and app streams.",
     redirect_slashes=False,
+    lifespan=lifespan,
 )
 app.openapi = extend_openapi(app)
 

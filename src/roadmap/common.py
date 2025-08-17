@@ -10,6 +10,8 @@ from datetime import date
 from urllib.error import HTTPError
 from uuid import UUID
 
+import fastapi
+
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Header
@@ -21,6 +23,9 @@ from sqlalchemy.sql import text
 
 from roadmap.config import Settings
 from roadmap.database import get_db
+from roadmap.kessel import KesselClient
+from roadmap.kessel import ObjectType
+from roadmap.kessel import Resource
 from roadmap.models import LifecycleType
 
 
@@ -28,6 +33,8 @@ logger = logging.getLogger("uvicorn.error")
 
 MajorVersion = t.Annotated[int | None, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int | None, Query(description="Minor version number", ge=0, le=10)]
+
+settings = Settings.create()
 
 
 class HealthCheckFilter(logging.Filter):
@@ -53,6 +60,27 @@ async def decode_header(
     org_id = identity.get("org_id", "")
 
     return org_id
+
+
+async def decode_header_user_id(
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+) -> str:
+    if x_rh_identity is None:
+        return ""
+
+    decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
+    id_header = json.loads(decoded_id_header)
+    identity = id_header.get("identity", {})
+
+    identity_type = identity.get("type", None)
+    if identity_type == "User":
+        user = identity.get("user", {})
+        return user.get("user_id", "")
+    elif identity_type == "ServiceAccount":
+        service_account = identity.get("service_account", {})
+        return service_account.get("user_id", "")
+
+    raise HTTPException(status_code=403, detail=f"Unsupported identity type: {identity_type}")
 
 
 async def query_rbac(
@@ -127,7 +155,48 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
 
-async def get_allowed_host_groups(
+async def get_kessel_client(
+    request: fastapi.Request, settings: t.Annotated[Settings, Depends(Settings.create)]
+) -> t.Optional[KesselClient]:
+    if settings.use_kessel:
+        return request.app.state.kessel_client
+
+    return None
+
+
+async def get_allowed_host_groups_kessel(
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    kessel_client: t.Annotated[KesselClient, Depends(get_kessel_client)],
+    user_id: t.Annotated[str, Depends(decode_header_user_id)],
+) -> set[str]:
+    """Check the given permissions for inventory access using Kessel API
+
+    Raise HTTPException if no permissions allow access.
+
+    Return set of workspaces host allowed to access.
+    It only returns an empty set on dev, when dev is set to false it never returns an empty set,
+    instead it raises an error to signal no permissions allow access.
+
+    Unlike the RBAC counterpart, this never returns a workspace None, as there is an "ungrouped" workspace.
+    """
+
+    if settings.dev:
+        return set()
+
+    workspace_iterator = kessel_client.get_resources(
+        object_type=ObjectType.workspace(),
+        relation="inventory_host_view",
+        subject=Resource.principal(f"redhat/{user_id}"),
+    )
+
+    workspaces = [w.resource_id async for w in workspace_iterator]
+    if workspaces:
+        return set(workspaces)
+
+    raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
+
+
+async def get_allowed_host_groups_rbac(
     permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
 ) -> set[str | None]:
     """Check the given permissions for inventory access.
@@ -162,6 +231,22 @@ async def get_allowed_host_groups(
             allowed_group_ids.update(group_list)
 
     return allowed_group_ids
+
+
+if settings.use_kessel:
+    get_allowed_host_groups = get_allowed_host_groups_kessel
+else:
+    get_allowed_host_groups = get_allowed_host_groups_rbac
+
+# async def get_allowed_host_groups(
+#     settings: t.Annotated[Settings, Depends(Settings.create)],
+#     rbac: t.Annotated[set[str | None], Depends(get_allowed_host_groups_rbac)],
+#     kessel: t.Annotated[set[str | None], Depends(get_allowed_host_groups_kessel)],
+# ) -> set[str | None]:
+#     if settings.use_kessel:
+#         return kessel
+#
+#     return rbac
 
 
 async def query_host_inventory(

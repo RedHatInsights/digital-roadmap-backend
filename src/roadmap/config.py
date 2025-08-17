@@ -26,9 +26,12 @@ class Settings(BaseSettings):
     dev: bool = False
     host_inventory_url: str = "https://console.redhat.com"
     upcoming_json_path: FilePath = Path(__file__).parent.joinpath("data").joinpath("upcoming.json")
+    use_kessel: bool = False
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
+    kessel_hostname: str = "127.0.0.1"
+    kessel_port: int = 9081
 
     @property
     def database_url(self) -> PostgresDsn:
@@ -42,6 +45,10 @@ class Settings(BaseSettings):
             return ""
 
         return f"http://{self.rbac_hostname}:{self.rbac_port}"
+
+    @property
+    def kessel_url(self):
+        return f"{self.kessel_hostname}:{self.kessel_port}"
 
     @classmethod
     @lru_cache

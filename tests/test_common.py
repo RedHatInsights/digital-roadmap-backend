@@ -2,6 +2,8 @@ from contextlib import nullcontext
 from datetime import date
 from email.message import Message
 from io import BytesIO
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 from urllib.error import HTTPError
 
 import pytest
@@ -11,14 +13,17 @@ from fastapi import HTTPException
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
+from roadmap.common import decode_header_user_id
 from roadmap.common import ensure_date
-from roadmap.common import get_allowed_host_groups
+from roadmap.common import get_allowed_host_groups_kessel
+from roadmap.common import get_allowed_host_groups_rbac
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.config import Settings
 from roadmap.database import get_db
+from src.roadmap.kessel import KesselClient
 
 
 @pytest.fixture(scope="module")
@@ -31,6 +36,21 @@ async def base_args():
         "settings": settings,
         "host_groups": [],
     }
+
+
+def mock_kessel_client(workspaces=None):
+    if workspaces is None:
+        workspaces = []
+
+    kessel_client = MagicMock(KesselClient)
+
+    async def get_resources(**kwargs):
+        for workspace_id in workspaces:
+            yield SimpleNamespace(resource_id=workspace_id)
+
+    kessel_client.get_resources = get_resources
+
+    return kessel_client
 
 
 async def test_query_host_inventory(base_args):
@@ -133,6 +153,34 @@ async def test_decode_header(value, expected):
     assert result == expected
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    (
+        (None, ""),
+        (b"eyJpZGVudGl0eSI6IHsidHlwZSI6ICJVc2VyIiwgInVzZXIiOiB7InVzZXJfaWQiOiAiZm9vYmFyIn19fQ==", "foobar"),  # User
+        (
+            b"eyJpZGVudGl0eSI6eyJvcmdfaWQiOiIzMjEiLCJ0eXBlIjoiU2VydmljZUFjY291bnQiLCJzZXJ2aWNlX2FjY291bnQiOiB7InVzZXJfaWQiOiAic2EifX19",
+            "sa",
+        ),  # ServiceAccount
+    ),
+)
+async def test_decode_header_user_id(value, expected):
+    result = await decode_header_user_id(value)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        b"eyJpZGVudGl0eSI6eyJvcmdfaWQiOiIzMjEiLCJ0eXBlIjoiU3lzdGVtIn19",  # System identity
+    ),
+)
+async def test_decode_header_username_unsupported_identity(value):
+    with pytest.raises(HTTPException, match="Unsupported identity type"):
+        await decode_header_user_id(value)
+
+
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
@@ -219,9 +267,9 @@ def test_get_group_list_from_resource_definition_error(resource_definition):
         _get_group_list_from_resource_definition(resource_definition)
 
 
-async def test_get_allowed_host_groups():
+async def test_get_allowed_host_groups_rbac():
     perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
-    result = await get_allowed_host_groups(perms)
+    result = await get_allowed_host_groups_rbac(perms)
 
     # Empty set means unrestricted access.
     assert result == set()
@@ -235,9 +283,28 @@ async def test_get_allowed_host_groups():
         [{"resourceDefinitions": [], "permission": "nope"}],
     ),
 )
-async def test_get_allowed_host_groups_no_access(permissions):
+async def test_get_allowed_host_groups_rbac_no_access(permissions):
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await get_allowed_host_groups(permissions)
+        await get_allowed_host_groups_rbac(permissions)
+
+
+async def test_get_allowed_host_groups_kessel():
+    settings = Settings.create()
+    settings.use_kessel = True
+    kessel_client = mock_kessel_client(["1234", "5678"])
+
+    result = await get_allowed_host_groups_kessel(settings, kessel_client, "foobar")
+
+    assert result == {"1234", "5678"}
+
+
+async def test_get_allowed_host_groups_kessel_no_access():
+    settings = Settings.create()
+    settings.use_kessel = True
+    kessel_client = mock_kessel_client([])  # Allowed workspaces are explicit, empty means no access
+
+    with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
+        await get_allowed_host_groups_kessel(settings, kessel_client, "foobar-no-access")
 
 
 def test_sort_attrs(mocker):

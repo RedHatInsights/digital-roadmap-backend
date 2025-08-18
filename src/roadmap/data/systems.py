@@ -347,10 +347,10 @@ OS_LIFECYCLE_DATES = {
         end_date_els=date(2038, 5, 31),
     ),
     "11": RHELLifecycle(
-    major=11,
-    start_date=date(2028, 5, 13),
-    end_date=date(2038, 5, 31),
-    end_date_els=date(2041, 5, 31),
+        major=11,
+        start_date=date(2028, 5, 13),
+        end_date=date(2038, 5, 31),
+        end_date_els=date(2041, 5, 31),
     ),
     "11.0": RHELLifecycle(
         major=11,

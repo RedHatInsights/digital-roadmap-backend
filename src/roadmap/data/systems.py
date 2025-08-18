@@ -429,4 +429,4 @@ OS_LIFECYCLE_DATES = {
         end_date=date(2038, 5, 31),
         end_date_els=date(2041, 5, 31),
     ),
-    }
+}

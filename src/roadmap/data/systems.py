@@ -356,7 +356,7 @@ OS_LIFECYCLE_DATES = {
         major=11,
         minor=0,
         start_date=date(2028, 5, 13),
-        end_date=date(2028, 11, 1),
+        end_date=date(2028, 11, 15),
         end_date_eus=date(2030, 5, 31),
         end_date_e4s=date(2032, 5, 31),
     ),

@@ -2,19 +2,6 @@ FROM registry.access.redhat.com/ubi10-minimal:10.0-1751880071 AS base
 
 FROM base AS builder
 
-LABEL com.redhat.component=rhel-roadmap-api
-LABEL description="Red Hat Enterprise Linux Roadmap API"
-LABEL distribution-scope=private
-LABEL io.k8s.description="Red Hat Enterprise Linux Roadmap API"
-LABEL io.k8s.display-name="RHEL Roadmap API"
-LABEL io.openshift.tags="rhel,lightspeed,roadmap"
-LABEL name=rhel-roadmap-api
-LABEL release=0.0.1
-LABEL summary="Red Hat Enterprise Linux Roadmap API"
-LABEL url="https://github.com/RedHatInsights/digital-roadmap-backend"
-LABEL vendor="Red Hat, Inc."
-LABEL version=0.0.1
-
 ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"
 ENV PATH="${VENV}/bin:$PATH"
@@ -39,6 +26,23 @@ RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
 
 
 FROM base AS final
+
+ARG SOURCE_DATE_EPOCH
+
+LABEL com.redhat.component=insights-planning-api
+LABEL cpe="cpe:2.3:a:redhat:insights_planning:-:*:*:*:*:*:*:*"
+LABEL description="Red Hat Enterprise Linux Roadmap API"
+LABEL distribution-scope=private
+LABEL io.k8s.description="Insights for RHEL Planning API"
+LABEL io.k8s.display-name="Insights for RHEL Planning API"
+LABEL io.openshift.tags="rhel,insights,roadmap"
+LABEL name=insights-planning-api
+LABEL org.opencontainers.image.created=${SOURCE_DATE_EPOCH}
+LABEL release=0.0.1
+LABEL summary="Red Hat Enterprise Linux Roadmap API"
+LABEL url="https://github.com/RedHatInsights/digital-roadmap-backend"
+LABEL vendor="Red Hat, Inc."
+LABEL version=0.0.1
 
 ENV VENV=/opt/venvs/roadmap
 ENV PYTHON="${VENV}/bin/python"

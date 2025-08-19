@@ -88,7 +88,7 @@ test:
 
 .PHONY: build
 build: check-container-runtime
-	$(CONTAINER_RUNTIME) build -t roadmap:latest -f Containerfile .
+	$(CONTAINER_RUNTIME) build --build-arg SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct main) -t roadmap:latest -f Containerfile .
 
 .PHONY: get-release-commit
 get-release-commit:

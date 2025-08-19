@@ -46,7 +46,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[str]:
+def get_module_os_major_versions(name: str) -> set[int]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 
@@ -323,7 +323,7 @@ async def systems_by_app_stream(
             continue
 
         try:
-            os_major, _ = rhel_major_minor(system_profile)
+            os_major, os_minor = rhel_major_minor(system_profile)
         except ValueError:
             missing["os_version"] += 1
             continue
@@ -339,9 +339,11 @@ async def systems_by_app_stream(
 
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
-        system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
+        system_info = SystemInfo(
+            id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
+        )
         for package in installed_packages:
-            package_data[(package, os_major)].append(system_info)
+            package_data[(package, system_info.os_major)].append(system_info)
 
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
         for app_stream in module_app_streams:
@@ -362,7 +364,7 @@ async def systems_by_app_stream(
 
 def app_streams_from_modules(
     dnf_modules: list[dict],
-    os_major: str,
+    os_major: int,
     cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -471,7 +473,7 @@ class NEVRA(BaseModel, frozen=True):
 @functools.cache
 def app_stream_from_package(
     package: str,
-    os_major: str,
+    os_major: int,
 ) -> AppStreamKey | None:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #

@@ -172,8 +172,13 @@ async def get_relevant_systems(  # noqa: C901
         lifecycle_type = get_lifecycle_type(installed_products)
 
         # Collect system IDs by major version, minor version, and lifecycle type so we can return those in the response
-        system_info = SystemInfo(id=result["id"], display_name=result["display_name"])
-        system_id_key = (str(os_major) if os_minor is None else f"{os_major}.{os_minor}", lifecycle_type)
+        system_info = SystemInfo(
+            id=result["id"], display_name=result["display_name"], os_major=os_major, os_minor=os_minor
+        )
+        system_id_key = (
+            str(system_info.os_major) if os_minor is None else f"{system_info.os_major}.{system_info.os_minor}",
+            lifecycle_type,
+        )
         systems_by_version_lifecycle[system_id_key].add(system_info)
 
         count_key = HostCount(name=name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)

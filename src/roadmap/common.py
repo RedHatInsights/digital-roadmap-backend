@@ -374,11 +374,11 @@ def streams_lt(a: str, b: str):
 
 def rhel_major_minor(system: dict) -> tuple[int, int | None]:
     # First, try operating_system
-    if system["os_major"] is not None:
+    if system.get("os_major") is not None:
         return (system["os_major"], system["os_minor"])
 
     # If we don't have the data in operating_system, fall back to os_release
-    if (os_release := system["os_release"]) is not None:
+    if (os_release := system.get("os_release")) is not None:
         major, minor = tuple(int(n) for n in os_release.split("."))[:2]
         return (major, minor)
 

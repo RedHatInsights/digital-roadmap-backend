@@ -5,9 +5,9 @@ cfgv==3.4.0
 decorator==5.2.1
 distlib==0.4.0
 executing==2.2.0
-Faker==37.4.2
-filelock==3.18.0
-identify==2.6.12
+Faker==37.5.3
+filelock==3.19.1
+identify==2.6.13
 ipdb==0.13.13
 ipython==9.4.0
 ipython_pygments_lexers==1.1.1
@@ -17,7 +17,7 @@ nodeenv==1.9.1
 parso==0.8.4
 pexpect==4.9.0
 platformdirs==4.3.8
-pre_commit==4.2.0
+pre_commit==4.3.0
 prompt_toolkit==3.0.51
 ptyprocess==0.7.0
 pure_eval==0.2.3
@@ -26,5 +26,5 @@ PyYAML==6.0.2
 stack-data==0.6.3
 traitlets==5.14.3
 tzdata==2025.2
-virtualenv==20.32.0
+virtualenv==20.34.0
 wcwidth==0.2.13

@@ -1,4 +1,4 @@
-coverage==7.10.1
+coverage==7.10.4
 execnet==2.1.1
 iniconfig==2.1.0
 packaging==25.0
@@ -9,4 +9,4 @@ pytest-asyncio==1.1.0
 pytest-cov==6.2.1
 pytest-mock==3.14.1
 pytest-xdist==3.8.0
-ruff==0.12.7
+ruff==0.12.10

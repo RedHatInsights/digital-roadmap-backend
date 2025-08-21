@@ -36,20 +36,26 @@ async def base_args():
 async def test_query_host_inventory(base_args):
     records = await anext(query_host_inventory(**base_args))
     results = [item async for item in records.mappings()]
+    expected = {
+        "id",
+        "display_name",
+        "os_name",
+        "os_minor",
+        "os_major",
+        "os_release",
+        "dnf_modules",
+        "packages",
+        "products",
+    }
 
     assert len(results) > 1
-    assert "system_profile_facts" in results[0]
+    assert expected.issubset(results[0])
 
 
 @pytest.mark.parametrize("major", (7, 8, 9))
 async def test_query_host_inventory_major(base_args, major):
     records = await anext(query_host_inventory(**base_args, major=major))
-
-    major_versions = set()
-    async for record in records.mappings():
-        if system_profile := record.get("system_profile_facts"):
-            if major_version := system_profile.get("operating_system", {}).get("major"):
-                major_versions.add(major_version)
+    major_versions = {record["os_major"] async for record in records.mappings()}
 
     assert major_versions == {major}
 
@@ -65,15 +71,12 @@ async def test_query_host_inventory_major(base_args, major):
 )
 async def test_query_host_inventory_major_minor(base_args, major, minor):
     records = await anext(query_host_inventory(**base_args, major=major, minor=minor))
+
     major_versions = set()
     minor_versions = set()
     async for record in records.mappings():
-        if system_profile := record.get("system_profile_facts"):
-            if major_version := system_profile.get("operating_system", {}).get("major"):
-                major_versions.add(major_version)
-
-            if (minor_version := system_profile.get("operating_system", {}).get("minor")) is not None:
-                minor_versions.add(minor_version)
+        major_versions.add(record["os_major"])
+        minor_versions.add(record["os_minor"])
 
     assert major_versions == {major}, "Major version mismatch"
     assert minor_versions == {minor}, "Minor version mismatch"
@@ -269,11 +272,11 @@ def test_normalize_version(stream, expected):
 @pytest.mark.parametrize(
     "profile, expected, context",
     (
-        ({"operating_system": {"major": 9, "minor": 0}}, (9, 0), nullcontext()),
-        ({"operating_system": {"name": "RHEL"}, "os_release": "9.0"}, (9, 0), nullcontext()),
-        ({"operating_system": {"name": "RHEL"}, "os_release": "9.1.10"}, (9, 1), nullcontext()),
+        ({"os_major": 9, "os_minor": 0}, (9, 0), nullcontext()),
+        ({"name": "RHEL", "os_release": "9.0"}, (9, 0), nullcontext()),
+        ({"name": "RHEL", "os_release": "9.1.10"}, (9, 1), nullcontext()),
         ({"os_release": "9.2"}, (9, 2), nullcontext()),
-        ({"operating_system": {}}, None, pytest.raises(ValueError)),
+        ({}, None, pytest.raises(ValueError)),
     ),
 )
 def test_rhel_major_minor(profile, expected, context):

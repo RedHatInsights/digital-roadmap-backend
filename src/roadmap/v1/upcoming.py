@@ -59,7 +59,7 @@ class UpcomingInputDetails(BaseModel):
 class UpcomingInput(BaseModel):
     name: str
     type: UpcomingType
-    packages: set[str]
+    package: set[str]
     release: str
     os_major: int = Field(default_factory=lambda data: int(data["release"].partition(".")[0]))
     date: Date
@@ -81,7 +81,7 @@ class UpcomingOutputDetails(BaseModel):
 class UpcomingOutput(BaseModel):
     name: str
     type: UpcomingType
-    packages: set[str]
+    package: set[str]
     release: str
     date: Date
     details: UpcomingOutputDetails
@@ -140,7 +140,7 @@ def get_upcoming_data_with_hosts(
     result = []
     for upcoming in read_upcoming_file(settings.upcoming_json_path):
         systems = set()
-        for package_name in upcoming.packages:
+        for package_name in upcoming.package:
             for key in keys_by_name[package_name]:
                 systems.update(systems_by_app_stream[key])
 
@@ -165,7 +165,7 @@ def get_upcoming_data_with_hosts(
             UpcomingOutput(
                 name=upcoming.name,
                 type=upcoming.type,
-                packages=upcoming.packages,
+                package=upcoming.package,
                 release=upcoming.release,
                 date=upcoming.date,
                 details=details,

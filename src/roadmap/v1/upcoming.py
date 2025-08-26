@@ -13,9 +13,9 @@ from fastapi import APIRouter
 from fastapi import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
+from pydantic import computed_field
 from pydantic import Field
 from pydantic import TypeAdapter
-from pydantic import computed_field
 
 from roadmap.common import ensure_date
 from roadmap.config import Settings
@@ -65,7 +65,7 @@ class UpcomingInput(BaseModel):
     os_major: int = Field(default_factory=lambda data: int(data["release"].partition(".")[0]))
     date: Date
     details: UpcomingInputDetails
-    
+
     @computed_field
     @property
     def package(self) -> str:
@@ -92,7 +92,7 @@ class UpcomingOutput(BaseModel):
     release: str
     date: Date
     details: UpcomingOutputDetails
-    
+
     @computed_field
     @property
     def package(self) -> str:

@@ -2,7 +2,7 @@
   {
     "name": "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST FROM FIXTURES",
     "type": "addition",
-    "package": ["nodejs", "npm"],
+    "packages": ["nodejs", "npm"],
     "release": "9.7",
     "date": "2025-08-01",
     "details": {
@@ -17,7 +17,7 @@
   {
     "name": "Add Node.js to RHEL10 AppStream THIS IS TEST DATA",
     "type": "addition",
-    "package": ["nodejs", "npm"],
+    "packages": ["nodejs", "npm"],
     "release": "10.1",
     "date": "2025-08-01",
     "details": {

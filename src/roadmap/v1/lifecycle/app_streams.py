@@ -373,6 +373,11 @@ def app_streams_from_modules(
         if os_major not in OS_MAJORS_BY_APP_NAME.get(module_name, []):
             continue
 
+        if "installed" not in dnf_module.get("status", ["installed"]):
+            # In case the status is not present behave as before without the field. Include all streams
+            # provided under "dnf_modules" key of the system.
+            continue
+
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:
             logger.debug(f"Did not find matching app stream module {module_name} {stream} on RHEL {os_major}")

@@ -69,8 +69,8 @@ class UpcomingInput(BaseModel):
     @computed_field
     @property
     def package(self) -> str:
-        """Returns the first package from packages set for backward compatibility."""
-        return next(iter(self.packages)) if self.packages else ""
+        """Returns the first package from sorted packages set for backward compatibility."""
+        return next(iter(sorted(self.packages))) if self.packages else ""
 
 
 class UpcomingOutputDetails(BaseModel):

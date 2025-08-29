@@ -144,37 +144,38 @@ async def get_upcoming(data: t.Annotated[t.Any, Depends(get_upcoming_data_no_hos
 async def packages_by_system(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
-):
-    results = defaultdict(set)
+) -> dict[SystemInfo, set[str]]:
+    logger.info(f"Getting packages by system for {org_id or 'UNKNOWN'}")
+
     missing = defaultdict(int)
-    async for result in systems.mappings():
-        # Make sure we have a system profile with enough data, otherwise continue
-        if not (system_profile := result.get("system_profile_facts")):
-            missing["system_profile"] += 1
-            continue
+    packages_by_system = defaultdict(set)
+    package_data = defaultdict(list)
+    async for system in systems.yield_per(2_000).mappings():
+        packages = system["packages"] or []
 
         try:
-            os_major, os_minor = rhel_major_minor(system_profile)
+            os_major, os_minor = rhel_major_minor(system)
         except ValueError:
             missing["os_version"] += 1
             continue
 
-        installed_packages = system_profile.get("installed_packages", [])
-        if not installed_packages:
-            missing["installed_packages"] += 1
+        if not packages:
+            missing["packages"] += 1
             continue
 
-        system = SystemInfo(id=result["id"], display_name=result["display_name"], os_major=os_major, os_minor=os_minor)
+        system_info = SystemInfo(
+            id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
+        )
         # TODO: This is probably crazy slow with a large number of hosts.
-        for package in installed_packages:
+        for package in packages:
             package = NEVRA.from_string(package).name
-            results[system].add(package)
+            packages_by_system[system_info].add(package)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
-    return results
+    return packages_by_system
 
 
 def get_upcoming_data_with_hosts(

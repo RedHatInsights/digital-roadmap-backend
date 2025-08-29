@@ -149,7 +149,6 @@ async def packages_by_system(
 
     missing = defaultdict(int)
     packages_by_system = defaultdict(set)
-    package_data = defaultdict(list)
     async for system in systems.yield_per(2_000).mappings():
         packages = system["packages"] or []
 
@@ -166,7 +165,6 @@ async def packages_by_system(
         system_info = SystemInfo(
             id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
         )
-        # TODO: This is probably crazy slow with a large number of hosts.
         for package in packages:
             package = NEVRA.from_string(package).name
             packages_by_system[system_info].add(package)

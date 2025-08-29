@@ -1,12 +1,12 @@
+import uuid
+
 from datetime import date
 from pathlib import Path
 
 from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.config import Settings
-from roadmap.data.app_streams import AppStreamEntity
-from roadmap.data.app_streams import AppStreamImplementation
-from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.models import SystemInfo
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
 from roadmap.v1.upcoming import UpcomingOutputDetails
 
@@ -100,29 +100,19 @@ def test_get_relevant_upcoming_changes(client, api_prefix):
 
 
 def test_get_upcoming_data_with_hosts():
-    """Given only AppStreamKey objects with os_major defined (no values of None),
-    ensure the function returns as expected.
+    """Given only RHEL 9 and 10 hosts, ensure that upcoming items relevant
+    to RHEL 8 are matched.
     """
-    versions = range(9, 11)
-    systems_by_app_stream = {
-        AppStreamKey(
-            name="Yo",
-            app_stream_entity=AppStreamEntity(
-                name="Yo",
-                application_stream_name="Yo",
-                stream="2.0",
-                os_major=version,
-                impl=AppStreamImplementation.package,
-            ),
-        ): set()
-        for version in versions
-    }
+    systems = [SystemInfo(id=uuid.uuid4(), display_name=f"RHEL {n}", os_major=n, os_minor=None) for n in range(9, 11)]
+    packages_by_system = {system: ["nodejs"] for system in systems}
     settings = Settings.create()
-    result = get_upcoming_data_with_hosts(systems_by_app_stream, settings)
+    result = get_upcoming_data_with_hosts(packages_by_system, settings)
     releases = [n.release for n in result]
 
     assert len(result) >= 1
-    assert not any(release.startswith("8") for release in releases), "Something went wrong"
+    assert not any(release.startswith("8") for release in releases), (
+        "An upcoming item for RHEL 8 was incorrectly returned in the results"
+    )
 
 
 def test_upcoming_populate_systems_from_systems_detail(make_systems):

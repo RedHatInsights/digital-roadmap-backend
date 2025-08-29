@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio.result import AsyncResult
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
 from roadmap.data import APP_STREAM_MODULES
@@ -45,7 +46,7 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[str]:
+def get_module_os_major_versions(name: str) -> set[int]:
     return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 
@@ -317,19 +318,17 @@ async def systems_by_app_stream(
         dnf_modules = system["dnf_modules"] or []
         packages = system["packages"] or []
 
-        if not os_major:
+        try:
+            os_major, os_minor = rhel_major_minor(system)
+        except ValueError:
             missing["os_version"] += 1
             continue
 
-        if not dnf_modules:
-            missing["dnf_modules"] += 1
-
-        if not packages:
-            missing["packages"] += 1
-
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
-        system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
+        system_info = SystemInfo(
+            id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
+        )
         for package in packages:
             package_data[(package, os_major)].append(system_info)
 
@@ -352,7 +351,7 @@ async def systems_by_app_stream(
 
 def app_streams_from_modules(
     dnf_modules: list[dict],
-    os_major: str,
+    os_major: int,
     cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -461,7 +460,7 @@ class NEVRA(BaseModel, frozen=True):
 @functools.cache
 def app_stream_from_package(
     package: str,
-    os_major: str,
+    os_major: int,
 ) -> AppStreamKey | None:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #

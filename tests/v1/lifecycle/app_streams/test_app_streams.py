@@ -1,5 +1,7 @@
 import pytest
 
+from roadmap.v1.lifecycle.app_streams import app_streams_from_modules
+
 
 RHEL_VERSIONS = (8, 9, 10)
 
@@ -116,3 +118,20 @@ def test_get_app_stream_module_info_not_found(api_prefix, client, version):
 
     assert result.status_code == 200
     assert len(data) == 0
+
+
+@pytest.mark.parametrize(
+    ("dnf_modules", "os_major", "expected_names"),
+    (
+        ([{"name": "python36", "status": ["default", "enabled", "installed"], "stream": "3.6"}], 8, {"python36"}),
+        ([{"name": "python36", "status": ["default", "enabled"], "stream": "3.6"}], 8, set()),
+        ([{"name": "python36", "stream": "3.6"}], 8, set()),
+        ([{"name": "php", "status": ["default", "enabled"], "stream": "8.3"}], 9, {"php"}),
+        ([{"name": "php", "stream": "8.3"}], 9, {"php"}),
+    ),
+)
+def test_app_streams_from_modules_status_field(dnf_modules, os_major, expected_names):
+    streams = app_streams_from_modules(dnf_modules, os_major, {})
+
+    stream_names = {stream.name for stream in streams}
+    assert stream_names == expected_names

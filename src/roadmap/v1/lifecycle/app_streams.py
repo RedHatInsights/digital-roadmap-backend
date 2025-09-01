@@ -352,7 +352,7 @@ async def systems_by_app_stream(
 
 def app_streams_from_modules(
     dnf_modules: list[dict],
-    os_major: str,
+    os_major: int,
     cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -372,9 +372,7 @@ def app_streams_from_modules(
         if os_major not in get_module_os_major_versions(module_name):
             continue
 
-        if "installed" not in dnf_module.get("status", ["installed"]):
-            # In case the status is not present behave as before without the field. Include all streams
-            # provided under "dnf_modules" key of the system.
+        if os_major <= 8 and "installed" not in dnf_module.get("status", []):
             continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))

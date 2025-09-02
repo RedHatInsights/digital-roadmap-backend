@@ -57,6 +57,11 @@ class UpcomingInputDetails(BaseModel):
     lastModified: Date
 
 
+def _get_first_sorted_package(packages: set[str]) -> str:
+    """Returns the first package from sorted packages set"""
+    return sorted(packages)[0] if packages else ""
+
+
 class UpcomingInput(BaseModel):
     name: str
     type: UpcomingType
@@ -70,7 +75,7 @@ class UpcomingInput(BaseModel):
     @property
     def package(self) -> str:
         """Returns the first package from sorted packages set for backward compatibility."""
-        return next(iter(sorted(self.packages))) if self.packages else ""
+        return _get_first_sorted_package(self.packages)
 
 
 class UpcomingOutputDetails(BaseModel):
@@ -97,7 +102,7 @@ class UpcomingOutput(BaseModel):
     @property
     def package(self) -> str:
         """Returns the first package from packages set for backward compatibility."""
-        return next(iter(self.packages)) if self.packages else ""
+        return _get_first_sorted_package(self.packages)
 
 
 class WrappedUpcomingOutput(BaseModel):

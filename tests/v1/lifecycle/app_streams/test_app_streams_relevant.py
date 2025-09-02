@@ -45,9 +45,9 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 59, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 456, "Incorrect number of hosts in response. Did the fixture data change?"
-    assert display_names.issuperset(["Redis 5", "Redis 6", "Apache HTTPD 2.4", "MySQL 8.0"]), (
+    assert count == 29, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 181, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert display_names.issuperset(["PostgreSQL 15", "PostgreSQL 16", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
     assert names.issuperset(["Python 3.11", "mysql", "mariadb", "nginx", "nodejs"])

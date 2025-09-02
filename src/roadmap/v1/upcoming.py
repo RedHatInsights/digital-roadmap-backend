@@ -13,6 +13,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from pydantic import AfterValidator
 from pydantic import BaseModel
+from pydantic import computed_field
 from pydantic import Field
 from pydantic import TypeAdapter
 
@@ -56,14 +57,25 @@ class UpcomingInputDetails(BaseModel):
     lastModified: Date
 
 
+def _get_first_sorted_package(packages: set[str]) -> str:
+    """Returns the first package from sorted packages set"""
+    return sorted(packages)[0] if packages else ""
+
+
 class UpcomingInput(BaseModel):
     name: str
     type: UpcomingType
-    package: str
+    packages: set[str]
     release: str
     os_major: int = Field(default_factory=lambda data: int(data["release"].partition(".")[0]))
     date: Date
     details: UpcomingInputDetails
+
+    @computed_field
+    @property
+    def package(self) -> str:
+        """Returns the first package from sorted packages set for backward compatibility."""
+        return _get_first_sorted_package(self.packages)
 
 
 class UpcomingOutputDetails(BaseModel):
@@ -81,10 +93,16 @@ class UpcomingOutputDetails(BaseModel):
 class UpcomingOutput(BaseModel):
     name: str
     type: UpcomingType
-    package: str
+    packages: set[str]
     release: str
     date: Date
     details: UpcomingOutputDetails
+
+    @computed_field
+    @property
+    def package(self) -> str:
+        """Returns the first package from packages set for backward compatibility."""
+        return _get_first_sorted_package(self.packages)
 
 
 class WrappedUpcomingOutput(BaseModel):
@@ -140,8 +158,9 @@ def get_upcoming_data_with_hosts(
     result = []
     for upcoming in read_upcoming_file(settings.upcoming_json_path):
         systems = set()
-        for key in keys_by_name[upcoming.package]:
-            systems.update(systems_by_app_stream[key])
+        for package_name in upcoming.packages:
+            for key in keys_by_name[package_name]:
+                systems.update(systems_by_app_stream[key])
 
         if not all:
             # If the roadmap item doesn't match the major OS version of a host
@@ -164,7 +183,7 @@ def get_upcoming_data_with_hosts(
             UpcomingOutput(
                 name=upcoming.name,
                 type=upcoming.type,
-                package=upcoming.package,
+                packages=upcoming.packages,
                 release=upcoming.release,
                 date=upcoming.date,
                 details=details,

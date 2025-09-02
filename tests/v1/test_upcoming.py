@@ -14,6 +14,7 @@ from roadmap.v1.upcoming import UpcomingOutputDetails
 def test_get_upcoming_changes(client, api_prefix):
     response = client.get(f"{api_prefix}/upcoming-changes")
     data = response.json()["data"]
+    package_results = [(result["package"], result["packages"]) for result in data]
 
     assert response.status_code == 200
     assert "Add Node.js to RHEL9 AppStream THIS IS TEST DATA" in [n["name"] for n in data]
@@ -22,6 +23,9 @@ def test_get_upcoming_changes(client, api_prefix):
     )
     assert not any("potentiallyAffectedSystemsCount" in d["details"] for d in data), (
         "/upcoming-changes should have no 'potentiallyAffectedSystemsCount' field, that is in /relevent/upcoming-changes only"
+    )
+    assert all(package == sorted(packages)[0] for package, packages in package_results), (
+        "Package does not match the first item in packages"
     )
 
 

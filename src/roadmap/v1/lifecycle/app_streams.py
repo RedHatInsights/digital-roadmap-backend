@@ -337,10 +337,10 @@ async def systems_by_app_stream(
             systems_by_stream[app_stream].add(system_info)
 
     # Now process the packages outside of the host record loop
-    for args, systems in package_data.items():
+    for args, systems_info in package_data.items():
         package, os_major = args
         if app_stream := app_stream_from_package(package, os_major):
-            systems_by_stream[app_stream].update(systems)
+            systems_by_stream[app_stream].update(systems_info)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

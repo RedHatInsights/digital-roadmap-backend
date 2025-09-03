@@ -181,15 +181,11 @@ async def packages_by_system(
 
 
 def get_upcoming_data_with_hosts(
-    packages_by_system: t.Annotated[t.Any, Depends(packages_by_system)],
+    packages_by_system: t.Annotated[dict[SystemInfo, set[str]], Depends(packages_by_system)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     all: bool = False,
 ) -> list[UpcomingOutput]:
     os_major_versions = {system.os_major for system in packages_by_system}
-    try:
-        os_major_versions.remove(None)
-    except KeyError:
-        pass
 
     result = []
     for upcoming in read_upcoming_file(settings.upcoming_json_path):

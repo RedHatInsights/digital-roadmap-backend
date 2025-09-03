@@ -324,6 +324,12 @@ async def systems_by_app_stream(
             missing["os_version"] += 1
             continue
 
+        if not dnf_modules:
+            missing["dnf_modules"] += 1
+
+        if not packages:
+            missing["packages"] += 1
+
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
         system_info = SystemInfo(

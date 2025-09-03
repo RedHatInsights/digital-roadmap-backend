@@ -165,9 +165,13 @@ async def packages_by_system(
         system_info = SystemInfo(
             id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
         )
-        for package in packages:
-            package = NEVRA.from_string(package).name
-            packages_by_system[system_info].add(package)
+
+        # The time and space complexity of this line is very high.
+        # The result of NEVRA.from_string() is cached, which helps a lot.
+        #
+        # In the future, it will most likely be necessary to store the NEVRA object and not just
+        # the package name to improve matching.
+        packages_by_system[system_info] = {NEVRA.from_string(package).name for package in packages}
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

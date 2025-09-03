@@ -46,10 +46,6 @@ Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
 
 
-def get_module_os_major_versions(name: str) -> set[int]:
-    return OS_MAJORS_BY_APP_NAME.get(name, set())
-
-
 async def filter_app_stream_results(data, filter_params):
     if name := filter_params.get("name"):
         name = name.casefold()
@@ -374,7 +370,7 @@ def app_streams_from_modules(
             # Bug with Perl data currently. Omit for now.
             continue
 
-        if os_major not in get_module_os_major_versions(module_name):
+        if os_major not in OS_MAJORS_BY_APP_NAME.get(module_name, []):
             continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))

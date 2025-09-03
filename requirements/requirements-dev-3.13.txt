@@ -5,7 +5,6 @@ cfgv==3.4.0
 decorator==5.2.1
 distlib==0.4.0
 executing==2.2.0
-Faker==37.5.3
 filelock==3.19.1
 identify==2.6.13
 ipdb==0.13.13
@@ -25,6 +24,5 @@ Pygments==2.19.2
 PyYAML==6.0.2
 stack-data==0.6.3
 traitlets==5.14.3
-tzdata==2025.2
 virtualenv==20.34.0
 wcwidth==0.2.13

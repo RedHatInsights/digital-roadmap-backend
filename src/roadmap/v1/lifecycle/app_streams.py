@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio.result import AsyncResult
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
 from roadmap.data import APP_STREAM_MODULES
@@ -43,10 +44,6 @@ logger = logging.getLogger("uvicorn.error")
 
 Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
-
-
-def get_module_os_major_versions(name: str) -> set[str]:
-    return OS_MAJORS_BY_APP_NAME.get(name, set())
 
 
 async def filter_app_stream_results(data, filter_params):
@@ -317,7 +314,9 @@ async def systems_by_app_stream(
         dnf_modules = system["dnf_modules"] or []
         packages = system["packages"] or []
 
-        if not os_major:
+        try:
+            os_major, os_minor = rhel_major_minor(system)
+        except ValueError:
             missing["os_version"] += 1
             continue
 
@@ -329,7 +328,9 @@ async def systems_by_app_stream(
 
         # Store package name, os_major, system ID and display name for later processing outside the loop.
         # This substantially reduces the time it takes for this function to return.
-        system_info = SystemInfo(id=system["id"], display_name=system["display_name"])
+        system_info = SystemInfo(
+            id=system["id"], display_name=system["display_name"], os_major=os_major, os_minor=os_minor
+        )
         for package in packages:
             package_data[(package, os_major)].append(system_info)
 
@@ -338,10 +339,10 @@ async def systems_by_app_stream(
             systems_by_stream[app_stream].add(system_info)
 
     # Now process the packages outside of the host record loop
-    for args, systems in package_data.items():
+    for args, systems_info in package_data.items():
         package, os_major = args
         if app_stream := app_stream_from_package(package, os_major):
-            systems_by_stream[app_stream].update(systems)
+            systems_by_stream[app_stream].update(systems_info)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
@@ -352,7 +353,7 @@ async def systems_by_app_stream(
 
 def app_streams_from_modules(
     dnf_modules: list[dict],
-    os_major: str,
+    os_major: int,
     cache: dict[str, AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
@@ -369,7 +370,7 @@ def app_streams_from_modules(
             # Bug with Perl data currently. Omit for now.
             continue
 
-        if os_major not in get_module_os_major_versions(module_name):
+        if os_major not in OS_MAJORS_BY_APP_NAME.get(module_name, []):
             continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
@@ -461,7 +462,7 @@ class NEVRA(BaseModel, frozen=True):
 @functools.cache
 def app_stream_from_package(
     package: str,
-    os_major: str,
+    os_major: int,
 ) -> AppStreamKey | None:
     # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
     #

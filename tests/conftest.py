@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 
+from faker import Faker
 from fastapi.testclient import TestClient
 
 from roadmap.config import Settings
@@ -92,8 +93,13 @@ def ids_by_os(read_json_fixture):
 
 @pytest.fixture
 def make_systems():
+    fake = Faker()
+
     def _make_systems(count=3):
-        systems = {SystemInfo(id=uuid4(), display_name=f"System {n}") for n in range(count)}
+        systems = {
+            SystemInfo(id=uuid4(), display_name=f"System {n}", os_major=fake.random_int(min=8, max=10), os_minor=None)
+            for n in range(count)
+        }
         system_ids = {system.id for system in systems}
 
         return system_ids, systems

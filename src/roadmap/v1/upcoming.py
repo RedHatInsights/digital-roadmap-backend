@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field
 from pydantic import TypeAdapter
+from pydantic import field_serializer
 
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
@@ -73,6 +74,11 @@ class UpcomingInput(BaseModel):
     date: Date
     details: UpcomingInputDetails
 
+    @field_serializer('packages')
+    def serialize_packages(self, packages: set[str]) -> list[str]:
+        """Serialize packages as a sorted list"""
+        return sorted(packages)
+
     @computed_field
     @property
     def package(self) -> str:
@@ -99,6 +105,11 @@ class UpcomingOutput(BaseModel):
     release: str
     date: Date
     details: UpcomingOutputDetails
+
+    @field_serializer('packages')
+    def serialize_packages(self, packages: set[str]) -> list[str]:
+        """Serialize packages as a sorted list"""
+        return sorted(packages)
 
     @computed_field
     @property

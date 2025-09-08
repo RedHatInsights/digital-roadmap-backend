@@ -46,7 +46,7 @@ class LifecycleResponse(BaseModel):
     data: list[RHELLifecycle]
 
     @model_validator(mode="after")
-    def validate(self):
+    def validate_items(self):
         # Run model validation in order to ensure the support status is accurate.
         self.data = [n.model_validate(n) for n in self.data]
 

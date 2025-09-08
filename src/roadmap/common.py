@@ -27,8 +27,8 @@ from roadmap.models import LifecycleType
 
 logger = logging.getLogger("uvicorn.error")
 
-MajorVersion = t.Annotated[int | None, Query(description="Major version number", ge=8, le=10)]
-MinorVersion = t.Annotated[int | None, Query(description="Minor version number", ge=0, le=10)]
+MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
+MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
 
 class HealthCheckFilter(logging.Filter):
@@ -170,8 +170,8 @@ async def query_host_inventory(
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
-    major: MajorVersion = None,
-    minor: MinorVersion = None,
+    major: MajorVersion | None = None,
+    minor: MinorVersion | None = None,
 ):
     """
     Query the Hosts database for system information on this org's hosts.

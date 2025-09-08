@@ -32,8 +32,8 @@ router = APIRouter(
     tags=["RHEL"],
 )
 
-MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=7, le=10)]
-MinorVersion = t.Annotated[int | None, Path(description="Minor version number", ge=0, le=10)]
+MajorVersion = t.Annotated[int, Path(description="Major version number", ge=7, le=10)]
+MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, le=10)]
 
 
 class RelevantSystemsResponse(BaseModel):

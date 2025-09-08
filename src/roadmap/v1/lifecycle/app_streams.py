@@ -42,8 +42,8 @@ from roadmap.models import SystemInfo
 
 logger = logging.getLogger("uvicorn.error")
 
-Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
-MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=8, le=10)]
+Date = t.Annotated[str | date, AfterValidator(ensure_date)]
+MajorVersion = t.Annotated[int, Path(description="Major version number", ge=8, le=10)]
 
 
 async def filter_app_stream_results(data, filter_params):

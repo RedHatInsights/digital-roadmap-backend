@@ -25,6 +25,9 @@ jobs:
     - name: Run pre-commit checks
       uses: pre-commit/action@v3.0.1
 
+    - name: Check types
+      run: make type
+
   units:
     name: Units - ${{ matrix.python-version }}
     runs-on: ubuntu-latest

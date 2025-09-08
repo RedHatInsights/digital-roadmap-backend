@@ -16,6 +16,7 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -372,7 +373,7 @@ def streams_lt(a: str, b: str):
         return a < b
 
 
-def rhel_major_minor(system: dict) -> tuple[int, int | None]:
+def rhel_major_minor(system: RowMapping) -> tuple[int, int | None]:
     # First, try operating_system
     if system.get("os_major") is not None:
         return (system["os_major"], system["os_minor"])

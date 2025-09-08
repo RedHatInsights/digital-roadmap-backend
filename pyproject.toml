@@ -6,6 +6,12 @@ tag-only = [
     "pre-commit/action",
 ]
 
+[tool.pyright]
+include = [
+    "src",
+]
+pythonVersion = "3.12"
+
 [tool.ruff]
 line-length = 120
 indent-width = 4

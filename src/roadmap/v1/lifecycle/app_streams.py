@@ -381,7 +381,7 @@ def app_streams_from_modules(
                 stream=stream,
                 start_date=None,
                 end_date=None,
-                application_stream_name="Unknown",
+                application_stream_name=SupportStatus.unknown,
                 impl=AppStreamImplementation.module,
             )
 

@@ -20,6 +20,7 @@ from roadmap.models import HostCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import RHELLifecycle
+from roadmap.models import SupportStatus
 from roadmap.models import System
 from roadmap.models import SystemInfo
 
@@ -185,8 +186,8 @@ async def get_relevant_systems(  # noqa: C901
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
             logger.warning(f"Missing lifecycle data for RHEL {key}")
-            start_date = "Unknown"
-            end_date = "Unknown"
+            start_date = SupportStatus.unknown
+            end_date = SupportStatus.unknown
         else:
             start_date = lifecycle_info.start_date
             end_date = lifecycle_info.end_date

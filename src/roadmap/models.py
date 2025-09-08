@@ -32,8 +32,8 @@ def _get_system_uuids(data) -> set[UUID]:
 
 
 def _calculate_support_status(
-    start_date: date | None,
-    end_date: date | None,
+    start_date: date | t.Literal[SupportStatus.unknown] | None,
+    end_date: date | t.Literal[SupportStatus.unknown] | None,
     current_date: date,
     months: int,
 ) -> SupportStatus:
@@ -128,8 +128,8 @@ class System(Lifecycle):
     display_name: str = ""
     major: int
     minor: int | None = None
-    start_date: date | t.Literal["Unknown"] | None
-    end_date: date | t.Literal["Unknown"] | None
+    start_date: date | t.Literal[SupportStatus.unknown] | None
+    end_date: date | t.Literal[SupportStatus.unknown] | None
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False

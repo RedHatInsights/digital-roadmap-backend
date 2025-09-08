@@ -120,7 +120,7 @@ class AppStreamEntity(BaseModel):
         """Create a normalized name field for presentation"""
 
         display_name = self.name
-        if self.application_stream_name and self.application_stream_name != "Unknown":
+        if self.application_stream_name and self.application_stream_name != SupportStatus.unknown:
             display_name = self.application_stream_name
 
         # Ensure the version number is in the display name

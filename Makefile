@@ -94,6 +94,10 @@ build: check-container-runtime
 get-release-commit:
 	@$(PYTHON) $(PROJECT_DIR)/scripts/get-release-commit.py
 
-.PHONY:
+.PHONY: bump-release
 bump-release:
 	@$(PYTHON) $(PROJECT_DIR)/scripts/bump-release.py
+
+.PHONY: tag
+tag:
+	@$(PYTHON) $(PROJECT_DIR)/scripts/tag-release.py

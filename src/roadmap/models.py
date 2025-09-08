@@ -85,7 +85,7 @@ class HostCount(BaseModel):
     lifecycle: LifecycleType
 
 
-class SystemInfo(BaseModel):
+class SystemInfo(BaseModel, frozen=True):
     """Information about relevant system."""
 
     model_config = ConfigDict(frozen=True)
@@ -123,13 +123,16 @@ class Lifecycle(BaseModel):
         return self
 
 
-class System(Lifecycle):
+class System(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     display_name: str = ""
     major: int
     minor: int | None = None
     start_date: date | t.Literal[SupportStatus.unknown] | None
     end_date: date | t.Literal[SupportStatus.unknown] | None
+    support_status: SupportStatus = SupportStatus.unknown
     count: int = 0
     lifecycle_type: LifecycleType
     related: bool = False
@@ -143,9 +146,26 @@ class System(Lifecycle):
 
         return self
 
+    @model_validator(mode="after")
+    def update_support_status(self):
+        today = date.today()
+        self.support_status = _calculate_support_status(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            current_date=today,
+            months=3,
+        )
 
-class RHELLifecycle(Lifecycle):
+        return self
+
+
+class RHELLifecycle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = "RHEL"
+    start_date: date
+    end_date: date
+    support_status: SupportStatus = SupportStatus.unknown
     display_name: str = ""
     major: int
     minor: int | None = None
@@ -157,6 +177,18 @@ class RHELLifecycle(Lifecycle):
     def set_display_name(self):
         if not self.display_name:
             self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
+
+        return self
+
+    @model_validator(mode="after")
+    def update_support_status(self):
+        today = date.today()
+        self.support_status = _calculate_support_status(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            current_date=today,
+            months=3,
+        )
 
         return self
 

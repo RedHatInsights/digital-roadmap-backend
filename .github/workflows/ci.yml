@@ -12,15 +12,13 @@ jobs:
   sanity:
     name: Sanity
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/roadmap/ci-data:latest
+      options: --user 1001
 
     steps:
     - name: Checkout
       uses: actions/checkout@v5.0.0
-
-    - name: Install Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: "3.12"
 
     - name: Run pre-commit checks
       uses: pre-commit/action@v3.0.1

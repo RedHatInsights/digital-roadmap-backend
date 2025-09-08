@@ -70,8 +70,12 @@ class Settings(BaseSettings):
             # db = LoadedConfig.database
             # However, that confounds our testing, so instead we do this:
             config = loadConfig(os.environ.get("ACG_CONFIG"))
+            if config is None:
+                return cls()
+
             db = config.database
             endpoints = config.endpoints
+
             # FIXME: Make RBAC setting in the environment override the clowder
             #        config file for consistency
             rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
@@ -83,13 +87,17 @@ class Settings(BaseSettings):
                     "rbac_port": rbac.port,
                 }
 
-            db_kwargs = {
-                "db_name": db.name,
-                "db_user": db.username,
-                "db_password": SecretStr(db.password),
-                "db_host": db.hostname,
-                "db_port": db.port,
-            }
+            db_kwargs = (
+                {
+                    "db_name": db.name,
+                    "db_user": db.username,
+                    "db_password": SecretStr(db.password),
+                    "db_host": db.hostname,
+                    "db_port": db.port,
+                }
+                if db
+                else {}
+            )
 
             env_check = {
                 "db_name": "ROADMAP_DB_NAME",

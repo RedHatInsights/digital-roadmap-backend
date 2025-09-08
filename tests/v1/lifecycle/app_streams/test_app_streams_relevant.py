@@ -450,7 +450,7 @@ def test_calculate_support_status_appstream(mocker, current_date, app_stream_sta
         rolling=False,
         start_date=app_stream_start,
         end_date=app_stream_end,
-        systems=[],
+        systems=set(),
         systems_detail=set(),
     )
 

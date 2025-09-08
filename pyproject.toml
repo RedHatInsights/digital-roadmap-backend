@@ -11,6 +11,10 @@ include = [
     "src",
 ]
 pythonVersion = "3.12"
+extraPaths = [
+    "digital-roadmap-backend/src",
+    ".venvs/roadmap/lib/python3.12/site-packages",
+]
 
 [tool.ruff]
 line-length = 120

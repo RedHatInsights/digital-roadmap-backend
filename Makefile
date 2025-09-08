@@ -82,6 +82,13 @@ freeze:
 lint:
 	@$(PRE_COMMIT) run --all-files
 
+.PHONY: type
+type:
+	@$(VENV_DIR)/bin/pyright
+
+.PHONY: sanity
+sanity: lint type
+
 .PHONY: test
 test:
 	@$(PYTEST)

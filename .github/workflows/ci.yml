@@ -10,10 +10,20 @@ on:
 
 jobs:
   sanity:
-    name: Sanity
+    name: Sanity - ${{ matrix.test.name }}
     runs-on: ubuntu-latest
     container:
       image: quay.io/roadmap/ci-data:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: Type
+            command: type
+
+          - name: Lint
+            command: lint
 
     steps:
     - name: Checkout
@@ -22,11 +32,8 @@ jobs:
     - name: Run pre-commit checks
       uses: pre-commit/action@v3.0.1
 
-    - name: Install test requirements
-      run: make install-dev
-
-    - name: Check types
-      run: make type
+    - name: Check
+      run: make ${{ matrix.test.command }}
 
   units:
     name: Units - ${{ matrix.python-version }}

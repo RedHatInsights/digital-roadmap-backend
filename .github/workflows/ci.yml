@@ -14,26 +14,25 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/roadmap/ci-data:latest
+      env:
+        VENV_DIR: /opt/venvs/ci
 
     strategy:
       fail-fast: false
       matrix:
         test:
           - name: Type
-            command: type
+            command: make type
 
           - name: Lint
-            command: lint
+            command: make lint
 
     steps:
     - name: Checkout
       uses: actions/checkout@v5.0.0
 
-    - name: Run pre-commit checks
-      uses: pre-commit/action@v3.0.1
-
     - name: Check
-      run: make ${{ matrix.test.command }}
+      run: ${{ matrix.test.command }}
 
   units:
     name: Units - ${{ matrix.python-version }}

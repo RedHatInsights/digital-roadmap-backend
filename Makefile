@@ -1,14 +1,14 @@
 PROJECT_DIR=$(shell pwd)
 
-VENV_DIR=.venvs/roadmap
+VENV ?= .venvs/roadmap
 PYTHON ?= $(shell command -v python || command -v python3)
 PYTHON_VERSION := $(shell $(PYTHON) -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
-VENV_PYTHON = $(VENV_DIR)/bin/python
+VENV_PYTHON = $(VENV)/bin/python
 PIP = $(VENV_PYTHON) -m pip
 
-PYTEST = $(VENV_DIR)/bin/pytest
-RUFF = $(VENV_DIR)/bin/ruff
-PRE_COMMIT = $(VENV_DIR)/bin/pre-commit
+PYTEST = $(VENV)/bin/pytest
+RUFF = $(VENV)/bin/ruff
+PRE_COMMIT = $(VENV)/bin/pre-commit
 
 export PIP_DISABLE_PIP_VERSION_CHECK = 1
 
@@ -33,7 +33,7 @@ default: install
 
 .PHONY: venv
 venv:
-	$(PYTHON) -m venv --clear $(VENV_DIR)
+	$(PYTHON) -m venv --clear $(VENV)
 
 .PHONY: install
 install: venv
@@ -68,11 +68,11 @@ load-host-data:
 
 .PHONY: run
 run:
-	$(VENV_DIR)/bin/uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug
+	$(VENV)/bin/uvicorn --app-dir src "roadmap.main:app" --reload --reload-dir src --host 127.0.0.1 --port 8000 --log-level debug
 
 .PHONY: clean
 clean:
-	@rm -rf $(VENV_DIR)
+	@rm -rf $(VENV)
 
 .PHONY: freeze
 freeze:
@@ -84,7 +84,7 @@ lint:
 
 .PHONY: type
 type:
-	@$(VENV_DIR)/bin/pyright
+	@$(VENV)/bin/pyright
 
 .PHONY: sanity
 sanity: lint type

@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/roadmap/ci-data:latest
-      env:
-        VENV_DIR: /opt/venvs/ci
 
     strategy:
       fail-fast: false

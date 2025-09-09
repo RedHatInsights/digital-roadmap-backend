@@ -20,16 +20,18 @@ jobs:
       matrix:
         test:
           - name: Type
+            step_name: Check types
             command: make type
 
           - name: Lint
+            step_name: Run pre-commit checks
             command: make lint
 
     steps:
     - name: Checkout
       uses: actions/checkout@v5.0.0
 
-    - name: Check
+    - name: ${{ matrix.test.step_name }}
       run: ${{ matrix.test.command }}
 
   units:

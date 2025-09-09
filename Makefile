@@ -1,7 +1,7 @@
 PROJECT_DIR=$(shell pwd)
 
 VENV_DIR=.venvs/roadmap
-PYTHON ?= $(shell which python || which python3)
+PYTHON ?= $(shell command -v python || command -v python3)
 PYTHON_VERSION := $(shell $(PYTHON) -V | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
 VENV_PYTHON = $(VENV_DIR)/bin/python
 PIP = $(VENV_PYTHON) -m pip

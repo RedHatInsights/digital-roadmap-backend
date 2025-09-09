@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/roadmap/ci-data:latest
-      options: --user 1001
+      options: --user root
 
     steps:
     - name: Checkout

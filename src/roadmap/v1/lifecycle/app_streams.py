@@ -4,6 +4,8 @@ import typing as t
 
 from collections import defaultdict
 from datetime import date
+from enum import auto
+from enum import StrEnum
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -278,6 +280,12 @@ class AppStreamKey(BaseModel):
         return isinstance(other, AppStreamKey) and self.__hash__() == other.__hash__()
 
 
+class ModuleStatus(StrEnum):
+    default = auto()
+    enabled = auto()
+    installed = auto()
+
+
 def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamKey]:
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
@@ -376,9 +384,9 @@ def app_streams_from_modules(
         if os_major <= 8:
             # RHEL 8 lists all modules in the system profile even if they are not
             # installed or enabled. Omit modules that are not explicitly installed.
-            if "installed" not in module_status:
+            if ModuleStatus.installed not in module_status:
                 continue
-        elif module_status and "installed" not in module_status:
+        elif module_status and ModuleStatus.installed not in module_status:
             # RHEL 9 and later only inclue installed modules in the system profile.
             # Include all modules unless there is a status without "installed".
             continue

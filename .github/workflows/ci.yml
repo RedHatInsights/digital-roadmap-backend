@@ -13,7 +13,7 @@ jobs:
     name: Sanity - ${{ matrix.test.name }}
     runs-on: ubuntu-latest
     container:
-      image: quay.io/roadmap/ci-data:latest
+      image: quay.io/roadmap/ci:latest
 
     strategy:
       fail-fast: false

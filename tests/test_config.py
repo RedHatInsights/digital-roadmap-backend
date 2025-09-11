@@ -11,7 +11,11 @@ from roadmap.config import Settings
 @pytest.fixture(autouse=True)
 def unset_acg_config(monkeypatch):
     monkeypatch.delenv("ACG_CONFIG", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_NAME", raising=False)
     monkeypatch.delenv("ROADMAP_DB_USER", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_PASSWORD", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_HOST", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_PORT", raising=False)
 
 
 def test_default_settings():
@@ -90,4 +94,21 @@ def test_rbac_config_env_override_clowder(monkeypatch):
     assert (
         settings.database_url.encoded_string()
         == "postgresql+psycopg://thelma:FRS635@WOOF.com:6753/roadtrip-db"  # notsecret
+    )
+
+
+def test_rbac_config_env_partial_override_clowder(monkeypatch):
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    monkeypatch.setenv("ROADMAP_DB_NAME", "roadtrip-db")
+    monkeypatch.setenv("ROADMAP_DB_USER", "thelma")
+    settings = Settings.create()
+
+    assert settings.db_name == "roadtrip-db"
+    assert settings.db_user == "thelma"
+    assert settings.db_password.get_secret_value() == "postgres"
+    assert settings.db_host == "localhost"
+    assert settings.db_port == 5432
+    assert (
+        settings.database_url.encoded_string()
+        == "postgresql+psycopg://thelma:postgres@localhost:5432/roadtrip-db"  # notsecret
     )

@@ -99,7 +99,7 @@ class Settings(BaseSettings):
             # If the value is set as an env var, remove it from the kwargs so
             # that the default behavior of using the env var will take precedence.
             for k, v in env_check.items():
-                if os.getenv(v) is not None:
+                if os.getenv(v) is not None and k in db_kwargs:
                     db_kwargs.pop(k)
 
             return cls(

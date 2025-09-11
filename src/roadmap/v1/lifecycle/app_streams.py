@@ -310,7 +310,6 @@ async def systems_by_app_stream(
     package_data = defaultdict(list)
     module_app_streams = set()
     async for system in systems.yield_per(2_000).mappings():
-        os_major = system["os_major"]
         dnf_modules = system["dnf_modules"] or []
         packages = system["packages"] or []
 

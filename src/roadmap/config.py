@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app_common_python import isClowderEnabled
-from app_common_python import loadConfig
+from app_common_python import LoadedConfig
 from pydantic import FilePath
 from pydantic import PostgresDsn
 from pydantic import SecretStr
@@ -62,19 +62,9 @@ class Settings(BaseSettings):
 
         """
         # True if env var ACG_CONFIG is set.
-        if isClowderEnabled():
-            # ACG_CONFIG must refer to a json file.
-            # Its contents populate LoadedConfig.
-
-            # This is how Clowder docs tell you to do it:
-            # db = LoadedConfig.database
-            # However, that confounds our testing, so instead we do this:
-            config = loadConfig(os.environ.get("ACG_CONFIG"))
-            if config is None:
-                return cls()
-
-            db = config.database
-            endpoints = config.endpoints
+        if isClowderEnabled() and LoadedConfig:
+            db = LoadedConfig.database
+            endpoints = LoadedConfig.endpoints
 
             # FIXME: Make RBAC setting in the environment override the clowder
             #        config file for consistency

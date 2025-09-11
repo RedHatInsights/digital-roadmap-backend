@@ -10,20 +10,29 @@ on:
 
 jobs:
   sanity:
-    name: Sanity
+    name: Sanity - ${{ matrix.test.name }}
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/roadmap/ci:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: Type
+            step_name: Check types
+            command: make type
+
+          - name: Lint
+            step_name: Run pre-commit checks
+            command: make lint
 
     steps:
     - name: Checkout
       uses: actions/checkout@v5.0.0
 
-    - name: Install Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: "3.12"
-
-    - name: Run pre-commit checks
-      uses: pre-commit/action@v3.0.1
+    - name: ${{ matrix.test.step_name }}
+      run: ${{ matrix.test.command }}
 
   units:
     name: Units - ${{ matrix.python-version }}

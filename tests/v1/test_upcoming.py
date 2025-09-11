@@ -104,7 +104,7 @@ def test_get_upcoming_data_with_hosts():
     to RHEL 8 are matched.
     """
     systems = [SystemInfo(id=uuid.uuid4(), display_name=f"RHEL {n}", os_major=n, os_minor=None) for n in range(9, 11)]
-    packages_by_system = {system: ["nodejs"] for system in systems}
+    packages_by_system = {system: {"nodejs"} for system in systems}
     settings = Settings.create()
     result = get_upcoming_data_with_hosts(packages_by_system, settings)
     releases = [n.release for n in result]

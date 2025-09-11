@@ -16,6 +16,7 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -26,8 +27,8 @@ from roadmap.models import LifecycleType
 
 logger = logging.getLogger("uvicorn.error")
 
-MajorVersion = t.Annotated[int | None, Query(description="Major version number", ge=8, le=10)]
-MinorVersion = t.Annotated[int | None, Query(description="Minor version number", ge=0, le=10)]
+MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
+MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
 
 class HealthCheckFilter(logging.Filter):
@@ -169,8 +170,8 @@ async def query_host_inventory(
     session: t.Annotated[AsyncSession, Depends(get_db)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
     host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
-    major: MajorVersion = None,
-    minor: MinorVersion = None,
+    major: MajorVersion | None = None,
+    minor: MinorVersion | None = None,
 ):
     """
     Query the Hosts database for system information on this org's hosts.
@@ -372,7 +373,7 @@ def streams_lt(a: str, b: str):
         return a < b
 
 
-def rhel_major_minor(system: dict) -> tuple[int, int | None]:
+def rhel_major_minor(system: RowMapping) -> tuple[int, int | None]:
     # First, try operating_system
     if system.get("os_major") is not None:
         return (system["os_major"], system["os_minor"])

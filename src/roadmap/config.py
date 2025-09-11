@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app_common_python import isClowderEnabled
-from app_common_python import loadConfig
+from app_common_python import LoadedConfig
 from pydantic import FilePath
 from pydantic import PostgresDsn
 from pydantic import SecretStr
@@ -62,16 +62,10 @@ class Settings(BaseSettings):
 
         """
         # True if env var ACG_CONFIG is set.
-        if isClowderEnabled():
-            # ACG_CONFIG must refer to a json file.
-            # Its contents populate LoadedConfig.
+        if isClowderEnabled() and LoadedConfig:
+            db = LoadedConfig.database
+            endpoints = LoadedConfig.endpoints
 
-            # This is how Clowder docs tell you to do it:
-            # db = LoadedConfig.database
-            # However, that confounds our testing, so instead we do this:
-            config = loadConfig(os.environ.get("ACG_CONFIG"))
-            db = config.database
-            endpoints = config.endpoints
             # FIXME: Make RBAC setting in the environment override the clowder
             #        config file for consistency
             rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
@@ -83,13 +77,17 @@ class Settings(BaseSettings):
                     "rbac_port": rbac.port,
                 }
 
-            db_kwargs = {
-                "db_name": db.name,
-                "db_user": db.username,
-                "db_password": SecretStr(db.password),
-                "db_host": db.hostname,
-                "db_port": db.port,
-            }
+            db_kwargs = (
+                {
+                    "db_name": db.name,
+                    "db_user": db.username,
+                    "db_password": SecretStr(db.password),
+                    "db_host": db.hostname,
+                    "db_port": db.port,
+                }
+                if db
+                else {}
+            )
 
             env_check = {
                 "db_name": "ROADMAP_DB_NAME",
@@ -101,7 +99,7 @@ class Settings(BaseSettings):
             # If the value is set as an env var, remove it from the kwargs so
             # that the default behavior of using the env var will take precedence.
             for k, v in env_check.items():
-                if os.getenv(v) is not None:
+                if os.getenv(v) is not None and k in db_kwargs:
                     db_kwargs.pop(k)
 
             return cls(

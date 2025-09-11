@@ -33,7 +33,7 @@ logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/upcoming-changes", tags=["Upcoming Changes"])
 
-Date = t.Annotated[str | date | None, AfterValidator(ensure_date)]
+Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 
 
 class UpcomingType(StrEnum):

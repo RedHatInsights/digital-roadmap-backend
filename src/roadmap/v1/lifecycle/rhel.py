@@ -20,6 +20,7 @@ from roadmap.models import HostCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import RHELLifecycle
+from roadmap.models import SupportStatus
 from roadmap.models import System
 from roadmap.models import SystemInfo
 
@@ -32,8 +33,8 @@ router = APIRouter(
     tags=["RHEL"],
 )
 
-MajorVersion = t.Annotated[int | None, Path(description="Major version number", ge=7, le=10)]
-MinorVersion = t.Annotated[int | None, Path(description="Minor version number", ge=0, le=10)]
+MajorVersion = t.Annotated[int, Path(description="Major version number", ge=7, le=10)]
+MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, le=10)]
 
 
 class RelevantSystemsResponse(BaseModel):
@@ -45,7 +46,7 @@ class LifecycleResponse(BaseModel):
     data: list[RHELLifecycle]
 
     @model_validator(mode="after")
-    def validate(self):
+    def validate_items(self):
         # Run model validation in order to ensure the support status is accurate.
         self.data = [n.model_validate(n) for n in self.data]
 
@@ -185,8 +186,8 @@ async def get_relevant_systems(  # noqa: C901
             lifecycle_info = OS_LIFECYCLE_DATES[key]
         except KeyError:
             logger.warning(f"Missing lifecycle data for RHEL {key}")
-            start_date = "Unknown"
-            end_date = "Unknown"
+            start_date = SupportStatus.unknown
+            end_date = SupportStatus.unknown
         else:
             start_date = lifecycle_info.start_date
             end_date = lifecycle_info.end_date

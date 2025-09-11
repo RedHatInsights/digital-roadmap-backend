@@ -1,7 +1,9 @@
 import json
-import os
+import pathlib
 
 import pytest
+
+from app_common_python import loadConfig
 
 from roadmap.config import Settings
 
@@ -9,32 +11,44 @@ from roadmap.config import Settings
 @pytest.fixture(autouse=True)
 def unset_acg_config(monkeypatch):
     monkeypatch.delenv("ACG_CONFIG", raising=False)
-
-
-def test_default_settings(monkeypatch):
+    monkeypatch.delenv("ROADMAP_DB_NAME", raising=False)
     monkeypatch.delenv("ROADMAP_DB_USER", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_PASSWORD", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_HOST", raising=False)
+    monkeypatch.delenv("ROADMAP_DB_PORT", raising=False)
 
+
+def test_default_settings():
     assert Settings.create().db_user == "postgres"
 
 
 def test_settings_db_user(monkeypatch):
     monkeypatch.setenv("ROADMAP_DB_USER", "test_db_user")
+
     assert Settings.create().db_user == "test_db_user"
 
 
-def test_setting_from_clowder(monkeypatch):
-    monkeypatch.setenv("ACG_CONFIG", os.path.join(os.getcwd(), "tests", "fixtures", "clowder_config.json"))
+def test_setting_from_clowder(monkeypatch, mocker):
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+
     settings = Settings.create()
+
     assert settings.db_user == "username"
     assert settings.rbac_url == "http://rbac-service.svc:8123"
 
 
-def test_setting_from_clowder_no_rbac(monkeypatch, tmp_path, read_json_fixture):
+def test_setting_from_clowder_no_rbac(monkeypatch, mocker, tmp_path, read_json_fixture):
     clowder_config = read_json_fixture("clowder_config.json")
     clowder_config.pop("endpoints")
     config = tmp_path / "config.json"
     config.write_text(json.dumps(clowder_config))
-    monkeypatch.setenv("ACG_CONFIG", str(config))
+
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch("roadmap.config.LoadedConfig", loadConfig(str(config)))
 
     settings = Settings.create()
 
@@ -64,7 +78,7 @@ def test_rbac_config_env(monkeypatch):
 
 
 def test_rbac_config_env_override_clowder(monkeypatch):
-    monkeypatch.setenv("ACG_CONFIG", os.path.join(os.getcwd(), "tests", "fixtures", "clowder_config.json"))
+    monkeypatch.setenv("ACG_CONFIG", "yes")
     monkeypatch.setenv("ROADMAP_DB_NAME", "roadtrip-db")
     monkeypatch.setenv("ROADMAP_DB_USER", "thelma")
     monkeypatch.setenv("ROADMAP_DB_PASSWORD", "FRS635")
@@ -80,4 +94,21 @@ def test_rbac_config_env_override_clowder(monkeypatch):
     assert (
         settings.database_url.encoded_string()
         == "postgresql+psycopg://thelma:FRS635@WOOF.com:6753/roadtrip-db"  # notsecret
+    )
+
+
+def test_rbac_config_env_partial_override_clowder(monkeypatch):
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    monkeypatch.setenv("ROADMAP_DB_NAME", "roadtrip-db")
+    monkeypatch.setenv("ROADMAP_DB_USER", "thelma")
+    settings = Settings.create()
+
+    assert settings.db_name == "roadtrip-db"
+    assert settings.db_user == "thelma"
+    assert settings.db_password.get_secret_value() == "postgres"
+    assert settings.db_host == "localhost"
+    assert settings.db_port == 5432
+    assert (
+        settings.database_url.encoded_string()
+        == "postgresql+psycopg://thelma:postgres@localhost:5432/roadtrip-db"  # notsecret
     )

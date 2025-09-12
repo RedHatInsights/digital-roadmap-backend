@@ -380,15 +380,22 @@ def app_streams_from_modules(
         if os_major not in OS_MAJORS_BY_APP_NAME.get(module_name, []):
             continue
 
-        module_status = dnf_module.get("status", [])
+        module_status = set(dnf_module.get("status", []))
+        include = [ModuleStatus.enabled, ModuleStatus.installed]
         if os_major <= 8:
+            # Omit module that is not installed or enabled.
+            #
             # RHEL 8 lists all modules in the system profile even if they are not
-            # installed or enabled. Omit modules that are not explicitly installed.
-            if ModuleStatus.installed not in module_status:
+            # installed or enabled.
+            if not module_status.intersection(include):
                 continue
-        elif module_status and ModuleStatus.installed not in module_status:
-            # RHEL 9 and later only inclue installed modules in the system profile.
-            # Include all modules unless there is a status without "installed".
+        elif module_status and not module_status.intersection(include):
+            # Omit module if there is status and it is not installed or enabled.
+            #
+            # RHEL 9 only includes installed or enabled modules in the system profile.
+            #
+            # RHEL 10 does not have modules and there is no module status in the
+            # system profile.
             continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))

@@ -72,13 +72,13 @@ APP_STREAM_MODULES = [
     ),
     AppStreamEntity(
         name="eclipse",
-        application_stream_name="",
+        application_stream_name="Eclipse",
+        application_stream_type=AppStreamType.rolling,
         stream="rhel8",
         impl=AppStreamImplementation.module,
         os_major=8,
         start_date=date(2020, 7, 21),
-        end_date=date(2021, 8, 20),
-        rolling=False,
+        rolling=True,
     ),
     AppStreamEntity(
         name="freeradius",

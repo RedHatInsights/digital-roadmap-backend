@@ -1,5 +1,5 @@
 app-common-python==0.2.8
-psycopg==3.2.9
-psycopg-c==3.2.9
+psycopg==3.2.10
+psycopg-c==3.2.10
 SQLAlchemy==2.0.43
-typing_extensions==4.14.1
+typing_extensions==4.15.0

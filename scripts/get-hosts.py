@@ -26,7 +26,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--org-id", help="Org ID", required=True, type=int)
     parser.add_argument("-e", "--environment", choices=["prod", "stage"], default="prod")
-    parser.add_argument("-n", "--display-name", help="Filter by display_name")
+    parser.add_argument("-n", "--display-name", help="Filter by display names that start with the provided value.")
     parser.add_argument("-l", "--limit", type=int, help="Maximum number of records to retrieve")
     parser.add_argument("-s", "--scrub", action="store_true", help="Anonymize the data")
 
@@ -115,7 +115,7 @@ def main():  # noqa: C901
     """
     if display_name:
         insertion_point = query.index("ORDER BY")
-        query = query[:insertion_point] + f"AND display_name = '{display_name}'\n" + query[insertion_point:]
+        query = query[:insertion_point] + f"AND starts_with(display_name, '{display_name}')\n" + query[insertion_point:]
 
     offset = 0
     remaining = total_limit

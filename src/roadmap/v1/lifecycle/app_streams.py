@@ -503,7 +503,7 @@ def app_stream_from_package(
     if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:
             stream = app_stream_package.stream.split(".")[:2]
-            if stream == [nevra.major, nevra.minor][: len(stream)]:
+            if stream == [nevra.major, nevra.minor]:
                 return AppStreamKey(
                     app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
                 )

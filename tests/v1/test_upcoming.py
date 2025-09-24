@@ -60,13 +60,22 @@ def test_get_relevant_upcoming_changes_all(client, api_prefix):
 
     response = client.get(f"{api_prefix}/relevant/upcoming-changes?all=true")
     data = response.json()["data"]
+    releases = []
+    for record in data:
+        if affected_systems := record["details"]["potentiallyAffectedSystemsDetail"]:
+            major_release = {int(record["release"].split(".", 1)[0])}
+            os_majors = {system["os_major"] for system in affected_systems}
+            releases.append((major_release, os_majors))
 
     assert response.status_code == 200
     assert any(len(record["details"]["potentiallyAffectedSystems"]) == 0 for record in data), (
-        "/relevant/upcoming-changes?all=true should have records with no affected systems"
+        "/relevant/upcoming-changes?all=true should have records with zero affected systems"
     )
     assert any(len(record["details"]["potentiallyAffectedSystems"]) > 0 for record in data), (
         "/relevant/upcoming-changes?all=true should have records with affected systems"
+    )
+    assert all(major_release == os_majors for major_release, os_majors in releases), (
+        "Affected system versions do not match release version. Look at 'releases'."
     )
 
 
@@ -88,14 +97,23 @@ def test_get_relevant_upcoming_changes(client, api_prefix):
 
     response = client.get(f"{api_prefix}/relevant/upcoming-changes")
     data = response.json()["data"]
+    releases = []
+    for record in data:
+        if affected_systems := record["details"]["potentiallyAffectedSystemsDetail"]:
+            major_release = {int(record["release"].split(".", 1)[0])}
+            os_majors = {system["os_major"] for system in affected_systems}
+            releases.append((major_release, os_majors))
 
     assert response.status_code == 200
-    assert "Add Node.js to RHEL9 AppStream THIS IS TEST DATA" in [n["name"] for n in data]
+    assert "Add Node.js to RHEL10 AppStream THIS IS TEST DATA" in [n["name"] for n in data]
     assert not any(len(record["details"]["potentiallyAffectedSystems"]) == 0 for record in data), (
-        "/relevant/upcoming-changes?all=true should have no records with no affected systems"
+        "/relevant/upcoming-changes should have no records with zero affected systems"
     )
     assert any(len(record["details"]["potentiallyAffectedSystems"]) > 0 for record in data), (
-        "/relevant/upcoming-changes?all=true should have records with affected systems"
+        "/relevant/upcoming-changes should have records with affected systems"
+    )
+    assert all(major_release == os_majors for major_release, os_majors in releases), (
+        "Affected system versions do not match release version. Look at 'releases'."
     )
 
 

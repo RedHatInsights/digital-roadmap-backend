@@ -202,8 +202,9 @@ def get_upcoming_data_with_hosts(
     for upcoming in read_upcoming_file(settings.upcoming_json_path):
         systems = set()
         for system, packages in packages_by_system.items():
-            if upcoming.packages.intersection(packages):
-                systems.add(system)
+            if system.os_major == upcoming.os_major:
+                if upcoming.packages.intersection(packages):
+                    systems.add(system)
 
         if not all:
             # If the roadmap item doesn't match the major OS version of a host

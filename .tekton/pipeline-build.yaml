@@ -112,7 +112,7 @@ spec:
             value: init
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:ec962d0be18f36ca7d331c99bf243800f569fc0a2ea6f8c8c3d3a574b71c44dc
+            value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:526a104a3342e36dad5c5e7f98c647da6b2a33897e458f772ff4afe523e0690a
 
           - name: kind
             value: task
@@ -180,7 +180,7 @@ spec:
             value: prefetch-dependencies-oci-ta
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.2@sha256:098322d6b789824f716f2d9caca1862d4afdc083ebaaee61aadd22a8c179480a
+            value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.2@sha256:dc82a7270aace9b1c26f7e96f8ccab2752e53d32980c41a45e1733baad76cde6
 
           - name: kind
             value: task
@@ -239,7 +239,7 @@ spec:
             value: buildah-oci-ta
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta:0.5@sha256:83a505fe13bcb1898ed51e92794af8b18fd8ea5e1e916a8ba5d21e9fdc0a9706
+            value: quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta:0.5@sha256:6ec006242975a17388bfe813e2afd0ae721dd013247580c0d988e3c4a9c7f867
 
           - name: kind
             value: task
@@ -278,7 +278,7 @@ spec:
             value: build-image-index
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-build-image-index:0.1@sha256:8e5dfb2fac011148f8715bbe0b99415f88297683d269eae0dfcad52562195d45
+            value: quay.io/konflux-ci/tekton-catalog/task-build-image-index:0.1@sha256:79784d53749584bc5a8de32142ec4e2f01cdbf42c20d94e59280e0b927c8597d
 
           - name: kind
             value: task
@@ -306,7 +306,7 @@ spec:
             value: deprecated-image-check
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:2c32152a55f6bfba67b41be456da46b6e109bb3e348e25220eed4eed149958c5
+            value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:f59175d9a0a60411738228dfe568af4684af4aa5e7e05c832927cb917801d489
 
           - name: kind
             value: task

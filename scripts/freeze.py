@@ -47,7 +47,7 @@ def freeze(python_version: str, requirement: Path) -> str:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--python-versions", default="3.12,3.13")
+    parser.add_argument("--python-versions", default="3.12,3.13,3.14")
 
     return parser.parse_args()
 

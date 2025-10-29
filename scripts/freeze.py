@@ -64,9 +64,10 @@ def main():
     args = parse_args()
     file = Path(__file__)
     repo_root = file.parent.parent
-    requirements = repo_root.joinpath("requirements").glob("*.in")
+    requirements = list(repo_root.joinpath("requirements").glob("*.in"))
     python_versions = sort_versions(args.python_versions)
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    workers = len(requirements) * len(python_versions)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [
             executor.submit(freeze, py_ver, req)
             for req in requirements

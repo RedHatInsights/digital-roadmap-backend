@@ -73,4 +73,5 @@ testpaths = "tests"
 pythonpath = "src"
 
 [tool.coverage.run]
+core = "ctrace"
 concurrency = ["greenlet", "thread"]

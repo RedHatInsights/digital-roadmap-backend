@@ -1,0 +1,19 @@
+-r requirements-3.14.txt
+-r requirements-test-3.14.txt
+asttokens==3.0.0
+decorator==5.2.1
+executing==2.2.1
+ipdb==0.13.13
+ipython==9.6.0
+ipython_pygments_lexers==1.1.1
+jedi==0.19.2
+matplotlib-inline==0.2.1
+parso==0.8.5
+pexpect==4.9.0
+prompt_toolkit==3.0.52
+ptyprocess==0.7.0
+pure_eval==0.2.3
+Pygments==2.19.2
+stack-data==0.6.3
+traitlets==5.14.3
+wcwidth==0.2.14

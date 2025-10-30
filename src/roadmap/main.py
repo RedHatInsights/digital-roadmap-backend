@@ -17,9 +17,8 @@ from uvicorn.protocols.utils import get_path_with_query_string
 
 import roadmap.v1
 
-from roadmap.config import Settings
 from roadmap.common import extend_openapi
-from roadmap.common import HealthCheckFilter
+from roadmap.config import Settings
 from roadmap.custom_logging import setup_logging
 
 

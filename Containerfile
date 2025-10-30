@@ -65,7 +65,7 @@ ADD /scripts/replication.py /usr/local/bin/replication.py
 
 ADD scripts/.release /srv/roady/
 ADD --chmod=0644 \
-    https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/data/-/raw/main/data/02_roadmap_jira.json \
+    https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/data/-/raw/main/data/roadmap_jira.json \
     /srv/roady/roadmap/data/upcoming.json
 
 USER roady

@@ -77,9 +77,9 @@ async def logging_middleware(request: Request, call_next) -> Response:
     finally:
         process_time = time.perf_counter_ns() - start_time
         status_code = response.status_code
-        url = get_path_with_query_string(request.scope)
-        client_host = request.client.host
-        client_port = request.client.port
+        url = get_path_with_query_string(request.scope)  # pyright: ignore[reportArgumentType]
+        client_host = getattr(request.client, "host", None)
+        client_port = getattr(request.client, "port", None)
         http_method = request.method
         http_version = request.scope["http_version"]
         # Recreate the Uvicorn access log format, but add all parameters as structured information

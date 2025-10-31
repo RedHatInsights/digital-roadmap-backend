@@ -10,12 +10,10 @@ from structlog.types import EventDict
 from structlog.types import Processor
 
 
-# https://github.com/hynek/structlog/issues/35#issuecomment-591321744
 def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
     """
-    Log entries keep the text message in the `event` field, but Datadog
-    uses the `message` field. This processor moves the value from one field to
-    the other.
+    Move the `event` field to the `message` field.
+
     See https://github.com/hynek/structlog/issues/35#issuecomment-591321744
     """
     event_dict["message"] = event_dict.pop("event")

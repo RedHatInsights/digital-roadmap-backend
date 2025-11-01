@@ -5,7 +5,7 @@ import sys
 
 import structlog
 
-from ddtrace import tracer
+from ddtrace.trace import tracer
 from structlog.types import EventDict
 from structlog.types import Processor
 

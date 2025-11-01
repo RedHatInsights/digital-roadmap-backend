@@ -1,4 +1,6 @@
 app-common-python
+asgi-correlation-id
+ddtrace
 fastapi[standard]
 greenlet
 prometheus-fastapi-instrumentator
@@ -6,3 +8,4 @@ psycopg[c]
 pydantic-settings
 sentry-sdk
 sqlalchemy
+structlog

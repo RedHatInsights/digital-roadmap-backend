@@ -194,16 +194,18 @@ async def query_host_inventory(
     # Build up a query for this org's hosts.
     query = """
         SELECT
-            id,
-            display_name,
-            system_profile_facts -> 'operating_system' ->> 'name' AS os_name,
-            (system_profile_facts -> 'operating_system' ->> 'major')::int AS os_major,
-            (system_profile_facts -> 'operating_system' ->> 'minor')::int AS os_minor,
-            system_profile_facts -> 'os_release' AS os_release,
-            system_profile_facts -> 'dnf_modules' AS dnf_modules,
-            system_profile_facts -> 'installed_packages' AS packages,
-            system_profile_facts -> 'installed_products' AS products
-        FROM hbi.hosts
+            h.id,
+            h.display_name,
+            sps.operating_system -> 'name' AS os_name,
+            (sps.operating_system -> 'major')::int AS os_major,
+            (sps.operating_system -> 'minor')::int AS os_minor,
+            sps.os_release,
+            sps.dnf_modules,
+            spd.installed_packages AS packages,
+            spd.installed_products AS products
+        FROM hbi.hosts h
+            INNER JOIN hbi.system_profiles_static sps on h.id = sps.host_id
+            LEFT JOIN hbi.system_profiles_dynamic spd on h.id = spd.host_id
         WHERE org_id = :org_id
     """
 

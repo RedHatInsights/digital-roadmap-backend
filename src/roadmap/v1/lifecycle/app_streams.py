@@ -503,6 +503,14 @@ def app_stream_from_package(
     if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:
             stream = app_stream_package.stream.split(".")[:2]
+            if len(stream) == 1:
+                # If the stream value only contains a single digit, add a "0"
+                # in order to get an accurate comparison.
+                #
+                # Without this, values of "11" for the stream would fail to match
+                # packages that are "11.0".
+                stream.append("0")
+
             if stream == [nevra.major, nevra.minor]:
                 return AppStreamKey(
                     app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name

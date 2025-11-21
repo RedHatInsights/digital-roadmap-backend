@@ -370,8 +370,10 @@ def app_streams_from_modules(
         stream = dnf_module["stream"]
         cache_key = (module_name, os_major, stream)
         if app_stream_key := cache.get(cache_key):
-            app_streams.add(app_stream_key)
-            continue
+            if app_stream_key.app_stream_entity.start_date:
+                logger.debug("Cache hit", extra={"cache_key": cache_key})
+                app_streams.add(app_stream_key)
+                continue
 
         if "perl" in module_name.casefold():
             # Bug with Perl data currently. Omit for now.

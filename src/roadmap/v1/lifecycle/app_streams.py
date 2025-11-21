@@ -361,14 +361,14 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: int,
-    cache: dict[str, AppStreamKey],
+    cache: dict[tuple[str, int, str], AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
         module_name = dnf_module["name"]
         stream = dnf_module["stream"]
-        cache_key = f"{module_name}_{os_major}_{stream}"
+        cache_key = (module_name, os_major, stream)
         if app_stream_key := cache.get(cache_key):
             app_streams.add(app_stream_key)
             continue

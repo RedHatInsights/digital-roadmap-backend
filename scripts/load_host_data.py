@@ -13,6 +13,7 @@ from app_common_python import os
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy import delete
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -41,7 +42,6 @@ class Host(HBI):
     facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
     tags: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
     canonical_facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
-    system_profile_facts: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
     ansible_host: Mapped[str] = mapped_column(String(255))
     stale_timestamp: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
     reporter: Mapped[str] = mapped_column(String(255))
@@ -50,6 +50,23 @@ class Host(HBI):
     groups: Mapped[JSONB] = mapped_column(JSONB(), default=[])
     tags_alt: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[{}])
     last_check_in: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP())
+
+
+class SystemProfileStatic(HBI):
+    __tablename__ = "system_profiles_static"
+
+    host_id: Mapped[UUID] = mapped_column(UUID(), ForeignKey("hbi.hosts.id"), primary_key=True)
+    operating_system: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
+    os_release: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    dnf_modules: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
+
+
+class SystemProfileDynamic(HBI):
+    __tablename__ = "system_profiles_dynamic"
+
+    host_id: Mapped[UUID] = mapped_column(UUID(), ForeignKey("hbi.hosts.id"), primary_key=True)
+    installed_packages: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
+    installed_products: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
 
 
 def wait_for_database(engine):
@@ -91,6 +108,8 @@ def main():
 
     # Create the table and table schema
     Host.metadata.create_all(engine)
+    SystemProfileStatic.metadata.create_all(engine)
+    SystemProfileDynamic.metadata.create_all(engine)
 
     # Allow overriding the host inventory data file
     data_file = Path(
@@ -102,18 +121,22 @@ def main():
     host_data = get_host_data(data_file)
 
     # Build the records
-    records = []
+    host_records = []
+    static_profile_records = []
+    dynamic_profile_records = []
+
     for host in host_data:
         id = host["id"]
         init_date = fake.date_time_between(start_date="-1w")
+        system_profile = host.get("system_profile_facts", {})
 
-        records.append(
+        # Create host record
+        host_records.append(
             Host(
                 id=id,
                 display_name=host.get("display_name", fake.unique.hostname()),
                 created_on=init_date,
                 modified_on=init_date,
-                system_profile_facts=host.get("system_profile_facts", {}),
                 ansible_host="ansible_host",
                 stale_timestamp=init_date + timedelta(30),
                 reporter="toast loader",
@@ -125,10 +148,34 @@ def main():
             )
         )
 
+        # Create static system profile record
+        static_profile_records.append(
+            SystemProfileStatic(
+                host_id=id,
+                operating_system=system_profile.get("operating_system", {}),
+                os_release=system_profile.get("os_release"),
+                dnf_modules=system_profile.get("dnf_modules", []),
+            )
+        )
+
+        # Create dynamic system profile record
+        dynamic_profile_records.append(
+            SystemProfileDynamic(
+                host_id=id,
+                installed_packages=system_profile.get("installed_packages", []),
+                installed_products=system_profile.get("installed_products", []),
+            )
+        )
+
     # Write the records to the database but first delete all existing records
     with Session(engine) as session:
+        # Delete child tables first (foreign key constraints)
+        session.execute(delete(SystemProfileDynamic))
+        session.execute(delete(SystemProfileStatic))
         session.execute(delete(Host))
-        session.add_all(records)
+        session.add_all(host_records)
+        session.add_all(static_profile_records)
+        session.add_all(dynamic_profile_records)
         session.commit()
 
 

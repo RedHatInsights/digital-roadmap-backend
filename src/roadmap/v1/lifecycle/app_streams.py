@@ -361,17 +361,13 @@ async def systems_by_app_stream(
 def app_streams_from_modules(
     dnf_modules: list[dict],
     os_major: int,
-    cache: dict[str, AppStreamKey],
+    cache: dict[tuple[str, int, str], AppStreamKey],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
     for dnf_module in dnf_modules:
         module_name = dnf_module["name"]
         stream = dnf_module["stream"]
-        cache_key = f"{module_name}_{os_major}_{stream}"
-        if app_stream_key := cache.get(cache_key):
-            app_streams.add(app_stream_key)
-            continue
 
         if "perl" in module_name.casefold():
             # Bug with Perl data currently. Omit for now.
@@ -397,6 +393,15 @@ def app_streams_from_modules(
             # RHEL 10 does not have modules and there is no module status in the
             # system profile.
             continue
+
+        # Cache checking needs to hapen after checking module status, otherwise
+        # a module will be incorrectly included in the results.
+        cache_key = (module_name, os_major, stream)
+        if app_stream_key := cache.get(cache_key):
+            if app_stream_key.app_stream_entity.start_date:
+                logger.debug("Cache hit", extra={"cache_key": cache_key})
+                app_streams.add(app_stream_key)
+                continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:

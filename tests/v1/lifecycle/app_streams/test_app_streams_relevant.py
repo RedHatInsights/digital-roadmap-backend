@@ -45,12 +45,12 @@ def test_get_relevant_app_stream(api_prefix, client):
     # Hard coding these numbers isn't ideal, but it will prevent regressions.
     # Ideally these numbers should be calculated from the fixture data or
     # defined in one place.
-    assert count == 32, "Incorrect number of items in response. Did the fixture data change?"
-    assert total == 209, "Incorrect number of hosts in response. Did the fixture data change?"
+    assert count == 26, "Incorrect number of items in response. Did the fixture data change?"
+    assert total == 190, "Incorrect number of hosts in response. Did the fixture data change?"
     assert display_names.issuperset(["PostgreSQL 15", "PostgreSQL 16", "Apache HTTPD 2.4", "MySQL 8.0"]), (
         "Missing expected items in response"
     )
-    assert names.issuperset(["Python 3.11", "mysql", "mariadb", "nginx", "nodejs"])
+    assert names.issuperset(["Python 3.11", "python36", "MySQL 8.0", "nginx", "nodejs"])
     assert not any(item["rolling"] for item in data), "Rolling app streams should not be in the response"
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"

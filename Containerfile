@@ -61,7 +61,7 @@ RUN microdnf install -y --nodocs \
 RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady roady
 
 ADD /src/roadmap/ /srv/roady/roadmap/
-ADD uvicorn_disable_logging.son /srv/roady/uvicorn_disable_logging.json
+ADD uvicorn_disable_logging.json /srv/roady/uvicorn_disable_logging.json
 ADD /scripts/replication.py /usr/local/bin/replication.py
 
 ADD scripts/.release /srv/roady/

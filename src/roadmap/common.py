@@ -194,16 +194,18 @@ async def query_host_inventory(
     # Build up a query for this org's hosts.
     query = """
         SELECT
-            id,
-            display_name,
-            system_profile_facts -> 'operating_system' ->> 'name' AS os_name,
-            (system_profile_facts -> 'operating_system' ->> 'major')::int AS os_major,
-            (system_profile_facts -> 'operating_system' ->> 'minor')::int AS os_minor,
-            system_profile_facts -> 'os_release' AS os_release,
-            system_profile_facts -> 'dnf_modules' AS dnf_modules,
-            system_profile_facts -> 'installed_packages' AS packages,
-            system_profile_facts -> 'installed_products' AS products
-        FROM hbi.hosts
+            h.id,
+            h.display_name,
+            sps.operating_system ->> 'name' AS os_name,
+            (sps.operating_system -> 'major')::int AS os_major,
+            (sps.operating_system -> 'minor')::int AS os_minor,
+            sps.os_release as os_release,
+            sps.dnf_modules as dnf_modules,
+            spd.installed_packages AS packages,
+            spd.installed_products AS products
+        FROM hbi.hosts h
+            INNER JOIN hbi.system_profiles_static sps on h.id = sps.host_id
+            LEFT JOIN hbi.system_profiles_dynamic spd on h.id = spd.host_id
         WHERE org_id = :org_id
     """
 
@@ -211,10 +213,10 @@ async def query_host_inventory(
     # "operating_system" subobject in the host's record. This subobject is kept
     # as JSON, and the #>> operator decodes and accesses into it.
     if major is not None:
-        query = f"{query} AND system_profile_facts #>> '{{operating_system,major}}' = :major"
+        query = f"{query} AND sps.operating_system ->> 'major' = :major"
 
     if minor is not None:
-        query = f"{query} AND system_profile_facts #>> '{{operating_system,minor}}' = :minor"
+        query = f"{query} AND sps.operating_system ->> 'minor' = :minor"
 
     # If host group data is given, we need to filter out hosts that this user
     # is not permitted to see. To do this we add more WHERE clauses to our
@@ -253,14 +255,14 @@ async def query_host_inventory(
         # for a group that has ungrouped == True.
         ungrouped_query = """
             EXISTS (
-                SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj
+                SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
                     WHERE (group_obj->>'ungrouped')::boolean = true)
         """
         # This query searches for any group record with an id that matches any
         # of our eligible host group ids.
         grouped_query = """
             EXISTS (
-                SELECT 1 FROM jsonb_array_elements(hosts.groups::jsonb) AS group_obj
+                SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
                     WHERE group_obj->>'id' = ANY(:host_groups))
         """
 

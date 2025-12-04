@@ -1,10 +1,10 @@
 -r requirements-3.14.txt
 -r requirements-test-3.14.txt
-asttokens==3.0.0
+asttokens==3.0.1
 decorator==5.2.1
 executing==2.2.1
 ipdb==0.13.13
-ipython==9.6.0
+ipython==9.8.0
 ipython_pygments_lexers==1.1.1
 jedi==0.19.2
 matplotlib-inline==0.2.1

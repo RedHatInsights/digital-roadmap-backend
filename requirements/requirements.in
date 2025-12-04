@@ -1,7 +1,7 @@
 app-common-python
 asgi-correlation-id
 ddtrace
-fastapi[standard]
+fastapi[standard-no-fastapi-cloud-cli]
 greenlet
 prometheus-fastapi-instrumentator
 psycopg[c]

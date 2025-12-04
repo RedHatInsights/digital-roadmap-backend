@@ -12,8 +12,6 @@ email-validator==2.3.0
 envier==0.6.1
 fastapi==0.123.8
 fastapi-cli==0.0.16
-fastapi-cloud-cli==0.5.2
-fastar==0.8.0
 greenlet==3.3.0
 h11==0.16.0
 httpcore==1.0.9
@@ -40,7 +38,6 @@ python-multipart==0.0.20
 PyYAML==6.0.3
 rich==14.2.0
 rich-toolkit==0.17.0
-rignore==0.7.6
 sentry-sdk==2.47.0
 shellingham==1.5.4
 SQLAlchemy==2.0.44

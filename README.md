@@ -157,6 +157,15 @@ make freeze
 Commit the changes.
 
 
+### Updating Konflux references
+
+Container images used by this project are built using Konflux. Each build task uses a container image and those image references must be updated periodically.
+
+Run `make update-konflux-refs` and commit the changes.
+
+If a particual container image reference does not look correct, run `update-konflux-refs.py -i [image]` to list recent tags for a specific container image.
+
+
 [local installation]: https://www.psycopg.org/psycopg3/docs/basic/install.html#local-installation
 [offline token]: https://access.redhat.com/articles/3626371
 [host inventory]: https://developers.redhat.com/api-catalog/api/inventory

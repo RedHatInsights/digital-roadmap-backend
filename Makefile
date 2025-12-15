@@ -78,6 +78,10 @@ clean:
 freeze:
 	@$(PYTHON) $(PROJECT_DIR)/scripts/freeze.py
 
+.PHONY: update-konflux-refs
+update-konflux-refs:
+	@$(PYTHON) $(PROJECT_DIR)/scripts/update-konflux-refs.py --overwrite --file $(PROJECT_DIR)/.tekton/pipeline-build.yaml
+
 .PHONY: lint
 lint:
 	@$(PRE_COMMIT) run --all-files

@@ -206,7 +206,7 @@ async def query_host_inventory(
         FROM hbi.hosts h
             INNER JOIN hbi.system_profiles_static sps on h.id = sps.host_id
             LEFT JOIN hbi.system_profiles_dynamic spd on h.id = spd.host_id
-        WHERE org_id = :org_id
+        WHERE h.org_id = :org_id
     """
 
     # #>> '{{operating_system,major}}' fetches the attribute "major" from the

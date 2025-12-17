@@ -56,6 +56,7 @@ class SystemProfileStatic(HBI):
     __tablename__ = "system_profiles_static"
 
     host_id: Mapped[UUID] = mapped_column(UUID(), ForeignKey("hbi.hosts.id"), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(36))
     operating_system: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default={})
     os_release: Mapped[str | None] = mapped_column(String(100), nullable=True)
     dnf_modules: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
@@ -65,6 +66,7 @@ class SystemProfileDynamic(HBI):
     __tablename__ = "system_profiles_dynamic"
 
     host_id: Mapped[UUID] = mapped_column(UUID(), ForeignKey("hbi.hosts.id"), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(36))
     installed_packages: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
     installed_products: Mapped[JSONB] = mapped_column(JSONB(), nullable=True, default=[])
 
@@ -152,6 +154,7 @@ def main():
         static_profile_records.append(
             SystemProfileStatic(
                 host_id=id,
+                org_id="1234",
                 operating_system=system_profile.get("operating_system", {}),
                 os_release=system_profile.get("os_release"),
                 dnf_modules=system_profile.get("dnf_modules", []),
@@ -162,6 +165,7 @@ def main():
         dynamic_profile_records.append(
             SystemProfileDynamic(
                 host_id=id,
+                org_id="1234",
                 installed_packages=system_profile.get("installed_packages", []),
                 installed_products=system_profile.get("installed_products", []),
             )

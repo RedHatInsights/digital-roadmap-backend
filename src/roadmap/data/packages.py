@@ -9,7 +9,7 @@ APP_STREAM_PACKAGES = {
     8: {
         "ansible-core": AppStreamEntity(
             name="ansible-core",
-            application_stream_name="Ansible Core 2.12",
+            application_stream_name="Ansible Core 2.16",
             application_stream_type=AppStreamType.full,
             stream="2.12",
             impl=AppStreamImplementation.package,

@@ -88,6 +88,12 @@ async def query_rbac(
     except HTTPError as err:
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.code, detail=err.msg)
+    except json.JSONDecodeError as err:
+        logger.error(f"Invalid JSON response from RBAC: {err}")
+        raise HTTPException(status_code=502, detail="Invalid JSON response from RBAC service")
+    except Exception as err:
+        logger.error(f"Unexpected error querying RBAC: {err}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Error communicating with RBAC service")
 
     return data.get("data", [{}])
 

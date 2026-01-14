@@ -17,6 +17,8 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy import RowMapping
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -285,16 +287,20 @@ async def query_host_inventory(
 
         query += suffix
 
-    result = await session.stream(
-        text(textwrap.dedent(query)),
-        params={
-            "org_id": org_id,
-            "major": str(major),
-            "minor": str(minor),
-            "host_groups": list(host_groups),
-        },
-    )
-    yield result
+    try:
+        result = await session.stream(
+            text(textwrap.dedent(query)),
+            params={
+                "org_id": org_id,
+                "major": str(major),
+                "minor": str(minor),
+                "host_groups": list(host_groups),
+            },
+        )
+        yield result
+    except (DBAPIError, SQLAlchemyError) as err:
+        logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

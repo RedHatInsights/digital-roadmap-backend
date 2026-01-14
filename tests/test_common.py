@@ -7,6 +7,7 @@ from urllib.error import HTTPError
 import pytest
 
 from fastapi import HTTPException
+from sqlalchemy.exc import DBAPIError
 
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
@@ -108,6 +109,18 @@ async def test_query_host_inventory_dev_org_id(base_args, org_id, expected):
     results = [item async for item in records.mappings()]
 
     assert len(results) > expected
+
+
+async def test_query_host_inventory_database_error(base_args, mocker):
+    """Test that database errors are caught and converted to HTTPException"""
+    mocker.patch.object(
+        base_args["session"],
+        "stream",
+        side_effect=DBAPIError("Database connection timeout", None, None),
+    )
+
+    with pytest.raises(HTTPException, match="Error querying host inventory"):
+        await anext(query_host_inventory(**base_args))
 
 
 @pytest.mark.parametrize("date_string", ("20250101", "2025-01-01"))

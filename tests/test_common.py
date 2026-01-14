@@ -175,6 +175,28 @@ async def test_query_rbac_no_url():
     assert result == [{}]
 
 
+async def test_query_rbac_json_decode_error(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(b"invalid json"),
+    )
+
+    with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
+        await query_rbac(settings)
+
+
+async def test_query_rbac_generic_exception(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=Exception("Connection timeout"),
+    )
+
+    with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
+        await query_rbac(settings)
+
+
 @pytest.mark.parametrize(
     ("resource_definition", "expected"),
     (

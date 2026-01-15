@@ -31,16 +31,6 @@ MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, 
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
 
-class HealthCheckFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        message = record.getMessage()
-        filters = (
-            "/v1/ping",
-            "/metrics",
-        )
-        return not any(filter in message for filter in filters)
-
-
 async def decode_header(
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> str:

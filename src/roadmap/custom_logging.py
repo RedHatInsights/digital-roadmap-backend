@@ -41,6 +41,19 @@ def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
+def drop_health_check_logs(logger, method, event_dict: EventDict) -> EventDict:
+    message = event_dict.get("event", "")
+    if isinstance(message, str):
+        filters = (
+            "/v1/ping",
+            "/metrics",
+        )
+        if any(filter in message for filter in filters):
+            raise structlog.DropEvent
+
+    return event_dict
+
+
 def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     timestamper = structlog.processors.TimeStamper(fmt="iso")
 
@@ -51,6 +64,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.stdlib.ExtraAdder(),
         drop_color_message_key,
+        drop_health_check_logs,
         tracer_injection,
         timestamper,
         structlog.processors.StackInfoRenderer(),

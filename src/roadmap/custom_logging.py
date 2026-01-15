@@ -1,5 +1,4 @@
 # https://gist.github.com/nymous/f138c7f06062b7c43c060bf03759c29e
-
 import logging
 import sys
 
@@ -29,6 +28,20 @@ def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
+def drop_health_check_logs(logger, method, event_dict: EventDict) -> EventDict:
+    logger_name = event_dict.get("logger")
+    if logger_name == "api.access":
+        message = event_dict.get("event", "")
+        filters = (
+            "/v1/ping",
+            "/metrics",
+        )
+        if any(filter in message for filter in filters):
+            raise structlog.DropEvent
+
+    return event_dict
+
+
 def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     # get correlation ids from current tracer context
     span = tracer.current_span()
@@ -37,19 +50,6 @@ def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     # add ids to structlog event dictionary
     event_dict["dd.trace_id"] = str(trace_id or 0)
     event_dict["dd.span_id"] = str(span_id or 0)
-
-    return event_dict
-
-
-def drop_health_check_logs(logger, method, event_dict: EventDict) -> EventDict:
-    message = event_dict.get("event", "")
-    if isinstance(message, str):
-        filters = (
-            "/v1/ping",
-            "/metrics",
-        )
-        if any(filter in message for filter in filters):
-            raise structlog.DropEvent
 
     return event_dict
 

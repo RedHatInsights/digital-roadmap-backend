@@ -194,8 +194,12 @@ async def query_host_inventory(
             spd.installed_packages AS packages,
             spd.installed_products AS products
         FROM hbi.hosts h
-            INNER JOIN hbi.system_profiles_static sps on h.id = sps.host_id
-            LEFT JOIN hbi.system_profiles_dynamic spd on h.id = spd.host_id
+            INNER JOIN hbi.system_profiles_static sps
+                ON h.id = sps.host_id
+                AND h.org_id = sps.org_id
+            LEFT JOIN hbi.system_profiles_dynamic spd
+                ON h.id = spd.host_id
+                AND h.org_id = spd.org_id
         WHERE h.org_id = :org_id
     """
 

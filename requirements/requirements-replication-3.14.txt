@@ -1,6 +1,6 @@
 app-common-python==0.2.9
-greenlet==3.3.1
-psycopg==3.3.2
-psycopg-c==3.3.2
+greenlet==3.3.2
+psycopg==3.3.3
+psycopg-c==3.3.3
 SQLAlchemy==2.0.46
 typing_extensions==4.15.0

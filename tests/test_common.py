@@ -7,6 +7,7 @@ from urllib.error import HTTPError
 import pytest
 
 from fastapi import HTTPException
+from sqlalchemy.exc import DBAPIError
 
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
@@ -110,6 +111,18 @@ async def test_query_host_inventory_dev_org_id(base_args, org_id, expected):
     assert len(results) > expected
 
 
+async def test_query_host_inventory_database_error(base_args, mocker):
+    """Test that database errors are caught and converted to HTTPException"""
+    mocker.patch.object(
+        base_args["session"],
+        "stream",
+        side_effect=DBAPIError("Database connection timeout", None, None),
+    )
+
+    with pytest.raises(HTTPException, match="Error querying host inventory"):
+        await anext(query_host_inventory(**base_args))
+
+
 @pytest.mark.parametrize("date_string", ("20250101", "2025-01-01"))
 def test_ensure_date(date_string):
     result = ensure_date(date_string)
@@ -173,6 +186,28 @@ async def test_query_rbac_no_url():
     result = await query_rbac(settings)
 
     assert result == [{}]
+
+
+async def test_query_rbac_json_decode_error(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(b"invalid json"),
+    )
+
+    with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
+        await query_rbac(settings)
+
+
+async def test_query_rbac_generic_exception(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=Exception("Connection timeout"),
+    )
+
+    with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
+        await query_rbac(settings)
 
 
 @pytest.mark.parametrize(

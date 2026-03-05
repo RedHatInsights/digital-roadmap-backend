@@ -1,5 +1,3 @@
-import pytest
-
 from roadmap.sentry_config import before_send
 from roadmap.sentry_config import has_filtered_message
 from roadmap.sentry_config import has_filtered_message_dict

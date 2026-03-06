@@ -61,9 +61,7 @@ def parse_args():
     parser.add_argument("--file", "-f", required=False, type=Path)
     parser.add_argument("--image", "-i", required=False, help="Print out list of tags for a given image")
     parser.add_argument("--overwrite", "-o", action="store_true")
-    parser.add_argument(
-        "--tag-length", "-l", default=12, type=int, help="Tags greater than this length will be omitted"
-    )
+    parser.add_argument("--tag-length", "-l", default=4, type=int, help="Tags greater than this length will be omitted")
     parser.add_argument("--max-count", "-m", help="Maximum number of image tags to gather", type=int, default=50)
 
     if argcomplete:

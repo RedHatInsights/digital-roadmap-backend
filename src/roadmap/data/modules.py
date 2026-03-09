@@ -1173,4 +1173,16 @@ APP_STREAM_MODULES = [
         end_date=date(2030, 11, 30),
         rolling=False,
     ),
+    AppStreamEntity(
+        name="ruby",
+        application_stream_name="Ruby 4.0",
+        application_stream_type=AppStreamType.stream,
+        stream="4.0",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        os_minor=8,
+        start_date=date(2026, 5, 1),
+        end_date=date(2029, 3, 31),
+        rolling=False,
+    ),
 ]

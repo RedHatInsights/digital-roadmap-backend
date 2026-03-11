@@ -104,6 +104,11 @@ class RelevantAppStream(BaseModel):
     @model_validator(mode="after")
     def update_support_status(self):
         """Validator for setting status."""
+        # If no systems are using this app stream, mark as not installed
+        if self.count == 0:
+            self.support_status = SupportStatus.not_installed
+            return self
+
         today = date.today()
         self.support_status = _calculate_support_status(
             start_date=self.start_date,  # pyright: ignore [reportArgumentType]

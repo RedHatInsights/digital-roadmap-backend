@@ -505,3 +505,49 @@ def test_relevant_app_stream_populate_systems_from_systems_detail(make_systems):
     )
 
     assert app_stream.systems == system_ids
+
+
+def test_relevant_app_stream_not_installed_status():
+    """Check that app streams with count=0 are marked as 'Not installed'."""
+
+    app_stream = RelevantAppStream(
+        name="postgresql",
+        display_name="PostgreSQL 17",
+        application_stream_name="postgresql",
+        application_stream_type=AppStreamType.stream,
+        os_major=9,
+        os_minor=4,
+        count=0,  # No systems using this app stream
+        rolling=False,
+        related=True,  # This is a related upgrade path
+        start_date=date(2024, 9, 24),
+        end_date=date(2029, 11, 30),
+        systems_detail=set(),
+    )
+
+    assert app_stream.support_status == SupportStatus.not_installed
+    assert app_stream.count == 0
+    assert app_stream.related is True
+
+
+def test_relevant_app_stream_with_systems_not_marked_as_not_installed():
+    """Check that app streams with count > 0 are NOT marked as 'Not installed'."""
+
+    app_stream = RelevantAppStream(
+        name="postgresql",
+        display_name="PostgreSQL 15",
+        application_stream_name="postgresql",
+        application_stream_type=AppStreamType.stream,
+        os_major=9,
+        os_minor=0,
+        count=5,  # Systems are using this app stream
+        rolling=False,
+        related=False,
+        start_date=date(2022, 5, 17),
+        end_date=date(2027, 5, 31),
+        systems_detail=set(),
+    )
+
+    # Should calculate normal status (supported in this case)
+    assert app_stream.support_status == SupportStatus.supported
+    assert app_stream.count == 5

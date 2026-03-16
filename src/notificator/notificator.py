@@ -12,7 +12,6 @@ from roadmap.models import SupportStatus
 from roadmap.models import System
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
-from roadmap.v1.lifecycle.app_streams import RelevantAppStream
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 
@@ -103,61 +102,34 @@ def _build_rhel_section(rhel_systems: list[System]) -> dict:
 
     Returns::
 
-        {
-            "meta": {"rhel_versions_count": 2, "systems_count": 107},
-            "data": [
-                {"name": "RHEL", "display_name": "RHEL 8.6", "major": 8, "minor": 6, ...},
-                {"name": "RHEL", "display_name": "RHEL 8.8", "major": 8, "minor": 8, ...},
-            ]
-        }
+        {"rhel_versions_count": 6, "systems_count": 5}
     """
-    total = sum(s.count for s in rhel_systems)
     return {
-        "meta": {"rhel_versions_count": len(rhel_systems), "systems_count": total},
-        "data": [system.model_dump(mode="json") for system in rhel_systems],
+        "rhel_versions_count": len(rhel_systems),
+        "systems_count": sum(s.count for s in rhel_systems),
     }
 
 
 def _build_appstream_section(
     systems_by_stream: dict[AppStreamKey, set[SystemInfo]],
 ) -> dict:
-    """Build appstream section for the kafka message.
+    """Build appstream section for the kafka message, grouped by os_major.
 
     Returns::
 
         {
-            "meta": {"appstreams_count": 2, "systems_count": 61},
-            "data": [
-                {"name": "nodejs", "display_name": "Node.js 16", "os_major": 8, ...},
-                {"name": "python", "display_name": "Python 3.9", "os_major": 8, ...},
-            ]
+            "rhel8": {"count": 2, "systems_count": 5},
+            "rhel9": {"count": 22, "systems_count": 6},
         }
     """
-    data = []
-    total = 0
+    by_os_major: dict[str, dict[str, int]] = {}
     for app_stream, systems in systems_by_stream.items():
-        entity = app_stream.app_stream_entity
-        count = len(systems)
-        total += count
-        relevant = RelevantAppStream(
-            name=app_stream.name,
-            display_name=entity.display_name,
-            application_stream_name=entity.application_stream_name,
-            application_stream_type=entity.application_stream_type,
-            start_date=entity.start_date,
-            end_date=entity.end_date,
-            os_major=entity.os_major,
-            os_minor=entity.os_minor,
-            count=count,
-            rolling=entity.rolling,
-            systems_detail=systems,
-            related=False,
-        )
-        data.append(relevant.model_dump(mode="json"))
-    return {
-        "meta": {"appstreams_count": len(data), "systems_count": total},
-        "data": data,
-    }
+        os_major = app_stream.app_stream_entity.os_major
+        key = f"rhel{os_major}"
+        group = by_os_major.setdefault(key, {"count": 0, "systems_count": 0})
+        group["count"] += 1
+        group["systems_count"] += len(systems)
+    return by_os_major
 
 
 def _build_notification_payload(
@@ -183,10 +155,16 @@ def _build_notification_payload(
             "events": [{
                 "metadata": {},
                 "payload": {
-                    "rhel_retired": {"meta": {...}, "data": [...]},
-                    "rhel_near_retirement": {"meta": {...}, "data": [...]},
-                    "appstream_retired": {"meta": {...}, "data": [...]},
-                    "appstream_near_retirement": {"meta": {...}, "data": [...]},
+                    "rhel_retired": {"rhel_versions_count": 6, "systems_count": 5},
+                    "rhel_near_retirement": {"rhel_versions_count": 1, "systems_count": 3},
+                    "appstream_retired": {
+                        "rhel8": {"count": 2, "systems_count": 5},
+                        "rhel9": {"count": 2, "systems_count": 8},
+                    },
+                    "appstream_near_retirement": {
+                        "rhel8": {"count": 5, "systems_count": 7},
+                        "rhel9": {"count": 22, "systems_count": 6},
+                    },
                 }
             }],
             "recipients": [],

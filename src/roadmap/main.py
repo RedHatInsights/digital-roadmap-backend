@@ -20,12 +20,14 @@ import roadmap.v1
 from roadmap.common import extend_openapi
 from roadmap.config import Settings
 from roadmap.custom_logging import setup_logging
+from roadmap.sentry_config import before_send
 
 
 if os.getenv("SENTRY_DSN"):
     sentry_sdk.init(
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
+        before_send=before_send,
         integrations=[
             FastApiIntegration(
                 failed_request_status_codes={403, 404, *range(500, 599)},

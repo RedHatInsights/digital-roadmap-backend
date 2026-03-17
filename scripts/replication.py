@@ -91,22 +91,28 @@ def _db_exists(logger, session, sql):
 
 def check_or_create_view(logger, engine):
     view_template = """CREATE OR REPLACE VIEW hbi.hosts_view AS SELECT
-        id,
-        account,
-        display_name,
-        created_on as created,
-        modified_on asupdated,
-        stale_timestamp,
-        stale_timestamp + INTERVAL '1' DAY * '7' AS stale_warning_timestamp,
-        stale_timestamp + INTERVAL '1' DAY * '14' AS culled_timestamp,
-        tags_alt as tags,
-        system_profile_facts as system_profile,
-        canonical_facts ->> 'insights_id'::text as insights_id,
-        reporter,
-        per_reporter_staleness,
-        org_id,
-        groups
-    FROM hbi.hosts WHERE (canonical_facts->'insights_id' IS NOT NULL)"""
+        h.id,
+        h.account,
+        h.display_name,
+        h.created_on as created,
+        h.modified_on as updated,
+        h.stale_timestamp,
+        h.stale_timestamp + INTERVAL '1' DAY * '7' AS stale_warning_timestamp,
+        h.stale_timestamp + INTERVAL '1' DAY * '14' AS culled_timestamp,
+        h.tags_alt as tags,
+        sps.operating_system,
+        sps.os_release,
+        sps.dnf_modules,
+        h.canonical_facts ->> 'insights_id'::text as insights_id,
+        h.reporter,
+        h.per_reporter_staleness,
+        h.org_id,
+        h.groups
+    FROM hbi.hosts h
+        LEFT JOIN hbi.system_profiles_static sps
+            ON h.id = sps.host_id
+            AND h.org_id = sps.org_id
+    WHERE (h.canonical_facts->'insights_id' IS NOT NULL)"""
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
         connection.execute(sa_text(view_template))
 
@@ -118,7 +124,8 @@ def check_or_create_indexes(logger, engine):
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_display_name_index ON hbi.hosts (display_name)",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_tags_index ON hbi.hosts USING GIN (tags JSONB_PATH_OPS)",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_stale_timestamp_index ON hbi.hosts (stale_timestamp)",
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_system_profile_index ON hbi.hosts USING GIN (system_profile_facts JSONB_PATH_OPS)",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS system_profiles_static_org_id_index ON hbi.system_profiles_static (org_id)",
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS system_profiles_dynamic_org_id_index ON hbi.system_profiles_dynamic (org_id)",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_insights_id_index ON hbi.hosts USING btree (((canonical_facts ->> 'insights_id'::text)))",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_insights_reporter_index ON hbi.hosts (reporter)",
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS hosts_per_reporter_staleness_index ON hbi.hosts USING GIN (per_reporter_staleness JSONB_PATH_OPS)",
@@ -143,7 +150,6 @@ def check_or_create_hosts_tables(logger, session):
             facts jsonb,
             tags jsonb,
             canonical_facts jsonb NOT NULL,
-            system_profile_facts jsonb,
             ansible_host character varying(255),
             stale_timestamp timestamp with time zone NOT NULL,
             reporter character varying(255) NOT NULL,
@@ -158,6 +164,43 @@ def check_or_create_hosts_tables(logger, session):
         logger.info("hbi.hosts created.")
 
 
+def check_or_create_profile_tables(logger, session):
+    check_static = (
+        "SELECT table_name FROM information_schema.tables"
+        " WHERE table_schema = 'hbi' AND table_name = 'system_profiles_static'"
+    )
+    if not _db_exists(logger, session, check_static):
+        logger.info("hbi.system_profiles_static not found.")
+        static_table_create = """CREATE TABLE hbi.system_profiles_static (
+            host_id uuid NOT NULL REFERENCES hbi.hosts(id),
+            org_id character varying(36) NOT NULL,
+            operating_system jsonb,
+            os_release character varying(100),
+            dnf_modules jsonb,
+            PRIMARY KEY (host_id)
+        );"""
+        session.execute(sa_text(static_table_create))
+        session.commit()
+        logger.info("hbi.system_profiles_static created.")
+
+    check_dynamic = (
+        "SELECT table_name FROM information_schema.tables"
+        " WHERE table_schema = 'hbi' AND table_name = 'system_profiles_dynamic'"
+    )
+    if not _db_exists(logger, session, check_dynamic):
+        logger.info("hbi.system_profiles_dynamic not found.")
+        dynamic_table_create = """CREATE TABLE hbi.system_profiles_dynamic (
+            host_id uuid NOT NULL REFERENCES hbi.hosts(id),
+            org_id character varying(36) NOT NULL,
+            installed_packages jsonb,
+            installed_products jsonb,
+            PRIMARY KEY (host_id)
+        );"""
+        session.execute(sa_text(dynamic_table_create))
+        session.commit()
+        logger.info("hbi.system_profiles_dynamic created.")
+
+
 def check_or_create_schema(logger, session, engine):
     check_schema = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'hbi'"
     if not _db_exists(logger, session, check_schema):
@@ -166,6 +209,7 @@ def check_or_create_schema(logger, session, engine):
         session.commit()
         logger.info("hbi schema created.")
     check_or_create_hosts_tables(logger, session)
+    check_or_create_profile_tables(logger, session)
     check_or_create_indexes(logger, engine)
     check_or_create_view(logger, engine)
 

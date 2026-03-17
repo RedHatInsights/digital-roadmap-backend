@@ -106,31 +106,39 @@ def main():  # noqa: C901
 
     query = f"""
     SELECT
-        id,
-        display_name,
-        system_profile_facts
-    FROM hbi.hosts
-    WHERE org_id = '{org_id}'
-    ORDER BY id
+        h.id,
+        h.display_name,
+        sps.operating_system,
+        sps.os_release,
+        sps.dnf_modules,
+        spd.installed_packages,
+        spd.installed_products
+    FROM hbi.hosts h
+        INNER JOIN hbi.system_profiles_static sps
+            ON h.id = sps.host_id
+            AND h.org_id = sps.org_id
+        LEFT JOIN hbi.system_profiles_dynamic spd
+            ON h.id = spd.host_id
+            AND h.org_id = spd.org_id
+    WHERE h.org_id = '{org_id}'
+    ORDER BY h.id
     """
     if display_name:
         insertion_point = query.index("ORDER BY")
-        query = query[:insertion_point] + f"AND starts_with(display_name, '{display_name}')\n" + query[insertion_point:]
+        query = (
+            query[:insertion_point] + f"AND starts_with(h.display_name, '{display_name}')\n" + query[insertion_point:]
+        )
 
     offset = 0
     remaining = total_limit
     results = []
-    keys_to_keep = {
-        "system_profile_facts",
-        "id",
-        "dnf_modules",
-        "installed_packages",
-        "rhsm",
-        "owner_id",
-        "os_release",
-        "operating_system",
-        "releasever",
-    }
+    # Columns from the split profile tables (system_profiles_static, system_profiles_dynamic)
+    profile_fields = {"operating_system", "os_release", "dnf_modules", "installed_packages", "installed_products"}
+    # JSONB columns need json.loads(); os_release is a plain varchar and does not
+    jsonb_fields = {"operating_system", "dnf_modules", "installed_packages", "installed_products"}
+    # When scrubbing, only keep these profile fields in the output
+    profile_keys_to_keep = {"dnf_modules", "installed_packages", "os_release", "operating_system"}
+
     while remaining > 0:
         query_limit = 100
         if remaining < 100:
@@ -142,23 +150,27 @@ def main():  # noqa: C901
 
         for record in records:
             inner_record = {}
+            system_profile = {}
             for idx, data in enumerate(record):
                 field = headers[idx]
-                if scrub:
-                    if field not in keys_to_keep:
-                        continue
 
-                    if field == "id":
-                        data = str(uuid.uuid4())
+                # Collect profile columns into a nested dict, parsing JSONB strings
+                if field in profile_fields:
+                    if data and field in jsonb_fields:
+                        data = json.loads(data)
+                    if not scrub or field in profile_keys_to_keep:
+                        system_profile[field] = data
 
-                if field == "system_profile_facts":
-                    data = json.loads(data)
+                # Host-level fields: anonymize id and strip display_name when scrubbing
+                else:
                     if scrub:
-                        data = {key: value for key, value in data.items() if key in keys_to_keep}
-                        data["owner_id"] = str(uuid.uuid4())
+                        if field == "display_name":
+                            continue
+                        if field == "id":
+                            data = str(uuid.uuid4())
+                    inner_record[field] = data
 
-                inner_record[field] = data
-
+            inner_record["system_profile"] = system_profile
             results.append(inner_record)
 
         offset += 100

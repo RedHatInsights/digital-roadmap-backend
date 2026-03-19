@@ -74,7 +74,7 @@ def ids_by_os(read_json_fixture):
     data = read_json_fixture("inventory_db_response.json.gz")
     systems_by_version = defaultdict(set)
     for system in data:
-        if system_profile := system.get("system_profile_facts"):
+        if system_profile := system.get("system_profile"):
             key = system_profile.get("os_release")
             os = system_profile.get("operating_system")
             if os is not None:

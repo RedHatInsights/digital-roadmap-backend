@@ -130,7 +130,7 @@ def main():
     for host in host_data:
         id = host["id"]
         init_date = fake.date_time_between(start_date="-1w")
-        system_profile = host.get("system_profile_facts", {})
+        system_profile = host.get("system_profile", {})
 
         # Create host record
         host_records.append(

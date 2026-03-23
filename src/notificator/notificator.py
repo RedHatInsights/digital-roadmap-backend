@@ -9,9 +9,6 @@ from roadmap.common import query_host_inventory
 from roadmap.config import Settings
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
-from roadmap.models import System
-from roadmap.models import SystemInfo
-from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 
@@ -41,18 +38,19 @@ class Notificator:
             ):
                 return [row async for row in result.mappings()]
 
+        return []
+
     async def get_relevant_appstreams(
         self,
         hosts,
-    ) -> tuple[dict[str, dict[AppStreamKey, set[SystemInfo]]], set[int]]:
+    ) -> dict[str, dict[str, dict[str, int]]]:
         """Get relevant appstreams based on response from HBI.
 
-        Appstreams are filtered to include only ones with status specified in `NOTIFY_STATUSES`.
+        Appstreams are filtered to include only ones with status specified in `NOTIFY_STATUSES`
+        and aggregated into counts grouped by os_major.
+
         Each status is guaranteed to exist, the key contains the status name - e.g. "appstream_retired" or
         "appstream_near_retirement".
-
-        Also returns all os_major values seen across all appstreams (regardless of status) so the
-        payload can include zero-count entries for RHEL versions with no affected appstreams.
         """
 
         relevant_appstreams = await systems_by_app_stream(
@@ -60,26 +58,35 @@ class Notificator:
             systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
         )
 
-        all_os_majors: set[int] = set()
-        grouped: dict[str, dict[AppStreamKey, set[SystemInfo]]] = {
+        appstreams_sections: dict[str, dict[str, dict[str, int]]] = {
             f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
         }
 
         for app_stream, systems in relevant_appstreams.items():
-            os_major = app_stream.app_stream_entity.os_major
-            if os_major is not None:
-                all_os_majors.add(os_major)
             status = app_stream.app_stream_entity.support_status
             if status in NOTIFY_STATUSES:
-                key = f"appstream_{status.name}"
-                grouped.setdefault(key, {})[app_stream] = systems
+                status_key = f"appstream_{status.name}"
+                os_key = f"rhel{app_stream.app_stream_entity.os_major}"
+                group = appstreams_sections[status_key].setdefault(os_key, {"count": 0, "systems_count": 0})
+                group["count"] += 1
+                group["systems_count"] += len(systems)
 
-        return grouped, all_os_majors
+        # Ensure every status group has entries for all os_majors seen in any group
+        # E.g. if RHEL9 appstream is present in `appstream_retired`, have it also in the `appstream_near_retirement`
+        # Using for nested for loop there is safe, not much RHEL versions are expected.
+        all_os_keys = {os_key for section in appstreams_sections.values() for os_key in section}
+        for section in appstreams_sections.values():
+            for os_key in all_os_keys:
+                section.setdefault(os_key, {"count": 0, "systems_count": 0})
 
-    async def get_relevant_rhel(self, hosts) -> dict[str, list[System]]:
+        return appstreams_sections
+
+    async def get_relevant_rhel(self, hosts) -> dict[str, dict[str, int]]:
         """Get relevant RHEL versions based on response from HBI.
 
-        RHEL versions are filtered to include only ones with status specified in `NOTIFY_STATUSES`.
+        RHEL versions are filtered to include only ones with status specified in `NOTIFY_STATUSES`
+        and aggregated into counts.
+
         Each status is guaranteed to exist, the key contains the status name - e.g. "rhel_retired" or
         "rhel_near_retirement".
         """
@@ -87,78 +94,38 @@ class Notificator:
             org_id=str(self.org_id),
             systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
         )
-        grouped: dict[str, list[System]] = {f"rhel_{status.name}": [] for status in NOTIFY_STATUSES}
+        rhel_sections: dict[str, dict[str, int]] = {
+            f"rhel_{status.name}": {"rhel_versions_count": 0, "systems_count": 0} for status in NOTIFY_STATUSES
+        }
         for system in relevant_systems.data:
             if system.name != "RHEL":
                 continue
             if system.support_status in NOTIFY_STATUSES:
                 key = f"rhel_{system.support_status.name}"
-                grouped.setdefault(key, []).append(system)
-        return grouped
+                rhel_sections[key]["rhel_versions_count"] += 1
+                rhel_sections[key]["systems_count"] += system.count
+        return rhel_sections
 
-    async def get_notification(self) -> dict:
+    async def get_lifecycle_notification(self) -> dict:
         """Gather required information for notification and build kafka message for notification backend."""
         hosts = await self.get_hosts()
         rhel_grouped = await self.get_relevant_rhel(hosts)
-        appstream_grouped, all_os_majors = await self.get_relevant_appstreams(hosts)
+        appstream_grouped = await self.get_relevant_appstreams(hosts)
 
         return _build_notification_payload(
             rhel_grouped=rhel_grouped,
             appstream_grouped=appstream_grouped,
-            all_os_majors=all_os_majors,
             org_id=str(self.org_id),
         )
 
 
-def _build_rhel_section(rhel_systems: list[System]) -> dict:
-    """Build RHEL section for the kafka message.
-
-    Returns::
-
-        {"rhel_versions_count": 6, "systems_count": 5}
-    """
-    return {
-        "rhel_versions_count": len(rhel_systems),
-        "systems_count": sum(s.count for s in rhel_systems),
-    }
-
-
-def _build_appstream_section(
-    systems_by_stream: dict[AppStreamKey, set[SystemInfo]],
-    all_os_majors: set[int],
-) -> dict:
-    """Build appstream section for the kafka message, grouped by os_major.
-
-    All os_major values are guaranteed to exist as keys, even with zero counts.
-
-    Returns::
-
-        {
-            "rhel8": {"count": 2, "systems_count": 5},
-            "rhel9": {"count": 22, "systems_count": 6},
-            "rhel10": {"count": 0, "systems_count": 0},
-        }
-    """
-    by_os_major: dict[str, dict[str, int]] = {
-        f"rhel{major}": {"count": 0, "systems_count": 0} for major in sorted(all_os_majors)
-    }
-    for app_stream, systems in systems_by_stream.items():
-        os_major = app_stream.app_stream_entity.os_major
-        key = f"rhel{os_major}"
-        group = by_os_major.setdefault(key, {"count": 0, "systems_count": 0})
-        group["count"] += 1
-        group["systems_count"] += len(systems)
-    return by_os_major
-
-
 def _build_notification_payload(
-    rhel_grouped: dict[str, list[System]],
-    appstream_grouped: dict[str, dict[AppStreamKey, set[SystemInfo]]],
-    all_os_majors: set[int],
+    rhel_grouped: dict[str, dict[str, int]],
+    appstream_grouped: dict[str, dict[str, dict[str, int]]],
     org_id: str,
     bundle: str = "rhel",
     application: str = "planning",
-    event_type: str = "rhel-version-out-of-support",  # and also appstream-package-version-out-of-support
+    event_type: str = "rhel-version-out-of-support",
 ) -> dict:
     """Build kafka message for notification backend using their specified format.
 
@@ -180,24 +147,16 @@ def _build_notification_payload(
                     "appstream_retired": {
                         "rhel8": {"count": 2, "systems_count": 5},
                         "rhel9": {"count": 2, "systems_count": 8},
-                        "rhel10": {"count": 0, "systems_count": 0},
                     },
                     "appstream_near_retirement": {
                         "rhel8": {"count": 5, "systems_count": 7},
                         "rhel9": {"count": 22, "systems_count": 6},
-                        "rhel10": {"count": 0, "systems_count": 0},
                     },
                 }
             }],
             "recipients": [],
         }
     """
-    payload_sections = {}
-    for key, systems in rhel_grouped.items():
-        payload_sections[key] = _build_rhel_section(systems)
-    for key, streams in appstream_grouped.items():
-        payload_sections[key] = _build_appstream_section(streams, all_os_majors)
-
     return {
         "version": "v1.0.0",
         "id": str(uuid4()),
@@ -210,7 +169,7 @@ def _build_notification_payload(
         "events": [
             {
                 "metadata": {},
-                "payload": payload_sections,
+                "payload": {**rhel_grouped, **appstream_grouped},
             },
         ],
         "recipients": [],

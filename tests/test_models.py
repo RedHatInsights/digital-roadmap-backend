@@ -87,3 +87,60 @@ def test_get_system_uuids_attribute_not_existing():
     data = {"value": "value"}
 
     assert _get_system_uuids(data) == set()
+
+
+def test_system_not_installed_status_when_count_zero(mocker):
+    """Test that a supported system with 0 count gets marked as not_installed."""
+    mock_date = mocker.patch("roadmap.models.date", wraps=date)
+    mock_date.today.return_value = date(2026, 3, 24)
+
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=7,
+        lifecycle_type=LifecycleType.mainline,
+        count=0,
+        start_date=date(2024, 5, 1),
+        end_date=date(2027, 5, 31),
+        systems_detail=set(),
+    )
+
+    assert system.support_status == SupportStatus.not_installed
+
+
+def test_system_supported_status_when_count_non_zero(mocker):
+    """Test that a supported system with count > 0 stays as supported."""
+    mock_date = mocker.patch("roadmap.models.date", wraps=date)
+    mock_date.today.return_value = date(2026, 3, 24)
+
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=7,
+        lifecycle_type=LifecycleType.mainline,
+        count=5,
+        start_date=date(2024, 5, 1),
+        end_date=date(2027, 5, 31),
+        systems_detail=set(),
+    )
+
+    assert system.support_status == SupportStatus.supported
+
+
+def test_system_retired_status_not_changed_when_count_zero(mocker):
+    """Test that a retired system with 0 count stays as retired, not not_installed."""
+    mock_date = mocker.patch("roadmap.models.date", wraps=date)
+    mock_date.today.return_value = date(2026, 3, 24)
+
+    system = System(
+        name="RHEL",
+        major=8,
+        minor=1,
+        lifecycle_type=LifecycleType.mainline,
+        count=0,
+        start_date=date(2019, 11, 5),
+        end_date=date(2021, 11, 30),
+        systems_detail=set(),
+    )
+
+    assert system.support_status == SupportStatus.retired

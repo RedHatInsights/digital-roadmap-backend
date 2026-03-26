@@ -5,8 +5,8 @@ from datetime import UTC
 from uuid import uuid4
 
 from notificator.cache import CachedResult
+from notificator.notificator_config import NotificatorSettings
 from roadmap.common import query_host_inventory
-from roadmap.config import Settings
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
@@ -17,7 +17,7 @@ NOTIFY_STATUSES = {SupportStatus.retired, SupportStatus.near_retirement}
 
 
 class Notificator:
-    settings = Settings.create()
+    settings = NotificatorSettings.create()
 
     def __init__(self, org_id: int):
         self.org_id = org_id
@@ -116,6 +116,7 @@ class Notificator:
             rhel_grouped=rhel_grouped,
             appstream_grouped=appstream_grouped,
             org_id=str(self.org_id),
+            event_type="retiring-lifecycle-monthly-report",
         )
 
 
@@ -123,9 +124,9 @@ def _build_notification_payload(
     rhel_grouped: dict[str, dict[str, int]],
     appstream_grouped: dict[str, dict[str, dict[str, int]]],
     org_id: str,
+    event_type: str,
     bundle: str = "rhel",
     application: str = "planning",
-    event_type: str = "rhel-version-out-of-support",
 ) -> dict:
     """Build kafka message for notification backend using their specified format.
 
@@ -136,7 +137,7 @@ def _build_notification_payload(
             "id": "db6e6cee-...",
             "bundle": "rhel",
             "application": "planning",
-            "event_type": "rhel-version-out-of-support",
+            "event_type": "retiring-lifecycle-monthly-report",
             "timestamp": "2026-02-24T12:00:00Z",
             "org_id": "1234",
             "events": [{
@@ -163,7 +164,7 @@ def _build_notification_payload(
         "bundle": bundle,
         "application": application,
         "event_type": event_type,
-        "timestamp": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),  # or we can use datetime.now(UTC).isoformat()
         "org_id": org_id,
         "context": {},
         "events": [

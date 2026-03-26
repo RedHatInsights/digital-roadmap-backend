@@ -158,7 +158,7 @@ class System(BaseModel):
 
         # If no systems are using this system release, mark as not installed
         # Also the system release should be supported
-        if self.count == 0 and self.support_status == SupportStatus.supported:
+        if self.count == 0:
             self.support_status = SupportStatus.not_installed
             return self
 

@@ -17,8 +17,8 @@ objects:
         - rbac
 
       kafkaTopics:
-        - topicName: platform.lifecycle-notification
-          partitions: 1
+        - topicName: platform.notifications.ingress
+          partitions: 24
           replicas: 3
 
       database:

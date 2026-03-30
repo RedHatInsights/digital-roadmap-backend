@@ -156,6 +156,11 @@ class System(BaseModel):
             months=3,
         )
 
+        # If no systems are using this system release, mark as not installed
+        if self.count == 0:
+            self.support_status = SupportStatus.not_installed
+            return self
+
         return self
 
 

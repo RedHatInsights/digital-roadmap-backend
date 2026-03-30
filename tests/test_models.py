@@ -125,5 +125,3 @@ def test_system_supported_status_when_count_non_zero(mocker):
     )
 
     assert system.support_status == SupportStatus.supported
-
-

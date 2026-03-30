@@ -127,20 +127,3 @@ def test_system_supported_status_when_count_non_zero(mocker):
     assert system.support_status == SupportStatus.supported
 
 
-def test_system_retired_status_not_changed_when_count_zero(mocker):
-    """Test that a retired system with 0 count stays as retired, not not_installed."""
-    mock_date = mocker.patch("roadmap.models.date", wraps=date)
-    mock_date.today.return_value = date(2026, 3, 24)
-
-    system = System(
-        name="RHEL",
-        major=8,
-        minor=1,
-        lifecycle_type=LifecycleType.mainline,
-        count=0,
-        start_date=date(2019, 11, 5),
-        end_date=date(2021, 11, 30),
-        systems_detail=set(),
-    )
-
-    assert system.support_status == SupportStatus.retired

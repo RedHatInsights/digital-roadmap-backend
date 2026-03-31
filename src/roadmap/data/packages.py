@@ -576,7 +576,7 @@ APP_STREAM_PACKAGES = {
             os_major=8,
             os_minor=0,
             start_date=date(2019, 5, 7),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-11-openjdk": AppStreamEntity(
@@ -4715,7 +4715,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-demo": AppStreamEntity(
@@ -4728,7 +4728,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-demo-fastdebug": AppStreamEntity(
@@ -4741,7 +4741,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-demo-slowdebug": AppStreamEntity(
@@ -4754,7 +4754,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-devel": AppStreamEntity(
@@ -4767,7 +4767,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-devel-fastdebug": AppStreamEntity(
@@ -4780,7 +4780,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-devel-slowdebug": AppStreamEntity(
@@ -4793,7 +4793,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-fastdebug": AppStreamEntity(
@@ -4806,7 +4806,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-headless": AppStreamEntity(
@@ -4819,7 +4819,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-headless-fastdebug": AppStreamEntity(
@@ -4832,7 +4832,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-headless-slowdebug": AppStreamEntity(
@@ -4845,7 +4845,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-javadoc": AppStreamEntity(
@@ -4858,7 +4858,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-javadoc-zip": AppStreamEntity(
@@ -4871,7 +4871,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-slowdebug": AppStreamEntity(
@@ -4884,7 +4884,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-src": AppStreamEntity(
@@ -4897,7 +4897,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-src-fastdebug": AppStreamEntity(
@@ -4910,7 +4910,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-1.8.0-openjdk-src-slowdebug": AppStreamEntity(
@@ -4923,7 +4923,7 @@ APP_STREAM_PACKAGES = {
             os_major=9,
             os_minor=0,
             start_date=date(2022, 5, 17),
-            end_date=date(2026, 5, 31),
+            end_date=date(2026, 11, 30),
             rolling=False,
         ),
         "java-11-openjdk": AppStreamEntity(

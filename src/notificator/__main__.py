@@ -11,7 +11,11 @@ from notificator.notificator import Notificator
 from roadmap.custom_logging import setup_logging
 
 
-setup_logging(json_logs=False, log_level="INFO")
+settings = NotificatorSettings.create()
+setup_logging(
+    json_logs=settings.json_logging,
+    log_level=settings.log_level
+)
 logger = structlog.get_logger(__name__)
 
 ORG_IDS = [int(os.environ.get("ORG_ID", "1234"))]

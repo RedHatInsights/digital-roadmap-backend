@@ -108,7 +108,7 @@ class Notificator:
         "rhel_near_retirement".
         """
         start_time = time.time()
-        logger.info("Processing RHEL systems", org_id=self.org_id)
+        logger.info("Processing RHEL releases", org_id=self.org_id)
 
         relevant_systems = await get_relevant_systems(
             org_id=str(self.org_id),

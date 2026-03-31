@@ -20,10 +20,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+
+import structlog
 
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
@@ -33,7 +34,7 @@ from notificator.notificator_config import NotificatorSettings
 from notificator.notificator_config import RETRY_INTERVAL
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
@@ -51,16 +52,16 @@ async def _start_producer(producer: AIOKafkaProducer) -> None:
     """
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            logger.info("Attempting to connect Kafka producer (attempt %d/%d).", attempt, MAX_RETRIES)
+            logger.info("Attempting to connect Kafka producer", attempt=attempt, max_retries=MAX_RETRIES)
             await producer.start()
-            logger.info("Kafka producer connected successfully.")
+            logger.info("Kafka producer connected successfully")
             return
         except KafkaError:
             logger.exception(
-                "Failed to connect Kafka producer (attempt %d/%d), retrying in %d seconds.",
-                attempt,
-                MAX_RETRIES,
-                RETRY_INTERVAL,
+                "Failed to connect Kafka producer",
+                attempt=attempt,
+                max_retries=MAX_RETRIES,
+                retry_interval_seconds=RETRY_INTERVAL,
             )
             if attempt == MAX_RETRIES:
                 raise
@@ -82,10 +83,10 @@ async def kafka_producer() -> AsyncIterator[KafkaProducer]:
     """
     settings = NotificatorSettings.create()
     logger.info(
-        "Kafka settings: dev=%s, bootstrap_servers=%s, topic=%s",
-        settings.dev,
-        settings.bootstrap_servers,
-        settings.notifications_topic,
+        "Kafka settings loaded",
+        dev=settings.dev,
+        bootstrap_servers=settings.bootstrap_servers,
+        topic=settings.notifications_topic,
     )
     if settings.dev or settings.bootstrap_servers:
         producer = _build_producer(settings)
@@ -125,4 +126,4 @@ class KafkaProducer:
             return
         msg = json.dumps(payload).encode("utf-8")
         await self._producer.send_and_wait(self._topic, msg)
-        logger.info("Notification sent to topic %s", self._topic)
+        logger.info("Notification sent to Kafka", topic=self._topic, org_id=payload.get("org_id"))

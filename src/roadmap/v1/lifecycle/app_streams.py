@@ -295,19 +295,30 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
     for app_stream_key in app_streams:
+        # Extract base product name from application_stream_name by removing trailing numbers
+        # E.g., "Node.js 22" -> "Node.js", "PostgreSQL 15" -> "PostgreSQL"
+        installed_app_name = app_stream_key.app_stream_entity.application_stream_name
+        installed_base = installed_app_name.rstrip('0123456789. ')
+
         for app in APP_STREAM_MODULES_PACKAGES:
             add = False
-            # Match by application_stream_name instead of display_name to allow different versions to match
-            if app.application_stream_name == app_stream_key.app_stream_entity.application_stream_name:
+            # Match by base product name to allow different versions to match
+            # E.g., both "Node.js 22" and "Node.js 24" have base "Node.js"
+            candidate_base = app.application_stream_name.rstrip('0123456789. ')
+
+            if candidate_base == installed_base:
                 # Case 1: Same RHEL version - show newer stream versions
                 if app.os_major == app_stream_key.app_stream_entity.os_major:
                     if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
                         if app.end_date is None or app.end_date > date.today():  # pyright: ignore [reportArgumentType, reportOperatorIssue]
                             add = True
                 # Case 2: Newer RHEL version - show streams with later start_date
-                elif app.start_date and app_stream_key.app_stream_entity.start_date:
-                    if app.start_date > app_stream_key.app_stream_entity.start_date:  # pyright: ignore [reportArgumentType, reportOperatorIssue]
-                        add = True
+                # Only show streams on newer RHEL versions (not older ones)
+                elif app.os_major and app_stream_key.app_stream_entity.os_major:
+                    if app.os_major > app_stream_key.app_stream_entity.os_major:
+                        if app.start_date and app_stream_key.app_stream_entity.start_date:
+                            if app.start_date > app_stream_key.app_stream_entity.start_date:  # pyright: ignore [reportArgumentType, reportOperatorIssue]
+                                add = True
             if add:
                 relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
 

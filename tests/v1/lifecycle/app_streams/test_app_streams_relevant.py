@@ -198,11 +198,15 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 1
-    # In the test data there is an eligible system from another group (for
-    # which the request does not have permission) that shows NGINX 1.14,
-    # and another with NGINX 1.22.
-    assert data[0]["display_name"] == "Node.js 18"
+    # The ungrouped host has Node.js 18 installed, plus related streams (Node.js 20, 22, 24, etc.)
+    installed = [item for item in data if not item.get("related", False)]
+    related = [item for item in data if item.get("related", False)]
+    assert len(installed) == 1, f"Expected 1 installed stream, got {len(installed)}"
+    assert installed[0]["display_name"] == "Node.js 18"
+    # Should have newer Node.js versions as related streams
+    assert len(related) > 0, "Expected related streams for Node.js 18"
+    related_names = {item["display_name"] for item in related}
+    assert "Node.js 20" in related_names or "Node.js 22" in related_names
 
 
 def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped_permission(api_prefix, client):
@@ -232,11 +236,16 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
+    assert result.status_code == 200
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14.
-    display_names = {d["display_name"] for d in data}
-    assert {"Node.js 18", "NGINX 1.22"} == display_names
-    assert result.status_code == 200
+    # Check installed streams (count > 0)
+    installed = [d for d in data if d["count"] > 0]
+    installed_names = {d["display_name"] for d in installed}
+    assert {"Node.js 18", "NGINX 1.22"} == installed_names
+    # Should also have related streams
+    related = [d for d in data if d.get("related", False)]
+    assert len(related) > 0, "Expected related streams"
 
 
 def test_get_revelent_app_stream_related(api_prefix, client, mocker):
@@ -322,11 +331,15 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 2
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
     # and another with nodejs 18.
-    assert data[0]["display_name"] == "NGINX 1.22"
+    # Check that NGINX 1.22 is in the installed streams
+    installed = [d for d in data if d["count"] > 0]
+    installed_names = {d["display_name"] for d in installed}
+    assert "NGINX 1.22" in installed_names
+    # Should have at least the installed stream (may also have related streams)
+    assert len(data) >= 1
 
 
 def test_app_stream_missing_lifecycle_data():

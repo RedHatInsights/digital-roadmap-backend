@@ -8,14 +8,12 @@ import structlog
 
 from notificator.kafka import kafka_producer
 from notificator.notificator import Notificator
+from notificator.notificator_config import NotificatorSettings
 from roadmap.custom_logging import setup_logging
 
 
 settings = NotificatorSettings.create()
-setup_logging(
-    json_logs=settings.json_logging,
-    log_level=settings.log_level
-)
+setup_logging(json_logs=settings.json_logging, log_level=settings.log_level)
 logger = structlog.get_logger(__name__)
 
 ORG_IDS = [int(os.environ.get("ORG_ID", "1234"))]
@@ -43,7 +41,9 @@ async def lifecycle_notification():
             # Wide exception, we don't want one failed ORG_ID causing failure of the whole script.
             except Exception:
                 elapsed = time.time() - start_time
-                logger.exception("Failed to process lifecycle notification", org_id=org_id, duration_seconds=round(elapsed, 2))
+                logger.exception(
+                    "Failed to process lifecycle notification", org_id=org_id, duration_seconds=round(elapsed, 2)
+                )
                 failed_orgs.append(org_id)
 
     if failed_orgs:

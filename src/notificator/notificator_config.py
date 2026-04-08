@@ -13,8 +13,6 @@ Usage::
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 from app_common_python import KafkaServers
 from app_common_python import KafkaTopics
 
@@ -22,9 +20,9 @@ from roadmap.config import Settings
 
 
 NOTIFICATIONS_TOPIC_REQUESTED = "platform.notifications.ingress"
-DEV_BOOTSTRAP_SERVERS = "localhost:9092"
-RETRY_INTERVAL = 5
-MAX_RETRIES = 5
+DEV_BOOTSTRAP_SERVERS = ["localhost:9092"]
+KAFKA_RETRY_INTERVAL = 5
+KAFKA_MAX_RETRIES = 5
 
 
 class NotificatorSettings(Settings):
@@ -36,18 +34,19 @@ class NotificatorSettings(Settings):
     """
 
     @classmethod
-    @lru_cache
     def create(cls) -> NotificatorSettings:  # type: ignore[override]
         """Create a cached NotificatorSettings instance.
 
         Delegates to ``Settings.create()`` which handles Clowder and env var
-        resolution. The result is cached so repeated calls return the same instance.
+        resolution. The parent's ``@lru_cache`` keys on ``cls``, so
+        ``Settings.create()`` and ``NotificatorSettings.create()`` get
+        separate cache entries automatically.
         """
         return super().create()  # type: ignore[return-value]
 
     @property
-    def bootstrap_servers(self) -> str | list[str]:
-        """Kafka broker addresses. In dev mode, returns ``localhost:9092``."""
+    def bootstrap_servers(self) -> list[str]:
+        """Kafka broker addresses. In dev mode, returns ``["localhost:9092"]``."""
         if self.dev:
             return DEV_BOOTSTRAP_SERVERS
         return KafkaServers

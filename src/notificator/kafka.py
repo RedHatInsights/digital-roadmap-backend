@@ -29,9 +29,9 @@ import structlog
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
 
-from notificator.notificator_config import MAX_RETRIES
+from notificator.notificator_config import KAFKA_MAX_RETRIES
+from notificator.notificator_config import KAFKA_RETRY_INTERVAL
 from notificator.notificator_config import NotificatorSettings
-from notificator.notificator_config import RETRY_INTERVAL
 
 
 logger = structlog.get_logger(__name__)
@@ -39,7 +39,7 @@ logger = structlog.get_logger(__name__)
 
 def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
     """Create an AIOKafkaProducer from the notificator settings."""
-    return AIOKafkaProducer(bootstrap_servers=settings.bootstrap_servers)
+    return AIOKafkaProducer(bootstrap_servers=settings.bootstrap_servers)  # pyright: ignore [reportArgumentType]
 
 
 async def _start_producer(producer: AIOKafkaProducer) -> None:
@@ -47,12 +47,12 @@ async def _start_producer(producer: AIOKafkaProducer) -> None:
 
     Kafka may not be immediately available when the notificator starts
     (e.g. during a rolling deployment). This function retries up to
-    ``MAX_RETRIES`` times, waiting ``RETRY_INTERVAL`` seconds between
+    ``KAFKA_MAX_RETRIES`` times, waiting ``KAFKA_RETRY_INTERVAL`` seconds between
     attempts. If all attempts fail, the last ``KafkaError`` is re-raised.
     """
-    for attempt in range(1, MAX_RETRIES + 1):
+    for attempt in range(1, KAFKA_MAX_RETRIES + 1):
         try:
-            logger.info("Attempting to connect Kafka producer", attempt=attempt, max_retries=MAX_RETRIES)
+            logger.info("Attempting to connect Kafka producer", attempt=attempt, max_retries=KAFKA_MAX_RETRIES)
             await producer.start()
             logger.info("Kafka producer connected successfully")
             return
@@ -60,12 +60,12 @@ async def _start_producer(producer: AIOKafkaProducer) -> None:
             logger.exception(
                 "Failed to connect Kafka producer",
                 attempt=attempt,
-                max_retries=MAX_RETRIES,
-                retry_interval_seconds=RETRY_INTERVAL,
+                max_retries=KAFKA_MAX_RETRIES,
+                retry_interval_seconds=KAFKA_RETRY_INTERVAL,
             )
-            if attempt == MAX_RETRIES:
+            if attempt == KAFKA_MAX_RETRIES:
                 raise
-            await asyncio.sleep(RETRY_INTERVAL)
+            await asyncio.sleep(KAFKA_RETRY_INTERVAL)
 
 
 @asynccontextmanager

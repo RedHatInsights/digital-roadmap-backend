@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+
 from datetime import datetime
 from datetime import UTC
 from uuid import uuid4
@@ -47,7 +48,12 @@ class Notificator:
             ):
                 hosts = [row async for row in result.mappings()]
                 elapsed = time.time() - start_time
-                logger.info("Fetched hosts from inventory", org_id=self.org_id, host_count=len(hosts), duration_seconds=round(elapsed, 2))
+                logger.info(
+                    "Fetched hosts from inventory",
+                    org_id=self.org_id,
+                    host_count=len(hosts),
+                    duration_seconds=round(elapsed, 2),
+                )
                 return hosts
 
         logger.warning("No database session available", org_id=self.org_id)
@@ -95,7 +101,12 @@ class Notificator:
                 section.setdefault(os_key, {"count": 0, "systems_count": 0})
 
         elapsed = time.time() - start_time
-        logger.info("Processed appstreams", org_id=self.org_id, appstream_count=len(relevant_appstreams), duration_seconds=round(elapsed, 2))
+        logger.info(
+            "Processed appstreams",
+            org_id=self.org_id,
+            appstream_count=len(relevant_appstreams),
+            duration_seconds=round(elapsed, 2),
+        )
         return appstreams_sections
 
     async def get_relevant_rhel(self, hosts) -> dict[str, dict[str, int]]:
@@ -126,7 +137,12 @@ class Notificator:
                 rhel_sections[key]["systems_count"] += system.count
 
         elapsed = time.time() - start_time
-        logger.info("Processed RHEL systems", org_id=self.org_id, relevant_systems_count=len(relevant_systems.data), duration_seconds=round(elapsed, 2))
+        logger.info(
+            "Processed RHEL systems",
+            org_id=self.org_id,
+            relevant_systems_count=len(relevant_systems.data),
+            duration_seconds=round(elapsed, 2),
+        )
         return rhel_sections
 
     async def get_lifecycle_notification(self) -> dict:

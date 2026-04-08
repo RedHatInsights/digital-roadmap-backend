@@ -568,7 +568,8 @@ def test_relevant_app_stream_with_systems_not_marked_as_not_installed():
 
 def test_related_app_streams_with_none_os_major():
     """Test related_app_streams handles None os_major values."""
-    from roadmap.v1.lifecycle.app_streams import AppStreamKey, related_app_streams
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
 
     # Create an app stream with None os_major
     app_stream_entity = AppStreamEntity(
@@ -606,8 +607,9 @@ def test_app_stream_from_package_no_match():
 
 def test_related_app_streams_with_empty_stream(mocker):
     """Test related_app_streams when stream is empty string."""
-    from roadmap.v1.lifecycle.app_streams import AppStreamKey, related_app_streams
     from roadmap.data import APP_STREAM_MODULES_PACKAGES
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
 
     # Mock APP_STREAM_MODULES_PACKAGES to include an entry with empty stream
     mock_app = AppStreamEntity(
@@ -622,10 +624,7 @@ def test_related_app_streams_with_empty_stream(mocker):
     )
 
     original_packages = list(APP_STREAM_MODULES_PACKAGES)
-    mocker.patch(
-        "roadmap.v1.lifecycle.app_streams.APP_STREAM_MODULES_PACKAGES",
-        original_packages + [mock_app]
-    )
+    mocker.patch("roadmap.v1.lifecycle.app_streams.APP_STREAM_MODULES_PACKAGES", original_packages + [mock_app])
 
     # Create an app stream that would match base name
     app_stream_entity = AppStreamEntity(
@@ -649,7 +648,7 @@ def test_related_app_streams_with_empty_stream(mocker):
 def test_app_stream_from_package_os_major_mismatch():
     """Test app_stream_from_package when package os_major doesn't match lookup key."""
     import importlib
-    from roadmap.v1 import lifecycle
+
     from roadmap.v1.lifecycle import app_streams as app_streams_module
 
     # Reload the module to clear functools.cache
@@ -671,6 +670,7 @@ def test_app_stream_from_package_os_major_mismatch():
 
     # Directly modify APP_STREAM_PACKAGES
     from roadmap.data import APP_STREAM_PACKAGES
+
     if 9 not in APP_STREAM_PACKAGES:
         APP_STREAM_PACKAGES[9] = {}
     APP_STREAM_PACKAGES[9]["testpkg"] = mock_package
@@ -689,7 +689,8 @@ def test_app_stream_from_package_os_major_mismatch():
 
 def test_related_app_streams_with_none_start_date():
     """Test related_app_streams handles None start_date in Case 2."""
-    from roadmap.v1.lifecycle.app_streams import AppStreamKey, related_app_streams
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
 
     # Create an app stream with None start_date
     app_stream_entity = AppStreamEntity(
@@ -712,7 +713,8 @@ def test_related_app_streams_with_none_start_date():
 
 def test_get_relevant_app_stream_exception_in_related(api_prefix, client, mocker):
     """Test exception handling in the related app streams endpoint."""
-    from roadmap.common import decode_header, query_rbac
+    from roadmap.common import decode_header
+    from roadmap.common import query_rbac
 
     async def query_rbac_override():
         return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
@@ -727,6 +729,7 @@ def test_get_relevant_app_stream_exception_in_related(api_prefix, client, mocker
             raise ValueError("Test exception for coverage")
         # Otherwise call the real constructor
         from roadmap.v1.lifecycle.app_streams import RelevantAppStream
+
         return RelevantAppStream.model_validate(kwargs)
 
     mocker.patch(
@@ -763,10 +766,7 @@ def test_app_stream_items_response_rolling_with_missing_os_data(mocker):
     )
 
     # Create response with the rolling app stream
-    response = AppStreamItemsResponse(
-        meta={"count": 1, "total": 1},
-        data=[rolling_app]
-    )
+    response = AppStreamItemsResponse(meta={"count": 1, "total": 1}, data=[rolling_app])
 
     # Should not raise an error, and end_date should remain None
     assert response.data[0].end_date is None

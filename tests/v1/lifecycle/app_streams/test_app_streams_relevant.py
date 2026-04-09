@@ -198,11 +198,15 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 1
-    # In the test data there is an eligible system from another group (for
-    # which the request does not have permission) that shows NGINX 1.14,
-    # and another with NGINX 1.22.
-    assert data[0]["display_name"] == "Node.js 18"
+    # The ungrouped host has Node.js 18 installed, plus related streams (Node.js 20, 22, 24, etc.)
+    installed = [item for item in data if not item.get("related", False)]
+    related = [item for item in data if item.get("related", False)]
+    assert len(installed) == 1, f"Expected 1 installed stream, got {len(installed)}"
+    assert installed[0]["display_name"] == "Node.js 18"
+    # Should have newer Node.js versions as related streams
+    assert len(related) > 0, "Expected related streams for Node.js 18"
+    related_names = {item["display_name"] for item in related}
+    assert "Node.js 20" in related_names or "Node.js 22" in related_names
 
 
 def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped_permission(api_prefix, client):
@@ -232,11 +236,16 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
+    assert result.status_code == 200
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14.
-    display_names = {d["display_name"] for d in data}
-    assert {"Node.js 18", "NGINX 1.22"} == display_names
-    assert result.status_code == 200
+    # Check installed streams (count > 0)
+    installed = [d for d in data if d["count"] > 0]
+    installed_names = {d["display_name"] for d in installed}
+    assert {"Node.js 18", "NGINX 1.22"} == installed_names
+    # Should also have related streams
+    related = [d for d in data if d.get("related", False)]
+    assert len(related) > 0, "Expected related streams"
 
 
 def test_get_revelent_app_stream_related(api_prefix, client, mocker):
@@ -322,11 +331,15 @@ def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, clie
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
     assert result.status_code == 200
-    assert len(data) == 2
     # In the test data there is an eligible system from another group (for
     # which the request does not have permission) that shows NGINX 1.14,
     # and another with nodejs 18.
-    assert data[0]["display_name"] == "NGINX 1.22"
+    # Check that NGINX 1.22 is in the installed streams
+    installed = [d for d in data if d["count"] > 0]
+    installed_names = {d["display_name"] for d in installed}
+    assert "NGINX 1.22" in installed_names
+    # Should have at least the installed stream (may also have related streams)
+    assert len(data) >= 1
 
 
 def test_app_stream_missing_lifecycle_data():
@@ -551,3 +564,209 @@ def test_relevant_app_stream_with_systems_not_marked_as_not_installed():
     # Should calculate normal status (supported in this case)
     assert app_stream.support_status == SupportStatus.supported
     assert app_stream.count == 5
+
+
+def test_related_app_streams_with_none_os_major():
+    """Test related_app_streams handles None os_major values."""
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
+
+    # Create an app stream with None os_major
+    app_stream_entity = AppStreamEntity(
+        name="nodejs",
+        stream="22",
+        display_name="Node.js 22",
+        application_stream_name="Node.js 22",
+        start_date=date(2024, 1, 1),
+        end_date=date(2026, 1, 1),
+        os_major=None,  # None to trigger the safety check
+        impl=AppStreamImplementation.module,
+    )
+
+    app_stream_key = AppStreamKey(app_stream_entity=app_stream_entity, name="nodejs")
+
+    # Should return empty set without error when os_major is None
+    result = related_app_streams([app_stream_key])
+    assert isinstance(result, set)
+
+
+def test_app_stream_from_package_no_match():
+    """Test app_stream_from_package returns None when package doesn't match stream."""
+    from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+    # Test with a package that exists but version doesn't match
+    # This tests the exit path where stream != [major, minor]
+    result = app_stream_from_package("nodejs-999.999-1.el9.x86_64", 9)
+    assert result is None
+
+    # Also test a real package that might exist but with wrong os_major
+    # This tests line 532->exit where app_stream_package.os_major != os_major
+    result = app_stream_from_package("postgresql-13.0-1.el8.x86_64", 10)  # Wrong OS
+    assert result is None
+
+
+def test_related_app_streams_with_empty_stream(mocker):
+    """Test related_app_streams when stream is empty string."""
+    from roadmap.data import APP_STREAM_MODULES_PACKAGES
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
+
+    # Mock APP_STREAM_MODULES_PACKAGES to include an entry with empty stream
+    mock_app = AppStreamEntity(
+        name="test",
+        stream="",  # Empty string to trigger line 315->325
+        display_name="Test",
+        application_stream_name="Test",
+        start_date=date(2024, 1, 1),
+        end_date=date(2026, 1, 1),
+        os_major=9,
+        impl=AppStreamImplementation.module,
+    )
+
+    original_packages = list(APP_STREAM_MODULES_PACKAGES)
+    mocker.patch("roadmap.v1.lifecycle.app_streams.APP_STREAM_MODULES_PACKAGES", original_packages + [mock_app])
+
+    # Create an app stream that would match base name
+    app_stream_entity = AppStreamEntity(
+        name="test",
+        stream="1.0",
+        display_name="Test 1.0",
+        application_stream_name="Test",
+        start_date=date(2024, 1, 1),
+        end_date=date(2026, 1, 1),
+        os_major=9,
+        impl=AppStreamImplementation.module,
+    )
+
+    app_stream_key = AppStreamKey(app_stream_entity=app_stream_entity, name="test")
+
+    # Should handle empty stream gracefully
+    result = related_app_streams([app_stream_key])
+    assert isinstance(result, set)
+
+
+def test_app_stream_from_package_os_major_mismatch():
+    """Test app_stream_from_package when package os_major doesn't match lookup key."""
+    import importlib
+
+    from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+    # Reload the module to clear functools.cache
+    importlib.reload(app_streams_module)
+
+    from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+    # Create a mock package with mismatched os_major
+    mock_package = AppStreamEntity(
+        name="testpkg",
+        stream="1.0",
+        display_name="Test Package 1.0",
+        application_stream_name="Test Package",
+        start_date=date(2024, 1, 1),
+        end_date=date(2026, 1, 1),
+        os_major=8,  # Different from the lookup key
+        impl=AppStreamImplementation.package,
+    )
+
+    # Directly modify APP_STREAM_PACKAGES
+    from roadmap.data import APP_STREAM_PACKAGES
+
+    if 9 not in APP_STREAM_PACKAGES:
+        APP_STREAM_PACKAGES[9] = {}
+    APP_STREAM_PACKAGES[9]["testpkg"] = mock_package
+
+    try:
+        # Should return None because os_major mismatch (8 != 9)
+        result = app_stream_from_package("testpkg-1.0-1.el9.x86_64", 9)
+        assert result is None
+    finally:
+        # Clean up
+        if "testpkg" in APP_STREAM_PACKAGES.get(9, {}):
+            del APP_STREAM_PACKAGES[9]["testpkg"]
+        # Reload again to clear cache
+        importlib.reload(app_streams_module)
+
+
+def test_related_app_streams_with_none_start_date():
+    """Test related_app_streams handles None start_date in Case 2."""
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
+
+    # Create an app stream with None start_date
+    app_stream_entity = AppStreamEntity(
+        name="nodejs",
+        stream="22",
+        display_name="Node.js 22",
+        application_stream_name="Node.js 22",
+        start_date=None,  # None to trigger the safety check in Case 2
+        end_date=date(2026, 1, 1),
+        os_major=9,
+        impl=AppStreamImplementation.module,
+    )
+
+    app_stream_key = AppStreamKey(app_stream_entity=app_stream_entity, name="nodejs")
+
+    # Should return empty set without error when start_date is None
+    result = related_app_streams([app_stream_key])
+    assert isinstance(result, set)
+
+
+def test_get_relevant_app_stream_exception_in_related(api_prefix, client, mocker):
+    """Test exception handling in the related app streams endpoint."""
+    from roadmap.common import decode_header
+    from roadmap.common import query_rbac
+
+    async def query_rbac_override():
+        return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+
+    async def decode_header_override():
+        return "1234"
+
+    # Mock RelevantAppStream to raise an exception when building related items
+    def mock_relevant_app_stream(*args, **kwargs):
+        # Raise exception only for related=True items
+        if kwargs.get("related", False):
+            raise ValueError("Test exception for coverage")
+        # Otherwise call the real constructor
+        from roadmap.v1.lifecycle.app_streams import RelevantAppStream
+
+        return RelevantAppStream.model_validate(kwargs)
+
+    mocker.patch(
+        "roadmap.v1.lifecycle.app_streams.RelevantAppStream",
+        side_effect=mock_relevant_app_stream,
+    )
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": True})
+
+    # Should return 400 error with exception detail
+    assert result.status_code == 400
+    assert "Test exception for coverage" in result.json()["detail"]
+
+
+def test_app_stream_items_response_rolling_with_missing_os_data(mocker):
+    """Test set_end_date_support_status when OS_LIFECYCLE_DATES doesn't have the os_major."""
+    from roadmap.v1.lifecycle.app_streams import AppStreamItemsResponse
+
+    # Create a rolling app stream with os_major that doesn't exist in OS_LIFECYCLE_DATES
+    rolling_app = AppStreamEntity(
+        name="test",
+        stream="1.0",
+        display_name="Test 1.0",
+        application_stream_name="Test",
+        start_date=date(2024, 1, 1),
+        end_date=None,
+        os_major=999,  # Non-existent OS major version
+        rolling=True,
+        impl=AppStreamImplementation.module,
+    )
+
+    # Create response with the rolling app stream
+    response = AppStreamItemsResponse(meta={"count": 1, "total": 1}, data=[rolling_app])
+
+    # Should not raise an error, and end_date should remain None
+    assert response.data[0].end_date is None

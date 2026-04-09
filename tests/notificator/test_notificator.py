@@ -125,12 +125,12 @@ class TestNotificator:
     async def test_get_relevant_appstreams_scenarios(self, notificator, mocker, systems_by_appstream, expected):
         """Appstream grouping with mocked systems_by_app_stream.
 
-        Scenarios (systems_by_appstream → expected grouped output):
-          empty                        – no appstreams → both sections empty
-          two_rhel8_all_supported      – supported-only streams are filtered out
-          one_rhel9_retired            – single retired stream, counts aggregated correctly
-          one_retired_one_near_retirement – both statuses on the same os_major
-          cross_os_major_backfill      – retired on RHEL 8, near-retirement on RHEL 9;
+        Scenarios (systems_by_appstream -> expected grouped output):
+          empty                        - no appstreams → both sections empty
+          two_rhel8_all_supported      - supported-only streams are filtered out
+          one_rhel9_retired            - single retired stream, counts aggregated correctly
+          one_retired_one_near_retirement - both statuses on the same os_major
+          cross_os_major_backfill      - retired on RHEL 8, near-retirement on RHEL 9;
                                          verifies zero-count entries are back-filled across os_majors
         """
         mocker.patch(

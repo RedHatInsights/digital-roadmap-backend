@@ -54,6 +54,34 @@ def make_appstream_key(name, display_name, status, os_major):
     return AppStreamKey.model_construct(name=name, app_stream_entity=entity)
 
 
+class FakeKafkaProducer:
+    """In-memory stand-in for AIOKafkaProducer that records sent messages.
+
+    Accepts an optional *start_errors* sequence: each call to ``start()``
+    pops the next item and raises it (if not None).  Once the sequence is
+    exhausted, ``start()`` succeeds normally.
+    """
+
+    def __init__(self, *, start_errors: list[Exception | None] | None = None):
+        self.sent: list[tuple[str, bytes]] = []
+        self.started = False
+        self.stopped = False
+        self._start_errors: list[Exception | None] = list(start_errors or [])
+
+    async def start(self):
+        if self._start_errors:
+            err = self._start_errors.pop(0)
+            if err is not None:
+                raise err
+        self.started = True
+
+    async def stop(self):
+        self.stopped = True
+
+    async def send_and_wait(self, topic: str, msg: bytes):
+        self.sent.append((topic, msg))
+
+
 def make_system(name, status, count, major, minor=None):
     """Build a System with a specific support_status, bypassing validators."""
     display_name = f"{name} {major}" + (f".{minor}" if minor is not None else "")

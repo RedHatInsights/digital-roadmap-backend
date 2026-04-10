@@ -27,7 +27,7 @@ async def main():
 async def lifecycle_notification():
     failed_orgs = []
 
-    async with kafka_producer() as producer:  # TODO handle (re-raise) exceptiton from start_producer
+    async with kafka_producer() as producer:  # TODO handle (re-raise) exception from start_producer
         # TODO ORG_IDs will be received from API
         for org_id in ORG_IDS:
             start_time = time.time()

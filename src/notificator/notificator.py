@@ -24,10 +24,9 @@ NOTIFY_STATUSES = {SupportStatus.retired, SupportStatus.near_retirement}
 
 
 class Notificator:
-    settings = NotificatorSettings.create()
-
     def __init__(self, org_id: int):
         self.org_id = org_id
+        self.settings = NotificatorSettings.create()
 
     async def get_hosts(self):
         """Fetch hosts from HBI to be able to process relevant systems and appstreams.

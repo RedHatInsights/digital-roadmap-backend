@@ -321,7 +321,9 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
                 elif app.os_major > app_stream_key.app_stream_entity.os_major:
                     if app.start_date and app_stream_key.app_stream_entity.start_date:
                         if app.start_date > app_stream_key.app_stream_entity.start_date:  # pyright: ignore [reportArgumentType, reportOperatorIssue]
-                            add = True
+                            # Don't show EOL streams as related
+                            if app.end_date is None or app.end_date > date.today():  # pyright: ignore [reportArgumentType, reportOperatorIssue]
+                                add = True
             if add:
                 relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
 

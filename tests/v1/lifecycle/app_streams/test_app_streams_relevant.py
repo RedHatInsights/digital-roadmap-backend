@@ -770,3 +770,128 @@ def test_app_stream_items_response_rolling_with_missing_os_data(mocker):
 
     # Should not raise an error, and end_date should remain None
     assert response.data[0].end_date is None
+
+
+def test_related_does_not_include_eol_streams_newer_rhel_version(mocker):
+    """Regression test: EOL streams on newer RHEL should be filtered ."""
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
+
+    # NGINX 1.20 on RHEL 8 (installed)
+    nginx_120_rhel8 = AppStreamEntity(
+        name="nginx",
+        stream="1.20",
+        display_name="NGINX 1.20",
+        application_stream_name="NGINX",
+        application_stream_type=AppStreamType.stream,
+        start_date=date(2021, 5, 17),
+        end_date=date(2023, 5, 31),
+        os_major=8,
+        impl=AppStreamImplementation.module,
+    )
+
+    # NGINX 1.22 on RHEL 9 (potential related, but EOL) - THIS WAS THE BUG
+    nginx_122_rhel9 = AppStreamEntity(
+        name="nginx",
+        stream="1.22",
+        display_name="NGINX 1.22",
+        application_stream_name="NGINX",
+        application_stream_type=AppStreamType.stream,
+        start_date=date(2022, 5, 17),  # After RHEL 8 version
+        end_date=date(2024, 6, 1),  # Past EOL
+        os_major=9,  # Newer RHEL version
+        impl=AppStreamImplementation.module,
+    )
+
+    # NGINX 1.24 on RHEL 9 (potential related, NOT EOL)
+    nginx_124_rhel9 = AppStreamEntity(
+        name="nginx",
+        stream="1.24",
+        display_name="NGINX 1.24",
+        application_stream_name="NGINX",
+        application_stream_type=AppStreamType.stream,
+        start_date=date(2023, 5, 17),  # After RHEL 8 version
+        end_date=date(2026, 5, 31),  # Still supported
+        os_major=9,
+        impl=AppStreamImplementation.module,
+    )
+
+    # Mock today's date to be after NGINX 1.22 EOL
+    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date", wraps=date)
+    mock_date.today.return_value = date(2025, 1, 1)
+
+    # Mock APP_STREAM_MODULES_PACKAGES
+    mocker.patch(
+        "roadmap.v1.lifecycle.app_streams.APP_STREAM_MODULES_PACKAGES",
+        [nginx_120_rhel8, nginx_122_rhel9, nginx_124_rhel9],
+    )
+
+    installed_key = AppStreamKey(app_stream_entity=nginx_120_rhel8, name="nginx")
+    result = related_app_streams([installed_key])
+
+    # Should only include NGINX 1.24 on RHEL 9 (not EOL)
+    # Should NOT include NGINX 1.22 on RHEL 9 (EOL) - THIS IS THE FIX
+    related_display_names = {r.app_stream_entity.display_name for r in result}
+    related_os_majors = {(r.app_stream_entity.display_name, r.app_stream_entity.os_major) for r in result}
+
+    assert "NGINX 1.24" in related_display_names, "Should include non-EOL version on newer RHEL"
+    assert "NGINX 1.22" not in related_display_names, "Should NOT include EOL version on newer RHEL"
+    assert ("NGINX 1.24", 9) in related_os_majors
+
+
+@pytest.mark.parametrize(
+    ("end_date", "today", "should_be_included"),
+    [
+        (date(2026, 1, 1), date(2025, 12, 31), True),  # Not yet EOL
+        (date(2026, 1, 1), date(2026, 1, 1), False),  # EOL today
+        (date(2026, 1, 1), date(2026, 1, 2), False),  # Past EOL
+        (None, date(2025, 1, 1), True),  # No end_date means supported
+    ],
+)
+def test_related_eol_boundary_conditions(mocker, end_date, today, should_be_included):
+    """Test EOL filtering at exact boundaries for related streams on newer RHEL."""
+    from roadmap.v1.lifecycle.app_streams import AppStreamKey
+    from roadmap.v1.lifecycle.app_streams import related_app_streams
+
+    # Installed stream on RHEL 8
+    installed = AppStreamEntity(
+        name="test",
+        stream="1.0",
+        display_name="Test 1.0",
+        application_stream_name="Test",
+        application_stream_type=AppStreamType.stream,
+        start_date=date(2020, 1, 1),
+        end_date=date(2024, 1, 1),
+        os_major=8,
+        impl=AppStreamImplementation.module,
+    )
+
+    # Potential related stream on RHEL 9
+    related_candidate = AppStreamEntity(
+        name="test",
+        stream="2.0",
+        display_name="Test 2.0",
+        application_stream_name="Test",
+        application_stream_type=AppStreamType.stream,
+        start_date=date(2021, 1, 1),
+        end_date=end_date,
+        os_major=9,
+        impl=AppStreamImplementation.module,
+    )
+
+    mock_date = mocker.patch("roadmap.v1.lifecycle.app_streams.date", wraps=date)
+    mock_date.today.return_value = today
+
+    mocker.patch(
+        "roadmap.v1.lifecycle.app_streams.APP_STREAM_MODULES_PACKAGES",
+        [installed, related_candidate],
+    )
+
+    installed_key = AppStreamKey(app_stream_entity=installed, name="test")
+    result = related_app_streams([installed_key])
+
+    if should_be_included:
+        assert len(result) == 1, f"Expected related stream to be included when end_date={end_date}, today={today}"
+        assert list(result)[0].app_stream_entity.display_name == "Test 2.0"
+    else:
+        assert len(result) == 0, f"Expected no related streams when end_date={end_date}, today={today}"

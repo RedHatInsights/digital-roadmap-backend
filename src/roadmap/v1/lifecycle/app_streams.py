@@ -291,6 +291,25 @@ class ModuleStatus(StrEnum):
     installed = auto()
 
 
+def _is_not_eol(app: AppStreamEntity) -> bool:
+    """Check if an app stream is not past its end of life date."""
+    return app.end_date is None or app.end_date > date.today()  # pyright: ignore [reportArgumentType, reportOperatorIssue]
+
+
+def _should_add_same_rhel_version(app: AppStreamEntity, installed: AppStreamEntity) -> bool:
+    """Check if app should be added as related for same RHEL version (newer stream)."""
+    if not (app.stream and installed.stream):
+        return False
+    return streams_lt(installed.stream, app.stream) and _is_not_eol(app)
+
+
+def _should_add_newer_rhel_version(app: AppStreamEntity, installed: AppStreamEntity) -> bool:
+    """Check if app should be added as related for newer RHEL version."""
+    if not (app.start_date and installed.start_date):
+        return False
+    return app.start_date > installed.start_date and _is_not_eol(app)  # pyright: ignore [reportArgumentType, reportOperatorIssue]
+
+
 def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamKey]:
     """Return unique list of related apps that do not appear in app_streams."""
     relateds = set()
@@ -308,22 +327,15 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
 
         for app in filtered_apps:
             add = False
+            installed = app_stream_key.app_stream_entity
             # Safety check: both os_major values must exist
-            if app.os_major and app_stream_key.app_stream_entity.os_major:
+            if app.os_major and installed.os_major:
                 # Case 1: Same RHEL version - show newer stream versions
-                if app.os_major == app_stream_key.app_stream_entity.os_major:
-                    if app.stream and app_stream_key.app_stream_entity.stream:
-                        if streams_lt(app_stream_key.app_stream_entity.stream, app.stream):
-                            if app.end_date is None or app.end_date > date.today():  # pyright: ignore [reportArgumentType, reportOperatorIssue]
-                                add = True
+                if app.os_major == installed.os_major:
+                    add = _should_add_same_rhel_version(app, installed)
                 # Case 2: Newer RHEL version - show streams with later start_date
-                # Only show streams on newer RHEL versions (not older ones)
-                elif app.os_major > app_stream_key.app_stream_entity.os_major:
-                    if app.start_date and app_stream_key.app_stream_entity.start_date:
-                        if app.start_date > app_stream_key.app_stream_entity.start_date:  # pyright: ignore [reportArgumentType, reportOperatorIssue]
-                            # Don't show EOL streams as related
-                            if app.end_date is None or app.end_date > date.today():  # pyright: ignore [reportArgumentType, reportOperatorIssue]
-                                add = True
+                elif app.os_major > installed.os_major:
+                    add = _should_add_newer_rhel_version(app, installed)
             if add:
                 relateds.add(AppStreamKey(app_stream_entity=app, name=app_stream_key.name))
 

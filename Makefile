@@ -99,7 +99,31 @@ test:
 
 .PHONY: build
 build: check-container-runtime
-	$(CONTAINER_RUNTIME) build --build-arg SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct main) -t roadmap:latest -f Containerfile .
+	$(CONTAINER_RUNTIME) build --build-arg SOURCE_DATE_EPOCH=$(shell git log -1 --pretty=%ct main) -t roadmap:latest -f Containerfile .
+
+KAFKA_TOPICS = platform.notifications.ingress
+
+.PHONY: start-kafka
+start-kafka: stop-kafka
+	$(CONTAINER_RUNTIME) run --rm -d -p 9092:9092 --name roadmap-kafka \
+		docker.io/apache/kafka:4.0.2
+	@echo "Waiting for Kafka to start..."
+	@until $(CONTAINER_RUNTIME) exec roadmap-kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092 > /dev/null 2>&1; do \
+		sleep 1; \
+	done
+	@for topic in $(KAFKA_TOPICS); do \
+		$(CONTAINER_RUNTIME) exec roadmap-kafka /opt/kafka/bin/kafka-topics.sh \
+			--create --topic $$topic --partitions 3 --bootstrap-server localhost:9092 --replication-factor 1; \
+	done
+
+.PHONY: stop-kafka
+stop-kafka: check-container-runtime
+	@$(CONTAINER_RUNTIME) stop roadmap-kafka > /dev/null 2>&1 || true
+	@sleep 0.1
+
+.PHONY: run-notificator
+run-notificator:
+	ROADMAP_DEV=1 PYTHONPATH=src $(VENV_PYTHON) -m notificator
 
 .PHONY: get-release-commit
 get-release-commit:

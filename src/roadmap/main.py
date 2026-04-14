@@ -15,6 +15,7 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from uvicorn.protocols.utils import get_path_with_query_string
 
+import roadmap.admin
 import roadmap.v1
 
 from roadmap.common import extend_openapi
@@ -119,6 +120,7 @@ roadmap.v1.router.add_api_route("/openapi.json", app.openapi, include_in_schema=
 
 # Include individual service routers under the main API router
 api_router.include_router(roadmap.v1.router)
+api_router.include_router(roadmap.admin.router)
 
 
 @api_router.get("/v1/ping", include_in_schema=False)

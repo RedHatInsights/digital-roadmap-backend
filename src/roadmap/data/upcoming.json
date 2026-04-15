@@ -2,7 +2,10 @@
   {
     "name": "Add Node.js to RHEL7 AppStream THIS IS TEST DATA",
     "type": "addition",
-    "packages": ["nodejs", "npm"],
+    "packages": [
+      "nodejs",
+      "npm"
+    ],
     "release": "7.2",
     "date": "2019-08-01",
     "details": {
@@ -17,7 +20,10 @@
   {
     "name": "Add Node.js to RHEL8 AppStream THIS IS TEST DATA",
     "type": "addition",
-    "packages": ["nodejs", "npm"],
+    "packages": [
+      "nodejs",
+      "npm"
+    ],
     "release": "8.1",
     "date": "2023-08-01",
     "details": {
@@ -32,7 +38,10 @@
   {
     "name": "Add Node.js to RHEL9 AppStream THIS IS TEST DATA",
     "type": "addition",
-    "packages": ["nodejs", "npm"],
+    "packages": [
+      "nodejs",
+      "npm"
+    ],
     "release": "9.7",
     "date": "2025-08-01",
     "details": {
@@ -47,7 +56,10 @@
   {
     "name": "Add Node.js to RHEL10 AppStream THIS IS TEST DATA",
     "type": "addition",
-    "packages": ["nodejs", "npm"],
+    "packages": [
+      "nodejs",
+      "npm"
+    ],
     "release": "10.1",
     "date": "2025-08-01",
     "details": {
@@ -60,9 +72,11 @@
     }
   },
   {
-    "name": "Test package that nobody has",
+    "name": "Test package that nobody has THIS IS TEST DATA",
     "type": "addition",
-    "packages": ["nobodyhasthis"],
+    "packages": [
+      "nobodyhasthis"
+    ],
     "release": "10.1",
     "date": "2025-08-01",
     "details": {
@@ -72,6 +86,263 @@
       "trainingTicket": "RHELBU-4321",
       "dateAdded": "2025-04-22",
       "lastModified": "2025-04-22"
+    }
+  },
+  {
+    "name": "Python 3.12 EOL THIS IS TEST DATA",
+    "type": "deprecation",
+    "packages": [
+      "python3.12"
+    ],
+    "release": "9.5",
+    "date": "2027-06-30",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Python 3.12 will reach end of life. Please migrate to Python 3.13 or later versions.",
+      "trainingTicket": "RHELBU-5001",
+      "dateAdded": "2026-04-01",
+      "lastModified": "2026-04-10"
+    }
+  },
+  {
+    "name": "PostgreSQL 16 Addition THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "postgresql16"
+    ],
+    "release": "9.6",
+    "date": "2026-11-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Enhanced performance improvements and new JSON functions for PostgreSQL 16.",
+      "trainingTicket": "RHELBU-5002",
+      "dateAdded": "2026-03-25",
+      "lastModified": "2026-04-05"
+    }
+  },
+  {
+    "name": "Kernel security update THIS IS TEST DATA",
+    "type": "change",
+    "packages": [
+      "kernel"
+    ],
+    "release": "8.10",
+    "date": "2026-09-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Important security patches and performance improvements to the Linux kernel.",
+      "trainingTicket": "RHELBU-5003",
+      "dateAdded": "2026-02-10",
+      "lastModified": "2026-03-15"
+    }
+  },
+  {
+    "name": "Apache HTTP Server 2.5 THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "httpd"
+    ],
+    "release": "10.2",
+    "date": "2027-03-20",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "New Apache HTTP Server 2.5 with improved HTTP/3 support and enhanced security features.",
+      "trainingTicket": "RHELBU-5004",
+      "dateAdded": "2026-01-15",
+      "lastModified": "2026-02-20"
+    }
+  },
+  {
+    "name": "OpenSSL 3.2 Update THIS IS TEST DATA",
+    "type": "change",
+    "packages": [
+      "openssl"
+    ],
+    "release": "9.4",
+    "date": "2026-08-10",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "OpenSSL 3.2 update includes critical security fixes and performance optimizations.",
+      "trainingTicket": "RHELBU-5005",
+      "dateAdded": "2025-12-01",
+      "lastModified": "2026-01-05"
+    }
+  },
+  {
+    "name": "Ruby 3.3 Deprecation THIS IS TEST DATA",
+    "type": "deprecation",
+    "packages": [
+      "ruby"
+    ],
+    "release": "9.8",
+    "date": "2028-01-31",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Ruby 3.3 will be deprecated. Users should migrate to Ruby 3.4 or later.",
+      "trainingTicket": "RHELBU-5006",
+      "dateAdded": "2025-06-20",
+      "lastModified": "2025-08-15"
+    }
+  },
+  {
+    "name": "Container Tools Update THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "podman",
+      "buildah",
+      "skopeo"
+    ],
+    "release": "10.0",
+    "date": "2026-12-01",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Enhanced container tools with better rootless support and improved performance.",
+      "trainingTicket": "RHELBU-5007",
+      "dateAdded": "2025-04-10",
+      "lastModified": "2025-05-22"
+    }
+  },
+  {
+    "name": "PHP 8.4 Addition THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "php"
+    ],
+    "release": "9.9",
+    "date": "2027-05-15",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "PHP 8.4 brings new features including improved JIT compilation and property hooks.",
+      "trainingTicket": "RHELBU-5008",
+      "dateAdded": "2024-11-30",
+      "lastModified": "2025-01-10"
+    }
+  },
+  {
+    "name": "Ansible Core 2.17 THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "ansible-core"
+    ],
+    "release": "9.7",
+    "date": "2026-10-20",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "New Ansible Core 2.17 release with improved automation capabilities and module updates.",
+      "trainingTicket": "RHELBU-5009",
+      "dateAdded": "2024-08-15",
+      "lastModified": "2024-09-20"
+    }
+  },
+  {
+    "name": "Golang 1.23 Compiler Update THIS IS TEST DATA",
+    "type": "change",
+    "packages": [
+      "golang"
+    ],
+    "release": "10.1",
+    "date": "2026-07-30",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Golang compiler updated to version 1.23 with performance improvements and new language features.",
+      "trainingTicket": "RHELBU-5010",
+      "dateAdded": "2024-03-05",
+      "lastModified": "2024-04-12"
+    }
+  },
+  {
+    "name": "Perl 5.40 EOL THIS IS TEST DATA",
+    "type": "deprecation",
+    "packages": [
+      "perl"
+    ],
+    "release": "8.11",
+    "date": "2027-12-31",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Perl 5.40 reaching end of life. Migration to newer Perl versions recommended.",
+      "trainingTicket": "RHELBU-5011",
+      "dateAdded": "2023-10-20",
+      "lastModified": "2023-11-15"
+    }
+  },
+  {
+    "name": "Systemd 256 Update THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "systemd"
+    ],
+    "release": "10.2",
+    "date": "2027-02-28",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Systemd 256 includes improved boot performance and enhanced security features.",
+      "trainingTicket": "RHELBU-5012",
+      "dateAdded": "2026-03-28",
+      "lastModified": "2026-04-08"
+    }
+  },
+  {
+    "name": "MariaDB 11.0 Addition THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "mariadb"
+    ],
+    "release": "9.8",
+    "date": "2027-04-10",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "MariaDB 11.0 with improved replication and new storage engine features.",
+      "trainingTicket": "RHELBU-5013",
+      "dateAdded": "2026-02-18",
+      "lastModified": "2026-03-05"
+    }
+  },
+  {
+    "name": "GCC 14 Compiler THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "gcc"
+    ],
+    "release": "10.0",
+    "date": "2026-11-30",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "GCC 14 compiler with C++23 support and improved optimization capabilities.",
+      "trainingTicket": "RHELBU-5014",
+      "dateAdded": "2025-09-12",
+      "lastModified": "2025-10-18"
+    }
+  },
+  {
+    "name": "Java 21 LTS Support THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "java-21-openjdk"
+    ],
+    "release": "9.6",
+    "date": "2026-09-25",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Extended Long Term Support for Java 21 with additional security updates.",
+      "trainingTicket": "RHELBU-5015",
+      "dateAdded": "2025-11-08",
+      "lastModified": "2025-12-20"
     }
   }
 ]

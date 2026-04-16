@@ -120,6 +120,23 @@ class TestNotificator:
                 },
                 id="cross_os_major_backfill",
             ),
+            pytest.param(
+                {
+                    make_appstream_key("postgres", "PostgreSQL 15", SupportStatus.retired, 9): {
+                        make_system_info(1),
+                        make_system_info(2),
+                    },
+                    make_appstream_key("ruby", "Ruby 3.1", SupportStatus.retired, 9): {
+                        make_system_info(2),
+                        make_system_info(3),
+                    },
+                },
+                {
+                    "appstream_retired": {"rhel9": {"count": 2, "systems_count": 3}},
+                    "appstream_near_retirement": {"rhel9": {"count": 0, "systems_count": 0}},
+                },
+                id="overlapping_systems_deduplicated",
+            ),
         ),
     )
     async def test_get_relevant_appstreams_scenarios(self, notificator, mocker, systems_by_appstream, expected):
@@ -132,6 +149,8 @@ class TestNotificator:
           one_retired_one_near_retirement - both statuses on the same os_major
           cross_os_major_backfill      - retired on RHEL 8, near-retirement on RHEL 9;
                                          verifies zero-count entries are back-filled across os_majors
+          overlapping_systems_deduplicated - two retired appstreams on RHEL 9 sharing a system;
+                                         verifies systems_count reflects unique systems, not sum per appstream
         """
         mocker.patch(
             "notificator.notificator.systems_by_app_stream",

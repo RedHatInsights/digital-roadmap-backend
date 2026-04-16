@@ -13,6 +13,7 @@ from notificator.notificator_config import NotificatorSettings
 from roadmap.common import query_host_inventory
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
+from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 
@@ -81,15 +82,26 @@ class Notificator:
         appstreams_sections: dict[str, dict[str, dict[str, int]]] = {
             f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
         }
+        # Track unique systems per (status, os_major) group separately — a single system
+        # can appear in multiple appstreams, so naive len() summing would over-count.
+        unique_systems: dict[str, dict[str, set[SystemInfo]]] = {
+            f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
+        }
 
         for app_stream, systems in relevant_appstreams.items():
             status = app_stream.app_stream_entity.support_status
             if status in NOTIFY_STATUSES:
                 status_key = f"appstream_{status.name}"
                 os_key = f"rhel{app_stream.app_stream_entity.os_major}"
-                group = appstreams_sections[status_key].setdefault(os_key, {"count": 0, "systems_count": 0})
-                group["count"] += 1
-                group["systems_count"] += len(systems)
+                appstreams_sections[status_key].setdefault(os_key, {"count": 0, "systems_count": 0})
+                appstreams_sections[status_key][os_key]["count"] += 1
+                # Merge into a set so each system is counted at most once per group
+                unique_systems[status_key].setdefault(os_key, set()).update(systems)
+
+        # Resolve unique system sets into final integer counts
+        for status_key, os_groups in unique_systems.items():
+            for os_key, systems_set in os_groups.items():
+                appstreams_sections[status_key][os_key]["systems_count"] = len(systems_set)
 
         # Ensure every status group has entries for all os_majors seen in any group
         # E.g. if RHEL9 appstream is present in `appstream_retired`, have it also in the `appstream_near_retirement`

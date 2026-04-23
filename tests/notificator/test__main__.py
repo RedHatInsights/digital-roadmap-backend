@@ -9,6 +9,7 @@ import pytest
 
 from notificator.__main__ import lifecycle_notification
 from notificator.__main__ import main
+from notificator.notificator_config import LIFECYCLE_SUBSCRIPTION
 
 
 class FakeNotificationProducer:
@@ -38,8 +39,8 @@ class TestLifecycleNotification:
         )
 
     def _patch_notificator(self, mocker, org_ids, *, return_value=None, side_effect=None):
-        """Patch ORG_IDS and Notificator in one call; returns the class mock."""
-        mocker.patch("notificator.__main__.ORG_IDS", org_ids)
+        """Patch get_org_ids and Notificator in one call; returns the class mock."""
+        mocker.patch("notificator.__main__.get_org_ids", return_value=org_ids)
         mock_cls = mocker.patch("notificator.__main__.Notificator")
         instance = AsyncMock()
         if side_effect is not None:
@@ -102,6 +103,28 @@ class TestLifecycleNotification:
         await lifecycle_notification()
 
         mock_cls.assert_called_once_with(org_id=777)
+
+    async def test_no_subscribed_orgs_skips_processing(self, mocker):
+        """When get_org_ids returns no orgs, skip without instantiating Notificator."""
+        mock_cls = self._patch_notificator(mocker, [], return_value={})
+
+        await lifecycle_notification()
+
+        mock_cls.assert_not_called()
+        assert len(self.producer.sent) == 0
+
+    async def test_explicit_org_ids_forwarded_to_get_org_ids(self, mocker):
+        """Passing org_ids forwards them to get_org_ids as a keyword argument."""
+        get_mock = mocker.patch("notificator.__main__.get_org_ids", return_value=[42, 99])
+        mock_cls = mocker.patch("notificator.__main__.Notificator")
+        instance = AsyncMock()
+        instance.get_lifecycle_notification.return_value = {"ok": True}
+        mock_cls.return_value = instance
+
+        await lifecycle_notification(org_ids=[42, 99])
+
+        get_mock.assert_called_once_with(LIFECYCLE_SUBSCRIPTION, org_ids=[42, 99])
+        assert len(self.producer.sent) == 2
 
 
 class TestMain:

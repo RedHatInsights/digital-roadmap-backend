@@ -123,7 +123,7 @@ stop-kafka: check-container-runtime
 
 .PHONY: run-notificator
 run-notificator:
-	ROADMAP_DEV=1 PYTHONPATH=src $(VENV_PYTHON) -m notificator
+	PYTHONPATH=src $(VENV_PYTHON) -m notificator
 
 .PHONY: get-release-commit
 get-release-commit:

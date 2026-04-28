@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ssl
+
 import httpx
 import structlog
 
@@ -49,15 +51,17 @@ async def fetch_subscribed_org_ids(settings: NotificatorSettings, subscription: 
         raise RuntimeError("ROADMAP_SUBSCRIPTIONS_URL is not configured")
 
     url = f"{settings.subscriptions_url}/{subscription.application}"
-    cert = (settings.tls_cert_path, settings.tls_key_path)
+
+    ctx = ssl.create_default_context()
+    ctx.load_cert_chain(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
 
     logger.info("Fetching subscribed org IDs", url=url, event_type=subscription.event_type)
 
-    async with httpx.AsyncClient(cert=cert) as client:
+    async with httpx.AsyncClient(verify=ctx, timeout=180) as client:
         response = await client.get(url, params={"eventTypeNames": subscription.event_type})
         response.raise_for_status()
+        data = response.json()
 
-    data = response.json()
     raw_ids = data.get(subscription.event_type, [])
     try:
         org_ids = [int(org_id) for org_id in raw_ids]

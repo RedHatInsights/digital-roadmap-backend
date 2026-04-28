@@ -25,7 +25,7 @@ def _make_settings(*, dev=False, subscriptions_url="https://example.com/subscrip
 
 
 def _mock_client(mocker, *, status_code=200, json_data=None):
-    """Patch httpx.AsyncClient to return a canned response without network I/O."""
+    """Patch httpx.AsyncClient and ssl to return canned responses without I/O."""
     response = MagicMock(spec=httpx.Response)
     response.status_code = status_code
     response.json.return_value = json_data if json_data is not None else {}
@@ -45,7 +45,14 @@ def _mock_client(mocker, *, status_code=200, json_data=None):
     mock_client.__aexit__.return_value = False
 
     mock_cls = mocker.patch("notificator.subscriptions.httpx.AsyncClient", return_value=mock_client)
-    return mock_client, mock_cls
+
+    ssl_ctx = MagicMock()
+    ssl_create = mocker.patch(
+        "notificator.subscriptions.ssl.create_default_context",
+        return_value=ssl_ctx,
+    )
+
+    return mock_client, mock_cls, ssl_ctx, ssl_create
 
 
 class TestGetOrgIds:
@@ -126,15 +133,15 @@ class TestFetchSubscribedOrgIds:
 
         assert result == [111, 222, 333]
 
-    async def test_returns_empty_list_when_key_missing(self, mocker, settings):
-        _mock_client(mocker, json_data={"other-event": ["999"]})
-
-        result = await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
-
-        assert result == []
-
-    async def test_returns_empty_list_for_empty_array(self, mocker, settings):
-        _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: []})
+    @pytest.mark.parametrize(
+        "json_data",
+        [
+            pytest.param({"other-event": ["999"]}, id="key_missing"),
+            pytest.param({LIFECYCLE_SUBSCRIPTION.event_type: []}, id="empty_array"),
+        ],
+    )
+    async def test_returns_empty_list(self, mocker, settings, json_data):
+        _mock_client(mocker, json_data=json_data)
 
         result = await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
@@ -147,7 +154,7 @@ class TestFetchSubscribedOrgIds:
             await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
     async def test_builds_url_from_base_and_application(self, mocker, settings):
-        client, _ = _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: ["42"]})
+        client, *_ = _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: ["42"]})
 
         await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
@@ -157,11 +164,13 @@ class TestFetchSubscribedOrgIds:
         )
 
     async def test_uses_mtls_cert_from_settings(self, mocker, settings):
-        _, mock_cls = _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: []})
+        _, mock_cls, ssl_ctx, ssl_create = _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: []})
 
         await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
-        mock_cls.assert_called_once_with(cert=("/tmp/tls/cert.pem", "/tmp/tls/key.pem"))
+        ssl_create.assert_called_once()
+        ssl_ctx.load_cert_chain.assert_called_once_with(certfile="/tmp/tls/cert.pem", keyfile="/tmp/tls/key.pem")
+        mock_cls.assert_called_once_with(verify=ssl_ctx, timeout=180)
 
     async def test_different_subscription_uses_correct_key_and_path(self, mocker, settings):
         other = SubscriptionType("other-app", "some-other-event")
@@ -171,8 +180,15 @@ class TestFetchSubscribedOrgIds:
 
         assert result == [555, 666]
 
-    async def test_raises_with_clear_error_when_payload_contains_non_int(self, mocker, settings):
-        _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: ["111", "oops", "333"]})
+    @pytest.mark.parametrize(
+        "bad_value",
+        [
+            pytest.param("oops", id="non_int_string"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    async def test_raises_on_invalid_payload_element(self, mocker, settings, bad_value):
+        _mock_client(mocker, json_data={LIFECYCLE_SUBSCRIPTION.event_type: ["111", bad_value, "333"]})
 
         with pytest.raises(ValueError, match="Invalid subscriptions payload"):
             await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)

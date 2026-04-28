@@ -56,7 +56,7 @@ async def lifecycle_notification(org_ids: list[int] | None = None):
     logger.info(
         "Finished lifecycle notification",
         duration_seconds=lifecycle_notification_elapsed,
-        processed_ord_ids=len(org_ids),
+        processed_org_ids=len(org_ids),
     )
 
     if failed_orgs:

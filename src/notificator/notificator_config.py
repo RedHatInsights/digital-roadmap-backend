@@ -96,8 +96,8 @@ class NotificatorSettings(Settings):
         Precedence: ``ROADMAP_KAFKA_NOTIFICATIONS_TOPIC`` env var, then
         Clowder topic resolution, then the default requested topic name.
         """
-        if self.kafka_notifications_topic is not None:
-            return self.kafka_notifications_topic
+        if self.kafka_notifications_topic is not None and self.kafka_notifications_topic.strip():
+            return self.kafka_notifications_topic.strip()
         topic = KafkaTopics.get(NOTIFICATIONS_TOPIC_REQUESTED)
         if topic:
             return topic.name

@@ -71,7 +71,7 @@ class TestGetOrgIds:
         assert result == [1234]
 
     async def test_dev_mode_returns_copy(self, mocker):
-        """DEV_ORG_IDS is not returned by reference — mutations won't leak."""
+        """DEV_ORG_IDS is not returned by reference - mutations won't leak."""
         self._patch_settings(mocker, dev=True)
 
         first = await get_org_ids(LIFECYCLE_SUBSCRIPTION)
@@ -145,7 +145,7 @@ class TestFetchSubscribedOrgIds:
         await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
         client.get.assert_called_once_with(
-            f"{settings.subscriptions_url}/{LIFECYCLE_SUBSCRIPTION.application}",
+            f"{settings.subscriptions_url}/subscriptions/rhel/{LIFECYCLE_SUBSCRIPTION.application}",
             params={"eventTypeNames": LIFECYCLE_SUBSCRIPTION.event_type},
         )
 

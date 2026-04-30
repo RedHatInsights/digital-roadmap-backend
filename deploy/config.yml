@@ -124,16 +124,16 @@ objects:
               failureThreshold: 6
 
             volumeMounts:
-            - mountPath: /tmp/tls
-              name: volume-notification-backend-cert
-              readOnly: true
+              - mountPath: /tmp/tls
+                name: volume-notification-backend-cert
+                readOnly: true
 
             volumes:
-            - name: volume-notification-backend-cert
-              secret:
-                defaultMode: 420
-                secretName: notification-backend-cert
-                optional: true
+              - name: volume-notification-backend-cert
+                secret:
+                  defaultMode: 420
+                  secretName: notification-backend-cert
+                  optional: true
       jobs:
         - name: notificator
           schedule: ${NOTIFICATOR_SCHEDULE}
@@ -208,16 +208,16 @@ objects:
                 memory: ${MEMORY_REQUEST_NOTIFICATOR}
 
             volumeMounts:
-            - mountPath: /tmp/tls
-              name: volume-notification-backend-cert
-              readOnly: true
+              - mountPath: /tmp/tls
+                name: volume-notification-backend-cert
+                readOnly: true
 
             volumes:
-            - name: volume-notification-backend-cert
-              secret:
-                defaultMode: 420
-                secretName: notification-backend-cert
-                optional: true
+              - name: volume-notification-backend-cert
+                secret:
+                  defaultMode: 420
+                  secretName: notification-backend-cert
+                  optional: true
 
         - name: inventory-sync
           restartPolicy: Never

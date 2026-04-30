@@ -39,10 +39,10 @@ async def fetch_subscribed_org_ids(settings: NotificatorSettings, subscription: 
 
     Raises ``httpx.HTTPStatusError`` on non-2xx responses.
     """
-    if settings.subscriptions_url is None:
+    if settings.subscriptions_url is None or not settings.subscriptions_url.strip():
         raise RuntimeError("ROADMAP_SUBSCRIPTIONS_URL is not configured")
 
-    url = f"{settings.subscriptions_url}/{subscription.application}"
+    url = f"{settings.subscriptions_url.rstrip('/')}/subscriptions/rhel/{subscription.application}"
 
     ctx = ssl.create_default_context()
     ctx.load_cert_chain(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
@@ -63,5 +63,5 @@ async def fetch_subscribed_org_ids(settings: NotificatorSettings, subscription: 
             f"expected list of ints, got {raw_ids!r}"
         ) from err
 
-    logger.info("Fetched subscribed org IDs", count=len(org_ids), org_ids=org_ids)
+    logger.info("Fetched subscribed org IDs", count=len(org_ids))
     return org_ids

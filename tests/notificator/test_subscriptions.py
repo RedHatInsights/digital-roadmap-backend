@@ -18,8 +18,8 @@ from notificator.subscriptions import get_org_ids
 def _make_settings(*, dev=False, subscriptions_url="https://example.com/subscriptions"):
     return SimpleNamespace(
         subscriptions_url=subscriptions_url,
-        tls_cert_path="/tmp/tls/cert.pem",
-        tls_key_path="/tmp/tls/key.pem",
+        tls_cert_path="/some/path/cert.pem",
+        tls_key_path="/some/path/key.pem",
         dev=dev,
     )
 
@@ -56,17 +56,12 @@ def _mock_client(mocker, *, status_code=200, json_data=None):
 
 
 class TestGetOrgIds:
-    """get_org_ids: precedence of explicit override, dev mode, and API fetch."""
+    """get_org_ids: dev mode vs API fetch."""
 
     def _patch_settings(self, mocker, *, dev=False):
         settings = _make_settings(dev=dev)
         mocker.patch("notificator.subscriptions.NotificatorSettings.create", return_value=settings)
         return settings
-
-    async def test_explicit_org_ids_returned_directly(self):
-        result = await get_org_ids(LIFECYCLE_SUBSCRIPTION, org_ids=[42, 99])
-
-        assert result == [42, 99]
 
     async def test_dev_mode_returns_dev_org_ids(self, mocker):
         self._patch_settings(mocker, dev=True)
@@ -84,15 +79,6 @@ class TestGetOrgIds:
         second = await get_org_ids(LIFECYCLE_SUBSCRIPTION)
 
         assert second == [1234]
-
-    async def test_explicit_org_ids_skip_settings_lookup(self, mocker):
-        """Explicit org_ids returns before NotificatorSettings.create() is called."""
-        create_mock = mocker.patch("notificator.subscriptions.NotificatorSettings.create")
-
-        result = await get_org_ids(LIFECYCLE_SUBSCRIPTION, org_ids=[999])
-
-        assert result == [999]
-        create_mock.assert_not_called()
 
     async def test_fetches_from_api_when_not_dev(self, mocker):
         self._patch_settings(mocker, dev=False)
@@ -169,7 +155,7 @@ class TestFetchSubscribedOrgIds:
         await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
         ssl_create.assert_called_once()
-        ssl_ctx.load_cert_chain.assert_called_once_with(certfile="/tmp/tls/cert.pem", keyfile="/tmp/tls/key.pem")
+        ssl_ctx.load_cert_chain.assert_called_once_with(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
         mock_cls.assert_called_once_with(verify=ssl_ctx, timeout=180)
 
     async def test_different_subscription_uses_correct_key_and_path(self, mocker, settings):

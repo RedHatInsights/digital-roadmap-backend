@@ -23,10 +23,10 @@ async def main():
     await roadmap_notification()
 
 
-async def lifecycle_notification(org_ids: list[int] | None = None):
+async def lifecycle_notification(override_org_ids: list[int] | None = None):
     logger.info("Started lifecycle notification")
     lifecycle_notification_start_time = time.time()
-    org_ids = await get_org_ids(LIFECYCLE_SUBSCRIPTION, org_ids=org_ids)
+    org_ids = override_org_ids if override_org_ids else await get_org_ids(LIFECYCLE_SUBSCRIPTION)
     if not org_ids:
         logger.warning("No subscribed org IDs found, skipping lifecycle notification")
         return

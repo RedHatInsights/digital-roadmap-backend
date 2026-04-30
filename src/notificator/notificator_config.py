@@ -82,7 +82,9 @@ class NotificatorSettings(Settings):
         then dev-mode localhost fallback, then Clowder-provided brokers.
         """
         if self.kafka_bootstrap_servers is not None:
-            return [s.strip() for s in self.kafka_bootstrap_servers.split(",")]
+            brokers = [s.strip() for s in self.kafka_bootstrap_servers.split(",") if s.strip()]
+            if brokers:
+                return brokers
         if self.dev:
             return DEV_BOOTSTRAP_SERVERS
         return KafkaServers

@@ -15,21 +15,13 @@ from notificator.notificator_config import SubscriptionType
 logger = structlog.get_logger(__name__)
 
 
-async def get_org_ids(
-    subscription: SubscriptionType,
-    *,
-    org_ids: list[int] | None = None,
-) -> list[int]:
+async def get_org_ids(subscription: SubscriptionType) -> list[int]:
     """Resolve org IDs for a given subscription type.
 
     Precedence:
-    1. Explicit *org_ids* (pass-through, e.g. for testing)
-    2. Dev mode (``ROADMAP_DEV=1``) -> ``DEV_ORG_IDS``
-    3. Subscription API fetch using mTLS
+    1. Dev mode (``ROADMAP_DEV=1``) -> ``DEV_ORG_IDS``
+    2. Subscription API fetch using mTLS
     """
-    if org_ids is not None:
-        return org_ids
-
     settings = NotificatorSettings.create()
 
     if settings.dev:

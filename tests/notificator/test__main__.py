@@ -9,7 +9,6 @@ import pytest
 
 from notificator.__main__ import lifecycle_notification
 from notificator.__main__ import main
-from notificator.notificator_config import LIFECYCLE_SUBSCRIPTION
 
 
 class FakeNotificationProducer:
@@ -113,17 +112,17 @@ class TestLifecycleNotification:
         mock_cls.assert_not_called()
         assert len(self.producer.sent) == 0
 
-    async def test_explicit_org_ids_forwarded_to_get_org_ids(self, mocker):
-        """Passing org_ids forwards them to get_org_ids as a keyword argument."""
-        get_mock = mocker.patch("notificator.__main__.get_org_ids", return_value=[42, 99])
+    async def test_explicit_org_ids_bypass_get_org_ids(self, mocker):
+        """Passing org_ids skips get_org_ids entirely."""
+        get_mock = mocker.patch("notificator.__main__.get_org_ids")
         mock_cls = mocker.patch("notificator.__main__.Notificator")
         instance = AsyncMock()
         instance.get_lifecycle_notification.return_value = {"ok": True}
         mock_cls.return_value = instance
 
-        await lifecycle_notification(org_ids=[42, 99])
+        await lifecycle_notification(override_org_ids=[42, 99])
 
-        get_mock.assert_called_once_with(LIFECYCLE_SUBSCRIPTION, org_ids=[42, 99])
+        get_mock.assert_not_called()
         assert len(self.producer.sent) == 2
 
 

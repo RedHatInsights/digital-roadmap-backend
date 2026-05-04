@@ -1,17 +1,11 @@
-from __future__ import annotations
-
-import typing as t
-
 import structlog
 
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
 
 from notificator.kafka import kafka_producer
 from notificator.kafka import KafkaBrokersNotConfigured
 from notificator.notificator import Notificator
-from roadmap.admin.auth import require_associate
 
 
 logger = structlog.get_logger(__name__)
@@ -21,16 +15,12 @@ router = APIRouter()
 
 @router.put("/notificator", summary="Trigger lifecycle notification for an org")
 async def trigger_notificator(
-    identity: t.Annotated[dict, Depends(require_associate)],
+    org_id: int,
 ):
-    org_id = identity.get("org_id", "")
-    if not org_id:
-        raise HTTPException(status_code=400, detail="Missing org_id in identity")
-
     logger.info("Admin trigger: lifecycle notification", org_id=org_id)
 
     try:
-        n = Notificator(org_id=int(org_id))
+        n = Notificator(org_id=org_id)
         payload = await n.get_lifecycle_notification()
     except Exception as exc:
         logger.exception("Failed to build lifecycle notification", org_id=org_id)

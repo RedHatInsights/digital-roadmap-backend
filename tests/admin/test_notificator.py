@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import base64
-import json
-
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock
 
@@ -14,17 +11,6 @@ from notificator.kafka import KafkaBrokersNotConfigured
 
 
 ADMIN_NOTIFICATOR_URL = "/api/roadmap/admin/notificator"
-
-
-def _make_identity_header(org_id: str, identity_type: str = "Associate", email: str = "admin@redhat.com") -> str:
-    payload = {
-        "identity": {
-            "org_id": org_id,
-            "type": identity_type,
-            "associate": {"email": email},
-        }
-    }
-    return base64.b64encode(json.dumps(payload).encode()).decode()
 
 
 class FakeKafkaProducer:
@@ -63,66 +49,30 @@ def _patch_notificator(mocker):
 
 
 class TestAdminAuth:
-    """Tests for the require_associate auth dependency on admin routes."""
+    """Tests for the admin notificator endpoint."""
 
-    def test_missing_identity_header_returns_401(self, client):
+    def test_missing_org_id_returns_422(self, client):
         response = client.put(ADMIN_NOTIFICATOR_URL)
 
-        assert response.status_code == 401
-        assert "Missing x-rh-identity" in response.json()["detail"]
+        assert response.status_code == 422
 
-    def test_non_associate_identity_returns_401(self, client):
-        headers = {"x-rh-identity": _make_identity_header("42", identity_type="User")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+    def test_invalid_org_id_returns_422(self, client):
+        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": "not-an-int"})
 
-        assert response.status_code == 401
-        assert "associate identity" in response.json()["detail"]
-
-    def test_invalid_base64_returns_401(self, client):
-        headers = {"x-rh-identity": "not-valid-base64!!!"}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
-
-        assert response.status_code == 401
-
-    def test_invalid_json_returns_401(self, client):
-        headers = {"x-rh-identity": base64.b64encode(b"not json").decode()}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
-
-        assert response.status_code == 401
-
-    def test_empty_identity_type_returns_401(self, client):
-        headers = {"x-rh-identity": _make_identity_header("42", identity_type="")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
-
-        assert response.status_code == 401
-
-    def test_associate_type_case_insensitive(self, client, fake_producer):
-        headers = {"x-rh-identity": _make_identity_header("42", identity_type="associate")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
-
-        assert response.status_code == 200
+        assert response.status_code == 422
 
 
 class TestTriggerNotificator:
     def test_success(self, client, fake_producer):
-        headers = {"x-rh-identity": _make_identity_header("42")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
 
         assert response.status_code == 200
         body = response.json()
         assert body["message"] == "Lifecycle notification sent for org 42"
         assert len(fake_producer.sent) == 1
 
-    def test_missing_org_id_in_identity(self, client):
-        headers = {"x-rh-identity": _make_identity_header("", identity_type="Associate")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
-
-        assert response.status_code == 400
-        assert "Missing org_id" in response.json()["detail"]
-
     def test_notificator_passes_org_id(self, client, _patch_notificator):
-        headers = {"x-rh-identity": _make_identity_header("999")}
-        client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+        client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 999})
 
         _patch_notificator.assert_called_once_with(org_id=999)
 
@@ -132,8 +82,7 @@ class TestTriggerNotificator:
         instance.get_lifecycle_notification.side_effect = RuntimeError("db down")
         mock_cls.return_value = instance
 
-        headers = {"x-rh-identity": _make_identity_header("42")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
 
         assert response.status_code == 500
         assert "Failed to build" in response.json()["detail"]
@@ -144,8 +93,7 @@ class TestTriggerNotificator:
             side_effect=KafkaBrokersNotConfigured("no brokers"),
         )
 
-        headers = {"x-rh-identity": _make_identity_header("42")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
 
         assert response.status_code == 503
         assert "Kafka brokers not configured" in response.json()["detail"]
@@ -158,8 +106,7 @@ class TestTriggerNotificator:
             side_effect=lambda: _fake_kafka_ctx(failing_producer),
         )
 
-        headers = {"x-rh-identity": _make_identity_header("42")}
-        response = client.put(ADMIN_NOTIFICATOR_URL, headers=headers)
+        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
 
         assert response.status_code == 500
         assert "Failed to send" in response.json()["detail"]

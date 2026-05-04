@@ -13,7 +13,7 @@ logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
-@router.put("/notificator", summary="Trigger lifecycle notification for an org")
+@router.post("/notificator", summary="Trigger lifecycle notification for an org")
 async def trigger_notificator(
     org_id: int,
 ):

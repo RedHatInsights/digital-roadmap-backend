@@ -45,6 +45,31 @@ def test_notifications_topic_not_found(mocker):
     assert settings.notifications_topic == NOTIFICATIONS_TOPIC_REQUESTED
 
 
+def test_bootstrap_servers_env_override(monkeypatch):
+    monkeypatch.setenv("ROADMAP_KAFKA_BOOTSTRAP_SERVERS", "host1:9092,host2:9092")
+
+    settings = NotificatorSettings.create()
+
+    assert settings.bootstrap_servers == ["host1:9092", "host2:9092"]
+
+
+def test_bootstrap_servers_env_override_takes_precedence_over_dev(monkeypatch):
+    monkeypatch.setenv("ROADMAP_DEV", "1")
+    monkeypatch.setenv("ROADMAP_KAFKA_BOOTSTRAP_SERVERS", "custom:9092")
+
+    settings = NotificatorSettings.create()
+
+    assert settings.bootstrap_servers == ["custom:9092"]
+
+
+def test_notifications_topic_env_override(monkeypatch):
+    monkeypatch.setenv("ROADMAP_KAFKA_NOTIFICATIONS_TOPIC", "my.custom.topic")
+
+    settings = NotificatorSettings.create()
+
+    assert settings.notifications_topic == "my.custom.topic"
+
+
 def test_dev_mode_does_not_affect_topic_resolution(monkeypatch, mocker):
     monkeypatch.setenv("ROADMAP_DEV", "1")
     topic = mocker.MagicMock()

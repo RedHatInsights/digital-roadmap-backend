@@ -23,7 +23,14 @@ def client():
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch):
     """Unset these environment variables during testing"""
-    unset = ("ROADMAP_DEV",)
+    unset = (
+        "ROADMAP_DEV",
+        "ROADMAP_KAFKA_BOOTSTRAP_SERVERS",
+        "ROADMAP_KAFKA_NOTIFICATIONS_TOPIC",
+        "ROADMAP_SUBSCRIPTIONS_URL",
+        "ROADMAP_TLS_CERT_PATH",
+        "ROADMAP_TLS_KEY_PATH",
+    )
     for var in unset:
         monkeypatch.delenv(var, raising=False)
 

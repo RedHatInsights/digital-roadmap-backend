@@ -88,6 +88,13 @@ objects:
                     key: dsn
                     optional: true
 
+              - name: ROADMAP_SUBSCRIPTIONS_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: ${SUBSCRIPTION_SECRET_NAME}
+                    key: url
+                    optional: true
+
               - name: SENTRY_ENVIRONMENT
                 value: ${ENV_NAME}
 
@@ -115,6 +122,18 @@ objects:
               initialDelaySeconds: 15
               periodSeconds: 10
               failureThreshold: 6
+
+            volumeMounts:
+              - mountPath: /tmp/tls
+                name: volume-notification-backend-cert
+                readOnly: true
+
+            volumes:
+              - name: volume-notification-backend-cert
+                secret:
+                  defaultMode: 420
+                  secretName: notification-backend-cert
+                  optional: true
       jobs:
         - name: notificator
           schedule: ${NOTIFICATOR_SCHEDULE}
@@ -126,9 +145,6 @@ objects:
               - -m
               - notificator
             env:
-              - name: ORG_ID
-                value: ${NOTIFICATOR_ORG_ID}
-
               - name: APP_NAME
                 value: ${APP_NAME}
 
@@ -172,6 +188,13 @@ objects:
                     key: dsn
                     optional: true
 
+              - name: ROADMAP_SUBSCRIPTIONS_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: ${SUBSCRIPTION_SECRET_NAME}
+                    key: url
+                    optional: true
+
               - name: SENTRY_ENVIRONMENT
                 value: ${ENV_NAME}
 
@@ -183,6 +206,19 @@ objects:
               requests:
                 cpu: ${CPU_REQUEST_NOTIFICATOR}
                 memory: ${MEMORY_REQUEST_NOTIFICATOR}
+
+            volumeMounts:
+              - mountPath: /tmp/tls
+                name: volume-notification-backend-cert
+                readOnly: true
+
+            volumes:
+              - name: volume-notification-backend-cert
+                secret:
+                  defaultMode: 420
+                  secretName: notification-backend-cert
+                  optional: true
+
         - name: inventory-sync
           restartPolicy: Never
           podSpec:
@@ -315,6 +351,9 @@ parameters:
   - name: SENTRY_SECRET_NAME
     value: sentry
 
+  - name: SUBSCRIPTION_SECRET_NAME
+    value: notification-backend-url
+
   - name: ROADMAP_DB_POOL_SIZE
     value: ""
 
@@ -353,9 +392,6 @@ parameters:
 
   - name: INVENTORY_SYNC_COUNTER
     value: '1'
-
-  - name: NOTIFICATOR_ORG_ID
-    value: "1234"
 
   - name: NOTIFICATOR_SCHEDULE
     value: "0 0 31 2 *"

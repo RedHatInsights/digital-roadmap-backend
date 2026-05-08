@@ -33,14 +33,14 @@ class TestLifecycleNotification:
     def _setup(self, mocker):
         self.producer = FakeNotificationProducer()
         mocker.patch(
-            "notificator.__main__.kafka_producer",
+            "notificator.lifecycle.kafka_producer",
             side_effect=lambda: _fake_kafka_ctx(self.producer),
         )
 
     def _patch_notificator(self, mocker, org_ids, *, return_value=None, side_effect=None):
         """Patch get_org_ids and Notificator in one call; returns the class mock."""
-        mocker.patch("notificator.__main__.get_org_ids", return_value=org_ids)
-        mock_cls = mocker.patch("notificator.__main__.Notificator")
+        mocker.patch("notificator.lifecycle.get_org_ids", return_value=org_ids)
+        mock_cls = mocker.patch("notificator.lifecycle.Notificator")
         instance = AsyncMock()
         if side_effect is not None:
             instance.get_lifecycle_notification.side_effect = side_effect
@@ -114,8 +114,8 @@ class TestLifecycleNotification:
 
     async def test_explicit_org_ids_bypass_get_org_ids(self, mocker):
         """Passing org_ids skips get_org_ids entirely."""
-        get_mock = mocker.patch("notificator.__main__.get_org_ids")
-        mock_cls = mocker.patch("notificator.__main__.Notificator")
+        get_mock = mocker.patch("notificator.lifecycle.get_org_ids")
+        mock_cls = mocker.patch("notificator.lifecycle.Notificator")
         instance = AsyncMock()
         instance.get_lifecycle_notification.return_value = {"ok": True}
         mock_cls.return_value = instance

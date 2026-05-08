@@ -58,6 +58,7 @@ class UpcomingInputDetails(BaseModel):
     trainingTicket: str
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
+    deployedDate: date | None = None
 
 
 def _get_first_sorted_package(packages: set[str]) -> str:
@@ -93,6 +94,7 @@ class UpcomingOutputDetails(BaseModel):
     trainingTicket: str
     dateAdded: date = Field(default_factory=date.today)
     lastModified: Date
+    deployedDate: date | None = None
     potentiallyAffectedSystemsCount: int
     potentiallyAffectedSystemsDetail: set[SystemInfo]
     potentiallyAffectedSystems: set[UUID] = Field(default_factory=_get_system_uuids)

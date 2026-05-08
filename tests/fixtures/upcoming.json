@@ -11,7 +11,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-1234",
       "dateAdded": "2025-03-10",
-      "lastModified": "2025-03-10"
+      "lastModified": "2025-03-10",
+      "deployedDate": "2025-03-15"
     }
   },
   {
@@ -26,7 +27,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-2222",
       "dateAdded": "2025-04-22",
-      "lastModified": "2025-04-22"
+      "lastModified": "2025-04-22",
+      "deployedDate": null
     }
   }
 ]

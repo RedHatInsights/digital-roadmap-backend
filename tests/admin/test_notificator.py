@@ -89,3 +89,4 @@ class TestTriggerNotificator:
 
         # Background wrapper swallows errors and only logs.
         assert response.status_code == 202
+        _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=None)

@@ -1,8 +1,7 @@
-"""Tests for the admin notificator trigger endpoint (PUT /api/roadmap/admin/notificator)."""
+"""Tests for admin notificator endpoints."""
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock
 
 import pytest
@@ -10,103 +9,83 @@ import pytest
 from notificator.kafka import KafkaBrokersNotConfigured
 
 
-ADMIN_NOTIFICATOR_URL = "/api/roadmap/admin/notificator"
-
-
-class FakeKafkaProducer:
-    def __init__(self):
-        self.sent: list[dict] = []
-
-    async def send_notification(self, payload: dict):
-        self.sent.append(payload)
-
-
-@asynccontextmanager
-async def _fake_kafka_ctx(producer):
-    yield producer
-
-
-@pytest.fixture()
-def fake_producer():
-    return FakeKafkaProducer()
+ADMIN_NOTIFICATOR_CUSTOM_URL = "/api/roadmap/admin/notificator/custom"
+ADMIN_NOTIFICATOR_ALL_URL = "/api/roadmap/admin/notificator/all"
 
 
 @pytest.fixture(autouse=True)
-def _patch_kafka(mocker, fake_producer):
-    mocker.patch(
-        "roadmap.admin.notificator.kafka_producer",
-        side_effect=lambda: _fake_kafka_ctx(fake_producer),
-    )
+def _patch_lifecycle_notification(mocker):
+    return mocker.patch("roadmap.admin.notificator.lifecycle_notification", new_callable=AsyncMock)
 
 
-@pytest.fixture(autouse=True)
-def _patch_notificator(mocker):
-    mock_cls = mocker.patch("roadmap.admin.notificator.Notificator")
-    instance = AsyncMock()
-    instance.get_lifecycle_notification.return_value = {"org_id": "42", "events": []}
-    mock_cls.return_value = instance
-    return mock_cls
+class TestCustomEndpointValidation:
+    """Validation tests for custom endpoint."""
 
-
-class TestAdminAuth:
-    """Tests for the admin notificator endpoint."""
-
-    def test_missing_org_id_returns_422(self, client):
-        response = client.put(ADMIN_NOTIFICATOR_URL)
+    def test_missing_body_returns_422(self, client):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL)
 
         assert response.status_code == 422
 
-    def test_invalid_org_id_returns_422(self, client):
-        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": "not-an-int"})
+    def test_invalid_org_ids_type_returns_422(self, client):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": "not-an-int"})
+
+        assert response.status_code == 422
+
+    def test_empty_org_ids_returns_422(self, client):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": []})
 
         assert response.status_code == 422
 
 
 class TestTriggerNotificator:
-    def test_success(self, client, fake_producer):
-        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
+    def test_custom_success_single_org(self, client, _patch_lifecycle_notification):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 200
         body = response.json()
-        assert body["message"] == "Lifecycle notification sent for org 42"
-        assert len(fake_producer.sent) == 1
+        assert body == {"message": "Lifecycle notification completed", "requested_org_ids": [42]}
+        _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=[42])
 
-    def test_notificator_passes_org_id(self, client, _patch_notificator):
-        client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 999})
+    def test_custom_deduplicates_and_sorts_org_ids(self, client, _patch_lifecycle_notification):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": [3, 1, 3, 2]})
 
-        _patch_notificator.assert_called_once_with(org_id=999)
+        assert response.status_code == 200
+        assert response.json()["requested_org_ids"] == [1, 2, 3]
+        _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=[1, 2, 3])
 
-    def test_notificator_build_failure(self, client, mocker):
-        mock_cls = mocker.patch("roadmap.admin.notificator.Notificator")
-        instance = AsyncMock()
-        instance.get_lifecycle_notification.side_effect = RuntimeError("db down")
-        mock_cls.return_value = instance
+    def test_custom_runtime_failure(self, client, _patch_lifecycle_notification):
+        _patch_lifecycle_notification.side_effect = RuntimeError("failed for 1/1 orgs")
 
-        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 500
-        assert "Failed to build" in response.json()["detail"]
+        assert "failed for 1/1 orgs" in response.json()["detail"]
 
-    def test_kafka_not_configured(self, client, mocker):
-        mocker.patch(
-            "roadmap.admin.notificator.kafka_producer",
-            side_effect=KafkaBrokersNotConfigured("no brokers"),
-        )
+    def test_custom_kafka_not_configured(self, client, _patch_lifecycle_notification):
+        _patch_lifecycle_notification.side_effect = KafkaBrokersNotConfigured("no brokers")
 
-        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 503
         assert "Kafka brokers not configured" in response.json()["detail"]
 
-    def test_kafka_send_failure(self, client, mocker):
-        failing_producer = AsyncMock()
-        failing_producer.send_notification.side_effect = RuntimeError("kafka down")
-        mocker.patch(
-            "roadmap.admin.notificator.kafka_producer",
-            side_effect=lambda: _fake_kafka_ctx(failing_producer),
-        )
+    def test_all_requires_confirmation(self, client):
+        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": False})
 
-        response = client.put(ADMIN_NOTIFICATOR_URL, params={"org_id": 42})
+        assert response.status_code == 400
+        assert "confirm_all=true" in response.json()["detail"]
 
-        assert response.status_code == 500
-        assert "Failed to send" in response.json()["detail"]
+    def test_all_accepts_and_triggers_background(self, client, _patch_lifecycle_notification):
+        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
+
+        assert response.status_code == 202
+        assert response.json() == {"message": "Lifecycle notification accepted"}
+        _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=None)
+
+    def test_all_background_failure_still_returns_202(self, client, _patch_lifecycle_notification):
+        _patch_lifecycle_notification.side_effect = RuntimeError("batch failed")
+
+        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
+
+        # Background wrapper swallows errors and only logs.
+        assert response.status_code == 202

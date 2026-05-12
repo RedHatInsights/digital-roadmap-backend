@@ -67,8 +67,8 @@ def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
     """
     ssl_context = _build_ssl_context(settings)
     if ssl_context:
-        return AIOKafkaProducer(  # pyright: ignore [reportArgumentType]
-            bootstrap_servers=settings.bootstrap_servers,
+        return AIOKafkaProducer(
+            bootstrap_servers=settings.bootstrap_servers,  # pyright: ignore [reportArgumentType]
             security_protocol="SSL",
             ssl_context=ssl_context,
         )

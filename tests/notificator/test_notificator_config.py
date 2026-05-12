@@ -188,12 +188,12 @@ class TestKafkaSecurityProtocol:
         settings = NotificatorSettings.create()
         assert settings.kafka_security_protocol == "PLAINTEXT"
 
-    def test_returns_sasl_ssl_for_sasl_broker(self, mocker):
-        """Broker with SASL authtype → SASL_SSL protocol."""
+    def test_returns_sasl_ssl_for_sasl_broker_with_cacert(self, mocker):
+        """Broker with SASL authtype and CA cert → SASL_SSL protocol."""
         sasl_enum = mocker.patch("notificator.notificator_config.BrokerConfigAuthtypeEnum")
         sasl_sentinel = object()
         sasl_enum.SASL = sasl_sentinel
-        _patch_clowder_broker(mocker, authtype=sasl_sentinel)
+        _patch_clowder_broker(mocker, authtype=sasl_sentinel, cacert="-----BEGIN CERTIFICATE-----")
 
         settings = NotificatorSettings.create()
 
@@ -204,6 +204,17 @@ class TestKafkaSecurityProtocol:
         _patch_clowder_broker(mocker, authtype=None)
         settings = NotificatorSettings.create()
         assert settings.kafka_security_protocol == "PLAINTEXT"
+
+    def test_returns_sasl_plaintext_when_sasl_without_cacert(self, mocker):
+        """SASL authtype but no CA cert → SASL_PLAINTEXT (prevents SSL context error)."""
+        sasl_enum = mocker.patch("notificator.notificator_config.BrokerConfigAuthtypeEnum")
+        sasl_sentinel = object()
+        sasl_enum.SASL = sasl_sentinel
+        _patch_clowder_broker(mocker, authtype=sasl_sentinel, cacert=None)
+
+        settings = NotificatorSettings.create()
+
+        assert settings.kafka_security_protocol == "SASL_PLAINTEXT"
 
 
 class TestKafkaSaslProperties:

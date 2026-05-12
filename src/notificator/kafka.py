@@ -19,9 +19,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import ssl
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 
@@ -40,8 +42,36 @@ class KafkaBrokersNotConfigured(Exception):
     """Raised when kafka_producer() is called without any Kafka brokers configured."""
 
 
+def _build_ssl_context(settings: NotificatorSettings) -> ssl.SSLContext | None:
+    """Return an mTLS SSLContext if the TLS cert and key files are present, else None.
+
+    In Clowder-managed environments (stage/prod) the cert and key are mounted
+    at the paths from settings. In local dev the files are absent, so we skip
+    SSL and fall back to a plain connection.
+    """
+    cert = Path(settings.tls_cert_path)
+    key = Path(settings.tls_key_path)
+    if not cert.exists() or not key.exists():
+        return None
+    ssl_context = ssl.create_default_context()
+    ssl_context.load_cert_chain(certfile=str(cert), keyfile=str(key))
+    logger.info("Kafka SSL context created")
+    return ssl_context
+
+
 def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
-    """Create an AIOKafkaProducer from the notificator settings."""
+    """Create an AIOKafkaProducer from the notificator settings.
+
+    Uses mTLS when TLS cert/key files are present (stage/prod Clowder mounts),
+    otherwise connects without SSL (local dev).
+    """
+    ssl_context = _build_ssl_context(settings)
+    if ssl_context:
+        return AIOKafkaProducer(
+            bootstrap_servers=settings.bootstrap_servers,  # pyright: ignore [reportArgumentType]
+            security_protocol="SSL",
+            ssl_context=ssl_context,
+        )
     return AIOKafkaProducer(bootstrap_servers=settings.bootstrap_servers)  # pyright: ignore [reportArgumentType]
 
 

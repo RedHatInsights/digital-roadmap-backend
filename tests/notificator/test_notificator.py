@@ -282,16 +282,17 @@ class TestNotificator:
             appstream_grouped=appstream,
             org_id=str(ORG_ID),
             event_type="retiring-lifecycle-monthly-report",
+            application="life-cycle",
         )
 
         assert result["version"] == "v1.0.0"
         assert result["id"] == str(FIXED_UUID)
         assert result["bundle"] == "rhel"
-        assert result["application"] == "planning"
+        assert result["application"] == "life-cycle"
         assert result["event_type"] == "retiring-lifecycle-monthly-report"
         assert result["timestamp"] == FIXED_TIMESTAMP
         assert result["org_id"] == str(ORG_ID)
-        assert result["context"] == {}
+        assert result["context"] == {"lifecycle": {"report_date": "March 2026"}}
         assert result["recipients"] == []
         assert len(result["events"]) == 1
         assert result["events"][0]["payload"] == {**rhel, **appstream}
@@ -303,8 +304,10 @@ class TestNotificator:
             appstream_grouped=EMPTY_APPSTREAM_SECTIONS,
             org_id=str(ORG_ID),
             event_type="retiring-lifecycle-monthly-report",
+            application="life-cycle",
         )
 
         assert len(result["events"]) == 1
         assert result["events"][0]["payload"] == {**EMPTY_RHEL_SECTIONS, **EMPTY_APPSTREAM_SECTIONS}
         assert result["events"][0]["metadata"] == {}
+        assert result["context"] == {"lifecycle": {"report_date": "March 2026"}}

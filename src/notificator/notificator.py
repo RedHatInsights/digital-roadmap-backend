@@ -169,6 +169,7 @@ class Notificator:
             appstream_grouped=appstream_grouped,
             org_id=str(self.org_id),
             event_type="retiring-lifecycle-monthly-report",
+            application="life-cycle",
         )
 
         logger.info("Built lifecycle notification", org_id=self.org_id, event_type="retiring-lifecycle-monthly-report")
@@ -181,7 +182,7 @@ def _build_notification_payload(
     org_id: str,
     event_type: str,
     bundle: str = "rhel",
-    application: str = "planning",
+    application: str = "life-cycle",
 ) -> dict:
     """Build kafka message for notification backend using their specified format.
 
@@ -191,10 +192,15 @@ def _build_notification_payload(
             "version": "v1.0.0",
             "id": "db6e6cee-...",
             "bundle": "rhel",
-            "application": "planning",
+            "application": "life-cycle",
             "event_type": "retiring-lifecycle-monthly-report",
             "timestamp": "2026-02-24T12:00:00Z",
             "org_id": "1234",
+            "context": {
+                "lifecycle": {
+                    "report_date": "February 2026"
+                }
+            },
             "events": [{
                 "metadata": {},
                 "payload": {
@@ -213,15 +219,23 @@ def _build_notification_payload(
             "recipients": [],
         }
     """
+    now = datetime.now(UTC)
+    timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    report_date = now.strftime("%B %Y")  # e.g., "May 2026"
+
     return {
         "version": "v1.0.0",
         "id": str(uuid4()),
         "bundle": bundle,
         "application": application,
         "event_type": event_type,
-        "timestamp": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),  # or we can use datetime.now(UTC).isoformat()
+        "timestamp": timestamp,
         "org_id": org_id,
-        "context": {},
+        "context": {
+            application.replace("-", ""): {
+                "report_date": report_date,
+            }
+        },
         "events": [
             {
                 "metadata": {},

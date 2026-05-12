@@ -36,7 +36,7 @@ class CustomNotificatorRequest(BaseModel):
 class AllNotificatorRequest(BaseModel):
     confirm_all: bool = Field(
         default=False,
-        description="Set to true to confirm notifications should be triggered for every org.",
+        description="Set to true to confirm notifications should be triggered for every org subscribed to receive this type of notification.",
     )
 
 

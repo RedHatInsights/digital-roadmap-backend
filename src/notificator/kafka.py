@@ -71,7 +71,7 @@ def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
         bootstrap_servers=settings.bootstrap_servers,  # pyright: ignore [reportArgumentType]
         security_protocol=security_protocol,
         ssl_context=ssl_context,
-        sasl_mechanism=settings.kafka_sasl_mechanism,
+        sasl_mechanism=settings.kafka_sasl_mechanism,  # pyright: ignore [reportArgumentType]
         sasl_plain_username=settings.kafka_sasl_username,
         sasl_plain_password=settings.kafka_sasl_password,
     )

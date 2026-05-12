@@ -94,7 +94,7 @@ class NotificatorSettings(Settings):
         Returns ``None`` in dev mode or when no CA cert is configured.
         """
         broker = self._kafka_broker()
-        if broker and broker.cacert:
+        if broker and broker.cacert and LoadedConfig:
             return LoadedConfig.kafka_ca()
         return None
 

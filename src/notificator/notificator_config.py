@@ -15,8 +15,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app_common_python import isClowderEnabled
 from app_common_python import KafkaServers
 from app_common_python import KafkaTopics
+from app_common_python import LoadedConfig
+from app_common_python.types import BrokerConfigAuthtypeEnum
 
 from roadmap.config import Settings
 
@@ -73,6 +76,64 @@ class NotificatorSettings(Settings):
         separate cache entries automatically.
         """
         return super().create()  # type: ignore[return-value]
+
+    def _kafka_broker(self):
+        """Return the first Clowder Kafka broker config, or None if not available."""
+        if isClowderEnabled() and LoadedConfig and LoadedConfig.kafka:
+            brokers = LoadedConfig.kafka.brokers or []
+            if brokers:
+                return brokers[0]
+        return None
+
+    @property
+    def kafka_ca_path(self) -> str | None:
+        """Path to the Kafka broker CA certificate for TLS verification.
+
+        When running under Clowder and the broker config includes a CA cert,
+        ``SmartAppConfig.kafka_ca()`` writes it to a temp file and returns the path.
+        Returns ``None`` in dev mode or when no CA cert is configured.
+        """
+        broker = self._kafka_broker()
+        if broker and broker.cacert:
+            return LoadedConfig.kafka_ca()
+        return None
+
+    @property
+    def kafka_security_protocol(self) -> str:
+        """Kafka security protocol derived from the Clowder broker authtype.
+
+        ``BrokerConfigAuthtypeEnum`` only defines ``SASL``, so in practice this
+        returns either ``"SASL_SSL"`` (stage/prod MSK on port 9096) or
+        ``"PLAINTEXT"`` (local dev without a Clowder config).
+        """
+        broker = self._kafka_broker()
+        if broker and broker.authtype == BrokerConfigAuthtypeEnum.SASL:
+            return "SASL_SSL"
+        return "PLAINTEXT"
+
+    @property
+    def kafka_sasl_mechanism(self) -> str | None:
+        """SASL mechanism from the Clowder broker config (e.g. ``"SCRAM-SHA-512"``)."""
+        broker = self._kafka_broker()
+        if broker and broker.sasl and broker.sasl.saslMechanism:
+            return broker.sasl.saslMechanism.upper()
+        return None
+
+    @property
+    def kafka_sasl_username(self) -> str | None:
+        """SASL username from the Clowder broker config."""
+        broker = self._kafka_broker()
+        if broker and broker.sasl:
+            return broker.sasl.username
+        return None
+
+    @property
+    def kafka_sasl_password(self) -> str | None:
+        """SASL password from the Clowder broker config."""
+        broker = self._kafka_broker()
+        if broker and broker.sasl:
+            return broker.sasl.password
+        return None
 
     @property
     def bootstrap_servers(self) -> list[str]:

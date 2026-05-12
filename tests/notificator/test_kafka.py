@@ -27,83 +27,96 @@ def _make_settings(
     *,
     dev=False,
     bootstrap_servers=None,
-    tls_cert_path="/tmp/tls/cert.pem",
-    tls_key_path="/tmp/tls/key.pem",
+    kafka_ca_path=None,
+    kafka_security_protocol="PLAINTEXT",
+    kafka_sasl_mechanism=None,
+    kafka_sasl_username=None,
+    kafka_sasl_password=None,
     topic="test-topic",
 ):
     return SimpleNamespace(
         dev=dev,
         bootstrap_servers=["broker:9092"] if bootstrap_servers is None else bootstrap_servers,
-        tls_cert_path=tls_cert_path,
-        tls_key_path=tls_key_path,
+        kafka_ca_path=kafka_ca_path,
+        kafka_security_protocol=kafka_security_protocol,
+        kafka_sasl_mechanism=kafka_sasl_mechanism,
+        kafka_sasl_username=kafka_sasl_username,
+        kafka_sasl_password=kafka_sasl_password,
         notifications_topic=topic,
     )
 
 
 class TestBuildSSLContext:
-    """_build_ssl_context: returns an SSLContext only when both cert and key files exist."""
+    """_build_ssl_context: returns an SSLContext only when a Kafka CA cert path is available."""
 
-    def test_returns_none_when_cert_missing(self, tmp_path):
-        """No cert file → no SSL context (plain connection, e.g. local dev)."""
-        settings = _make_settings(
-            tls_cert_path=str(tmp_path / "missing_cert.pem"),
-            tls_key_path=str(tmp_path / "missing_key.pem"),
-        )
+    def test_returns_none_when_no_ca_path(self):
+        """No CA path (local dev / Clowder without Kafka TLS) → no SSL context."""
+        settings = _make_settings(kafka_ca_path=None)
         assert _build_ssl_context(settings) is None
 
-    def test_returns_none_when_key_missing(self, tmp_path):
-        """Cert present but key absent → no SSL context."""
-        cert = tmp_path / "cert.pem"
-        cert.write_text("cert-data")
-        settings = _make_settings(
-            tls_cert_path=str(cert),
-            tls_key_path=str(tmp_path / "missing_key.pem"),
-        )
-        assert _build_ssl_context(settings) is None
-
-    def test_returns_ssl_context_when_both_files_exist(self, tmp_path, mocker):
-        """Both files present → returns an ssl.SSLContext with the cert loaded."""
-        cert = tmp_path / "cert.pem"
-        key = tmp_path / "key.pem"
-        cert.write_text("cert-data")
-        key.write_text("key-data")
+    def test_returns_ssl_context_when_ca_path_provided(self, mocker):
+        """CA path present → delegates to aiokafka create_ssl_context with cafile."""
         mock_ctx = mocker.MagicMock(spec=ssl.SSLContext)
-        mocker.patch("ssl.create_default_context", return_value=mock_ctx)
-        settings = _make_settings(tls_cert_path=str(cert), tls_key_path=str(key))
+        mock_create = mocker.patch("notificator.kafka.create_ssl_context", return_value=mock_ctx)
+        settings = _make_settings(kafka_ca_path="/tmp/kafka-ca.pem")
 
         result = _build_ssl_context(settings)
 
         assert result is mock_ctx
-        mock_ctx.load_cert_chain.assert_called_once_with(certfile=str(cert), keyfile=str(key))
+        mock_create.assert_called_once_with(cafile="/tmp/kafka-ca.pem")
 
 
 class TestBuildProducer:
-    """_build_producer: wires SSL context into the producer when TLS files are present."""
+    """_build_producer: wires full security config into the producer from settings."""
 
-    def test_uses_ssl_when_context_available(self, mocker):
-        """When _build_ssl_context returns a context, the producer is built with SSL."""
+    def test_sasl_ssl_protocol_passes_all_security_params(self, mocker):
+        """SASL_SSL path (MSK stage/prod): security_protocol, ssl_context, and SASL
+        credentials must all be forwarded to AIOKafkaProducer."""
         mock_ctx = mocker.MagicMock(spec=ssl.SSLContext)
         mocker.patch("notificator.kafka._build_ssl_context", return_value=mock_ctx)
         mock_producer_cls = mocker.patch("notificator.kafka.AIOKafkaProducer")
-        settings = _make_settings(bootstrap_servers=["broker:9096"])
+        settings = _make_settings(
+            bootstrap_servers=["broker:9096"],
+            kafka_ca_path="/tmp/kafka-ca.pem",
+            kafka_security_protocol="SASL_SSL",
+            kafka_sasl_mechanism="SCRAM-SHA-512",
+            kafka_sasl_username="user",
+            kafka_sasl_password="secret",
+        )
 
         _build_producer(settings)
 
         mock_producer_cls.assert_called_once_with(
             bootstrap_servers=["broker:9096"],
-            security_protocol="SSL",
+            security_protocol="SASL_SSL",
             ssl_context=mock_ctx,
+            sasl_mechanism="SCRAM-SHA-512",
+            sasl_plain_username="user",
+            sasl_plain_password="secret",
         )
 
-    def test_no_ssl_when_context_is_none(self, mocker):
-        """When _build_ssl_context returns None, the producer is built without SSL."""
+    def test_plaintext_protocol_no_ssl_no_sasl(self, mocker):
+        """PLAINTEXT path (local dev): no SSL context, no SASL credentials."""
         mocker.patch("notificator.kafka._build_ssl_context", return_value=None)
         mock_producer_cls = mocker.patch("notificator.kafka.AIOKafkaProducer")
-        settings = _make_settings(bootstrap_servers=["localhost:9092"])
+        settings = _make_settings(
+            bootstrap_servers=["localhost:9092"],
+            kafka_security_protocol="PLAINTEXT",
+            kafka_sasl_mechanism=None,
+            kafka_sasl_username=None,
+            kafka_sasl_password=None,
+        )
 
         _build_producer(settings)
 
-        mock_producer_cls.assert_called_once_with(bootstrap_servers=["localhost:9092"])
+        mock_producer_cls.assert_called_once_with(
+            bootstrap_servers=["localhost:9092"],
+            security_protocol="PLAINTEXT",
+            ssl_context=None,
+            sasl_mechanism=None,
+            sasl_plain_username=None,
+            sasl_plain_password=None,
+        )
 
 
 class TestKafkaProducer:

@@ -23,12 +23,12 @@ import ssl
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import structlog
 
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
+from aiokafka.helpers import create_ssl_context
 
 from notificator.notificator_config import KAFKA_MAX_RETRIES
 from notificator.notificator_config import KAFKA_RETRY_INTERVAL
@@ -43,36 +43,38 @@ class KafkaBrokersNotConfigured(Exception):
 
 
 def _build_ssl_context(settings: NotificatorSettings) -> ssl.SSLContext | None:
-    """Return an mTLS SSLContext if the TLS cert and key files are present, else None.
+    """Return an SSLContext for Kafka broker verification, or None if no CA cert is configured.
 
-    In Clowder-managed environments (stage/prod) the cert and key are mounted
-    at the paths from settings. In local dev the files are absent, so we skip
-    SSL and fall back to a plain connection.
+    Uses ``aiokafka.helpers.create_ssl_context`` (the canonical aiokafka helper)
+    with the broker CA certificate provided by Clowder.  Returns ``None`` in
+    local dev where no CA cert is configured.
     """
-    cert = Path(settings.tls_cert_path)
-    key = Path(settings.tls_key_path)
-    if not cert.exists() or not key.exists():
+    ca_path = settings.kafka_ca_path
+    if not ca_path:
         return None
-    ssl_context = ssl.create_default_context()
-    ssl_context.load_cert_chain(certfile=str(cert), keyfile=str(key))
-    logger.info("Kafka SSL context created")
-    return ssl_context
+    ctx = create_ssl_context(cafile=ca_path)
+    logger.info("Kafka SSL context created", ca_path=ca_path)
+    return ctx
 
 
 def _build_producer(settings: NotificatorSettings) -> AIOKafkaProducer:
     """Create an AIOKafkaProducer from the notificator settings.
 
-    Uses mTLS when TLS cert/key files are present (stage/prod Clowder mounts),
-    otherwise connects without SSL (local dev).
+    Security protocol is derived from the Clowder broker authtype:
+    - ``SASL_SSL``: MSK with SASL/SCRAM auth (stage/prod, port 9096)
+    - ``PLAINTEXT``: local dev (no Clowder config)
     """
     ssl_context = _build_ssl_context(settings)
-    if ssl_context:
-        return AIOKafkaProducer(
-            bootstrap_servers=settings.bootstrap_servers,  # pyright: ignore [reportArgumentType]
-            security_protocol="SSL",
-            ssl_context=ssl_context,
-        )
-    return AIOKafkaProducer(bootstrap_servers=settings.bootstrap_servers)  # pyright: ignore [reportArgumentType]
+    security_protocol = settings.kafka_security_protocol
+    logger.info("Building Kafka producer", security_protocol=security_protocol)
+    return AIOKafkaProducer(
+        bootstrap_servers=settings.bootstrap_servers,  # pyright: ignore [reportArgumentType]
+        security_protocol=security_protocol,
+        ssl_context=ssl_context,
+        sasl_mechanism=settings.kafka_sasl_mechanism,  # pyright: ignore [reportArgumentType]
+        sasl_plain_username=settings.kafka_sasl_username,
+        sasl_plain_password=settings.kafka_sasl_password,
+    )
 
 
 async def _start_producer(producer: AIOKafkaProducer) -> None:

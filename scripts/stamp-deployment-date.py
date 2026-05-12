@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stamp deployment dates on roadmap items.
 
-For each roadmap item in upcoming.json that doesn't have a deployedDate,
+For each roadmap item in roadmap_jira.json that doesn't have a deployedDate,
 set it to today's date. This should be run during container image build
 to mark when new items were deployed.
 
@@ -21,7 +21,7 @@ def stamp_deployment_dates(file_path: Path, deployment_date: date | None = None)
     Stamp deployment dates on roadmap items.
 
     Args:
-        file_path: Path to the upcoming.json file
+        file_path: Path to the roadmap_jira.json file
         deployment_date: Date to use for deployment (defaults to today)
 
     Returns:
@@ -41,7 +41,7 @@ def stamp_deployment_dates(file_path: Path, deployment_date: date | None = None)
     # Stamp items that don't have a deployedDate
     for item in items:
         details = item.get("details", {})
-        if details.get("deployedDate") is None:
+        if not details.get("deployedDate"):
             details["deployedDate"] = deployment_date_str
             stamped_count += 1
 
@@ -55,7 +55,7 @@ def stamp_deployment_dates(file_path: Path, deployment_date: date | None = None)
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: stamp-deployment-date.py <path-to-upcoming.json> [YYYY-MM-DD]", file=sys.stderr)
+        print("Usage: stamp-deployment-date.py <path-to-roadmap_jira.json> [YYYY-MM-DD]", file=sys.stderr)
         sys.exit(1)
 
     file_path = Path(sys.argv[1])

@@ -102,21 +102,13 @@ class NotificatorSettings(Settings):
     def kafka_security_protocol(self) -> str:
         """Kafka security protocol derived from the Clowder broker authtype.
 
-        ``BrokerConfigAuthtypeEnum`` only defines ``SASL``, so in practice this
-        returns either ``"SASL_SSL"`` (stage/prod MSK on port 9096) or
-        ``"PLAINTEXT"`` (local dev without a Clowder config).
-
-        When SASL auth is configured, SSL is required and a CA cert must be present.
-        Falls back to ``"SASL_PLAINTEXT"`` if SASL is configured without a CA cert
-        (though this is an unusual configuration).
+        Returns ``"SASL_SSL"`` when the broker uses SASL auth (stage/prod MSK
+        on port 9096) or ``"PLAINTEXT"`` when no Clowder broker is configured
+        (local dev).
         """
         broker = self._kafka_broker()
         if broker and broker.authtype == BrokerConfigAuthtypeEnum.SASL:
-            # SASL_SSL requires a CA certificate for TLS
-            if broker.cacert:
-                return "SASL_SSL"
-            # Fallback for SASL without TLS (unusual but valid)
-            return "SASL_PLAINTEXT"
+            return "SASL_SSL"
         return "PLAINTEXT"
 
     @property

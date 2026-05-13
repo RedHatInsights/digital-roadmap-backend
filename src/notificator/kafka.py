@@ -43,17 +43,17 @@ class KafkaBrokersNotConfigured(Exception):
 
 
 def _build_ssl_context(settings: NotificatorSettings) -> ssl.SSLContext | None:
-    """Return an SSLContext for Kafka broker verification, or None if no CA cert is configured.
+    """Return an SSLContext for Kafka broker TLS, or ``None`` for PLAINTEXT.
 
-    Uses ``aiokafka.helpers.create_ssl_context`` (the canonical aiokafka helper)
-    with the broker CA certificate provided by Clowder.  Returns ``None`` in
-    local dev where no CA cert is configured.
+    When a Clowder-provided broker CA cert exists (``kafka_ca_path``), it is
+    loaded as the sole trust anchor.  When SASL auth is configured but no
+    custom CA is provided, ``create_ssl_context(cafile=None)`` falls back to
+    the system trust store (which includes the Amazon root CA used by MSK).
     """
-    ca_path = settings.kafka_ca_path
-    if not ca_path:
+    if settings.kafka_security_protocol != "SASL_SSL":
         return None
-    ctx = create_ssl_context(cafile=ca_path)
-    logger.info("Kafka SSL context created", ca_path=ca_path)
+    ctx = create_ssl_context(cafile=settings.kafka_ca_path)
+    logger.info("Kafka SSL context created", ca_path=settings.kafka_ca_path or "(system trust store)")
     return ctx
 
 

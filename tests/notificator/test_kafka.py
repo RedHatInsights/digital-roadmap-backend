@@ -47,23 +47,37 @@ def _make_settings(
 
 
 class TestBuildSSLContext:
-    """_build_ssl_context: returns an SSLContext only when a Kafka CA cert path is available."""
+    """_build_ssl_context: returns an SSLContext when security protocol requires SSL."""
 
-    def test_returns_none_when_no_ca_path(self):
-        """No CA path (local dev / Clowder without Kafka TLS) → no SSL context."""
-        settings = _make_settings(kafka_ca_path=None)
+    def test_returns_none_when_plaintext(self):
+        """PLAINTEXT protocol (local dev) → no SSL context needed."""
+        settings = _make_settings(kafka_ca_path=None, kafka_security_protocol="PLAINTEXT")
         assert _build_ssl_context(settings) is None
 
-    def test_returns_ssl_context_when_ca_path_provided(self, mocker):
-        """CA path present → delegates to aiokafka create_ssl_context with cafile."""
+    def test_returns_ssl_context_with_ca_path(self, mocker):
+        """SASL_SSL with CA path → delegates to aiokafka create_ssl_context with cafile."""
         mock_ctx = mocker.MagicMock(spec=ssl.SSLContext)
         mock_create = mocker.patch("notificator.kafka.create_ssl_context", return_value=mock_ctx)
-        settings = _make_settings(kafka_ca_path="/tmp/kafka-ca.pem")
+        settings = _make_settings(
+            kafka_ca_path="/tmp/kafka-ca.pem",
+            kafka_security_protocol="SASL_SSL",
+        )
 
         result = _build_ssl_context(settings)
 
         assert result is mock_ctx
         mock_create.assert_called_once_with(cafile="/tmp/kafka-ca.pem")
+
+    def test_returns_ssl_context_with_system_cas_when_no_ca_path(self, mocker):
+        """SASL_SSL without custom CA → uses system trust store (covers MSK certs)."""
+        mock_ctx = mocker.MagicMock(spec=ssl.SSLContext)
+        mock_create = mocker.patch("notificator.kafka.create_ssl_context", return_value=mock_ctx)
+        settings = _make_settings(kafka_ca_path=None, kafka_security_protocol="SASL_SSL")
+
+        result = _build_ssl_context(settings)
+
+        assert result is mock_ctx
+        mock_create.assert_called_once_with(cafile=None)
 
 
 class TestBuildProducer:

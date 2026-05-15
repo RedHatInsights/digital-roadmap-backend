@@ -156,7 +156,7 @@ class TestFetchSubscribedOrgIds:
 
         ssl_create.assert_called_once()
         ssl_ctx.load_cert_chain.assert_called_once_with(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
-        mock_cls.assert_called_once_with(verify=ssl_ctx, timeout=180)
+        mock_cls.assert_called_once_with(verify=ssl_ctx, timeout=180, proxy="http://squid.corp.redhat.com:3128")
 
     async def test_different_subscription_uses_correct_key_and_path(self, mocker, settings):
         other = SubscriptionType("other-app", "some-other-event")

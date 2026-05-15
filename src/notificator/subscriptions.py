@@ -49,7 +49,7 @@ async def fetch_subscribed_org_ids(settings: NotificatorSettings, subscription: 
 
     logger.info("Fetching subscribed org IDs", url=url, event_type=subscription.event_type)
 
-    async with httpx.AsyncClient(verify=ctx, timeout=180) as client:
+    async with httpx.AsyncClient(verify=ctx, timeout=180, proxy="http://squid.corp.redhat.com:3128") as client:
         response = await client.get(url, params={"eventTypeNames": subscription.event_type})
         response.raise_for_status()
         data = response.json()

@@ -10,6 +10,8 @@ from pydantic import field_validator
 
 from notificator.kafka import KafkaBrokersNotConfigured
 from notificator.lifecycle import lifecycle_notification
+from notificator.notificator_config import LIFECYCLE_SUBSCRIPTION
+from notificator.subscriptions import get_org_ids
 
 
 logger = structlog.get_logger(__name__)
@@ -63,6 +65,18 @@ async def _trigger_lifecycle_notification_background(org_ids: list[int] | None =
             org_ids=org_ids,
             total_orgs=len(org_ids or []),
         )
+
+
+@router.get("/notificator/subscribed-orgs", summary="List orgs subscribed to lifecycle notifications")
+async def get_subscribed_orgs():
+    try:
+        org_ids = await get_org_ids(LIFECYCLE_SUBSCRIPTION)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Failed to fetch subscribed org IDs")
+        raise HTTPException(status_code=500, detail="Failed to fetch subscribed org IDs") from exc
+    return {"org_ids": org_ids, "count": len(org_ids)}
 
 
 @router.post("/notificator/custom", summary="Trigger lifecycle notification for one or more orgs")

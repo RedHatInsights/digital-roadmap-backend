@@ -11,11 +11,17 @@ from notificator.kafka import KafkaBrokersNotConfigured
 
 ADMIN_NOTIFICATOR_CUSTOM_URL = "/api/roadmap/admin/notificator/custom"
 ADMIN_NOTIFICATOR_ALL_URL = "/api/roadmap/admin/notificator/all"
+ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL = "/api/roadmap/admin/notificator/subscribed-orgs"
 
 
 @pytest.fixture(autouse=True)
 def _patch_lifecycle_notification(mocker):
     return mocker.patch("roadmap.admin.notificator.lifecycle_notification", new_callable=AsyncMock)
+
+
+@pytest.fixture()
+def _patch_get_org_ids(mocker):
+    return mocker.patch("roadmap.admin.notificator.get_org_ids", new_callable=AsyncMock)
 
 
 class TestCustomEndpointValidation:
@@ -90,3 +96,41 @@ class TestTriggerNotificator:
         # Background wrapper swallows errors and only logs.
         assert response.status_code == 202
         _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=None)
+
+
+class TestSubscribedOrgs:
+    """Tests for GET /notificator/subscribed-orgs endpoint."""
+
+    def test_returns_subscribed_org_ids(self, client, _patch_get_org_ids):
+        _patch_get_org_ids.return_value = [1, 2, 3]
+
+        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body == {"org_ids": [1, 2, 3], "count": 3}
+
+    def test_returns_empty_list_when_no_subscriptions(self, client, _patch_get_org_ids):
+        _patch_get_org_ids.return_value = []
+
+        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body == {"org_ids": [], "count": 0}
+
+    def test_returns_503_when_subscriptions_url_not_configured(self, client, _patch_get_org_ids):
+        _patch_get_org_ids.side_effect = RuntimeError("ROADMAP_SUBSCRIPTIONS_URL is not configured")
+
+        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+
+        assert response.status_code == 503
+        assert "ROADMAP_SUBSCRIPTIONS_URL is not configured" in response.json()["detail"]
+
+    def test_returns_500_on_unexpected_error(self, client, _patch_get_org_ids):
+        _patch_get_org_ids.side_effect = Exception("connection timeout")
+
+        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+
+        assert response.status_code == 500
+        assert "Failed to fetch subscribed org IDs" in response.json()["detail"]

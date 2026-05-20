@@ -68,7 +68,10 @@ class TestNotificator:
                     make_appstream_key("perl", "Perl 5.30", SupportStatus.supported, 8): {make_system_info(1, 8)},
                     make_appstream_key("ruby", "Ruby 2.7", SupportStatus.supported, 8): {make_system_info(2, 8)},
                 },
-                EMPTY_APPSTREAM_SECTIONS,
+                {
+                    "appstream_retired": {"rhel8": {"count": 0, "systems_count": 0}},
+                    "appstream_near_retirement": {"rhel8": {"count": 0, "systems_count": 0}},
+                },
                 id="two_rhel8_all_supported",
             ),
             pytest.param(
@@ -144,7 +147,8 @@ class TestNotificator:
 
         Scenarios (systems_by_appstream -> expected grouped output):
           empty                        - no appstreams → both sections empty
-          two_rhel8_all_supported      - supported-only streams are filtered out
+          two_rhel8_all_supported      - supported-only streams still produce zero-count
+                                         os_major entries in both sections
           one_rhel9_retired            - single retired stream, counts aggregated correctly
           one_retired_one_near_retirement - both statuses on the same os_major
           cross_os_major_backfill      - retired on RHEL 8, near-retirement on RHEL 9;

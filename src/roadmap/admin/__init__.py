@@ -25,10 +25,10 @@ async def require_internal_user(
 
     try:
         payload = json.loads(base64.b64decode(x_rh_identity))
+        user = payload.get("identity", {}).get("user") or {}
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid x-rh-identity header") from exc
 
-    user = payload.get("identity", {}).get("user") or {}
     if not user.get("is_internal", False):
         raise HTTPException(status_code=403, detail="Admin endpoints are restricted to internal users")
 

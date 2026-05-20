@@ -65,8 +65,10 @@ class Notificator:
     ) -> dict[str, dict[str, dict[str, int]]]:
         """Get relevant appstreams based on response from HBI.
 
-        Appstreams are filtered to include only ones with status specified in `NOTIFY_STATUSES`
-        and aggregated into counts grouped by os_major.
+        Appstreams with status in `NOTIFY_STATUSES` are aggregated into counts grouped
+        by os_major.  Appstreams with other statuses (e.g. supported) are not counted,
+        but their os_major is still tracked so that every OS major that has *any*
+        appstream gets a zero-count entry in every section.
 
         Each status is guaranteed to exist, the key contains the status name - e.g. "appstream_retired" or
         "appstream_near_retirement".
@@ -87,15 +89,17 @@ class Notificator:
         unique_systems: dict[str, dict[str, set[SystemInfo]]] = {
             f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
         }
+        all_os_keys: set[str] = set()
 
         for app_stream, systems in relevant_appstreams.items():
+            os_key = f"rhel{app_stream.app_stream_entity.os_major}"
+            all_os_keys.add(os_key)
+
             status = app_stream.app_stream_entity.support_status
             if status in NOTIFY_STATUSES:
                 status_key = f"appstream_{status.name}"
-                os_key = f"rhel{app_stream.app_stream_entity.os_major}"
                 appstreams_sections[status_key].setdefault(os_key, {"count": 0, "systems_count": 0})
                 appstreams_sections[status_key][os_key]["count"] += 1
-                # Merge into a set so each system is counted at most once per group
                 unique_systems[status_key].setdefault(os_key, set()).update(systems)
 
         # Resolve unique system sets into final integer counts
@@ -103,10 +107,9 @@ class Notificator:
             for os_key, systems_set in os_groups.items():
                 appstreams_sections[status_key][os_key]["systems_count"] = len(systems_set)
 
-        # Ensure every status group has entries for all os_majors seen in any group
-        # E.g. if RHEL9 appstream is present in `appstream_retired`, have it also in the `appstream_near_retirement`
-        # Using for nested for loop there is safe, not much RHEL versions are expected.
-        all_os_keys = {os_key for section in appstreams_sections.values() for os_key in section}
+        # Ensure every status group has entries for all os_majors seen in any appstream
+        # (including supported ones), so the consumer always gets a consistent shape.
+        # Using a nested for loop here is safe; not many RHEL versions are expected.
         for section in appstreams_sections.values():
             for os_key in all_os_keys:
                 section.setdefault(os_key, {"count": 0, "systems_count": 0})

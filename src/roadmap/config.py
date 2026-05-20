@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     rbac_hostname: str = ""
     rbac_port: int = 8000
 
+    env_name: str = "stage"
     log_level: str = "info"
     json_logging: bool = False
 

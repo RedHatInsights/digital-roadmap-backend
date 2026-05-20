@@ -7,11 +7,14 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
 
+from roadmap.config import Settings
+
 from . import notificator
 
 
 async def require_internal_user(
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+    settings: Settings = Depends(Settings.create),
 ) -> None:
     """Reject requests that do not come from a Red Hat internal user.
 
@@ -19,7 +22,12 @@ async def require_internal_user(
     base64-encoded JSON blob.  We check
     ``identity.user.is_internal == True`` to restrict access to Red Hat
     associates only.
+
+    In non-production environments the check is skipped.
     """
+    if settings.env_name != "prod":
+        return
+
     if x_rh_identity is None:
         raise HTTPException(status_code=401, detail="Missing x-rh-identity header")
 

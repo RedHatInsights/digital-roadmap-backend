@@ -98,6 +98,9 @@ objects:
               - name: SENTRY_ENVIRONMENT
                 value: ${ENV_NAME}
 
+              - name: ROADMAP_ENV_NAME
+                value: ${ENV_NAME}
+
             resources:
               limits:
                 cpu: "${CPU_LIMIT_SERVICE}"

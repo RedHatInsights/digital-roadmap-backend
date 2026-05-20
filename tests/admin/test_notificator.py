@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from notificator.kafka import KafkaBrokersNotConfigured
+from roadmap.config import Settings
 
 
 ADMIN_NOTIFICATOR_CUSTOM_URL = "/api/roadmap/admin/notificator/custom"
@@ -24,8 +25,21 @@ def _patch_get_org_ids(mocker):
     return mocker.patch("roadmap.admin.notificator.get_org_ids", new_callable=AsyncMock)
 
 
-class TestAdminAuthGuard:
-    """The is_internal check must block unauthenticated and external callers."""
+@pytest.fixture()
+def _force_prod(monkeypatch):
+    """Set env_name to 'prod' so the auth guard is active."""
+    monkeypatch.setenv("ROADMAP_ENV_NAME", "prod")
+    Settings.create.cache_clear()
+    yield
+    Settings.create.cache_clear()
+
+
+class TestAdminAuthGuardProd:
+    """In prod, the is_internal check must block unauthenticated and external callers."""
+
+    @pytest.fixture(autouse=True)
+    def _prod(self, _force_prod):
+        pass
 
     def test_no_identity_header_returns_401(self, client):
         response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 1})
@@ -60,6 +74,24 @@ class TestAdminAuthGuard:
 
     def test_internal_user_passes(self, admin_client, _patch_lifecycle_notification):
         response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 200
+
+
+class TestAdminAuthGuardStage:
+    """In stage (default), the auth guard is bypassed."""
+
+    def test_no_header_allowed_in_stage(self, client, _patch_lifecycle_notification):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 200
+
+    def test_external_user_allowed_in_stage(self, client, external_headers, _patch_lifecycle_notification):
+        response = client.post(
+            ADMIN_NOTIFICATOR_CUSTOM_URL,
+            json={"org_ids": 1},
+            headers=external_headers,
+        )
 
         assert response.status_code == 200
 

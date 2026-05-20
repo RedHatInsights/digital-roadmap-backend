@@ -24,76 +24,115 @@ def _patch_get_org_ids(mocker):
     return mocker.patch("roadmap.admin.notificator.get_org_ids", new_callable=AsyncMock)
 
 
+class TestAdminAuthGuard:
+    """The is_internal check must block unauthenticated and external callers."""
+
+    def test_no_identity_header_returns_401(self, client):
+        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 401
+        assert "Missing x-rh-identity" in response.json()["detail"]
+
+    def test_invalid_identity_header_returns_401(self, client):
+        response = client.post(
+            ADMIN_NOTIFICATOR_CUSTOM_URL,
+            json={"org_ids": 1},
+            headers={"x-rh-identity": "not-valid-base64!!!"},
+        )
+
+        assert response.status_code == 401
+        assert "Invalid x-rh-identity" in response.json()["detail"]
+
+    def test_external_user_returns_403(self, client, external_headers):
+        response = client.post(
+            ADMIN_NOTIFICATOR_CUSTOM_URL,
+            json={"org_ids": 1},
+            headers=external_headers,
+        )
+
+        assert response.status_code == 403
+        assert "restricted to internal users" in response.json()["detail"]
+
+    def test_external_user_blocked_on_get(self, client, external_headers):
+        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL, headers=external_headers)
+
+        assert response.status_code == 403
+
+    def test_internal_user_passes(self, admin_client, _patch_lifecycle_notification):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 200
+
+
 class TestCustomEndpointValidation:
     """Validation tests for custom endpoint."""
 
-    def test_missing_body_returns_422(self, client):
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL)
+    def test_missing_body_returns_422(self, admin_client):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL)
 
         assert response.status_code == 422
 
-    def test_invalid_org_ids_type_returns_422(self, client):
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": "not-an-int"})
+    def test_invalid_org_ids_type_returns_422(self, admin_client):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": "not-an-int"})
 
         assert response.status_code == 422
 
-    def test_empty_org_ids_returns_422(self, client):
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": []})
+    def test_empty_org_ids_returns_422(self, admin_client):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": []})
 
         assert response.status_code == 422
 
 
 class TestTriggerNotificator:
-    def test_custom_success_single_org(self, client, _patch_lifecycle_notification):
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
+    def test_custom_success_single_org(self, admin_client, _patch_lifecycle_notification):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 200
         body = response.json()
         assert body == {"message": "Lifecycle notification completed", "requested_org_ids": [42]}
         _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=[42])
 
-    def test_custom_deduplicates_and_sorts_org_ids(self, client, _patch_lifecycle_notification):
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": [3, 1, 3, 2]})
+    def test_custom_deduplicates_and_sorts_org_ids(self, admin_client, _patch_lifecycle_notification):
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": [3, 1, 3, 2]})
 
         assert response.status_code == 200
         assert response.json()["requested_org_ids"] == [1, 2, 3]
         _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=[1, 2, 3])
 
-    def test_custom_runtime_failure(self, client, _patch_lifecycle_notification):
+    def test_custom_runtime_failure(self, admin_client, _patch_lifecycle_notification):
         _patch_lifecycle_notification.side_effect = RuntimeError("failed for 1/1 orgs")
 
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 500
         assert "failed for 1/1 orgs" in response.json()["detail"]
 
-    def test_custom_kafka_not_configured(self, client, _patch_lifecycle_notification):
+    def test_custom_kafka_not_configured(self, admin_client, _patch_lifecycle_notification):
         _patch_lifecycle_notification.side_effect = KafkaBrokersNotConfigured("no brokers")
 
-        response = client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
+        response = admin_client.post(ADMIN_NOTIFICATOR_CUSTOM_URL, json={"org_ids": 42})
 
         assert response.status_code == 503
         assert "Kafka brokers not configured" in response.json()["detail"]
 
-    def test_all_requires_confirmation(self, client):
-        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": False})
+    def test_all_requires_confirmation(self, admin_client):
+        response = admin_client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": False})
 
         assert response.status_code == 400
         assert "confirm_all=true" in response.json()["detail"]
 
-    def test_all_accepts_and_triggers_background(self, client, _patch_lifecycle_notification):
-        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
+    def test_all_accepts_and_triggers_background(self, admin_client, _patch_lifecycle_notification):
+        response = admin_client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
 
         assert response.status_code == 202
         assert response.json() == {"message": "Lifecycle notification accepted"}
         _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=None)
 
-    def test_all_background_failure_still_returns_202(self, client, _patch_lifecycle_notification):
+    def test_all_background_failure_still_returns_202(self, admin_client, _patch_lifecycle_notification):
         _patch_lifecycle_notification.side_effect = RuntimeError("batch failed")
 
-        response = client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
+        response = admin_client.post(ADMIN_NOTIFICATOR_ALL_URL, json={"confirm_all": True})
 
-        # Background wrapper swallows errors and only logs.
         assert response.status_code == 202
         _patch_lifecycle_notification.assert_awaited_once_with(override_org_ids=None)
 
@@ -101,36 +140,36 @@ class TestTriggerNotificator:
 class TestSubscribedOrgs:
     """Tests for GET /notificator/subscribed-orgs endpoint."""
 
-    def test_returns_subscribed_org_ids(self, client, _patch_get_org_ids):
+    def test_returns_subscribed_org_ids(self, admin_client, _patch_get_org_ids):
         _patch_get_org_ids.return_value = [1, 2, 3]
 
-        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+        response = admin_client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
 
         assert response.status_code == 200
         body = response.json()
         assert body == {"org_ids": [1, 2, 3], "count": 3}
 
-    def test_returns_empty_list_when_no_subscriptions(self, client, _patch_get_org_ids):
+    def test_returns_empty_list_when_no_subscriptions(self, admin_client, _patch_get_org_ids):
         _patch_get_org_ids.return_value = []
 
-        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+        response = admin_client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
 
         assert response.status_code == 200
         body = response.json()
         assert body == {"org_ids": [], "count": 0}
 
-    def test_returns_503_when_subscriptions_url_not_configured(self, client, _patch_get_org_ids):
+    def test_returns_503_when_subscriptions_url_not_configured(self, admin_client, _patch_get_org_ids):
         _patch_get_org_ids.side_effect = RuntimeError("ROADMAP_SUBSCRIPTIONS_URL is not configured")
 
-        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+        response = admin_client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
 
         assert response.status_code == 503
         assert "ROADMAP_SUBSCRIPTIONS_URL is not configured" in response.json()["detail"]
 
-    def test_returns_500_on_unexpected_error(self, client, _patch_get_org_ids):
+    def test_returns_500_on_unexpected_error(self, admin_client, _patch_get_org_ids):
         _patch_get_org_ids.side_effect = Exception("connection timeout")
 
-        response = client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
+        response = admin_client.get(ADMIN_NOTIFICATOR_SUBSCRIBED_ORGS_URL)
 
         assert response.status_code == 500
         assert "Failed to fetch subscribed org IDs" in response.json()["detail"]

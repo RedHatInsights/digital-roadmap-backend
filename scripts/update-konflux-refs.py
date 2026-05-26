@@ -63,6 +63,14 @@ class Color(StrEnum):
     br_white = "\033[97m"
 
 
+def _positive_int(value):
+    validated = int(value)
+    if validated < 1:
+        raise ValueError("Must be positive")
+
+    return validated
+
+
 def parse_args():
     description = """
     Update container refs in a file or list all tags.
@@ -82,12 +90,13 @@ def parse_args():
         description=textwrap.dedent(description),
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.register("type", "positive integer", _positive_int)
     parser.add_argument("--file", "-f", required=False, type=Path)
     parser.add_argument("--image", "-i", required=False, help="Print out list of tags for a given image")
     parser.add_argument("--overwrite", "-o", action="store_true")
     parser.add_argument("--tag-length", "-l", default=4, type=int, help="Tags greater than this length will be omitted")
     parser.add_argument("--max-count", "-m", help="Maximum number of image tags to gather", type=int, default=50)
-    parser.add_argument("--workers", "-t", help="Number of concurrent workers", type=int, default=16)
+    parser.add_argument("--workers", "-t", help="Number of concurrent workers", type="positive integer", default=16)
 
     if argcomplete:
         argcomplete.autocomplete(parser)
@@ -190,6 +199,9 @@ def parse_container_image(line) -> tuple[str, str, str]:
 
 
 def array_split(lines: list[str], number: int) -> t.Iterable[tuple[str, ...]]:
+    if number < 1:
+        raise ValueError("number must be at least 1.")
+
     chunk_size = math.ceil(len(lines) / number)
     return batched(lines, chunk_size)
 

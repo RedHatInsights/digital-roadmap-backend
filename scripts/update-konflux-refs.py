@@ -206,7 +206,7 @@ def array_split(lines: list[str], number: int) -> t.Iterable[tuple[str, ...]]:
     return batched(lines, chunk_size)
 
 
-def process_chunk(data: t.Iterable[str], max_tag_length: int) -> list[str]:
+def process_chunk(data: t.Iterable[str], max_tag_length: int) -> tuple[str, ...]:
     updated = []
     for line in data:
         if "quay.io/konflux-ci" in line:
@@ -226,7 +226,7 @@ def process_chunk(data: t.Iterable[str], max_tag_length: int) -> list[str]:
 
         updated.append(line)
 
-    return updated
+    return tuple(updated)
 
 
 def main():
@@ -248,12 +248,12 @@ def main():
         chunks = array_split(file_content, workers)
         with ThreadPoolExecutor(max_workers=workers) as executor:
             # Use future objects as a key to preserve submission order.
-            future_chunks = {executor.submit(process_chunk, chunk, max_tag_length): [] for chunk in chunks}
+            future_chunks = {executor.submit(process_chunk, chunk, max_tag_length): chunk for chunk in chunks}
             for future in as_completed(future_chunks):
                 try:
                     future_chunks[future] = future.result()
                 except Exception as exc:
-                    print(f"Problem getting data: {exc}.")
+                    print(f"Problem getting data. Not all references were updated. {exc}.")
 
         # Reassemble the lines in the order they were submitted.
         updated = [n for lines in future_chunks.values() for n in lines]

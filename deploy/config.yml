@@ -406,10 +406,10 @@ parameters:
     value: 500m
 
   - name: MEMORY_REQUEST_NOTIFICATOR
-    value: 256Mi
+    value: 512Mi
 
   - name: MEMORY_LIMIT_NOTIFICATOR
-    value: 512Mi
+    value: 1024Mi
 
   - name: LOG_LEVEL
     value: DEBUG

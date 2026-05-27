@@ -25,11 +25,11 @@ def freeze(python_version: str, requirement: Path) -> str:
 
     # Create a fresh virtual environment
     subprocess.check_output([python_bin, "-m", "venv", "--clear", venv_path])
-    subprocess.check_output([venv_python, "-m", "pip", "install", "--upgrade", "pip"])
+    subprocess.check_output([venv_python, "-m", "pip", "install", "--no-cache", "--upgrade", "pip"])
 
     # Install requirements with constraints
     subprocess.check_output(
-        [venv_python, "-m", "pip", "install", "--requirement", requirement, "--constraint", constraints]
+        [venv_python, "-m", "pip", "install", "--no-cache", "--requirement", requirement, "--constraint", constraints]
     )
 
     # Generate a freeze file

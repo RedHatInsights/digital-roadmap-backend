@@ -64,13 +64,11 @@ ADD /src/roadmap/ /srv/roady/roadmap/
 ADD /src/notificator /srv/roady/notificator/
 ADD uvicorn_disable_logging.json /srv/roady/uvicorn_disable_logging.json
 ADD /scripts/replication.py /usr/local/bin/replication.py
-ADD /scripts/stamp-deployment-date.py /usr/local/bin/stamp-deployment-date.py
 
 ADD scripts/.release /srv/roady/
-RUN curl -sSL -o /srv/roady/roadmap/data/upcoming.json \
+ADD --chmod=0644 \
     https://gitlab.cee.redhat.com/rhel-lightspeed/roadmap/data/-/raw/main/data/roadmap_jira.json \
-    && chmod 0644 /srv/roady/roadmap/data/upcoming.json \
-    && "$PYTHON" /usr/local/bin/stamp-deployment-date.py /srv/roady/roadmap/data/upcoming.json
+    /srv/roady/roadmap/data/upcoming.json
 
 USER roady
 WORKDIR /srv/roady

@@ -1,13 +1,16 @@
 #!/usr/bin/env python
-
 import argparse
 import json
+import math
 import sys
 import textwrap
 import typing as t
 import urllib.request
 
+from concurrent.futures import as_completed
+from concurrent.futures import ThreadPoolExecutor
 from enum import StrEnum
+from itertools import islice
 from operator import itemgetter
 from pathlib import Path
 
@@ -16,6 +19,27 @@ try:
     import argcomplete  # pyright: ignore[reportMissingImports]
 except ImportError:
     argcomplete = None
+
+
+def _batched(iterable: t.Iterable, batch_size: int) -> t.Iterable[tuple[t.Any, ...]]:
+    """Yield batches based on chunk size.
+
+    Roughly equivalent to itertools.batched in Python >= 3.12.
+    https://docs.python.org/3/library/itertools.html#itertools.batched
+    """
+
+    if batch_size < 1:
+        raise ValueError("Batch size must be at least 1.")
+
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, batch_size)):
+        yield batch
+
+
+try:
+    from itertools import batched
+except ImportError:
+    batched = _batched
 
 
 QUAYIO = "quay.io/"
@@ -39,6 +63,14 @@ class Color(StrEnum):
     br_white = "\033[97m"
 
 
+def _positive_int(value):
+    validated = int(value)
+    if validated < 1:
+        raise ValueError("Must be positive")
+
+    return validated
+
+
 def parse_args():
     description = """
     Update container refs in a file or list all tags.
@@ -58,11 +90,13 @@ def parse_args():
         description=textwrap.dedent(description),
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.register("type", "positive integer", _positive_int)
     parser.add_argument("--file", "-f", required=False, type=Path)
     parser.add_argument("--image", "-i", required=False, help="Print out list of tags for a given image")
     parser.add_argument("--overwrite", "-o", action="store_true")
     parser.add_argument("--tag-length", "-l", default=4, type=int, help="Tags greater than this length will be omitted")
     parser.add_argument("--max-count", "-m", help="Maximum number of image tags to gather", type=int, default=50)
+    parser.add_argument("--workers", "-t", help="Number of concurrent workers", type="positive integer", default=16)
 
     if argcomplete:
         argcomplete.autocomplete(parser)
@@ -164,6 +198,37 @@ def parse_container_image(line) -> tuple[str, str, str]:
     return image, tag, digest
 
 
+def array_split(lines: list[str], number: int) -> t.Iterable[tuple[str, ...]]:
+    if number < 1:
+        raise ValueError("number must be at least 1.")
+
+    chunk_size = math.ceil(len(lines) / number)
+    return batched(lines, chunk_size)
+
+
+def process_chunk(data: t.Iterable[str], max_tag_length: int) -> tuple[str, ...]:
+    updated = []
+    for line in data:
+        if "quay.io/konflux-ci" in line:
+            image, tag, digest = parse_container_image(line)
+            latest_tag = get_latest_tag(image.lstrip(QUAYIO), max_tag_length=max_tag_length)
+
+            print(f"Updating {image}", flush=True)
+
+            tag = f":{tag}" if tag else ""
+            digest = f"@{digest}" if digest else ""
+            current_image = f"{image}{tag}{digest}"
+
+            new_tag = f":{latest_tag['name']}" if tag else ""
+            new_digest = f"@{latest_tag['manifest_digest']}" if digest else ""
+            new_image = f"{image}{new_tag}{new_digest}"
+            line = line.replace(current_image, new_image)
+
+        updated.append(line)
+
+    return tuple(updated)
+
+
 def main():
     args = parse_args()
 
@@ -172,34 +237,26 @@ def main():
     overwrite = args.overwrite
     max_tag_length = args.tag_length
     max_count = args.max_count
+    workers = args.workers
 
     if file:
-        updated = []
         file_content = file.read_text().splitlines()
         output_file = file.with_name(f"{file.stem}_updated{file.suffix}")
         if overwrite:
             output_file = file
 
-        for line in file_content:
-            if "quay.io/konflux-ci" in line:
-                image, tag, digest = parse_container_image(line)
-                latest_tag = get_latest_tag(image.lstrip(QUAYIO), max_tag_length=max_tag_length)
+        chunks = array_split(file_content, workers)
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            # Use future objects as a key to preserve submission order.
+            future_chunks = {executor.submit(process_chunk, chunk, max_tag_length): chunk for chunk in chunks}
+            for future in as_completed(future_chunks):
+                try:
+                    future_chunks[future] = future.result()
+                except Exception as exc:
+                    print(f"Problem getting data. Not all references were updated. {exc}.")
 
-                print(f"Updating {image}")
-
-                tag = f":{tag}" if tag else ""
-                digest = f"@{digest}" if digest else ""
-                current_image = f"{image}{tag}{digest}"
-
-                # Honor the current format and only add tag or digest if they
-                # were in the original line.
-                new_tag = f":{latest_tag['name']}" if tag else ""
-                new_digest = f"@{latest_tag['manifest_digest']}" if digest else ""
-                new_image = f"{image}{new_tag}{new_digest}"
-                line = line.replace(current_image, new_image)
-
-            updated.append(line)
-
+        # Reassemble the lines in the order they were submitted.
+        updated = [n for lines in future_chunks.values() for n in lines]
         output_file.write_text("\n".join(updated) + "\n")
         sys.exit()
 

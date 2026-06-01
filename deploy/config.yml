@@ -400,16 +400,16 @@ parameters:
     value: "0 6 1 * *"
 
   - name: CPU_REQUEST_NOTIFICATOR
-    value: 250m
-
-  - name: CPU_LIMIT_NOTIFICATOR
     value: 500m
 
+  - name: CPU_LIMIT_NOTIFICATOR
+    value: 750m
+
   - name: MEMORY_REQUEST_NOTIFICATOR
-    value: 512Mi
+    value: 1024Mi
 
   - name: MEMORY_LIMIT_NOTIFICATOR
-    value: 1024Mi
+    value: 2048Mi
 
   - name: LOG_LEVEL
     value: DEBUG

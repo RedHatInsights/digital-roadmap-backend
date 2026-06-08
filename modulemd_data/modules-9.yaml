@@ -1,0 +1,3192 @@
+document: modulemd-defaults
+version: 1
+data:
+  module: mariadb
+  profiles:
+    10.11:
+    - server
+    10.18:
+    - server
+    11.8:
+    - server
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '10.11'
+  artifacts:
+    rpms:
+    - galera-0:26.4.16-1.module_el9+853+7b957b9b.src
+    - galera-0:26.4.16-1.module_el9+853+7b957b9b.x86_64
+    - galera-debuginfo-0:26.4.16-1.module_el9+853+7b957b9b.x86_64
+    - galera-debugsource-0:26.4.16-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-3:10.11.6-1.module_el9+853+7b957b9b.src
+    - mariadb-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-backup-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-backup-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-common-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-debugsource-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-devel-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-embedded-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-embedded-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-embedded-devel-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-errmsg-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-gssapi-server-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-gssapi-server-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-oqgraph-engine-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-pam-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-pam-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-server-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-server-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-server-galera-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-server-utils-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-server-utils-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-test-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+    - mariadb-test-debuginfo-3:10.11.6-1.module_el9+853+7b957b9b.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '10.11'
+  artifacts:
+    rpms:
+    - galera-0:26.4.20-1.module_el9+1141+de86b509.src
+    - galera-0:26.4.20-1.module_el9+1141+de86b509.x86_64
+    - galera-debuginfo-0:26.4.20-1.module_el9+1141+de86b509.x86_64
+    - galera-debugsource-0:26.4.20-1.module_el9+1141+de86b509.x86_64
+    - mariadb-3:10.11.10-1.module_el9+1141+de86b509.src
+    - mariadb-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-backup-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-backup-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-common-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-debugsource-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-devel-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-embedded-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-embedded-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-embedded-devel-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-errmsg-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-gssapi-server-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-gssapi-server-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-oqgraph-engine-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-pam-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-pam-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-server-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-server-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-server-galera-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-server-utils-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-server-utils-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-test-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+    - mariadb-test-debuginfo-3:10.11.10-1.module_el9+1141+de86b509.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '10.11'
+  artifacts:
+    rpms:
+    - galera-0:26.4.20-1.module_el9+1303+08607f68.src
+    - galera-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - galera-debuginfo-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - galera-debugsource-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - mariadb-3:10.11.15-1.module_el9+1303+08607f68.src
+    - mariadb-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-backup-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-backup-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-common-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-debugsource-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-devel-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-embedded-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-embedded-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-embedded-devel-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-errmsg-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-gssapi-server-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-gssapi-server-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-oqgraph-engine-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-pam-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-pam-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-server-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-server-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-server-galera-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-server-utils-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-server-utils-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-test-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+    - mariadb-test-debuginfo-3:10.11.15-1.module_el9+1303+08607f68.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '10.11'
+  artifacts:
+    rpms:
+    - galera-0:26.4.20-1.module_el9+1303+08607f68.src
+    - galera-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - galera-debuginfo-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - galera-debugsource-0:26.4.20-1.module_el9+1303+08607f68.x86_64
+    - mariadb-3:10.11.15-2.module_el9+1320+91d4cbb7.src
+    - mariadb-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-backup-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-backup-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-common-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-debugsource-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-devel-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-embedded-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-embedded-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-embedded-devel-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-errmsg-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-gssapi-server-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-gssapi-server-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-oqgraph-engine-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-pam-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-pam-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-server-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-server-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-server-galera-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-server-utils-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-server-utils-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-test-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+    - mariadb-test-debuginfo-3:10.11.15-2.module_el9+1320+91d4cbb7.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '11.8'
+  artifacts:
+    rpms:
+    - galera-0:26.4.23-1.module_el9+1297+eaf3c84c.src
+    - galera-0:26.4.23-1.module_el9+1297+eaf3c84c.x86_64
+    - galera-debuginfo-0:26.4.23-1.module_el9+1297+eaf3c84c.x86_64
+    - galera-debugsource-0:26.4.23-1.module_el9+1297+eaf3c84c.x86_64
+    - mariadb-3:11.8.5-1.module_el9+1304+6dbdc612.src
+    - mariadb-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-backup-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-backup-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-client-utils-3:11.8.5-1.module_el9+1304+6dbdc612.noarch
+    - mariadb-common-3:11.8.5-1.module_el9+1304+6dbdc612.noarch
+    - mariadb-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-debugsource-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-devel-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-embedded-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-embedded-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-embedded-devel-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-errmsg-3:11.8.5-1.module_el9+1304+6dbdc612.noarch
+    - mariadb-gssapi-server-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-gssapi-server-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-oqgraph-engine-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-pam-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-pam-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-server-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-server-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-server-galera-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-server-galera-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-server-utils-3:11.8.5-1.module_el9+1304+6dbdc612.noarch
+    - mariadb-test-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+    - mariadb-test-debuginfo-3:11.8.5-1.module_el9+1304+6dbdc612.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: mariadb
+  stream: '11.8'
+  artifacts:
+    rpms:
+    - galera-0:26.4.25-1.module_el9+1327+fe5ff7c2.src
+    - galera-0:26.4.25-1.module_el9+1327+fe5ff7c2.x86_64
+    - galera-debuginfo-0:26.4.25-1.module_el9+1327+fe5ff7c2.x86_64
+    - galera-debugsource-0:26.4.25-1.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-3:11.8.6-2.module_el9+1327+fe5ff7c2.src
+    - mariadb-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-backup-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-backup-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-client-utils-3:11.8.6-2.module_el9+1327+fe5ff7c2.noarch
+    - mariadb-common-3:11.8.6-2.module_el9+1327+fe5ff7c2.noarch
+    - mariadb-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-debugsource-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-devel-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-embedded-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-embedded-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-embedded-devel-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-errmsg-3:11.8.6-2.module_el9+1327+fe5ff7c2.noarch
+    - mariadb-gssapi-server-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-gssapi-server-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-oqgraph-engine-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-oqgraph-engine-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-pam-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-pam-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-server-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-server-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-server-galera-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-server-galera-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-server-utils-3:11.8.6-2.module_el9+1327+fe5ff7c2.noarch
+    - mariadb-test-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+    - mariadb-test-debuginfo-3:11.8.6-2.module_el9+1327+fe5ff7c2.x86_64
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: maven
+  profiles:
+    3.8:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: maven
+  stream: '3.8'
+  artifacts:
+    rpms:
+    - apache-commons-cli-0:1.5.0-5.module_el9+923+016ca152.noarch
+    - apache-commons-cli-0:1.5.0-5.module_el9+923+016ca152.src
+    - apache-commons-codec-0:1.15-8.module_el9+923+016ca152.noarch
+    - apache-commons-codec-0:1.15-8.module_el9+923+016ca152.src
+    - apache-commons-io-1:2.11.0-3.module_el9+923+016ca152.noarch
+    - apache-commons-io-1:2.11.0-3.module_el9+923+016ca152.src
+    - apache-commons-lang3-0:3.12.0-8.module_el9+923+016ca152.noarch
+    - apache-commons-lang3-0:3.12.0-8.module_el9+923+016ca152.src
+    - atinject-0:1.0.5-5.module_el9+923+016ca152.noarch
+    - atinject-0:1.0.5-5.module_el9+923+016ca152.src
+    - cdi-api-0:2.0.2-7.module_el9+923+016ca152.noarch
+    - cdi-api-0:2.0.2-7.module_el9+923+016ca152.src
+    - google-guice-0:4.2.3-10.module_el9+923+016ca152.noarch
+    - google-guice-0:4.2.3-10.module_el9+923+016ca152.src
+    - guava-0:31.0.1-5.module_el9+923+016ca152.noarch
+    - guava-0:31.0.1-5.module_el9+923+016ca152.src
+    - httpcomponents-client-0:4.5.13-6.module_el9+923+016ca152.noarch
+    - httpcomponents-client-0:4.5.13-6.module_el9+923+016ca152.src
+    - httpcomponents-core-0:4.4.13-8.module_el9+923+016ca152.noarch
+    - httpcomponents-core-0:4.4.13-8.module_el9+923+016ca152.src
+    - jakarta-annotations-0:1.3.5-15.module_el9+923+016ca152.noarch
+    - jakarta-annotations-0:1.3.5-15.module_el9+923+016ca152.src
+    - jansi-0:2.4.0-7.module_el9+923+016ca152.src
+    - jansi-0:2.4.0-7.module_el9+923+016ca152.x86_64
+    - jansi-debuginfo-0:2.4.0-7.module_el9+923+016ca152.x86_64
+    - jansi-debugsource-0:2.4.0-7.module_el9+923+016ca152.x86_64
+    - jcl-over-slf4j-0:1.7.32-5.module_el9+923+016ca152.noarch
+    - jsr-305-0:3.0.2-7.module_el9+923+016ca152.noarch
+    - jsr-305-0:3.0.2-7.module_el9+923+016ca152.src
+    - maven-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-1:3.8.5-6.module_el9+923+016ca152.src
+    - maven-lib-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-openjdk11-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-openjdk17-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-openjdk21-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-openjdk8-1:3.8.5-6.module_el9+923+016ca152.noarch
+    - maven-resolver-1:1.7.3-6.module_el9+923+016ca152.noarch
+    - maven-resolver-1:1.7.3-6.module_el9+923+016ca152.src
+    - maven-shared-utils-0:3.3.4-6.module_el9+923+016ca152.noarch
+    - maven-shared-utils-0:3.3.4-6.module_el9+923+016ca152.src
+    - maven-wagon-0:3.5.1-3.module_el9+923+016ca152.noarch
+    - maven-wagon-0:3.5.1-3.module_el9+923+016ca152.src
+    - plexus-cipher-0:2.0-3.module_el9+923+016ca152.noarch
+    - plexus-cipher-0:2.0-3.module_el9+923+016ca152.src
+    - plexus-classworlds-0:2.6.0-13.module_el9+923+016ca152.noarch
+    - plexus-classworlds-0:2.6.0-13.module_el9+923+016ca152.src
+    - plexus-containers-0:2.1.1-3.module_el9+923+016ca152.src
+    - plexus-containers-component-annotations-0:2.1.1-3.module_el9+923+016ca152.noarch
+    - plexus-interpolation-0:1.26-13.module_el9+923+016ca152.noarch
+    - plexus-interpolation-0:1.26-13.module_el9+923+016ca152.src
+    - plexus-sec-dispatcher-0:2.0-5.module_el9+923+016ca152.noarch
+    - plexus-sec-dispatcher-0:2.0-5.module_el9+923+016ca152.src
+    - plexus-utils-0:3.3.0-11.module_el9+923+016ca152.noarch
+    - plexus-utils-0:3.3.0-11.module_el9+923+016ca152.src
+    - sisu-1:0.3.5-3.module_el9+923+016ca152.noarch
+    - sisu-1:0.3.5-3.module_el9+923+016ca152.src
+    - slf4j-0:1.7.32-5.module_el9+923+016ca152.noarch
+    - slf4j-0:1.7.32-5.module_el9+923+016ca152.src
+---
+document: modulemd
+version: 2
+data:
+  name: maven
+  stream: '3.9'
+  artifacts:
+    rpms:
+    - aopalliance-0:1.0-51.module_el9+1180+96ab3331.noarch
+    - aopalliance-0:1.0-51.module_el9+1180+96ab3331.src
+    - apache-commons-cli-0:1.9.0-4.module_el9+1180+96ab3331.noarch
+    - apache-commons-cli-0:1.9.0-4.module_el9+1180+96ab3331.src
+    - apache-commons-codec-0:1.17.1-8.module_el9+1180+96ab3331.noarch
+    - apache-commons-codec-0:1.17.1-8.module_el9+1180+96ab3331.src
+    - apache-commons-io-1:2.16.1-9.module_el9+1180+96ab3331.noarch
+    - apache-commons-io-1:2.16.1-9.module_el9+1180+96ab3331.src
+    - atinject-0:1.0.5-14.module_el9+1180+96ab3331.noarch
+    - atinject-0:1.0.5-14.module_el9+1180+96ab3331.src
+    - google-guice-0:5.1.0-23.module_el9+1180+96ab3331.noarch
+    - google-guice-0:5.1.0-23.module_el9+1180+96ab3331.src
+    - guava-0:33.3.0-5.module_el9+1180+96ab3331.noarch
+    - guava-0:33.3.0-5.module_el9+1180+96ab3331.src
+    - httpcomponents-client-0:4.5.14-21.module_el9+1180+96ab3331.noarch
+    - httpcomponents-client-0:4.5.14-21.module_el9+1180+96ab3331.src
+    - httpcomponents-core-0:4.4.16-21.module_el9+1180+96ab3331.noarch
+    - httpcomponents-core-0:4.4.16-21.module_el9+1180+96ab3331.src
+    - jakarta-annotations-0:1.3.5-38.module_el9+1180+96ab3331.noarch
+    - jakarta-annotations-0:1.3.5-38.module_el9+1180+96ab3331.src
+    - jansi-0:2.4.1-12.module_el9+1180+96ab3331.src
+    - jansi-0:2.4.1-12.module_el9+1180+96ab3331.x86_64
+    - jcl-over-slf4j-0:1.7.36-9.module_el9+1180+96ab3331.noarch
+    - jsr-305-0:3.0.2-36.module_el9+1180+96ab3331.noarch
+    - jsr-305-0:3.0.2-36.module_el9+1180+96ab3331.src
+    - maven-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-1:3.9.9-12.module_el9+1184+7627fd1e.src
+    - maven-lib-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-openjdk11-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-openjdk17-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-openjdk21-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-openjdk8-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-resolver-1:1.9.22-6.module_el9+1180+96ab3331.noarch
+    - maven-resolver-1:1.9.22-6.module_el9+1180+96ab3331.src
+    - maven-shared-utils-0:3.4.2-19.module_el9+1180+96ab3331.noarch
+    - maven-shared-utils-0:3.4.2-19.module_el9+1180+96ab3331.src
+    - maven-unbound-1:3.9.9-12.module_el9+1184+7627fd1e.noarch
+    - maven-wagon-0:3.5.3-17.module_el9+1180+96ab3331.noarch
+    - maven-wagon-0:3.5.3-17.module_el9+1180+96ab3331.src
+    - plexus-cipher-0:2.0-25.module_el9+1180+96ab3331.noarch
+    - plexus-cipher-0:2.0-25.module_el9+1180+96ab3331.src
+    - plexus-classworlds-0:2.8.0-9.module_el9+1180+96ab3331.noarch
+    - plexus-classworlds-0:2.8.0-9.module_el9+1180+96ab3331.src
+    - plexus-containers-0:2.2.0-10.module_el9+1180+96ab3331.src
+    - plexus-containers-component-annotations-0:2.2.0-10.module_el9+1180+96ab3331.noarch
+    - plexus-interpolation-0:1.27-10.module_el9+1180+96ab3331.noarch
+    - plexus-interpolation-0:1.27-10.module_el9+1180+96ab3331.src
+    - plexus-sec-dispatcher-0:2.0-28.module_el9+1180+96ab3331.noarch
+    - plexus-sec-dispatcher-0:2.0-28.module_el9+1180+96ab3331.src
+    - plexus-utils-0:3.5.1-17.module_el9+1180+96ab3331.noarch
+    - plexus-utils-0:3.5.1-17.module_el9+1180+96ab3331.src
+    - sisu-1:0.9.0~M3-7.module_el9+1180+96ab3331.noarch
+    - sisu-1:0.9.0~M3-7.module_el9+1180+96ab3331.src
+    - slf4j-0:1.7.36-9.module_el9+1180+96ab3331.noarch
+    - slf4j-0:1.7.36-9.module_el9+1180+96ab3331.src
+---
+document: modulemd
+version: 2
+data:
+  name: maven
+  stream: '3.9'
+  artifacts:
+    rpms:
+    - aopalliance-0:1.0-51.module_el9+1180+96ab3331.noarch
+    - aopalliance-0:1.0-51.module_el9+1180+96ab3331.src
+    - apache-commons-cli-0:1.9.0-4.module_el9+1180+96ab3331.noarch
+    - apache-commons-cli-0:1.9.0-4.module_el9+1180+96ab3331.src
+    - apache-commons-codec-0:1.17.1-8.module_el9+1180+96ab3331.noarch
+    - apache-commons-codec-0:1.17.1-8.module_el9+1180+96ab3331.src
+    - apache-commons-io-1:2.16.1-9.module_el9+1180+96ab3331.noarch
+    - apache-commons-io-1:2.16.1-9.module_el9+1180+96ab3331.src
+    - atinject-0:1.0.5-14.module_el9+1180+96ab3331.noarch
+    - atinject-0:1.0.5-14.module_el9+1180+96ab3331.src
+    - google-guice-0:5.1.0-23.module_el9+1180+96ab3331.noarch
+    - google-guice-0:5.1.0-23.module_el9+1180+96ab3331.src
+    - guava-0:33.3.0-5.module_el9+1180+96ab3331.noarch
+    - guava-0:33.3.0-5.module_el9+1180+96ab3331.src
+    - httpcomponents-client-0:4.5.14-21.module_el9+1180+96ab3331.noarch
+    - httpcomponents-client-0:4.5.14-21.module_el9+1180+96ab3331.src
+    - httpcomponents-core-0:4.4.16-21.module_el9+1180+96ab3331.noarch
+    - httpcomponents-core-0:4.4.16-21.module_el9+1180+96ab3331.src
+    - jakarta-annotations-0:1.3.5-38.module_el9+1180+96ab3331.noarch
+    - jakarta-annotations-0:1.3.5-38.module_el9+1180+96ab3331.src
+    - jansi-0:2.4.1-12.module_el9+1180+96ab3331.src
+    - jansi-0:2.4.1-12.module_el9+1180+96ab3331.x86_64
+    - jcl-over-slf4j-0:1.7.36-9.module_el9+1180+96ab3331.noarch
+    - jsr-305-0:3.0.2-36.module_el9+1180+96ab3331.noarch
+    - jsr-305-0:3.0.2-36.module_el9+1180+96ab3331.src
+    - maven-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-1:3.9.9-13.module_el9+1307+b4d55eb3.src
+    - maven-lib-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-openjdk11-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-openjdk17-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-openjdk21-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-openjdk25-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-openjdk8-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-resolver-1:1.9.22-6.module_el9+1180+96ab3331.noarch
+    - maven-resolver-1:1.9.22-6.module_el9+1180+96ab3331.src
+    - maven-shared-utils-0:3.4.2-19.module_el9+1180+96ab3331.noarch
+    - maven-shared-utils-0:3.4.2-19.module_el9+1180+96ab3331.src
+    - maven-unbound-1:3.9.9-13.module_el9+1307+b4d55eb3.noarch
+    - maven-wagon-0:3.5.3-17.module_el9+1180+96ab3331.noarch
+    - maven-wagon-0:3.5.3-17.module_el9+1180+96ab3331.src
+    - plexus-cipher-0:2.0-25.module_el9+1180+96ab3331.noarch
+    - plexus-cipher-0:2.0-25.module_el9+1180+96ab3331.src
+    - plexus-classworlds-0:2.8.0-9.module_el9+1180+96ab3331.noarch
+    - plexus-classworlds-0:2.8.0-9.module_el9+1180+96ab3331.src
+    - plexus-containers-0:2.2.0-10.module_el9+1180+96ab3331.src
+    - plexus-containers-component-annotations-0:2.2.0-10.module_el9+1180+96ab3331.noarch
+    - plexus-interpolation-0:1.27-10.module_el9+1180+96ab3331.noarch
+    - plexus-interpolation-0:1.27-10.module_el9+1180+96ab3331.src
+    - plexus-sec-dispatcher-0:2.0-28.module_el9+1180+96ab3331.noarch
+    - plexus-sec-dispatcher-0:2.0-28.module_el9+1180+96ab3331.src
+    - plexus-utils-0:3.5.1-17.module_el9+1180+96ab3331.noarch
+    - plexus-utils-0:3.5.1-17.module_el9+1180+96ab3331.src
+    - sisu-1:0.9.0~M3-7.module_el9+1180+96ab3331.noarch
+    - sisu-1:0.9.0~M3-7.module_el9+1180+96ab3331.src
+    - slf4j-0:1.7.36-9.module_el9+1180+96ab3331.noarch
+    - slf4j-0:1.7.36-9.module_el9+1180+96ab3331.src
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1169+67ad2a1f.4.src
+    - mecab-0:0.996-3.module_el9+1169+67ad2a1f.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1169+67ad2a1f.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1169+67ad2a1f.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1169+67ad2a1f.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1169+67ad2a1f.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1169+67ad2a1f.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1169+67ad2a1f.x86_64
+    - mysql-0:8.4.3-2.module_el9+1169+67ad2a1f.src
+    - mysql-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-common-0:8.4.3-2.module_el9+1169+67ad2a1f.noarch
+    - mysql-debuginfo-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-debugsource-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-devel-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-devel-debuginfo-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-errmsg-0:8.4.3-2.module_el9+1169+67ad2a1f.noarch
+    - mysql-libs-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-libs-debuginfo-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-server-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-server-debuginfo-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-test-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - mysql-test-data-0:8.4.3-2.module_el9+1169+67ad2a1f.noarch
+    - mysql-test-debuginfo-0:8.4.3-2.module_el9+1169+67ad2a1f.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1169+67ad2a1f.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1169+67ad2a1f.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1169+67ad2a1f.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.src
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mysql-0:8.4.4-1.module_el9+1192+f597a618.src
+    - mysql-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-common-0:8.4.4-1.module_el9+1192+f597a618.noarch
+    - mysql-debuginfo-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-debugsource-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-devel-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-devel-debuginfo-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-errmsg-0:8.4.4-1.module_el9+1192+f597a618.noarch
+    - mysql-libs-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-libs-debuginfo-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-server-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-server-debuginfo-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-test-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - mysql-test-data-0:8.4.4-1.module_el9+1192+f597a618.noarch
+    - mysql-test-debuginfo-0:8.4.4-1.module_el9+1192+f597a618.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1192+f597a618.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1192+f597a618.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1192+f597a618.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.src
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mysql-0:8.4.7-1.module_el9+1294+3bf61324.src
+    - mysql-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-common-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-debugsource-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-devel-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-devel-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-errmsg-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-libs-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-libs-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-server-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-server-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-test-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-test-data-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-test-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1192+f597a618.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1192+f597a618.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1192+f597a618.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.src
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mysql-0:8.4.7-1.module_el9+1294+3bf61324.src
+    - mysql-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-common-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-debugsource-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-devel-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-devel-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-errmsg-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-libs-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-libs-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-server-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-server-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-test-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - mysql-test-data-0:8.4.7-1.module_el9+1294+3bf61324.noarch
+    - mysql-test-debuginfo-0:8.4.7-1.module_el9+1294+3bf61324.x86_64
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.src
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debuginfo-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debugsource-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1192+f597a618.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1192+f597a618.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1192+f597a618.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.src
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mysql-0:8.4.7-2.module_el9+1324+fc671961.src
+    - mysql-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-common-0:8.4.7-2.module_el9+1324+fc671961.noarch
+    - mysql-debuginfo-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-debugsource-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-devel-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-devel-debuginfo-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-errmsg-0:8.4.7-2.module_el9+1324+fc671961.noarch
+    - mysql-libs-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-libs-debuginfo-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-server-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-server-debuginfo-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-test-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - mysql-test-data-0:8.4.7-2.module_el9+1324+fc671961.noarch
+    - mysql-test-debuginfo-0:8.4.7-2.module_el9+1324+fc671961.x86_64
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.src
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debuginfo-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debugsource-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1192+f597a618.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1192+f597a618.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1192+f597a618.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: mysql
+  stream: '8.4'
+  artifacts:
+    rpms:
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.src
+    - mecab-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debuginfo-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-debugsource-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-devel-0:0.996-3.module_el9+1192+f597a618.4.x86_64
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.src
+    - mecab-ipadic-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mecab-ipadic-EUCJP-0:2.7.0.20070801-24.module_el9+1192+f597a618.x86_64
+    - mysql-0:8.4.8-1.module_el9+1325+b8a55c72.src
+    - mysql-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-common-0:8.4.8-1.module_el9+1325+b8a55c72.noarch
+    - mysql-debuginfo-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-debugsource-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-devel-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-devel-debuginfo-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-errmsg-0:8.4.8-1.module_el9+1325+b8a55c72.noarch
+    - mysql-libs-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-libs-debuginfo-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-server-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-server-debuginfo-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-test-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - mysql-test-data-0:8.4.8-1.module_el9+1325+b8a55c72.noarch
+    - mysql-test-debuginfo-0:8.4.8-1.module_el9+1325+b8a55c72.x86_64
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.src
+    - perl-DBD-MySQL-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debuginfo-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - perl-DBD-MySQL-debugsource-0:4.053-3.module_el9+1319+1ea7ccca.x86_64
+    - rapidjson-0:1.1.0-19.module_el9+1192+f597a618.src
+    - rapidjson-devel-0:1.1.0-19.module_el9+1192+f597a618.x86_64
+    - rapidjson-doc-0:1.1.0-19.module_el9+1192+f597a618.noarch
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: nginx
+  profiles:
+    1.22:
+    - common
+    1.24:
+    - common
+    1.26:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.22'
+  artifacts:
+    rpms:
+    - nginx-1:1.22.1-4.module_el9+666+132dc76f.src
+    - nginx-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-all-modules-1:1.22.1-4.module_el9+666+132dc76f.noarch
+    - nginx-core-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-core-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-debugsource-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-filesystem-1:1.22.1-4.module_el9+666+132dc76f.noarch
+    - nginx-mod-devel-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-image-filter-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-image-filter-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-perl-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-perl-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-xslt-filter-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-mail-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-mail-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-stream-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+    - nginx-mod-stream-debuginfo-1:1.22.1-4.module_el9+666+132dc76f.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.22'
+  artifacts:
+    rpms:
+    - nginx-1:1.22.1-8.module_el9+1086+80da4ced.src
+    - nginx-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-all-modules-1:1.22.1-8.module_el9+1086+80da4ced.noarch
+    - nginx-core-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-core-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-debugsource-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-filesystem-1:1.22.1-8.module_el9+1086+80da4ced.noarch
+    - nginx-mod-devel-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-image-filter-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-image-filter-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-perl-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-perl-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-xslt-filter-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-mail-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-mail-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-stream-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+    - nginx-mod-stream-debuginfo-1:1.22.1-8.module_el9+1086+80da4ced.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.24'
+  artifacts:
+    rpms:
+    - nginx-1:1.24.0-1.module_el9+833+e1ad0c2b.src
+    - nginx-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-all-modules-1:1.24.0-1.module_el9+833+e1ad0c2b.noarch
+    - nginx-core-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-core-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-debugsource-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-filesystem-1:1.24.0-1.module_el9+833+e1ad0c2b.noarch
+    - nginx-mod-devel-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-image-filter-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-image-filter-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-perl-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-perl-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-xslt-filter-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-mail-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-mail-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-stream-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+    - nginx-mod-stream-debuginfo-1:1.24.0-1.module_el9+833+e1ad0c2b.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.24'
+  artifacts:
+    rpms:
+    - nginx-1:1.24.0-4.module_el9+1087+9adf8b0f.src
+    - nginx-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-all-modules-1:1.24.0-4.module_el9+1087+9adf8b0f.noarch
+    - nginx-core-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-core-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-debugsource-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-filesystem-1:1.24.0-4.module_el9+1087+9adf8b0f.noarch
+    - nginx-mod-devel-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-image-filter-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-image-filter-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-perl-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-perl-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-xslt-filter-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-mail-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-mail-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-stream-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+    - nginx-mod-stream-debuginfo-1:1.24.0-4.module_el9+1087+9adf8b0f.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.24'
+  artifacts:
+    rpms:
+    - nginx-1:1.24.0-7.module_el9+1340+77d2f868.src
+    - nginx-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-all-modules-1:1.24.0-7.module_el9+1340+77d2f868.noarch
+    - nginx-core-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-core-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-debugsource-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-filesystem-1:1.24.0-7.module_el9+1340+77d2f868.noarch
+    - nginx-mod-devel-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-image-filter-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-image-filter-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-perl-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-perl-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-xslt-filter-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-mail-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-mail-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-stream-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+    - nginx-mod-stream-debuginfo-1:1.24.0-7.module_el9+1340+77d2f868.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.26'
+  artifacts:
+    rpms:
+    - nginx-2:1.26.3-1.module_el9+1198+24cff44a.src
+    - nginx-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-all-modules-2:1.26.3-1.module_el9+1198+24cff44a.noarch
+    - nginx-core-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-core-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-debugsource-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-filesystem-2:1.26.3-1.module_el9+1198+24cff44a.noarch
+    - nginx-mod-devel-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-image-filter-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-image-filter-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-perl-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-perl-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-xslt-filter-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-mail-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-mail-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-stream-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+    - nginx-mod-stream-debuginfo-2:1.26.3-1.module_el9+1198+24cff44a.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nginx
+  stream: '1.26'
+  artifacts:
+    rpms:
+    - nginx-2:1.26.3-8.module_el9+1337+df4f836a.src
+    - nginx-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-all-modules-2:1.26.3-8.module_el9+1337+df4f836a.noarch
+    - nginx-core-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-core-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-debugsource-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-filesystem-2:1.26.3-8.module_el9+1337+df4f836a.noarch
+    - nginx-mod-devel-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-image-filter-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-image-filter-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-perl-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-perl-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-xslt-filter-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-http-xslt-filter-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-mail-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-mail-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-stream-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+    - nginx-mod-stream-debuginfo-2:1.26.3-8.module_el9+1337+df4f836a.x86_64
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: nodejs
+  profiles:
+    18:
+    - common
+    20:
+    - common
+    22:
+    - common
+    24:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '18'
+  artifacts:
+    rpms:
+    - nodejs-1:18.14.2-2.module_el9+307+7e5e4074.src
+    - nodejs-1:18.14.2-2.module_el9+307+7e5e4074.x86_64
+    - nodejs-debuginfo-1:18.14.2-2.module_el9+307+7e5e4074.x86_64
+    - nodejs-debugsource-1:18.14.2-2.module_el9+307+7e5e4074.x86_64
+    - nodejs-devel-1:18.14.2-2.module_el9+307+7e5e4074.x86_64
+    - nodejs-docs-1:18.14.2-2.module_el9+307+7e5e4074.noarch
+    - nodejs-full-i18n-1:18.14.2-2.module_el9+307+7e5e4074.x86_64
+    - nodejs-nodemon-0:2.0.20-2.module_el9+306+b1d6f667.noarch
+    - nodejs-nodemon-0:2.0.20-2.module_el9+306+b1d6f667.src
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - npm-1:9.5.0-1.18.14.2.2.module_el9+307+7e5e4074.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '18'
+  artifacts:
+    rpms:
+    - nodejs-1:18.19.1-1.module_el9+986+cd5c1200.src
+    - nodejs-1:18.19.1-1.module_el9+986+cd5c1200.x86_64
+    - nodejs-debuginfo-1:18.19.1-1.module_el9+986+cd5c1200.x86_64
+    - nodejs-debugsource-1:18.19.1-1.module_el9+986+cd5c1200.x86_64
+    - nodejs-devel-1:18.19.1-1.module_el9+986+cd5c1200.x86_64
+    - nodejs-docs-1:18.19.1-1.module_el9+986+cd5c1200.noarch
+    - nodejs-full-i18n-1:18.19.1-1.module_el9+986+cd5c1200.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+663+27147c5a.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+663+27147c5a.src
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - npm-1:10.2.4-1.18.19.1.1.module_el9+986+cd5c1200.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '18'
+  artifacts:
+    rpms:
+    - nodejs-1:18.20.6-1.module_el9+1197+bd8092a0.src
+    - nodejs-1:18.20.6-1.module_el9+1197+bd8092a0.x86_64
+    - nodejs-debuginfo-1:18.20.6-1.module_el9+1197+bd8092a0.x86_64
+    - nodejs-debugsource-1:18.20.6-1.module_el9+1197+bd8092a0.x86_64
+    - nodejs-devel-1:18.20.6-1.module_el9+1197+bd8092a0.x86_64
+    - nodejs-docs-1:18.20.6-1.module_el9+1197+bd8092a0.noarch
+    - nodejs-full-i18n-1:18.20.6-1.module_el9+1197+bd8092a0.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1197+bd8092a0.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1197+bd8092a0.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1197+bd8092a0.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1197+bd8092a0.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1197+bd8092a0.noarch
+    - npm-1:10.8.2-1.18.20.6.1.module_el9+1197+bd8092a0.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '18'
+  artifacts:
+    rpms:
+    - nodejs-1:18.20.6-2.module_el9+1205+97196d51.src
+    - nodejs-1:18.20.6-2.module_el9+1205+97196d51.x86_64
+    - nodejs-debuginfo-1:18.20.6-2.module_el9+1205+97196d51.x86_64
+    - nodejs-debugsource-1:18.20.6-2.module_el9+1205+97196d51.x86_64
+    - nodejs-devel-1:18.20.6-2.module_el9+1205+97196d51.x86_64
+    - nodejs-docs-1:18.20.6-2.module_el9+1205+97196d51.noarch
+    - nodejs-full-i18n-1:18.20.6-2.module_el9+1205+97196d51.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+663+27147c5a.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+663+27147c5a.src
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+244+c48c75d4.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+244+c48c75d4.noarch
+    - npm-1:10.8.2-1.18.20.6.2.module_el9+1205+97196d51.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.9.0-1.module_el9+743+ad38546c.src
+    - nodejs-1:20.9.0-1.module_el9+743+ad38546c.x86_64
+    - nodejs-debuginfo-1:20.9.0-1.module_el9+743+ad38546c.x86_64
+    - nodejs-debugsource-1:20.9.0-1.module_el9+743+ad38546c.x86_64
+    - nodejs-devel-1:20.9.0-1.module_el9+743+ad38546c.x86_64
+    - nodejs-docs-1:20.9.0-1.module_el9+743+ad38546c.noarch
+    - nodejs-full-i18n-1:20.9.0-1.module_el9+743+ad38546c.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+743+ad38546c.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+743+ad38546c.src
+    - nodejs-packaging-0:2021.06-4.module_el9+583+597f83c2.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+583+597f83c2.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+583+597f83c2.noarch
+    - npm-1:10.1.0-1.20.9.0.1.module_el9+743+ad38546c.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.18.1-1.module_el9+1145+0c321386.src
+    - nodejs-1:20.18.1-1.module_el9+1145+0c321386.x86_64
+    - nodejs-debuginfo-1:20.18.1-1.module_el9+1145+0c321386.x86_64
+    - nodejs-debugsource-1:20.18.1-1.module_el9+1145+0c321386.x86_64
+    - nodejs-devel-1:20.18.1-1.module_el9+1145+0c321386.x86_64
+    - nodejs-docs-1:20.18.1-1.module_el9+1145+0c321386.noarch
+    - nodejs-full-i18n-1:20.18.1-1.module_el9+1145+0c321386.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1145+0c321386.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1145+0c321386.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1145+0c321386.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1145+0c321386.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1145+0c321386.noarch
+    - npm-1:10.8.2-1.20.18.1.1.module_el9+1145+0c321386.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.18.2-1.module_el9+1195+2a179db7.src
+    - nodejs-1:20.18.2-1.module_el9+1195+2a179db7.x86_64
+    - nodejs-debuginfo-1:20.18.2-1.module_el9+1195+2a179db7.x86_64
+    - nodejs-debugsource-1:20.18.2-1.module_el9+1195+2a179db7.x86_64
+    - nodejs-devel-1:20.18.2-1.module_el9+1195+2a179db7.x86_64
+    - nodejs-docs-1:20.18.2-1.module_el9+1195+2a179db7.noarch
+    - nodejs-full-i18n-1:20.18.2-1.module_el9+1195+2a179db7.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - npm-1:10.8.2-1.20.18.2.1.module_el9+1195+2a179db7.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.18.2-2.module_el9+1204+f4e0acc5.src
+    - nodejs-1:20.18.2-2.module_el9+1204+f4e0acc5.x86_64
+    - nodejs-debuginfo-1:20.18.2-2.module_el9+1204+f4e0acc5.x86_64
+    - nodejs-debugsource-1:20.18.2-2.module_el9+1204+f4e0acc5.x86_64
+    - nodejs-devel-1:20.18.2-2.module_el9+1204+f4e0acc5.x86_64
+    - nodejs-docs-1:20.18.2-2.module_el9+1204+f4e0acc5.noarch
+    - nodejs-full-i18n-1:20.18.2-2.module_el9+1204+f4e0acc5.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - npm-1:10.8.2-1.20.18.2.2.module_el9+1204+f4e0acc5.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.19.1-1.module_el9+1223+a180c0b3.src
+    - nodejs-1:20.19.1-1.module_el9+1223+a180c0b3.x86_64
+    - nodejs-debuginfo-1:20.19.1-1.module_el9+1223+a180c0b3.x86_64
+    - nodejs-debugsource-1:20.19.1-1.module_el9+1223+a180c0b3.x86_64
+    - nodejs-devel-1:20.19.1-1.module_el9+1223+a180c0b3.x86_64
+    - nodejs-docs-1:20.19.1-1.module_el9+1223+a180c0b3.noarch
+    - nodejs-full-i18n-1:20.19.1-1.module_el9+1223+a180c0b3.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1195+2a179db7.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1195+2a179db7.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1195+2a179db7.noarch
+    - npm-1:10.8.2-1.20.19.1.1.module_el9+1223+a180c0b3.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.19.2-1.module_el9+1241+94a933ca.src
+    - nodejs-1:20.19.2-1.module_el9+1241+94a933ca.x86_64
+    - nodejs-debuginfo-1:20.19.2-1.module_el9+1241+94a933ca.x86_64
+    - nodejs-debugsource-1:20.19.2-1.module_el9+1241+94a933ca.x86_64
+    - nodejs-devel-1:20.19.2-1.module_el9+1241+94a933ca.x86_64
+    - nodejs-docs-1:20.19.2-1.module_el9+1241+94a933ca.noarch
+    - nodejs-full-i18n-1:20.19.2-1.module_el9+1241+94a933ca.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1241+94a933ca.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1241+94a933ca.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1241+94a933ca.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1241+94a933ca.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1241+94a933ca.noarch
+    - npm-1:10.8.2-1.20.19.2.1.module_el9+1241+94a933ca.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.20.0-1.module_el9+1311+9d3b29bd.src
+    - nodejs-1:20.20.0-1.module_el9+1311+9d3b29bd.x86_64
+    - nodejs-debuginfo-1:20.20.0-1.module_el9+1311+9d3b29bd.x86_64
+    - nodejs-debugsource-1:20.20.0-1.module_el9+1311+9d3b29bd.x86_64
+    - nodejs-devel-1:20.20.0-1.module_el9+1311+9d3b29bd.x86_64
+    - nodejs-docs-1:20.20.0-1.module_el9+1311+9d3b29bd.noarch
+    - nodejs-full-i18n-1:20.20.0-1.module_el9+1311+9d3b29bd.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1311+9d3b29bd.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1311+9d3b29bd.src
+    - nodejs-packaging-0:2021.06-5.module_el9+1311+9d3b29bd.noarch
+    - nodejs-packaging-0:2021.06-5.module_el9+1311+9d3b29bd.src
+    - nodejs-packaging-bundler-0:2021.06-5.module_el9+1311+9d3b29bd.noarch
+    - npm-1:10.8.2-1.20.20.0.1.module_el9+1311+9d3b29bd.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '20'
+  artifacts:
+    rpms:
+    - nodejs-1:20.20.2-1.module_el9+1345+b7fa13da.src
+    - nodejs-1:20.20.2-1.module_el9+1345+b7fa13da.x86_64
+    - nodejs-debuginfo-1:20.20.2-1.module_el9+1345+b7fa13da.x86_64
+    - nodejs-debugsource-1:20.20.2-1.module_el9+1345+b7fa13da.x86_64
+    - nodejs-devel-1:20.20.2-1.module_el9+1345+b7fa13da.x86_64
+    - nodejs-docs-1:20.20.2-1.module_el9+1345+b7fa13da.noarch
+    - nodejs-full-i18n-1:20.20.2-1.module_el9+1345+b7fa13da.x86_64
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1345+b7fa13da.noarch
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1345+b7fa13da.src
+    - nodejs-packaging-0:2021.06-6.module_el9+1345+b7fa13da.noarch
+    - nodejs-packaging-0:2021.06-6.module_el9+1345+b7fa13da.src
+    - nodejs-packaging-bundler-0:2021.06-6.module_el9+1345+b7fa13da.noarch
+    - npm-1:10.8.2-1.20.20.2.1.module_el9+1345+b7fa13da.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.4.1-4.module_el9+1103+f54cc21b.src
+    - nodejs-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-debuginfo-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-debugsource-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-devel-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-docs-1:22.4.1-4.module_el9+1103+f54cc21b.noarch
+    - nodejs-full-i18n-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-libs-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-libs-debuginfo-1:22.4.1-4.module_el9+1103+f54cc21b.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1103+f54cc21b.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1103+f54cc21b.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1103+f54cc21b.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1103+f54cc21b.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1103+f54cc21b.noarch
+    - npm-1:10.8.1-1.22.4.1.4.module_el9+1103+f54cc21b.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.4.1.4.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.13.1-1.module_el9+1194+c2cea2d5.src
+    - nodejs-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-debuginfo-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-debugsource-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-devel-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-docs-1:22.13.1-1.module_el9+1194+c2cea2d5.noarch
+    - nodejs-full-i18n-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-libs-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-libs-debuginfo-1:22.13.1-1.module_el9+1194+c2cea2d5.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1194+c2cea2d5.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1194+c2cea2d5.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1194+c2cea2d5.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1194+c2cea2d5.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1194+c2cea2d5.noarch
+    - npm-1:10.9.2-1.22.13.1.1.module_el9+1194+c2cea2d5.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.13.1.1.module_el9+1194+c2cea2d5.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.13.1-2.module_el9+1203+32355adb.src
+    - nodejs-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-debuginfo-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-debugsource-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-devel-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-docs-1:22.13.1-2.module_el9+1203+32355adb.noarch
+    - nodejs-full-i18n-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-libs-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-libs-debuginfo-1:22.13.1-2.module_el9+1203+32355adb.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1136+f43a8a15.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1136+f43a8a15.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1136+f43a8a15.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1136+f43a8a15.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1136+f43a8a15.noarch
+    - npm-1:10.9.2-1.22.13.1.2.module_el9+1203+32355adb.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.13.1.2.module_el9+1203+32355adb.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.15.0-1.module_el9+1228+42ce8270.src
+    - nodejs-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-debuginfo-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-debugsource-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-devel-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-docs-1:22.15.0-1.module_el9+1228+42ce8270.noarch
+    - nodejs-full-i18n-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-libs-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-libs-debuginfo-1:22.15.0-1.module_el9+1228+42ce8270.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1228+42ce8270.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1228+42ce8270.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1228+42ce8270.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1228+42ce8270.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1228+42ce8270.noarch
+    - npm-1:10.9.2-1.22.15.0.1.module_el9+1228+42ce8270.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.15.0.1.module_el9+1228+42ce8270.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.16.0-1.module_el9+1240+ae16e6be.src
+    - nodejs-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-debuginfo-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-debugsource-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-devel-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-docs-1:22.16.0-1.module_el9+1240+ae16e6be.noarch
+    - nodejs-full-i18n-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-libs-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-libs-debuginfo-1:22.16.0-1.module_el9+1240+ae16e6be.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1228+42ce8270.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1228+42ce8270.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1228+42ce8270.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1228+42ce8270.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1228+42ce8270.noarch
+    - npm-1:10.9.2-1.22.16.0.1.module_el9+1240+ae16e6be.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.16.0.1.module_el9+1240+ae16e6be.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.16.0-2.module_el9+1242+04ec4b05.src
+    - nodejs-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-debuginfo-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-debugsource-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-devel-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-docs-1:22.16.0-2.module_el9+1242+04ec4b05.noarch
+    - nodejs-full-i18n-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-libs-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-libs-debuginfo-1:22.16.0-2.module_el9+1242+04ec4b05.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1242+04ec4b05.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1242+04ec4b05.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1242+04ec4b05.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1242+04ec4b05.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1242+04ec4b05.noarch
+    - npm-1:10.9.2-1.22.16.0.2.module_el9+1242+04ec4b05.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.16.0.2.module_el9+1242+04ec4b05.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.19.0-2.module_el9+1269+2b208c4d.src
+    - nodejs-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-debuginfo-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-debugsource-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-devel-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-docs-1:22.19.0-2.module_el9+1269+2b208c4d.noarch
+    - nodejs-full-i18n-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-libs-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-libs-debuginfo-1:22.19.0-2.module_el9+1269+2b208c4d.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1269+2b208c4d.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1269+2b208c4d.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1269+2b208c4d.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1269+2b208c4d.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1269+2b208c4d.noarch
+    - npm-1:10.9.3-1.22.19.0.2.module_el9+1269+2b208c4d.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.19.0.2.module_el9+1269+2b208c4d.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.22.0-1.module_el9+1314+f4a09924.src
+    - nodejs-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-debuginfo-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-debugsource-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-devel-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-docs-1:22.22.0-1.module_el9+1314+f4a09924.noarch
+    - nodejs-full-i18n-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-libs-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-libs-debuginfo-1:22.22.0-1.module_el9+1314+f4a09924.x86_64
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1314+f4a09924.noarch
+    - nodejs-nodemon-0:3.0.1-1.module_el9+1314+f4a09924.src
+    - nodejs-packaging-0:2021.06-5.module_el9+1314+f4a09924.noarch
+    - nodejs-packaging-0:2021.06-5.module_el9+1314+f4a09924.src
+    - nodejs-packaging-bundler-0:2021.06-5.module_el9+1314+f4a09924.noarch
+    - npm-1:10.9.4-1.22.22.0.1.module_el9+1314+f4a09924.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.22.0.1.module_el9+1314+f4a09924.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '22'
+  artifacts:
+    rpms:
+    - nodejs-1:22.22.2-1.module_el9+1339+cba72ab1.src
+    - nodejs-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-debuginfo-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-debugsource-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-devel-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-docs-1:22.22.2-1.module_el9+1339+cba72ab1.noarch
+    - nodejs-full-i18n-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-libs-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-libs-debuginfo-1:22.22.2-1.module_el9+1339+cba72ab1.x86_64
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1339+cba72ab1.noarch
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1339+cba72ab1.src
+    - nodejs-packaging-0:2021.06-6.module_el9+1339+cba72ab1.noarch
+    - nodejs-packaging-0:2021.06-6.module_el9+1339+cba72ab1.src
+    - nodejs-packaging-bundler-0:2021.06-6.module_el9+1339+cba72ab1.noarch
+    - npm-1:10.9.7-1.22.22.2.1.module_el9+1339+cba72ab1.x86_64
+    - v8-12.4-devel-3:12.4.254.21-1.22.22.2.1.module_el9+1339+cba72ab1.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '24'
+  artifacts:
+    rpms:
+    - nodejs-1:24.4.1-5.module_el9+1264+1928513c.src
+    - nodejs-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-debuginfo-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-debugsource-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-devel-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-docs-1:24.4.1-5.module_el9+1264+1928513c.noarch
+    - nodejs-full-i18n-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-libs-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-libs-debuginfo-1:24.4.1-5.module_el9+1264+1928513c.x86_64
+    - nodejs-nodemon-0:3.0.3-2.module_el9+1255+0cbf3967.noarch
+    - nodejs-nodemon-0:3.0.3-2.module_el9+1255+0cbf3967.src
+    - nodejs-npm-1:11.4.2-1.24.4.1.5.module_el9+1264+1928513c.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1255+0cbf3967.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1255+0cbf3967.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1255+0cbf3967.noarch
+    - v8-13.6-devel-3:13.6.233.10-1.24.4.1.5.module_el9+1264+1928513c.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '24'
+  artifacts:
+    rpms:
+    - nodejs-1:24.4.1-6.module_el9+1266+49a8750a.src
+    - nodejs-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-debuginfo-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-debugsource-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-devel-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-docs-1:24.4.1-6.module_el9+1266+49a8750a.noarch
+    - nodejs-full-i18n-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-libs-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-libs-debuginfo-1:24.4.1-6.module_el9+1266+49a8750a.x86_64
+    - nodejs-nodemon-0:3.0.3-2.module_el9+1255+0cbf3967.noarch
+    - nodejs-nodemon-0:3.0.3-2.module_el9+1255+0cbf3967.src
+    - nodejs-packaging-0:2021.06-4.module_el9+1255+0cbf3967.noarch
+    - nodejs-packaging-0:2021.06-4.module_el9+1255+0cbf3967.src
+    - nodejs-packaging-bundler-0:2021.06-4.module_el9+1255+0cbf3967.noarch
+    - npm-1:11.4.2-1.24.4.1.6.module_el9+1266+49a8750a.noarch
+    - v8-13.6-devel-3:13.6.233.10-1.24.4.1.6.module_el9+1266+49a8750a.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '24'
+  artifacts:
+    rpms:
+    - nodejs-1:24.13.0-1.module_el9+1312+8f77b0ff.src
+    - nodejs-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-debuginfo-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-debugsource-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-devel-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-docs-1:24.13.0-1.module_el9+1312+8f77b0ff.noarch
+    - nodejs-full-i18n-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-libs-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-libs-debuginfo-1:24.13.0-1.module_el9+1312+8f77b0ff.x86_64
+    - nodejs-nodemon-0:3.0.3-3.module_el9+1312+8f77b0ff.noarch
+    - nodejs-nodemon-0:3.0.3-3.module_el9+1312+8f77b0ff.src
+    - nodejs-packaging-0:2021.06-6.module_el9+1312+8f77b0ff.noarch
+    - nodejs-packaging-0:2021.06-6.module_el9+1312+8f77b0ff.src
+    - nodejs-packaging-bundler-0:2021.06-6.module_el9+1312+8f77b0ff.noarch
+    - npm-1:11.6.2-1.24.13.0.1.module_el9+1312+8f77b0ff.noarch
+    - v8-13.6-devel-3:13.6.233.17-1.24.13.0.1.module_el9+1312+8f77b0ff.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: nodejs
+  stream: '24'
+  artifacts:
+    rpms:
+    - nodejs-1:24.14.1-2.module_el9+1328+43462ce9.src
+    - nodejs-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-debuginfo-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-debugsource-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-devel-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-docs-1:24.14.1-2.module_el9+1328+43462ce9.noarch
+    - nodejs-full-i18n-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-libs-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-libs-debuginfo-1:24.14.1-2.module_el9+1328+43462ce9.x86_64
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1328+43462ce9.noarch
+    - nodejs-nodemon-0:3.1.14-1.module_el9+1328+43462ce9.src
+    - nodejs-packaging-0:2021.06-6.module_el9+1328+43462ce9.noarch
+    - nodejs-packaging-0:2021.06-6.module_el9+1328+43462ce9.src
+    - nodejs-packaging-bundler-0:2021.06-6.module_el9+1328+43462ce9.noarch
+    - npm-1:11.11.0-1.24.14.1.2.module_el9+1328+43462ce9.noarch
+    - v8-13.6-devel-3:13.6.233.17-1.24.14.1.2.module_el9+1328+43462ce9.x86_64
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: php
+  profiles:
+    8.1:
+    - common
+    8.2:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: php
+  stream: '8.1'
+  artifacts:
+    rpms:
+    - apcu-panel-0:5.1.21-1.module_el9+137+d73770a9.noarch
+    - php-0:8.1.27-1.module_el9+790+4812d76d.src
+    - php-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-bcmath-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-bcmath-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-cli-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-cli-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-common-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-common-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-dba-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-dba-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-dbg-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-dbg-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-debugsource-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-devel-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-embedded-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-embedded-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-enchant-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-enchant-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-ffi-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-ffi-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-fpm-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-fpm-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-gd-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-gd-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-gmp-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-gmp-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-intl-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-intl-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-ldap-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-ldap-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-mbstring-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-mbstring-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-mysqlnd-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-mysqlnd-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-odbc-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-odbc-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-opcache-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-opcache-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-pdo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-pdo-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-pecl-apcu-0:5.1.21-1.module_el9+137+d73770a9.src
+    - php-pecl-apcu-0:5.1.21-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-apcu-debuginfo-0:5.1.21-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-apcu-debugsource-0:5.1.21-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-apcu-devel-0:5.1.21-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-rrd-0:2.0.3-4.module_el9+137+d73770a9.src
+    - php-pecl-rrd-0:2.0.3-4.module_el9+137+d73770a9.x86_64
+    - php-pecl-rrd-debuginfo-0:2.0.3-4.module_el9+137+d73770a9.x86_64
+    - php-pecl-rrd-debugsource-0:2.0.3-4.module_el9+137+d73770a9.x86_64
+    - php-pecl-xdebug3-0:3.1.4-1.module_el9+137+d73770a9.src
+    - php-pecl-xdebug3-0:3.1.4-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-xdebug3-debuginfo-0:3.1.4-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-xdebug3-debugsource-0:3.1.4-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-zip-0:1.20.1-1.module_el9+137+d73770a9.src
+    - php-pecl-zip-0:1.20.1-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-zip-debuginfo-0:1.20.1-1.module_el9+137+d73770a9.x86_64
+    - php-pecl-zip-debugsource-0:1.20.1-1.module_el9+137+d73770a9.x86_64
+    - php-pgsql-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-pgsql-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-process-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-process-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-snmp-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-snmp-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-soap-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-soap-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-xml-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+    - php-xml-debuginfo-0:8.1.27-1.module_el9+790+4812d76d.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: php
+  stream: '8.2'
+  artifacts:
+    rpms:
+    - apcu-panel-0:5.1.23-1.module_el9+766+427f1f3d.noarch
+    - php-0:8.2.13-1.module_el9+766+427f1f3d.src
+    - php-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-bcmath-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-bcmath-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-cli-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-cli-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-common-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-common-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-dba-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-dba-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-dbg-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-dbg-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-debugsource-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-devel-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-embedded-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-embedded-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-enchant-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-enchant-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-ffi-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-ffi-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-fpm-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-fpm-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-gd-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-gd-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-gmp-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-gmp-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-intl-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-intl-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-ldap-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-ldap-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-mbstring-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-mbstring-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-mysqlnd-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-mysqlnd-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-odbc-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-odbc-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-opcache-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-opcache-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-pdo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-pdo-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-0:5.1.23-1.module_el9+766+427f1f3d.src
+    - php-pecl-apcu-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-debuginfo-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-debugsource-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-devel-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-0:2.0.3-4.module_el9+766+427f1f3d.src
+    - php-pecl-rrd-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-debuginfo-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-debugsource-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-0:3.2.2-2.module_el9+766+427f1f3d.src
+    - php-pecl-xdebug3-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-debuginfo-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-debugsource-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-0:1.22.3-1.module_el9+766+427f1f3d.src
+    - php-pecl-zip-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-debuginfo-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-debugsource-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pgsql-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-pgsql-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-process-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-process-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-snmp-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-snmp-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-soap-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-soap-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-xml-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+    - php-xml-debuginfo-0:8.2.13-1.module_el9+766+427f1f3d.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: php
+  stream: '8.2'
+  artifacts:
+    rpms:
+    - apcu-panel-0:5.1.23-1.module_el9+766+427f1f3d.noarch
+    - php-0:8.2.28-1.module_el9+1229+58548675.src
+    - php-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-bcmath-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-bcmath-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-cli-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-cli-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-common-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-common-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-dba-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-dba-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-dbg-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-dbg-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-debugsource-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-devel-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-embedded-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-embedded-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-enchant-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-enchant-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-ffi-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-ffi-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-fpm-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-fpm-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-gd-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-gd-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-gmp-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-gmp-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-intl-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-intl-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-ldap-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-ldap-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-mbstring-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-mbstring-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-mysqlnd-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-mysqlnd-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-odbc-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-odbc-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-opcache-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-opcache-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-pdo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-pdo-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-pecl-apcu-0:5.1.23-1.module_el9+766+427f1f3d.src
+    - php-pecl-apcu-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-debuginfo-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-debugsource-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-apcu-devel-0:5.1.23-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-0:2.0.3-4.module_el9+766+427f1f3d.src
+    - php-pecl-rrd-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-debuginfo-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-rrd-debugsource-0:2.0.3-4.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-0:3.2.2-2.module_el9+766+427f1f3d.src
+    - php-pecl-xdebug3-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-debuginfo-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-xdebug3-debugsource-0:3.2.2-2.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-0:1.22.3-1.module_el9+766+427f1f3d.src
+    - php-pecl-zip-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-debuginfo-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pecl-zip-debugsource-0:1.22.3-1.module_el9+766+427f1f3d.x86_64
+    - php-pgsql-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-pgsql-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-process-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-process-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-snmp-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-snmp-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-soap-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-soap-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-xml-0:8.2.28-1.module_el9+1229+58548675.x86_64
+    - php-xml-debuginfo-0:8.2.28-1.module_el9+1229+58548675.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: php
+  stream: '8.3'
+  artifacts:
+    rpms:
+    - apcu-panel-0:5.1.23-1.module_el9+1148+4d3da9e4.noarch
+    - php-0:8.3.15-1.module_el9+1148+4d3da9e4.src
+    - php-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-bcmath-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-bcmath-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-cli-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-cli-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-common-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-common-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-dba-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-dba-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-dbg-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-dbg-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-debugsource-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-devel-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-embedded-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-embedded-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-enchant-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-enchant-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-ffi-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-ffi-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-fpm-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-fpm-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-gd-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-gd-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-gmp-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-gmp-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-intl-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-intl-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-ldap-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-ldap-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-mbstring-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-mbstring-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-mysqlnd-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-mysqlnd-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-odbc-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-odbc-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-opcache-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-opcache-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pdo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pdo-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-apcu-0:5.1.23-1.module_el9+1148+4d3da9e4.src
+    - php-pecl-apcu-0:5.1.23-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-apcu-debuginfo-0:5.1.23-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-apcu-debugsource-0:5.1.23-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-apcu-devel-0:5.1.23-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-redis6-0:6.1.0-2.module_el9+1148+4d3da9e4.src
+    - php-pecl-redis6-0:6.1.0-2.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-redis6-debuginfo-0:6.1.0-2.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-redis6-debugsource-0:6.1.0-2.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-rrd-0:2.0.3-4.module_el9+1148+4d3da9e4.src
+    - php-pecl-rrd-0:2.0.3-4.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-rrd-debuginfo-0:2.0.3-4.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-rrd-debugsource-0:2.0.3-4.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-xdebug3-0:3.3.1-1.module_el9+1148+4d3da9e4.src
+    - php-pecl-xdebug3-0:3.3.1-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-xdebug3-debuginfo-0:3.3.1-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-xdebug3-debugsource-0:3.3.1-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-zip-0:1.22.3-1.module_el9+1148+4d3da9e4.src
+    - php-pecl-zip-0:1.22.3-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-zip-debuginfo-0:1.22.3-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pecl-zip-debugsource-0:1.22.3-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pgsql-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-pgsql-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-process-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-process-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-snmp-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-snmp-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-soap-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-soap-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-xml-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+    - php-xml-debuginfo-0:8.3.15-1.module_el9+1148+4d3da9e4.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: php
+  stream: '8.3'
+  artifacts:
+    rpms:
+    - apcu-panel-0:5.1.23-1.module_el9+1213+23b849bf.noarch
+    - php-0:8.3.19-1.module_el9+1213+23b849bf.src
+    - php-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-bcmath-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-bcmath-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-cli-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-cli-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-common-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-common-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-dba-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-dba-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-dbg-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-dbg-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-debugsource-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-devel-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-embedded-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-embedded-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-enchant-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-enchant-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-ffi-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-ffi-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-fpm-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-fpm-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-gd-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-gd-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-gmp-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-gmp-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-intl-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-intl-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-ldap-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-ldap-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-mbstring-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-mbstring-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-mysqlnd-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-mysqlnd-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-odbc-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-odbc-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-opcache-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-opcache-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-pdo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-pdo-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-apcu-0:5.1.23-1.module_el9+1213+23b849bf.src
+    - php-pecl-apcu-0:5.1.23-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-apcu-debuginfo-0:5.1.23-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-apcu-debugsource-0:5.1.23-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-apcu-devel-0:5.1.23-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-redis6-0:6.1.0-2.module_el9+1213+23b849bf.src
+    - php-pecl-redis6-0:6.1.0-2.module_el9+1213+23b849bf.x86_64
+    - php-pecl-redis6-debuginfo-0:6.1.0-2.module_el9+1213+23b849bf.x86_64
+    - php-pecl-redis6-debugsource-0:6.1.0-2.module_el9+1213+23b849bf.x86_64
+    - php-pecl-rrd-0:2.0.3-4.module_el9+1213+23b849bf.src
+    - php-pecl-rrd-0:2.0.3-4.module_el9+1213+23b849bf.x86_64
+    - php-pecl-rrd-debuginfo-0:2.0.3-4.module_el9+1213+23b849bf.x86_64
+    - php-pecl-rrd-debugsource-0:2.0.3-4.module_el9+1213+23b849bf.x86_64
+    - php-pecl-xdebug3-0:3.3.1-1.module_el9+1213+23b849bf.src
+    - php-pecl-xdebug3-0:3.3.1-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-xdebug3-debuginfo-0:3.3.1-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-xdebug3-debugsource-0:3.3.1-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-zip-0:1.22.3-1.module_el9+1213+23b849bf.src
+    - php-pecl-zip-0:1.22.3-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-zip-debuginfo-0:1.22.3-1.module_el9+1213+23b849bf.x86_64
+    - php-pecl-zip-debugsource-0:1.22.3-1.module_el9+1213+23b849bf.x86_64
+    - php-pgsql-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-pgsql-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-process-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-process-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-snmp-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-snmp-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-soap-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-soap-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-xml-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+    - php-xml-debuginfo-0:8.3.19-1.module_el9+1213+23b849bf.x86_64
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: postgresql
+  profiles:
+    15:
+    - server
+    16:
+    - server
+    18:
+    - server
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '15'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-1.module_el9+264+92dde3f0.src
+    - pg_repack-0:1.4.8-1.module_el9+264+92dde3f0.x86_64
+    - pg_repack-debuginfo-0:1.4.8-1.module_el9+264+92dde3f0.x86_64
+    - pg_repack-debugsource-0:1.4.8-1.module_el9+264+92dde3f0.x86_64
+    - pgaudit-0:1.7.0-1.module_el9+264+92dde3f0.src
+    - pgaudit-0:1.7.0-1.module_el9+264+92dde3f0.x86_64
+    - pgaudit-debuginfo-0:1.7.0-1.module_el9+264+92dde3f0.x86_64
+    - pgaudit-debugsource-0:1.7.0-1.module_el9+264+92dde3f0.x86_64
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+264+92dde3f0.src
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+264+92dde3f0.x86_64
+    - postgres-decoderbufs-debuginfo-0:1.9.7-1.Final.module_el9+264+92dde3f0.x86_64
+    - postgres-decoderbufs-debugsource-0:1.9.7-1.Final.module_el9+264+92dde3f0.x86_64
+    - postgresql-0:15.2-1.module_el9+264+92dde3f0.src
+    - postgresql-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-contrib-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-contrib-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-debugsource-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-docs-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-docs-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-plperl-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-plperl-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-plpython3-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-plpython3-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-pltcl-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-pltcl-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-private-devel-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-private-libs-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-private-libs-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-server-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-server-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-server-devel-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-server-devel-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-static-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-test-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-test-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-test-rpm-macros-0:15.2-1.module_el9+264+92dde3f0.noarch
+    - postgresql-upgrade-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-upgrade-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-upgrade-devel-0:15.2-1.module_el9+264+92dde3f0.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:15.2-1.module_el9+264+92dde3f0.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '15'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-1.module_el9+573+eebb7838.src
+    - pg_repack-0:1.4.8-1.module_el9+573+eebb7838.x86_64
+    - pg_repack-debuginfo-0:1.4.8-1.module_el9+573+eebb7838.x86_64
+    - pg_repack-debugsource-0:1.4.8-1.module_el9+573+eebb7838.x86_64
+    - pgaudit-0:1.7.0-1.module_el9+573+eebb7838.src
+    - pgaudit-0:1.7.0-1.module_el9+573+eebb7838.x86_64
+    - pgaudit-debuginfo-0:1.7.0-1.module_el9+573+eebb7838.x86_64
+    - pgaudit-debugsource-0:1.7.0-1.module_el9+573+eebb7838.x86_64
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+573+eebb7838.src
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+573+eebb7838.x86_64
+    - postgres-decoderbufs-debuginfo-0:1.9.7-1.Final.module_el9+573+eebb7838.x86_64
+    - postgres-decoderbufs-debugsource-0:1.9.7-1.Final.module_el9+573+eebb7838.x86_64
+    - postgresql-0:15.3-1.module_el9+573+eebb7838.src
+    - postgresql-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-contrib-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-contrib-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-debugsource-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-docs-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-docs-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-plperl-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-plperl-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-plpython3-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-plpython3-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-pltcl-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-pltcl-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-private-devel-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-private-libs-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-private-libs-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-server-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-server-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-server-devel-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-server-devel-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-static-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-test-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-test-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-test-rpm-macros-0:15.3-1.module_el9+573+eebb7838.noarch
+    - postgresql-upgrade-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-upgrade-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-upgrade-devel-0:15.3-1.module_el9+573+eebb7838.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:15.3-1.module_el9+573+eebb7838.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '15'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-2.module_el9+1108+b05fe5f3.src
+    - pg_repack-0:1.4.8-2.module_el9+1108+b05fe5f3.x86_64
+    - pg_repack-debuginfo-0:1.4.8-2.module_el9+1108+b05fe5f3.x86_64
+    - pg_repack-debugsource-0:1.4.8-2.module_el9+1108+b05fe5f3.x86_64
+    - pgaudit-0:1.7.0-1.module_el9+1108+b05fe5f3.src
+    - pgaudit-0:1.7.0-1.module_el9+1108+b05fe5f3.x86_64
+    - pgaudit-debuginfo-0:1.7.0-1.module_el9+1108+b05fe5f3.x86_64
+    - pgaudit-debugsource-0:1.7.0-1.module_el9+1108+b05fe5f3.x86_64
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1108+b05fe5f3.src
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1108+b05fe5f3.x86_64
+    - postgres-decoderbufs-debuginfo-0:1.9.7-1.Final.module_el9+1108+b05fe5f3.x86_64
+    - postgres-decoderbufs-debugsource-0:1.9.7-1.Final.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-0:15.8-2.module_el9+1108+b05fe5f3.src
+    - postgresql-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-contrib-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-contrib-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-debugsource-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-docs-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-docs-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-plperl-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-plperl-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-plpython3-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-plpython3-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-pltcl-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-pltcl-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-private-devel-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-private-libs-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-private-libs-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-server-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-server-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-server-devel-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-server-devel-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-static-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-test-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-test-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-test-rpm-macros-0:15.8-2.module_el9+1108+b05fe5f3.noarch
+    - postgresql-upgrade-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-upgrade-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-upgrade-devel-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:15.8-2.module_el9+1108+b05fe5f3.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '15'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-2.module_el9+1138+aac284f4.src
+    - pg_repack-0:1.4.8-2.module_el9+1138+aac284f4.x86_64
+    - pg_repack-debuginfo-0:1.4.8-2.module_el9+1138+aac284f4.x86_64
+    - pg_repack-debugsource-0:1.4.8-2.module_el9+1138+aac284f4.x86_64
+    - pgaudit-0:1.7.0-1.module_el9+1138+aac284f4.src
+    - pgaudit-0:1.7.0-1.module_el9+1138+aac284f4.x86_64
+    - pgaudit-debuginfo-0:1.7.0-1.module_el9+1138+aac284f4.x86_64
+    - pgaudit-debugsource-0:1.7.0-1.module_el9+1138+aac284f4.x86_64
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1138+aac284f4.src
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1138+aac284f4.x86_64
+    - postgres-decoderbufs-debuginfo-0:1.9.7-1.Final.module_el9+1138+aac284f4.x86_64
+    - postgres-decoderbufs-debugsource-0:1.9.7-1.Final.module_el9+1138+aac284f4.x86_64
+    - postgresql-0:15.10-1.module_el9+1138+aac284f4.src
+    - postgresql-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-contrib-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-contrib-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-debugsource-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-docs-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-docs-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-plperl-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-plperl-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-plpython3-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-plpython3-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-pltcl-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-pltcl-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-private-devel-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-private-libs-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-private-libs-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-server-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-server-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-server-devel-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-server-devel-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-static-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-test-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-test-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-test-rpm-macros-0:15.10-1.module_el9+1138+aac284f4.noarch
+    - postgresql-upgrade-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-upgrade-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-upgrade-devel-0:15.10-1.module_el9+1138+aac284f4.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:15.10-1.module_el9+1138+aac284f4.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '15'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-2.module_el9+1199+0a6782cc.src
+    - pg_repack-0:1.4.8-2.module_el9+1199+0a6782cc.x86_64
+    - pg_repack-debuginfo-0:1.4.8-2.module_el9+1199+0a6782cc.x86_64
+    - pg_repack-debugsource-0:1.4.8-2.module_el9+1199+0a6782cc.x86_64
+    - pgaudit-0:1.7.0-1.module_el9+1199+0a6782cc.src
+    - pgaudit-0:1.7.0-1.module_el9+1199+0a6782cc.x86_64
+    - pgaudit-debuginfo-0:1.7.0-1.module_el9+1199+0a6782cc.x86_64
+    - pgaudit-debugsource-0:1.7.0-1.module_el9+1199+0a6782cc.x86_64
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1199+0a6782cc.src
+    - postgres-decoderbufs-0:1.9.7-1.Final.module_el9+1199+0a6782cc.x86_64
+    - postgres-decoderbufs-debuginfo-0:1.9.7-1.Final.module_el9+1199+0a6782cc.x86_64
+    - postgres-decoderbufs-debugsource-0:1.9.7-1.Final.module_el9+1199+0a6782cc.x86_64
+    - postgresql-0:15.12-1.module_el9+1199+0a6782cc.src
+    - postgresql-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-contrib-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-contrib-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-debugsource-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-docs-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-docs-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-plperl-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-plperl-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-plpython3-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-plpython3-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-pltcl-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-pltcl-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-private-devel-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-private-libs-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-private-libs-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-server-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-server-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-server-devel-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-server-devel-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-static-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-test-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-test-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-test-rpm-macros-0:15.12-1.module_el9+1199+0a6782cc.noarch
+    - postgresql-upgrade-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-upgrade-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-upgrade-devel-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:15.12-1.module_el9+1199+0a6782cc.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-1.module_el9+807+b1de07f3.src
+    - pg_repack-0:1.4.8-1.module_el9+807+b1de07f3.x86_64
+    - pg_repack-debuginfo-0:1.4.8-1.module_el9+807+b1de07f3.x86_64
+    - pg_repack-debugsource-0:1.4.8-1.module_el9+807+b1de07f3.x86_64
+    - pgaudit-0:16.0-1.module_el9+807+b1de07f3.src
+    - pgaudit-0:16.0-1.module_el9+807+b1de07f3.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+807+b1de07f3.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+807+b1de07f3.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+807+b1de07f3.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+807+b1de07f3.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+807+b1de07f3.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+807+b1de07f3.x86_64
+    - postgresql-0:16.1-1.module_el9+807+b1de07f3.src
+    - postgresql-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-contrib-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-contrib-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-debugsource-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-docs-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-docs-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-plperl-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-plperl-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-plpython3-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-plpython3-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-pltcl-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-pltcl-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-private-devel-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-private-libs-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-private-libs-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-server-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-server-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-server-devel-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-server-devel-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-static-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-test-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-test-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-test-rpm-macros-0:16.1-1.module_el9+807+b1de07f3.noarch
+    - postgresql-upgrade-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-upgrade-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-upgrade-devel-0:16.1-1.module_el9+807+b1de07f3.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.1-1.module_el9+807+b1de07f3.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-1.module_el9+1037+40bad64f.src
+    - pg_repack-0:1.4.8-1.module_el9+1037+40bad64f.x86_64
+    - pg_repack-debuginfo-0:1.4.8-1.module_el9+1037+40bad64f.x86_64
+    - pg_repack-debugsource-0:1.4.8-1.module_el9+1037+40bad64f.x86_64
+    - pgaudit-0:16.0-1.module_el9+1037+40bad64f.src
+    - pgaudit-0:16.0-1.module_el9+1037+40bad64f.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+1037+40bad64f.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+1037+40bad64f.x86_64
+    - pgvector-0:0.6.2-1.module_el9+1037+40bad64f.src
+    - pgvector-0:0.6.2-1.module_el9+1037+40bad64f.x86_64
+    - pgvector-debuginfo-0:0.6.2-1.module_el9+1037+40bad64f.x86_64
+    - pgvector-debugsource-0:0.6.2-1.module_el9+1037+40bad64f.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1037+40bad64f.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1037+40bad64f.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+1037+40bad64f.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+1037+40bad64f.x86_64
+    - postgresql-0:16.1-1.module_el9+1037+40bad64f.src
+    - postgresql-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-contrib-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-contrib-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-debugsource-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-docs-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-docs-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-plperl-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-plperl-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-plpython3-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-plpython3-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-pltcl-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-pltcl-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-private-devel-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-private-libs-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-private-libs-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-server-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-server-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-server-devel-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-server-devel-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-static-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-test-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-test-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-test-rpm-macros-0:16.1-1.module_el9+1037+40bad64f.noarch
+    - postgresql-upgrade-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-upgrade-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-upgrade-devel-0:16.1-1.module_el9+1037+40bad64f.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.1-1.module_el9+1037+40bad64f.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-2.module_el9+1109+d821d6e7.src
+    - pg_repack-0:1.4.8-2.module_el9+1109+d821d6e7.x86_64
+    - pg_repack-debuginfo-0:1.4.8-2.module_el9+1109+d821d6e7.x86_64
+    - pg_repack-debugsource-0:1.4.8-2.module_el9+1109+d821d6e7.x86_64
+    - pgaudit-0:16.0-1.module_el9+1109+d821d6e7.src
+    - pgaudit-0:16.0-1.module_el9+1109+d821d6e7.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+1109+d821d6e7.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+1109+d821d6e7.x86_64
+    - pgvector-0:0.6.2-1.module_el9+1109+d821d6e7.src
+    - pgvector-0:0.6.2-1.module_el9+1109+d821d6e7.x86_64
+    - pgvector-debuginfo-0:0.6.2-1.module_el9+1109+d821d6e7.x86_64
+    - pgvector-debugsource-0:0.6.2-1.module_el9+1109+d821d6e7.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1109+d821d6e7.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1109+d821d6e7.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+1109+d821d6e7.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+1109+d821d6e7.x86_64
+    - postgresql-0:16.4-2.module_el9+1109+d821d6e7.src
+    - postgresql-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-contrib-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-contrib-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-debugsource-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-docs-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-docs-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-plperl-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-plperl-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-plpython3-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-plpython3-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-pltcl-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-pltcl-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-private-devel-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-private-libs-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-private-libs-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-server-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-server-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-server-devel-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-server-devel-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-static-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-test-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-test-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-test-rpm-macros-0:16.4-2.module_el9+1109+d821d6e7.noarch
+    - postgresql-upgrade-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-upgrade-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-upgrade-devel-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.4-2.module_el9+1109+d821d6e7.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.4.8-2.module_el9+1137+39dc736e.src
+    - pg_repack-0:1.4.8-2.module_el9+1137+39dc736e.x86_64
+    - pg_repack-debuginfo-0:1.4.8-2.module_el9+1137+39dc736e.x86_64
+    - pg_repack-debugsource-0:1.4.8-2.module_el9+1137+39dc736e.x86_64
+    - pgaudit-0:16.0-1.module_el9+1137+39dc736e.src
+    - pgaudit-0:16.0-1.module_el9+1137+39dc736e.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+1137+39dc736e.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+1137+39dc736e.x86_64
+    - pgvector-0:0.6.2-1.module_el9+1137+39dc736e.src
+    - pgvector-0:0.6.2-1.module_el9+1137+39dc736e.x86_64
+    - pgvector-debuginfo-0:0.6.2-1.module_el9+1137+39dc736e.x86_64
+    - pgvector-debugsource-0:0.6.2-1.module_el9+1137+39dc736e.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1137+39dc736e.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1137+39dc736e.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+1137+39dc736e.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+1137+39dc736e.x86_64
+    - postgresql-0:16.6-1.module_el9+1137+39dc736e.src
+    - postgresql-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-contrib-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-contrib-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-debugsource-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-docs-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-docs-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-plperl-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-plperl-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-plpython3-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-plpython3-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-pltcl-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-pltcl-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-private-devel-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-private-libs-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-private-libs-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-server-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-server-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-server-devel-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-server-devel-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-static-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-test-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-test-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-test-rpm-macros-0:16.6-1.module_el9+1137+39dc736e.noarch
+    - postgresql-upgrade-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-upgrade-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-upgrade-devel-0:16.6-1.module_el9+1137+39dc736e.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.6-1.module_el9+1137+39dc736e.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.5.1-1.module_el9+1209+bd6e4013.src
+    - pg_repack-0:1.5.1-1.module_el9+1209+bd6e4013.x86_64
+    - pg_repack-debuginfo-0:1.5.1-1.module_el9+1209+bd6e4013.x86_64
+    - pg_repack-debugsource-0:1.5.1-1.module_el9+1209+bd6e4013.x86_64
+    - pgaudit-0:16.0-1.module_el9+1209+bd6e4013.src
+    - pgaudit-0:16.0-1.module_el9+1209+bd6e4013.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+1209+bd6e4013.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+1209+bd6e4013.x86_64
+    - pgvector-0:0.6.2-2.module_el9+1209+bd6e4013.src
+    - pgvector-0:0.6.2-2.module_el9+1209+bd6e4013.x86_64
+    - pgvector-debuginfo-0:0.6.2-2.module_el9+1209+bd6e4013.x86_64
+    - pgvector-debugsource-0:0.6.2-2.module_el9+1209+bd6e4013.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1209+bd6e4013.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1209+bd6e4013.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+1209+bd6e4013.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+1209+bd6e4013.x86_64
+    - postgresql-0:16.8-1.module_el9+1209+bd6e4013.src
+    - postgresql-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-contrib-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-contrib-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-debugsource-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-docs-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-docs-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-plperl-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-plperl-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-plpython3-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-plpython3-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-pltcl-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-pltcl-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-private-devel-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-private-libs-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-private-libs-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-server-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-server-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-server-devel-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-server-devel-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-static-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-test-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-test-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-test-rpm-macros-0:16.8-1.module_el9+1209+bd6e4013.noarch
+    - postgresql-upgrade-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-upgrade-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-upgrade-devel-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.8-1.module_el9+1209+bd6e4013.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '16'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.5.1-1.module_el9+1265+61707298.src
+    - pg_repack-0:1.5.1-1.module_el9+1265+61707298.x86_64
+    - pg_repack-debuginfo-0:1.5.1-1.module_el9+1265+61707298.x86_64
+    - pg_repack-debugsource-0:1.5.1-1.module_el9+1265+61707298.x86_64
+    - pgaudit-0:16.0-1.module_el9+1265+61707298.src
+    - pgaudit-0:16.0-1.module_el9+1265+61707298.x86_64
+    - pgaudit-debuginfo-0:16.0-1.module_el9+1265+61707298.x86_64
+    - pgaudit-debugsource-0:16.0-1.module_el9+1265+61707298.x86_64
+    - pgvector-0:0.6.2-2.module_el9+1265+61707298.src
+    - pgvector-0:0.6.2-2.module_el9+1265+61707298.x86_64
+    - pgvector-debuginfo-0:0.6.2-2.module_el9+1265+61707298.x86_64
+    - pgvector-debugsource-0:0.6.2-2.module_el9+1265+61707298.x86_64
+    - postgis-0:3.5.3-3.module_el9+1265+61707298.src
+    - postgis-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-client-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-client-debuginfo-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-debuginfo-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-debugsource-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-docs-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-upgrade-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-upgrade-debuginfo-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgis-utils-0:3.5.3-3.module_el9+1265+61707298.x86_64
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1265+61707298.src
+    - postgres-decoderbufs-0:2.4.0-1.Final.module_el9+1265+61707298.x86_64
+    - postgres-decoderbufs-debuginfo-0:2.4.0-1.Final.module_el9+1265+61707298.x86_64
+    - postgres-decoderbufs-debugsource-0:2.4.0-1.Final.module_el9+1265+61707298.x86_64
+    - postgresql-0:16.8-1.module_el9+1265+61707298.src
+    - postgresql-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-contrib-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-contrib-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-debugsource-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-docs-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-docs-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-plperl-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-plperl-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-plpython3-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-plpython3-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-pltcl-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-pltcl-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-private-devel-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-private-libs-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-private-libs-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-server-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-server-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-server-devel-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-server-devel-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-static-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-test-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-test-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-test-rpm-macros-0:16.8-1.module_el9+1265+61707298.noarch
+    - postgresql-upgrade-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-upgrade-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-upgrade-devel-0:16.8-1.module_el9+1265+61707298.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:16.8-1.module_el9+1265+61707298.x86_64
+---
+document: modulemd
+version: 2
+data:
+  name: postgresql
+  stream: '18'
+  artifacts:
+    rpms:
+    - pg_repack-0:1.5.3-1.module_el9+1300+1c4aa8df.src
+    - pg_repack-0:1.5.3-1.module_el9+1300+1c4aa8df.x86_64
+    - pg_repack-debuginfo-0:1.5.3-1.module_el9+1300+1c4aa8df.x86_64
+    - pg_repack-debugsource-0:1.5.3-1.module_el9+1300+1c4aa8df.x86_64
+    - pgaudit-0:18.0-1.module_el9+1300+1c4aa8df.src
+    - pgaudit-0:18.0-1.module_el9+1300+1c4aa8df.x86_64
+    - pgaudit-debuginfo-0:18.0-1.module_el9+1300+1c4aa8df.x86_64
+    - pgaudit-debugsource-0:18.0-1.module_el9+1300+1c4aa8df.x86_64
+    - pgvector-0:0.8.1-1.module_el9+1300+1c4aa8df.src
+    - pgvector-0:0.8.1-1.module_el9+1300+1c4aa8df.x86_64
+    - pgvector-debuginfo-0:0.8.1-1.module_el9+1300+1c4aa8df.x86_64
+    - pgvector-debugsource-0:0.8.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-0:3.6.1-1.module_el9+1300+1c4aa8df.src
+    - postgis-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-client-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-client-debuginfo-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-debuginfo-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-debugsource-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-docs-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-upgrade-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-upgrade-debuginfo-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgis-utils-0:3.6.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgres-decoderbufs-0:3.3.1-1.Final.module_el9+1300+1c4aa8df.src
+    - postgres-decoderbufs-0:3.3.1-1.Final.module_el9+1300+1c4aa8df.x86_64
+    - postgres-decoderbufs-debuginfo-0:3.3.1-1.Final.module_el9+1300+1c4aa8df.x86_64
+    - postgres-decoderbufs-debugsource-0:3.3.1-1.Final.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-0:18.1-1.module_el9+1300+1c4aa8df.src
+    - postgresql-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-contrib-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-contrib-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-debugsource-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-docs-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-docs-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-plperl-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-plperl-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-plpython3-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-plpython3-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-private-devel-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-private-libs-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-private-libs-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-server-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-server-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-server-devel-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-server-devel-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-static-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-test-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-test-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-test-rpm-macros-0:18.1-1.module_el9+1300+1c4aa8df.noarch
+    - postgresql-upgrade-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-upgrade-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-upgrade-devel-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+    - postgresql-upgrade-devel-debuginfo-0:18.1-1.module_el9+1300+1c4aa8df.x86_64
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: redis
+  profiles:
+    7:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: redis
+  stream: '7'
+  artifacts:
+    rpms:
+    - redis-0:7.0.12-1.module_el9+499+353c08ce.src
+    - redis-0:7.0.12-1.module_el9+499+353c08ce.x86_64
+    - redis-debuginfo-0:7.0.12-1.module_el9+499+353c08ce.x86_64
+    - redis-debugsource-0:7.0.12-1.module_el9+499+353c08ce.x86_64
+    - redis-devel-0:7.0.12-1.module_el9+499+353c08ce.x86_64
+    - redis-doc-0:7.0.12-1.module_el9+499+353c08ce.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: redis
+  stream: '7'
+  artifacts:
+    rpms:
+    - redis-0:7.0.12-2.module_el9+978+267ab8ff.src
+    - redis-0:7.0.12-2.module_el9+978+267ab8ff.x86_64
+    - redis-debuginfo-0:7.0.12-2.module_el9+978+267ab8ff.x86_64
+    - redis-debugsource-0:7.0.12-2.module_el9+978+267ab8ff.x86_64
+    - redis-devel-0:7.0.12-2.module_el9+978+267ab8ff.x86_64
+    - redis-doc-0:7.0.12-2.module_el9+978+267ab8ff.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: redis
+  stream: '7'
+  artifacts:
+    rpms:
+    - redis-0:7.2.11-1.module_el9+1278+df234daa.src
+    - redis-0:7.2.11-1.module_el9+1278+df234daa.x86_64
+    - redis-debuginfo-0:7.2.11-1.module_el9+1278+df234daa.x86_64
+    - redis-debugsource-0:7.2.11-1.module_el9+1278+df234daa.x86_64
+    - redis-devel-0:7.2.11-1.module_el9+1278+df234daa.x86_64
+    - redis-doc-0:7.2.11-1.module_el9+1278+df234daa.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: redis
+  stream: '7'
+  artifacts:
+    rpms:
+    - redis-0:7.2.11-2.module_el9+1308+6e340906.src
+    - redis-0:7.2.11-2.module_el9+1308+6e340906.x86_64
+    - redis-debuginfo-0:7.2.11-2.module_el9+1308+6e340906.x86_64
+    - redis-debugsource-0:7.2.11-2.module_el9+1308+6e340906.x86_64
+    - redis-devel-0:7.2.11-2.module_el9+1308+6e340906.x86_64
+    - redis-doc-0:7.2.11-2.module_el9+1308+6e340906.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: redis
+  stream: '7'
+  artifacts:
+    rpms:
+    - redis-0:7.2.14-1.module_el9+1352+2158ab98.src
+    - redis-0:7.2.14-1.module_el9+1352+2158ab98.x86_64
+    - redis-debuginfo-0:7.2.14-1.module_el9+1352+2158ab98.x86_64
+    - redis-debugsource-0:7.2.14-1.module_el9+1352+2158ab98.x86_64
+    - redis-devel-0:7.2.14-1.module_el9+1352+2158ab98.x86_64
+    - redis-doc-0:7.2.14-1.module_el9+1352+2158ab98.noarch
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: ruby
+  profiles:
+    3.1:
+    - common
+    3.3:
+    - common
+    4.0:
+    - common
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.1'
+  artifacts:
+    rpms:
+    - ruby-0:3.1.2-142.module_el9+787+b20bfeee.src
+    - ruby-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-bundled-gems-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-debuginfo-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-debugsource-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-default-gems-0:3.1.2-142.module_el9+787+b20bfeee.noarch
+    - ruby-devel-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-doc-0:3.1.2-142.module_el9+787+b20bfeee.noarch
+    - ruby-libs-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - ruby-libs-debuginfo-0:3.1.2-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-bigdecimal-0:3.1.1-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.1-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-bundler-0:2.3.7-142.module_el9+787+b20bfeee.noarch
+    - rubygem-io-console-0:0.5.11-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-io-console-debuginfo-0:0.5.11-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-irb-0:1.4.1-142.module_el9+787+b20bfeee.noarch
+    - rubygem-json-0:2.6.1-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-json-debuginfo-0:2.6.1-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-minitest-0:5.15.0-142.module_el9+787+b20bfeee.noarch
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.src
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-doc-0:0.5.4-1.module_el9+156+2e0939d1.noarch
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.src
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debuginfo-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debugsource-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-doc-0:1.3.5-1.module_el9+156+2e0939d1.noarch
+    - rubygem-power_assert-0:2.0.1-142.module_el9+787+b20bfeee.noarch
+    - rubygem-psych-0:4.0.3-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-psych-debuginfo-0:4.0.3-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-rake-0:13.0.6-142.module_el9+787+b20bfeee.noarch
+    - rubygem-rbs-0:2.1.0-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-rbs-debuginfo-0:2.1.0-142.module_el9+787+b20bfeee.x86_64
+    - rubygem-rdoc-0:6.4.0-142.module_el9+787+b20bfeee.noarch
+    - rubygem-rexml-0:3.2.5-142.module_el9+787+b20bfeee.noarch
+    - rubygem-rss-0:0.2.9-142.module_el9+787+b20bfeee.noarch
+    - rubygem-test-unit-0:3.5.3-142.module_el9+787+b20bfeee.noarch
+    - rubygem-typeprof-0:0.21.2-142.module_el9+787+b20bfeee.noarch
+    - rubygems-0:3.3.7-142.module_el9+787+b20bfeee.noarch
+    - rubygems-devel-0:3.3.7-142.module_el9+787+b20bfeee.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.1'
+  artifacts:
+    rpms:
+    - ruby-0:3.1.4-143.module_el9+998+d1955e82.src
+    - ruby-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-bundled-gems-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-debuginfo-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-debugsource-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-default-gems-0:3.1.4-143.module_el9+998+d1955e82.noarch
+    - ruby-devel-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-doc-0:3.1.4-143.module_el9+998+d1955e82.noarch
+    - ruby-libs-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - ruby-libs-debuginfo-0:3.1.4-143.module_el9+998+d1955e82.x86_64
+    - rubygem-bigdecimal-0:3.1.1-143.module_el9+998+d1955e82.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.1-143.module_el9+998+d1955e82.x86_64
+    - rubygem-bundler-0:2.3.26-143.module_el9+998+d1955e82.noarch
+    - rubygem-io-console-0:0.5.11-143.module_el9+998+d1955e82.x86_64
+    - rubygem-io-console-debuginfo-0:0.5.11-143.module_el9+998+d1955e82.x86_64
+    - rubygem-irb-0:1.4.1-143.module_el9+998+d1955e82.noarch
+    - rubygem-json-0:2.6.1-143.module_el9+998+d1955e82.x86_64
+    - rubygem-json-debuginfo-0:2.6.1-143.module_el9+998+d1955e82.x86_64
+    - rubygem-minitest-0:5.15.0-143.module_el9+998+d1955e82.noarch
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.src
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-doc-0:0.5.4-1.module_el9+156+2e0939d1.noarch
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.src
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debuginfo-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debugsource-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-doc-0:1.3.5-1.module_el9+156+2e0939d1.noarch
+    - rubygem-power_assert-0:2.0.1-143.module_el9+998+d1955e82.noarch
+    - rubygem-psych-0:4.0.4-143.module_el9+998+d1955e82.x86_64
+    - rubygem-psych-debuginfo-0:4.0.4-143.module_el9+998+d1955e82.x86_64
+    - rubygem-rake-0:13.0.6-143.module_el9+998+d1955e82.noarch
+    - rubygem-rbs-0:2.7.0-143.module_el9+998+d1955e82.x86_64
+    - rubygem-rbs-debuginfo-0:2.7.0-143.module_el9+998+d1955e82.x86_64
+    - rubygem-rdoc-0:6.4.0-143.module_el9+998+d1955e82.noarch
+    - rubygem-rexml-0:3.2.5-143.module_el9+998+d1955e82.noarch
+    - rubygem-rss-0:0.2.9-143.module_el9+998+d1955e82.noarch
+    - rubygem-test-unit-0:3.5.3-143.module_el9+998+d1955e82.noarch
+    - rubygem-typeprof-0:0.21.3-143.module_el9+998+d1955e82.noarch
+    - rubygems-0:3.3.26-143.module_el9+998+d1955e82.noarch
+    - rubygems-devel-0:3.3.26-143.module_el9+998+d1955e82.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.1'
+  artifacts:
+    rpms:
+    - ruby-0:3.1.5-144.module_el9+1038+5fd22adb.src
+    - ruby-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-bundled-gems-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-debuginfo-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-debugsource-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-default-gems-0:3.1.5-144.module_el9+1038+5fd22adb.noarch
+    - ruby-devel-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-doc-0:3.1.5-144.module_el9+1038+5fd22adb.noarch
+    - ruby-libs-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - ruby-libs-debuginfo-0:3.1.5-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-bigdecimal-0:3.1.1-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.1-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-bundler-0:2.3.27-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-io-console-0:0.5.11-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-io-console-debuginfo-0:0.5.11-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-irb-0:1.4.1-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-json-0:2.6.1-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-json-debuginfo-0:2.6.1-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-minitest-0:5.15.0-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.src
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-doc-0:0.5.4-1.module_el9+156+2e0939d1.noarch
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.src
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debuginfo-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debugsource-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-doc-0:1.3.5-1.module_el9+156+2e0939d1.noarch
+    - rubygem-power_assert-0:2.0.1-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-psych-0:4.0.4-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-psych-debuginfo-0:4.0.4-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-rake-0:13.0.6-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-rbs-0:2.7.0-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-rbs-debuginfo-0:2.7.0-144.module_el9+1038+5fd22adb.x86_64
+    - rubygem-rdoc-0:6.4.1.1-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-rexml-0:3.2.5-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-rss-0:0.2.9-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-test-unit-0:3.5.3-144.module_el9+1038+5fd22adb.noarch
+    - rubygem-typeprof-0:0.21.3-144.module_el9+1038+5fd22adb.noarch
+    - rubygems-0:3.3.27-144.module_el9+1038+5fd22adb.noarch
+    - rubygems-devel-0:3.3.27-144.module_el9+1038+5fd22adb.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.1'
+  artifacts:
+    rpms:
+    - ruby-0:3.1.5-145.module_el9+1185+80ab91c1.src
+    - ruby-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-bundled-gems-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-debuginfo-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-debugsource-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-default-gems-0:3.1.5-145.module_el9+1185+80ab91c1.noarch
+    - ruby-devel-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-doc-0:3.1.5-145.module_el9+1185+80ab91c1.noarch
+    - ruby-libs-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - ruby-libs-debuginfo-0:3.1.5-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-bigdecimal-0:3.1.1-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.1-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-bundler-0:2.3.27-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-io-console-0:0.5.11-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-io-console-debuginfo-0:0.5.11-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-irb-0:1.4.1-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-json-0:2.6.1-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-json-debuginfo-0:2.6.1-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-minitest-0:5.15.0-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.src
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-doc-0:0.5.4-1.module_el9+156+2e0939d1.noarch
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.src
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debuginfo-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debugsource-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-doc-0:1.3.5-1.module_el9+156+2e0939d1.noarch
+    - rubygem-power_assert-0:2.0.1-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-psych-0:4.0.4-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-psych-debuginfo-0:4.0.4-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-rake-0:13.0.6-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-rbs-0:2.7.0-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-rbs-debuginfo-0:2.7.0-145.module_el9+1185+80ab91c1.x86_64
+    - rubygem-rdoc-0:6.4.1.1-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-rexml-0:3.2.5-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-rss-0:0.2.9-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-test-unit-0:3.5.3-145.module_el9+1185+80ab91c1.noarch
+    - rubygem-typeprof-0:0.21.3-145.module_el9+1185+80ab91c1.noarch
+    - rubygems-0:3.3.27-145.module_el9+1185+80ab91c1.noarch
+    - rubygems-devel-0:3.3.27-145.module_el9+1185+80ab91c1.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.1'
+  artifacts:
+    rpms:
+    - ruby-0:3.1.7-146.module_el9+1212+fe8e2727.src
+    - ruby-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-bundled-gems-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-debuginfo-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-debugsource-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-default-gems-0:3.1.7-146.module_el9+1212+fe8e2727.noarch
+    - ruby-devel-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-doc-0:3.1.7-146.module_el9+1212+fe8e2727.noarch
+    - ruby-libs-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - ruby-libs-debuginfo-0:3.1.7-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-bigdecimal-0:3.1.1-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.1-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-bundler-0:2.3.27-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-io-console-0:0.5.11-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-io-console-debuginfo-0:0.5.11-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-irb-0:1.4.1-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-json-0:2.6.1-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-json-debuginfo-0:2.6.1-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-minitest-0:5.15.0-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.src
+    - rubygem-mysql2-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.4-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-mysql2-doc-0:0.5.4-1.module_el9+156+2e0939d1.noarch
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.src
+    - rubygem-pg-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debuginfo-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-debugsource-0:1.3.5-1.module_el9+156+2e0939d1.x86_64
+    - rubygem-pg-doc-0:1.3.5-1.module_el9+156+2e0939d1.noarch
+    - rubygem-power_assert-0:2.0.1-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-psych-0:4.0.4-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-psych-debuginfo-0:4.0.4-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-rake-0:13.0.6-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-rbs-0:2.7.0-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-rbs-debuginfo-0:2.7.0-146.module_el9+1212+fe8e2727.x86_64
+    - rubygem-rdoc-0:6.4.1.1-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-rexml-0:3.3.9-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-rss-0:0.3.1-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-test-unit-0:3.5.3-146.module_el9+1212+fe8e2727.noarch
+    - rubygem-typeprof-0:0.21.3-146.module_el9+1212+fe8e2727.noarch
+    - rubygems-0:3.3.27-146.module_el9+1212+fe8e2727.noarch
+    - rubygems-devel-0:3.3.27-146.module_el9+1212+fe8e2727.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.0-1.module_el9+862+220991ec.src
+    - ruby-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-bundled-gems-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-debuginfo-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-debugsource-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-default-gems-0:3.3.0-1.module_el9+862+220991ec.noarch
+    - ruby-devel-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-doc-0:3.3.0-1.module_el9+862+220991ec.noarch
+    - ruby-libs-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - ruby-libs-debuginfo-0:3.3.0-1.module_el9+862+220991ec.x86_64
+    - rubygem-bigdecimal-0:3.1.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-bundler-0:2.5.3-1.module_el9+862+220991ec.noarch
+    - rubygem-io-console-0:0.7.1-1.module_el9+862+220991ec.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-1.module_el9+862+220991ec.x86_64
+    - rubygem-irb-0:1.11.0-1.module_el9+862+220991ec.noarch
+    - rubygem-json-0:2.7.1-1.module_el9+862+220991ec.x86_64
+    - rubygem-json-debuginfo-0:2.7.1-1.module_el9+862+220991ec.x86_64
+    - rubygem-minitest-0:5.20.0-1.module_el9+862+220991ec.noarch
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.src
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-1.module_el9+862+220991ec.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-1.module_el9+862+220991ec.noarch
+    - rubygem-psych-0:5.1.2-1.module_el9+862+220991ec.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-1.module_el9+862+220991ec.x86_64
+    - rubygem-racc-0:1.7.3-1.module_el9+862+220991ec.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-1.module_el9+862+220991ec.x86_64
+    - rubygem-rake-0:13.1.0-1.module_el9+862+220991ec.noarch
+    - rubygem-rbs-0:3.4.0-1.module_el9+862+220991ec.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-1.module_el9+862+220991ec.x86_64
+    - rubygem-rdoc-0:6.6.2-1.module_el9+862+220991ec.noarch
+    - rubygem-rexml-0:3.2.6-1.module_el9+862+220991ec.noarch
+    - rubygem-rss-0:0.3.0-1.module_el9+862+220991ec.noarch
+    - rubygem-test-unit-0:3.6.1-1.module_el9+862+220991ec.noarch
+    - rubygem-typeprof-0:0.21.9-1.module_el9+862+220991ec.noarch
+    - rubygems-0:3.5.3-1.module_el9+862+220991ec.noarch
+    - rubygems-devel-0:3.5.3-1.module_el9+862+220991ec.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.1-2.module_el9+1063+32abbc07.src
+    - ruby-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-bundled-gems-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-debuginfo-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-debugsource-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-default-gems-0:3.3.1-2.module_el9+1063+32abbc07.noarch
+    - ruby-devel-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-doc-0:3.3.1-2.module_el9+1063+32abbc07.noarch
+    - ruby-libs-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - ruby-libs-debuginfo-0:3.3.1-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-bigdecimal-0:3.1.5-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-bundler-0:2.5.9-2.module_el9+1063+32abbc07.noarch
+    - rubygem-io-console-0:0.7.1-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-irb-0:1.11.0-2.module_el9+1063+32abbc07.noarch
+    - rubygem-json-0:2.7.1-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-json-debuginfo-0:2.7.1-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-minitest-0:5.20.0-2.module_el9+1063+32abbc07.noarch
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.src
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-1.module_el9+862+220991ec.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-2.module_el9+1063+32abbc07.noarch
+    - rubygem-psych-0:5.1.2-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-racc-0:1.7.3-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-rake-0:13.1.0-2.module_el9+1063+32abbc07.noarch
+    - rubygem-rbs-0:3.4.0-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-2.module_el9+1063+32abbc07.x86_64
+    - rubygem-rdoc-0:6.6.3.1-2.module_el9+1063+32abbc07.noarch
+    - rubygem-rexml-0:3.2.6-2.module_el9+1063+32abbc07.noarch
+    - rubygem-rss-0:0.3.0-2.module_el9+1063+32abbc07.noarch
+    - rubygem-test-unit-0:3.6.1-2.module_el9+1063+32abbc07.noarch
+    - rubygem-typeprof-0:0.21.9-2.module_el9+1063+32abbc07.noarch
+    - rubygems-0:3.5.9-2.module_el9+1063+32abbc07.noarch
+    - rubygems-devel-0:3.5.9-2.module_el9+1063+32abbc07.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.5-3.module_el9+1112+c9edd103.src
+    - ruby-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-bundled-gems-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-debuginfo-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-debugsource-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-default-gems-0:3.3.5-3.module_el9+1112+c9edd103.noarch
+    - ruby-devel-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-doc-0:3.3.5-3.module_el9+1112+c9edd103.noarch
+    - ruby-libs-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - ruby-libs-debuginfo-0:3.3.5-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-bigdecimal-0:3.1.5-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-bundler-0:2.5.16-3.module_el9+1112+c9edd103.noarch
+    - rubygem-io-console-0:0.7.1-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-irb-0:1.13.1-3.module_el9+1112+c9edd103.noarch
+    - rubygem-json-0:2.7.1-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-json-debuginfo-0:2.7.1-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-minitest-0:5.20.0-3.module_el9+1112+c9edd103.noarch
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.src
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-1.module_el9+862+220991ec.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-3.module_el9+1112+c9edd103.noarch
+    - rubygem-psych-0:5.1.2-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-racc-0:1.7.3-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-rake-0:13.1.0-3.module_el9+1112+c9edd103.noarch
+    - rubygem-rbs-0:3.4.0-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-3.module_el9+1112+c9edd103.x86_64
+    - rubygem-rdoc-0:6.6.3.1-3.module_el9+1112+c9edd103.noarch
+    - rubygem-rexml-0:3.3.6-3.module_el9+1112+c9edd103.noarch
+    - rubygem-rss-0:0.3.1-3.module_el9+1112+c9edd103.noarch
+    - rubygem-test-unit-0:3.6.1-3.module_el9+1112+c9edd103.noarch
+    - rubygem-typeprof-0:0.21.9-3.module_el9+1112+c9edd103.noarch
+    - rubygems-0:3.5.16-3.module_el9+1112+c9edd103.noarch
+    - rubygems-devel-0:3.5.16-3.module_el9+1112+c9edd103.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.8-4.module_el9+1234+fda12214.src
+    - ruby-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-bundled-gems-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-debugsource-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-default-gems-0:3.3.8-4.module_el9+1234+fda12214.noarch
+    - ruby-devel-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-doc-0:3.3.8-4.module_el9+1234+fda12214.noarch
+    - ruby-libs-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-libs-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bigdecimal-0:3.1.5-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bundler-0:2.5.22-4.module_el9+1234+fda12214.noarch
+    - rubygem-io-console-0:0.7.1-4.module_el9+1234+fda12214.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-4.module_el9+1234+fda12214.x86_64
+    - rubygem-irb-0:1.13.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-json-0:2.7.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-json-debuginfo-0:2.7.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-minitest-0:5.20.0-4.module_el9+1234+fda12214.noarch
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.src
+    - rubygem-mysql2-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-1.module_el9+862+220991ec.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-1.module_el9+862+220991ec.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-4.module_el9+1234+fda12214.noarch
+    - rubygem-psych-0:5.1.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-racc-0:1.7.3-4.module_el9+1234+fda12214.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rake-0:13.1.0-4.module_el9+1234+fda12214.noarch
+    - rubygem-rbs-0:3.4.0-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rdoc-0:6.6.3.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-rexml-0:3.3.9-4.module_el9+1234+fda12214.noarch
+    - rubygem-rss-0:0.3.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-test-unit-0:3.6.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-typeprof-0:0.21.9-4.module_el9+1234+fda12214.noarch
+    - rubygems-0:3.5.22-4.module_el9+1234+fda12214.noarch
+    - rubygems-devel-0:3.5.22-4.module_el9+1234+fda12214.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.8-4.module_el9+1234+fda12214.src
+    - ruby-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-bundled-gems-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-debugsource-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-default-gems-0:3.3.8-4.module_el9+1234+fda12214.noarch
+    - ruby-devel-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-doc-0:3.3.8-4.module_el9+1234+fda12214.noarch
+    - ruby-libs-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - ruby-libs-debuginfo-0:3.3.8-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bigdecimal-0:3.1.5-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-4.module_el9+1234+fda12214.x86_64
+    - rubygem-bundler-0:2.5.22-4.module_el9+1234+fda12214.noarch
+    - rubygem-io-console-0:0.7.1-4.module_el9+1234+fda12214.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-4.module_el9+1234+fda12214.x86_64
+    - rubygem-irb-0:1.13.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-json-0:2.7.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-json-debuginfo-0:2.7.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-minitest-0:5.20.0-4.module_el9+1234+fda12214.noarch
+    - rubygem-mysql2-0:0.5.5-3.module_el9+1245+36c517c5.src
+    - rubygem-mysql2-0:0.5.5-3.module_el9+1245+36c517c5.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-3.module_el9+1245+36c517c5.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-3.module_el9+1245+36c517c5.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-3.module_el9+1245+36c517c5.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-4.module_el9+1234+fda12214.noarch
+    - rubygem-psych-0:5.1.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-4.module_el9+1234+fda12214.x86_64
+    - rubygem-racc-0:1.7.3-4.module_el9+1234+fda12214.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rake-0:13.1.0-4.module_el9+1234+fda12214.noarch
+    - rubygem-rbs-0:3.4.0-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-4.module_el9+1234+fda12214.x86_64
+    - rubygem-rdoc-0:6.6.3.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-rexml-0:3.3.9-4.module_el9+1234+fda12214.noarch
+    - rubygem-rss-0:0.3.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-test-unit-0:3.6.1-4.module_el9+1234+fda12214.noarch
+    - rubygem-typeprof-0:0.21.9-4.module_el9+1234+fda12214.noarch
+    - rubygems-0:3.5.22-4.module_el9+1234+fda12214.noarch
+    - rubygems-devel-0:3.5.22-4.module_el9+1234+fda12214.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '3.3'
+  artifacts:
+    rpms:
+    - ruby-0:3.3.10-5.module_el9+1286+8ef4fb5d.src
+    - ruby-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-bundled-gems-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-bundled-gems-debuginfo-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-debuginfo-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-debugsource-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-default-gems-0:3.3.10-5.module_el9+1286+8ef4fb5d.noarch
+    - ruby-devel-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-doc-0:3.3.10-5.module_el9+1286+8ef4fb5d.noarch
+    - ruby-libs-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - ruby-libs-debuginfo-0:3.3.10-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-bigdecimal-0:3.1.5-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-bigdecimal-debuginfo-0:3.1.5-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-bundler-0:2.5.22-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-io-console-0:0.7.1-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-io-console-debuginfo-0:0.7.1-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-irb-0:1.13.1-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-json-0:2.7.2-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-json-debuginfo-0:2.7.2-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-minitest-0:5.20.0-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-mysql2-0:0.5.5-3.module_el9+1286+8ef4fb5d.src
+    - rubygem-mysql2-0:0.5.5-3.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.5-3.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.5-3.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-mysql2-doc-0:0.5.5-3.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.src
+    - rubygem-pg-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debuginfo-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-debugsource-0:1.5.4-1.module_el9+862+220991ec.x86_64
+    - rubygem-pg-doc-0:1.5.4-1.module_el9+862+220991ec.noarch
+    - rubygem-power_assert-0:2.0.3-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-psych-0:5.1.2-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-psych-debuginfo-0:5.1.2-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-racc-0:1.7.3-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-racc-debuginfo-0:1.7.3-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-rake-0:13.1.0-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-rbs-0:3.4.0-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-rbs-debuginfo-0:3.4.0-5.module_el9+1286+8ef4fb5d.x86_64
+    - rubygem-rdoc-0:6.6.3.1-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-rexml-0:3.4.4-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-rss-0:0.3.1-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-test-unit-0:3.6.1-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygem-typeprof-0:0.21.9-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygems-0:3.5.22-5.module_el9+1286+8ef4fb5d.noarch
+    - rubygems-devel-0:3.5.22-5.module_el9+1286+8ef4fb5d.noarch
+---
+document: modulemd
+version: 2
+data:
+  name: ruby
+  stream: '4.0'
+  artifacts:
+    rpms:
+    - ruby-0:4.0.1-31.module_el9+1318+36e679b0.src
+    - ruby-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-bundled-gems-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-bundled-gems-debuginfo-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-debuginfo-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-debugsource-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-default-gems-0:4.0.1-31.module_el9+1318+36e679b0.noarch
+    - ruby-devel-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-doc-0:4.0.1-31.module_el9+1318+36e679b0.noarch
+    - ruby-libs-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - ruby-libs-debuginfo-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-bigdecimal-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-bigdecimal-debuginfo-0:4.0.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-bundler-0:4.0.3-31.module_el9+1318+36e679b0.noarch
+    - rubygem-io-console-0:0.8.2-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-io-console-debuginfo-0:0.8.2-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-irb-0:1.16.0-31.module_el9+1318+36e679b0.noarch
+    - rubygem-json-0:2.18.0-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-json-debuginfo-0:2.18.0-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-minitest-0:6.0.0-31.module_el9+1318+36e679b0.noarch
+    - rubygem-mysql2-0:0.5.7-1.module_el9+1318+36e679b0.src
+    - rubygem-mysql2-0:0.5.7-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-mysql2-debuginfo-0:0.5.7-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-mysql2-debugsource-0:0.5.7-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-mysql2-doc-0:0.5.7-1.module_el9+1318+36e679b0.noarch
+    - rubygem-pg-0:1.6.3-1.module_el9+1318+36e679b0.src
+    - rubygem-pg-0:1.6.3-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-pg-debuginfo-0:1.6.3-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-pg-debugsource-0:1.6.3-1.module_el9+1318+36e679b0.x86_64
+    - rubygem-pg-doc-0:1.6.3-1.module_el9+1318+36e679b0.noarch
+    - rubygem-power_assert-0:3.0.1-31.module_el9+1318+36e679b0.noarch
+    - rubygem-psych-0:5.3.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-psych-debuginfo-0:5.3.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-racc-0:1.8.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-racc-debuginfo-0:1.8.1-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-rake-0:13.3.1-31.module_el9+1318+36e679b0.noarch
+    - rubygem-rbs-0:3.10.0-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-rbs-debuginfo-0:3.10.0-31.module_el9+1318+36e679b0.x86_64
+    - rubygem-rdoc-0:7.0.3-31.module_el9+1318+36e679b0.noarch
+    - rubygem-rexml-0:3.4.4-31.module_el9+1318+36e679b0.noarch
+    - rubygem-rss-0:0.3.2-31.module_el9+1318+36e679b0.noarch
+    - rubygem-test-unit-0:3.7.5-31.module_el9+1318+36e679b0.noarch
+    - rubygem-typeprof-0:0.31.1-31.module_el9+1318+36e679b0.noarch
+    - rubygems-0:4.0.3-31.module_el9+1318+36e679b0.noarch
+    - rubygems-devel-0:4.0.3-31.module_el9+1318+36e679b0.noarch

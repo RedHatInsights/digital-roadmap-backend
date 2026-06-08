@@ -6,3 +6,7 @@ __pycache__
 /.venv*
 /venv*
 /scratch
+
+# Modulemd download artifacts (temporary files)
+modulemd_data/repomd-*.xml
+modulemd_data/*.xz

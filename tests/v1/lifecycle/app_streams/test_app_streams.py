@@ -126,12 +126,20 @@ def test_get_app_stream_module_info_not_found(api_prefix, client, version):
         # RHEL 8
         ([{"name": "python36", "status": ["default"], "stream": "3.6"}], 8, set()),
         ([{"name": "python36", "status": ["default", "enabled", "installed"], "stream": "3.6"}], 8, {"python36"}),
-        ([{"name": "python36", "status": ["default", "enabled"], "stream": "3.6"}], 8, {"python36"}),
+        (
+            [{"name": "python36", "status": ["default", "enabled"], "stream": "3.6"}],
+            8,
+            set(),
+        ),  # Enabled-only requires package verification
         ([{"name": "python36", "status": ["default", "installed"], "stream": "3.6"}], 8, {"python36"}),
         ([{"name": "python36", "stream": "3.6"}], 8, set()),
         # RHEL 9
         ([{"name": "php", "status": ["default"], "stream": "8.3"}], 9, set()),
-        ([{"name": "php", "status": ["default", "enabled"], "stream": "8.3"}], 9, {"php"}),
+        (
+            [{"name": "php", "status": ["default", "enabled"], "stream": "8.3"}],
+            9,
+            set(),
+        ),  # Enabled-only requires package verification
         ([{"name": "php", "status": ["installed", "enabled"], "stream": "8.3"}], 9, {"php"}),
         ([{"name": "php", "stream": "8.3"}], 9, {"php"}),
     ),

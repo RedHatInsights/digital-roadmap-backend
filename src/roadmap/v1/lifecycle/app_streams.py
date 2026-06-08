@@ -416,7 +416,7 @@ async def systems_by_app_stream(  # noqa: C901
 def app_streams_from_modules(  # noqa: C901
     dnf_modules: list[dict],
     os_major: int,
-    cache: dict[tuple[str, int, str], AppStreamKey],
+    cache: dict[tuple[str, int, str], AppStreamKey | tuple[AppStreamKey, set[str]]],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()

@@ -343,7 +343,7 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     return relateds.difference(app_streams)
 
 
-async def systems_by_app_stream(
+async def systems_by_app_stream(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
 ) -> dict[AppStreamKey, set[SystemInfo]]:
@@ -413,7 +413,7 @@ async def systems_by_app_stream(
     return systems_by_stream
 
 
-def app_streams_from_modules(
+def app_streams_from_modules(  # noqa: C901
     dnf_modules: list[dict],
     os_major: int,
     cache: dict[tuple[str, int, str], AppStreamKey],
@@ -454,8 +454,7 @@ def app_streams_from_modules(
         cache_key = (module_name, os_major, stream)
 
         # Check if module is enabled but not installed - needs package verification
-        if (ModuleStatus.enabled in module_status and
-            ModuleStatus.installed not in module_status):
+        if ModuleStatus.enabled in module_status and ModuleStatus.installed not in module_status:
             # Module is enabled but not marked as installed by DNF
             # Check if we have package mapping data for this module
             expected_packages = MODULE_PACKAGES.get(cache_key)

@@ -13,6 +13,7 @@ Usage:
 
 import re
 import sys
+
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -29,18 +30,18 @@ def parse_nevra(nevra_string):
         nodejs-20.11.1-1.module+el9.3.0+20363+77c810cf.x86_64 -> nodejs
     """
     # Handle epoch format: name-epoch:version-release.arch
-    if ':' in nevra_string:
+    if ":" in nevra_string:
         # Find the name before "-epoch:"
-        match = re.match(r'^(.+?)-\d+:', nevra_string)
+        match = re.match(r"^(.+?)-\d+:", nevra_string)
         if match:
             return match.group(1)
 
     # No epoch: name-version-release.arch
     # Just take the first segment before the first hyphen
-    return nevra_string.split('-')[0]
+    return nevra_string.split("-")[0]
 
 
-def extract_module_packages(modules_yaml_path):
+def extract_module_packages(modules_yaml_path):  # noqa: C901
     """Parse modulemd YAML and return module -> packages mapping."""
 
     module_packages = defaultdict(lambda: defaultdict(set))
@@ -50,7 +51,7 @@ def extract_module_packages(modules_yaml_path):
     print(f"Parsing {modules_yaml_path}...")
 
     try:
-        with open(modules_yaml_path, 'r') as f:
+        with open(modules_yaml_path, "r") as f:
             # modules.yaml contains multiple YAML documents separated by "---"
             documents = yaml.safe_load_all(f)
 
@@ -59,27 +60,23 @@ def extract_module_packages(modules_yaml_path):
                     continue
 
                 # Module documents have document: modulemd
-                if doc.get('document') != 'modulemd':
+                if doc.get("document") != "modulemd":
                     continue
 
                 # Skip obsolete modulemd versions
-                if doc.get('version', 0) < 2:
+                if doc.get("version", 0) < 2:
                     continue
 
-                data = doc.get('data', {})
-                module_name = data.get('name')
-                stream = data.get('stream')
+                data = doc.get("data", {})
+                module_name = data.get("name")
+                stream = data.get("stream")
 
                 if not module_name or not stream:
                     continue
 
-                # Extract RHEL major version from context or make educated guess
-                # Context format: "9d28cfd0" or "rhel8" or similar
-                context = data.get('context', '')
-
                 # Extract package names from artifacts
-                artifacts = data.get('artifacts', {})
-                rpms = artifacts.get('rpms', [])
+                artifacts = data.get("artifacts", {})
+                rpms = artifacts.get("rpms", [])
 
                 if not rpms:
                     skipped_count += 1
@@ -88,11 +85,11 @@ def extract_module_packages(modules_yaml_path):
                 package_names = set()
                 for rpm_nevra in rpms:
                     # Skip debuginfo and debugsource packages
-                    if 'debuginfo' in rpm_nevra or 'debugsource' in rpm_nevra:
+                    if "debuginfo" in rpm_nevra or "debugsource" in rpm_nevra:
                         continue
 
                     # Only process x86_64 and src packages (skip i686, etc.)
-                    if not ('.x86_64' in rpm_nevra or '.src' in rpm_nevra or '.noarch' in rpm_nevra):
+                    if not (".x86_64" in rpm_nevra or ".src" in rpm_nevra or ".noarch" in rpm_nevra):
                         continue
 
                     pkg_name = parse_nevra(rpm_nevra)
@@ -103,13 +100,13 @@ def extract_module_packages(modules_yaml_path):
                     # Look for .el8 or .el9 or module+el8 patterns
                     os_major = None
                     for rpm in rpms[:5]:  # Check first few packages
-                        if '.el8' in rpm or 'module+el8' in rpm or 'module_el8' in rpm:
+                        if ".el8" in rpm or "module+el8" in rpm or "module_el8" in rpm:
                             os_major = 8
                             break
-                        elif '.el9' in rpm or 'module+el9' in rpm or 'module_el9' in rpm:
+                        elif ".el9" in rpm or "module+el9" in rpm or "module_el9" in rpm:
                             os_major = 9
                             break
-                        elif '.el10' in rpm or 'module+el10' in rpm or 'module_el10' in rpm:
+                        elif ".el10" in rpm or "module+el10" in rpm or "module_el10" in rpm:
                             os_major = 10
                             break
 
@@ -150,32 +147,34 @@ def generate_module_packages_file(all_packages, output_path):
     # Sort by (os_major, module_name, stream) for readability
     sorted_items = sorted(all_packages.items(), key=lambda x: (x[0][1], x[0][0], x[0][2]))
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write('"""\n')
-        f.write('AppStream Module to Package Mappings\n')
-        f.write('\n')
-        f.write('This file maps (module_name, os_major, stream) -> set of package names.\n')
-        f.write('Used to determine if an enabled module actually has packages installed.\n')
-        f.write('\n')
-        f.write(f'Auto-generated by scripts/generate_module_packages.py on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+        f.write("AppStream Module to Package Mappings\n")
+        f.write("\n")
+        f.write("This file maps (module_name, os_major, stream) -> set of package names.\n")
+        f.write("Used to determine if an enabled module actually has packages installed.\n")
+        f.write("\n")
+        f.write(
+            f"Auto-generated by scripts/generate_module_packages.py on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
         f.write('"""\n\n')
 
-        f.write('MODULE_PACKAGES = {\n')
+        f.write("MODULE_PACKAGES = {\n")
 
         current_os_major = None
         for (module_name, os_major, stream), packages in sorted_items:
             # Add a blank line and comment for each OS major version
             if current_os_major != os_major:
                 if current_os_major is not None:
-                    f.write('\n')
-                f.write(f'    # RHEL {os_major} Modules\n')
+                    f.write("\n")
+                f.write(f"    # RHEL {os_major} Modules\n")
                 current_os_major = os_major
 
             # Format the package set nicely
             sorted_packages = sorted(packages)
 
             # If packages fit on one line (< 100 chars), use single line
-            packages_str = ', '.join(f'"{pkg}"' for pkg in sorted_packages)
+            packages_str = ", ".join(f'"{pkg}"' for pkg in sorted_packages)
             if len(packages_str) < 80:
                 f.write(f'    ("{module_name}", {os_major}, "{stream}"): {{{packages_str}}},\n')
             else:
@@ -186,9 +185,9 @@ def generate_module_packages_file(all_packages, output_path):
                         f.write(f'        "{pkg}"\n')
                     else:
                         f.write(f'        "{pkg}",\n')
-                f.write('    },\n')
+                f.write("    },\n")
 
-        f.write('}\n')
+        f.write("}\n")
 
     print(f"  ✓ Generated {len(all_packages)} module mappings")
 
@@ -266,5 +265,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -15,7 +15,7 @@ MODULE_PACKAGES = {
         "389-ds-base-legacy-tools",
         "389-ds-base-libs",
         "389-ds-base-snmp",
-        "python3-lib389"
+        "python3-lib389",
     },
     ("ant", 8, "1.10"): {"ant", "ant-imageio", "ant-lib"},
     ("container-tools", 8, "1.0"): {
@@ -33,7 +33,7 @@ MODULE_PACKAGES = {
         "python3-criu",
         "runc",
         "skopeo",
-        "slirp4netns"
+        "slirp4netns",
     },
     ("container-tools", 8, "2.0"): {
         "buildah",
@@ -57,7 +57,7 @@ MODULE_PACKAGES = {
         "skopeo-tests",
         "slirp4netns",
         "toolbox",
-        "udica"
+        "udica",
     },
     ("container-tools", 8, "3.0"): {
         "buildah",
@@ -87,7 +87,7 @@ MODULE_PACKAGES = {
         "slirp4netns",
         "toolbox",
         "toolbox-tests",
-        "udica"
+        "udica",
     },
     ("container-tools", 8, "4.0"): {
         "aardvark-dns",
@@ -124,7 +124,7 @@ MODULE_PACKAGES = {
         "slirp4netns",
         "toolbox",
         "toolbox-tests",
-        "udica"
+        "udica",
     },
     ("container-tools", 8, "rhel8"): {
         "aardvark-dns",
@@ -161,7 +161,7 @@ MODULE_PACKAGES = {
         "slirp4netns",
         "toolbox",
         "toolbox-tests",
-        "udica"
+        "udica",
     },
     ("eclipse", 8, "rhel8"): {
         "apache-commons-compress",
@@ -222,7 +222,7 @@ MODULE_PACKAGES = {
         "univocity-parsers",
         "xml-commons-apis",
         "xmlgraphics-commons",
-        "xz-java"
+        "xz-java",
     },
     ("freeradius", 8, "3.0"): {
         "freeradius",
@@ -237,7 +237,7 @@ MODULE_PACKAGES = {
         "freeradius-sqlite",
         "freeradius-unixODBC",
         "freeradius-utils",
-        "python3-freeradius"
+        "python3-freeradius",
     },
     ("gimp", 8, "2.8"): {
         "gimp",
@@ -254,7 +254,7 @@ MODULE_PACKAGES = {
         "pygtk2-doc",
         "python2-cairo",
         "python2-cairo-devel",
-        "python2-pycairo"
+        "python2-pycairo",
     },
     ("go-toolset", 8, "rhel8"): {
         "delve",
@@ -265,7 +265,7 @@ MODULE_PACKAGES = {
         "golang-misc",
         "golang-race",
         "golang-src",
-        "golang-tests"
+        "golang-tests",
     },
     ("httpd", 8, "2.4"): {
         "httpd",
@@ -278,7 +278,7 @@ MODULE_PACKAGES = {
         "mod_md",
         "mod_proxy_html",
         "mod_session",
-        "mod_ssl"
+        "mod_ssl",
     },
     ("idm", 8, "DL1"): {
         "bind-dyndb-ldap",
@@ -316,7 +316,7 @@ MODULE_PACKAGES = {
         "pyusb",
         "slapi-nis",
         "softhsm",
-        "softhsm-devel"
+        "softhsm-devel",
     },
     ("idm", 8, "client"): {
         "ipa",
@@ -339,7 +339,7 @@ MODULE_PACKAGES = {
         "python3-qrcode",
         "python3-qrcode-core",
         "python3-yubico",
-        "pyusb"
+        "pyusb",
     },
     ("inkscape", 8, "0.92.3"): {"inkscape", "inkscape-docs", "inkscape-view", "python-scour", "python2-scour"},
     ("javapackages-runtime", 8, "201801"): {"javapackages-filesystem", "javapackages-tools"},
@@ -358,7 +358,7 @@ MODULE_PACKAGES = {
         "jaxb-runtime",
         "jaxb-txw2",
         "jaxb-xjc",
-        "jaxb-xsom"
+        "jaxb-xsom",
     },
     ("jmc", 8, "rhel8"): {
         "HdrHistogram",
@@ -374,7 +374,7 @@ MODULE_PACKAGES = {
         "lz4-java",
         "lz4-java-javadoc",
         "owasp-java-encoder",
-        "owasp-java-encoder-javadoc"
+        "owasp-java-encoder-javadoc",
     },
     ("libselinux-python", 8, "2.8"): {"libselinux", "libselinux-python"},
     ("llvm-toolset", 8, "rhel8"): {
@@ -409,7 +409,7 @@ MODULE_PACKAGES = {
         "llvm-toolset",
         "python3.12-clang",
         "python3.12-lit",
-        "python3.12-lldb"
+        "python3.12-lldb",
     },
     ("log4j", 8, "2"): {"disruptor", "jctools", "log4j", "log4j-jcl", "log4j-slf4j", "log4j-web"},
     ("mailman", 8, "2.1"): {"mailman"},
@@ -429,7 +429,7 @@ MODULE_PACKAGES = {
         "mariadb-server",
         "mariadb-server-galera",
         "mariadb-server-utils",
-        "mariadb-test"
+        "mariadb-test",
     },
     ("mariadb", 8, "10.3"): {
         "Judy",
@@ -446,7 +446,7 @@ MODULE_PACKAGES = {
         "mariadb-server",
         "mariadb-server-galera",
         "mariadb-server-utils",
-        "mariadb-test"
+        "mariadb-test",
     },
     ("mariadb", 8, "10.5"): {
         "Judy",
@@ -464,7 +464,7 @@ MODULE_PACKAGES = {
         "mariadb-server",
         "mariadb-server-galera",
         "mariadb-server-utils",
-        "mariadb-test"
+        "mariadb-test",
     },
     ("maven", 8, "3.5"): {
         "aopalliance",
@@ -514,7 +514,7 @@ MODULE_PACKAGES = {
         "sisu",
         "sisu-inject",
         "sisu-plexus",
-        "slf4j"
+        "slf4j",
     },
     ("maven", 8, "3.6"): {
         "aopalliance",
@@ -549,7 +549,7 @@ MODULE_PACKAGES = {
         "plexus-sec-dispatcher",
         "plexus-utils",
         "sisu",
-        "slf4j"
+        "slf4j",
     },
     ("maven", 8, "3.8"): {
         "apache-commons-cli",
@@ -583,7 +583,7 @@ MODULE_PACKAGES = {
         "plexus-sec-dispatcher",
         "plexus-utils",
         "sisu",
-        "slf4j"
+        "slf4j",
     },
     ("mercurial", 8, "4.8"): {"mercurial", "mercurial-hgk"},
     ("mercurial", 8, "6.2"): {"mercurial", "mercurial-chg", "mercurial-hgk"},
@@ -599,7 +599,7 @@ MODULE_PACKAGES = {
         "mysql-errmsg",
         "mysql-libs",
         "mysql-server",
-        "mysql-test"
+        "mysql-test",
     },
     ("mysql", 8, "8.4"): {
         "mecab",
@@ -613,7 +613,7 @@ MODULE_PACKAGES = {
         "mysql-libs",
         "mysql-server",
         "mysql-test",
-        "mysql-test-data"
+        "mysql-test-data",
     },
     ("nginx", 8, "1.14"): {
         "nginx",
@@ -623,7 +623,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 8, "1.16"): {
         "nginx",
@@ -633,7 +633,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 8, "1.18"): {
         "nginx",
@@ -643,7 +643,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 8, "1.20"): {
         "nginx",
@@ -654,7 +654,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 8, "1.22"): {
         "nginx",
@@ -665,7 +665,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 8, "1.24"): {
         "nginx",
@@ -676,7 +676,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nodejs", 8, "10"): {
         "nodejs",
@@ -685,7 +685,7 @@ MODULE_PACKAGES = {
         "nodejs-full-i18n",
         "nodejs-nodemon",
         "nodejs-packaging",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "12"): {
         "nodejs",
@@ -694,7 +694,7 @@ MODULE_PACKAGES = {
         "nodejs-full-i18n",
         "nodejs-nodemon",
         "nodejs-packaging",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "14"): {
         "nodejs",
@@ -703,7 +703,7 @@ MODULE_PACKAGES = {
         "nodejs-full-i18n",
         "nodejs-nodemon",
         "nodejs-packaging",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "16"): {
         "nodejs",
@@ -712,7 +712,7 @@ MODULE_PACKAGES = {
         "nodejs-full-i18n",
         "nodejs-nodemon",
         "nodejs-packaging",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "18"): {
         "nodejs",
@@ -722,7 +722,7 @@ MODULE_PACKAGES = {
         "nodejs-nodemon",
         "nodejs-packaging",
         "nodejs-packaging-bundler",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "20"): {
         "nodejs",
@@ -732,7 +732,7 @@ MODULE_PACKAGES = {
         "nodejs-nodemon",
         "nodejs-packaging",
         "nodejs-packaging-bundler",
-        "npm"
+        "npm",
     },
     ("nodejs", 8, "22"): {
         "nodejs",
@@ -744,7 +744,7 @@ MODULE_PACKAGES = {
         "nodejs-packaging",
         "nodejs-packaging-bundler",
         "npm",
-        "v8-12.4-devel"
+        "v8-12.4-devel",
     },
     ("nodejs", 8, "24"): {
         "nodejs",
@@ -756,7 +756,7 @@ MODULE_PACKAGES = {
         "nodejs-packaging",
         "nodejs-packaging-bundler",
         "npm",
-        "v8-13.6-devel"
+        "v8-13.6-devel",
     },
     ("parfait", 8, "0.5"): {
         "parfait",
@@ -773,7 +773,7 @@ MODULE_PACKAGES = {
         "uom-se",
         "uom-se-javadoc",
         "uom-systems",
-        "uom-systems-javadoc"
+        "uom-systems-javadoc",
     },
     ("perl", 8, "5.24"): {
         "perl",
@@ -915,7 +915,7 @@ MODULE_PACKAGES = {
         "perl-threads",
         "perl-threads-shared",
         "perl-utils",
-        "perl-version"
+        "perl-version",
     },
     ("perl", 8, "5.30"): {
         "perl",
@@ -1059,7 +1059,7 @@ MODULE_PACKAGES = {
         "perl-threads",
         "perl-threads-shared",
         "perl-utils",
-        "perl-version"
+        "perl-version",
     },
     ("perl", 8, "5.32"): {
         "perl",
@@ -1283,7 +1283,7 @@ MODULE_PACKAGES = {
         "perl-utils",
         "perl-vars",
         "perl-version",
-        "perl-vmsish"
+        "perl-vmsish",
     },
     ("perl-App-cpanminus", 8, "1.7044"): {
         "perl-App-cpanminus",
@@ -1292,7 +1292,7 @@ MODULE_PACKAGES = {
         "perl-File-pushd",
         "perl-Module-CPANfile",
         "perl-Parse-PMFile",
-        "perl-String-ShellQuote"
+        "perl-String-ShellQuote",
     },
     ("perl-DBD-MySQL", 8, "4.046"): {"perl-DBD-MySQL"},
     ("perl-DBD-Pg", 8, "3.7"): {"perl-DBD-Pg"},
@@ -1321,7 +1321,7 @@ MODULE_PACKAGES = {
         "perl-TimeDate",
         "perl-Try-Tiny",
         "perl-WWW-RobotRules",
-        "perl-libwww-perl"
+        "perl-libwww-perl",
     },
     ("php", 8, "7.2"): {
         "apcu-panel",
@@ -1358,7 +1358,7 @@ MODULE_PACKAGES = {
         "php-snmp",
         "php-soap",
         "php-xml",
-        "php-xmlrpc"
+        "php-xmlrpc",
     },
     ("php", 8, "7.3"): {
         "apcu-panel",
@@ -1397,7 +1397,7 @@ MODULE_PACKAGES = {
         "php-snmp",
         "php-soap",
         "php-xml",
-        "php-xmlrpc"
+        "php-xmlrpc",
     },
     ("php", 8, "7.4"): {
         "apcu-panel",
@@ -1436,7 +1436,7 @@ MODULE_PACKAGES = {
         "php-snmp",
         "php-soap",
         "php-xml",
-        "php-xmlrpc"
+        "php-xmlrpc",
     },
     ("php", 8, "8.0"): {
         "apcu-panel",
@@ -1473,7 +1473,7 @@ MODULE_PACKAGES = {
         "php-process",
         "php-snmp",
         "php-soap",
-        "php-xml"
+        "php-xml",
     },
     ("php", 8, "8.2"): {
         "apcu-panel",
@@ -1510,7 +1510,7 @@ MODULE_PACKAGES = {
         "php-process",
         "php-snmp",
         "php-soap",
-        "php-xml"
+        "php-xml",
     },
     ("pki-core", 8, "10.6"): {
         "idm-jss",
@@ -1532,7 +1532,7 @@ MODULE_PACKAGES = {
         "python3-idm-pki",
         "resteasy",
         "resteasy-javadoc",
-        "tomcatjss"
+        "tomcatjss",
     },
     ("pki-deps", 8, "10.6"): {
         "apache-commons-collections",
@@ -1567,7 +1567,7 @@ MODULE_PACKAGES = {
         "xml-commons-apis",
         "xml-commons-resolver",
         "xmlstreambuffer",
-        "xsom"
+        "xsom",
     },
     ("pmdk", 8, "1_fileformat_v6"): {
         "daxio",
@@ -1595,7 +1595,7 @@ MODULE_PACKAGES = {
         "pmdk",
         "pmempool",
         "pmreorder",
-        "rpmemd"
+        "rpmemd",
     },
     ("postgresql", 8, "10"): {
         "postgresql",
@@ -1610,7 +1610,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 8, "12"): {
         "pg_repack",
@@ -1628,7 +1628,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 8, "13"): {
         "pg_repack",
@@ -1646,7 +1646,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 8, "15"): {
         "pg_repack",
@@ -1666,7 +1666,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 8, "16"): {
         "pg_repack",
@@ -1686,7 +1686,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 8, "9.6"): {
         "postgresql",
@@ -1699,7 +1699,7 @@ MODULE_PACKAGES = {
         "postgresql-server-devel",
         "postgresql-static",
         "postgresql-test",
-        "postgresql-test-rpm-macros"
+        "postgresql-test-rpm-macros",
     },
     ("python27", 8, "2.7"): {
         "Cython",
@@ -1799,7 +1799,7 @@ MODULE_PACKAGES = {
         "python2-wheel",
         "python2-wheel-wheel",
         "pytz",
-        "scipy"
+        "scipy",
     },
     ("python36", 8, "3.6"): {
         "python-PyMySQL",
@@ -1834,7 +1834,7 @@ MODULE_PACKAGES = {
         "python36-debug",
         "python36-devel",
         "python36-rpm-macros",
-        "scipy"
+        "scipy",
     },
     ("python38", 8, "3.8"): {
         "Cython",
@@ -1905,7 +1905,7 @@ MODULE_PACKAGES = {
         "python3x-setuptools",
         "python3x-six",
         "pytz",
-        "scipy"
+        "scipy",
     },
     ("python39", 8, "3.9"): {
         "PyYAML",
@@ -1965,7 +1965,7 @@ MODULE_PACKAGES = {
         "python3x-pip",
         "python3x-setuptools",
         "python3x-six",
-        "scipy"
+        "scipy",
     },
     ("redis", 8, "5"): {"redis", "redis-devel", "redis-doc"},
     ("redis", 8, "6"): {"redis", "redis-devel", "redis-doc"},
@@ -2002,7 +2002,7 @@ MODULE_PACKAGES = {
         "spacewalk-koan",
         "spacewalk-oscap",
         "spacewalk-remote-utils",
-        "spacewalk-usix"
+        "spacewalk-usix",
     },
     ("ruby", 8, "2.5"): {
         "ruby",
@@ -2036,7 +2036,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-xmlrpc",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 8, "2.6"): {
         "ruby",
@@ -2069,7 +2069,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-xmlrpc",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 8, "2.7"): {
         "ruby",
@@ -2102,7 +2102,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-xmlrpc",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 8, "3.0"): {
         "ruby",
@@ -2132,7 +2132,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 8, "3.1"): {
         "ruby",
@@ -2163,7 +2163,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 8, "3.3"): {
         "ruby",
@@ -2195,7 +2195,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("rust-toolset", 8, "rhel8"): {
         "cargo",
@@ -2211,7 +2211,7 @@ MODULE_PACKAGES = {
         "rust-std-static-wasm32-unknown-unknown",
         "rust-std-static-wasm32-wasip1",
         "rust-toolset",
-        "rustfmt"
+        "rustfmt",
     },
     ("satellite-5-client", 8, "1.0"): {
         "dnf-plugin-spacewalk",
@@ -2226,7 +2226,7 @@ MODULE_PACKAGES = {
         "rhn-setup",
         "rhn-setup-gnome",
         "rhnlib",
-        "rhnsd"
+        "rhnsd",
     },
     ("scala", 8, "2.10"): {
         "hawtjni",
@@ -2236,7 +2236,7 @@ MODULE_PACKAGES = {
         "jline",
         "scala",
         "scala-apidoc",
-        "scala-swing"
+        "scala-swing",
     },
     ("squid", 8, "4"): {"libecap", "libecap-devel", "squid"},
     ("subversion", 8, "1.10"): {
@@ -2249,7 +2249,7 @@ MODULE_PACKAGES = {
         "subversion-libs",
         "subversion-perl",
         "subversion-tools",
-        "utf8proc"
+        "utf8proc",
     },
     ("subversion", 8, "1.14"): {
         "libserf",
@@ -2262,7 +2262,7 @@ MODULE_PACKAGES = {
         "subversion-libs",
         "subversion-perl",
         "subversion-tools",
-        "utf8proc"
+        "utf8proc",
     },
     ("swig", 8, "3.0"): {"swig", "swig-doc", "swig-gdb"},
     ("swig", 8, "4.0"): {"swig", "swig-doc", "swig-gdb"},
@@ -2391,9 +2391,8 @@ MODULE_PACKAGES = {
         "virt-v2v",
         "virt-v2v-bash-completion",
         "virt-v2v-man-pages-ja",
-        "virt-v2v-man-pages-uk"
+        "virt-v2v-man-pages-uk",
     },
-
     # RHEL 9 Modules
     ("mariadb", 9, "10.11"): {
         "galera",
@@ -2410,7 +2409,7 @@ MODULE_PACKAGES = {
         "mariadb-server",
         "mariadb-server-galera",
         "mariadb-server-utils",
-        "mariadb-test"
+        "mariadb-test",
     },
     ("mariadb", 9, "11.8"): {
         "galera",
@@ -2428,7 +2427,7 @@ MODULE_PACKAGES = {
         "mariadb-server",
         "mariadb-server-galera",
         "mariadb-server-utils",
-        "mariadb-test"
+        "mariadb-test",
     },
     ("maven", 9, "3.8"): {
         "apache-commons-cli",
@@ -2462,7 +2461,7 @@ MODULE_PACKAGES = {
         "plexus-sec-dispatcher",
         "plexus-utils",
         "sisu",
-        "slf4j"
+        "slf4j",
     },
     ("maven", 9, "3.9"): {
         "aopalliance",
@@ -2497,7 +2496,7 @@ MODULE_PACKAGES = {
         "plexus-sec-dispatcher",
         "plexus-utils",
         "sisu",
-        "slf4j"
+        "slf4j",
     },
     ("mysql", 9, "8.4"): {
         "mecab",
@@ -2515,7 +2514,7 @@ MODULE_PACKAGES = {
         "perl-DBD-MySQL",
         "rapidjson",
         "rapidjson-devel",
-        "rapidjson-doc"
+        "rapidjson-doc",
     },
     ("nginx", 9, "1.22"): {
         "nginx",
@@ -2527,7 +2526,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 9, "1.24"): {
         "nginx",
@@ -2539,7 +2538,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nginx", 9, "1.26"): {
         "nginx",
@@ -2551,7 +2550,7 @@ MODULE_PACKAGES = {
         "nginx-mod-http-perl",
         "nginx-mod-http-xslt-filter",
         "nginx-mod-mail",
-        "nginx-mod-stream"
+        "nginx-mod-stream",
     },
     ("nodejs", 9, "18"): {
         "nodejs",
@@ -2561,7 +2560,7 @@ MODULE_PACKAGES = {
         "nodejs-nodemon",
         "nodejs-packaging",
         "nodejs-packaging-bundler",
-        "npm"
+        "npm",
     },
     ("nodejs", 9, "20"): {
         "nodejs",
@@ -2571,7 +2570,7 @@ MODULE_PACKAGES = {
         "nodejs-nodemon",
         "nodejs-packaging",
         "nodejs-packaging-bundler",
-        "npm"
+        "npm",
     },
     ("nodejs", 9, "22"): {
         "nodejs",
@@ -2583,7 +2582,7 @@ MODULE_PACKAGES = {
         "nodejs-packaging",
         "nodejs-packaging-bundler",
         "npm",
-        "v8-12.4-devel"
+        "v8-12.4-devel",
     },
     ("nodejs", 9, "24"): {
         "nodejs",
@@ -2595,7 +2594,7 @@ MODULE_PACKAGES = {
         "nodejs-packaging",
         "nodejs-packaging-bundler",
         "npm",
-        "v8-13.6-devel"
+        "v8-13.6-devel",
     },
     ("php", 9, "8.1"): {
         "apcu-panel",
@@ -2628,7 +2627,7 @@ MODULE_PACKAGES = {
         "php-process",
         "php-snmp",
         "php-soap",
-        "php-xml"
+        "php-xml",
     },
     ("php", 9, "8.2"): {
         "apcu-panel",
@@ -2661,7 +2660,7 @@ MODULE_PACKAGES = {
         "php-process",
         "php-snmp",
         "php-soap",
-        "php-xml"
+        "php-xml",
     },
     ("php", 9, "8.3"): {
         "apcu-panel",
@@ -2695,7 +2694,7 @@ MODULE_PACKAGES = {
         "php-process",
         "php-snmp",
         "php-soap",
-        "php-xml"
+        "php-xml",
     },
     ("postgresql", 9, "15"): {
         "pg_repack",
@@ -2715,7 +2714,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 9, "16"): {
         "pg_repack",
@@ -2741,7 +2740,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("postgresql", 9, "18"): {
         "pg_repack",
@@ -2766,7 +2765,7 @@ MODULE_PACKAGES = {
         "postgresql-test",
         "postgresql-test-rpm-macros",
         "postgresql-upgrade",
-        "postgresql-upgrade-devel"
+        "postgresql-upgrade-devel",
     },
     ("redis", 9, "7"): {"redis", "redis-devel", "redis-doc"},
     ("ruby", 9, "3.1"): {
@@ -2796,7 +2795,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 9, "3.3"): {
         "ruby",
@@ -2826,7 +2825,7 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
     ("ruby", 9, "4.0"): {
         "ruby",
@@ -2856,6 +2855,6 @@ MODULE_PACKAGES = {
         "rubygem-test-unit",
         "rubygem-typeprof",
         "rubygems",
-        "rubygems-devel"
+        "rubygems-devel",
     },
 }

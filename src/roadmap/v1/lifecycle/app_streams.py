@@ -343,7 +343,7 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     return relateds.difference(app_streams)
 
 
-async def systems_by_app_stream(  # noqa: C901
+async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
 ) -> dict[AppStreamKey, set[SystemInfo]]:
@@ -353,6 +353,7 @@ async def systems_by_app_stream(  # noqa: C901
     missing = defaultdict(int)
     systems_by_stream = defaultdict(set)
     module_cache = {}
+    modules_pending_verification = {}  # Stores (AppStreamKey, set[package_names]) for enabled-only modules
     package_data = defaultdict(list)
     module_app_streams = set()
     async for system in systems.yield_per(2_000).mappings():
@@ -382,23 +383,20 @@ async def systems_by_app_stream(  # noqa: C901
         # Build set of installed package names for module verification
         installed_package_names = {NEVRA.from_string(pkg).name for pkg in packages} if packages else set()
 
-        module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache)
+        module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache, modules_pending_verification)
         for app_stream in module_app_streams:
             systems_by_stream[app_stream].add(system_info)
 
         # Verify enabled-only modules marked for package verification
-        # Check module_cache for tuples (app_stream_key, expected_packages)
-        for cache_value in module_cache.values():
-            if isinstance(cache_value, tuple):
-                app_stream_key, expected_packages = cache_value
-                # Check if this module's expected packages are installed on this system
-                if expected_packages & installed_package_names:
-                    # At least one package from the module is installed
-                    systems_by_stream[app_stream_key].add(system_info)
-                    logger.debug(
-                        f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
-                        f"{len(expected_packages & installed_package_names)} packages installed"
-                    )
+        for app_stream_key, expected_packages in modules_pending_verification.values():
+            # Check if this module's expected packages are installed on this system
+            if expected_packages & installed_package_names:
+                # At least one package from the module is installed
+                systems_by_stream[app_stream_key].add(system_info)
+                logger.debug(
+                    f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
+                    f"{len(expected_packages & installed_package_names)} packages installed"
+                )
 
     # Now process the packages outside of the host record loop
     for args, systems_info in package_data.items():
@@ -416,7 +414,8 @@ async def systems_by_app_stream(  # noqa: C901
 def app_streams_from_modules(  # noqa: C901
     dnf_modules: list[dict],
     os_major: int,
-    cache: dict[tuple[str, int, str], AppStreamKey | tuple[AppStreamKey, set[str]]],
+    cache: dict[tuple[str, int, str], AppStreamKey],
+    pending_verification: dict[tuple[str, int, str], tuple[AppStreamKey, set[str]]],
 ) -> set[AppStreamKey]:
     """Return a set of normalized AppStreamKey objects for the given modules"""
     app_streams = set()
@@ -461,13 +460,12 @@ def app_streams_from_modules(  # noqa: C901
 
             if expected_packages:
                 # We have package data - mark for verification in package processing phase
-                # Store tuple (app_stream_key, expected_packages) for later verification
-                # This will be checked in systems_by_app_stream()
+                # Store in separate dict for later verification in systems_by_app_stream()
                 matched_module = APP_STREAM_MODULES_BY_KEY.get(cache_key)
                 if matched_module and matched_module.start_date:
                     app_stream_key = AppStreamKey(app_stream_entity=matched_module, name=module_name)
-                    # Mark with special tuple for package verification
-                    cache[cache_key] = (app_stream_key, expected_packages)
+                    # Store in pending_verification dict (not in cache)
+                    pending_verification[cache_key] = (app_stream_key, expected_packages)
                     logger.debug(
                         f"Module {module_name}:{stream} enabled but not installed, "
                         f"marked for package verification ({len(expected_packages)} packages)"
@@ -478,13 +476,10 @@ def app_streams_from_modules(  # noqa: C901
         # Check cache for previously processed modules
         cached_value = cache.get(cache_key)
         if cached_value:
-            # Cache may contain either AppStreamKey or tuple (AppStreamKey, packages)
-            # Only use AppStreamKey (not tuples marked for package verification)
-            if isinstance(cached_value, AppStreamKey):
-                if cached_value.app_stream_entity.start_date:
-                    logger.debug("Cache hit", extra={"cache_key": cache_key})
-                    app_streams.add(cached_value)
-                    continue
+            if cached_value.app_stream_entity.start_date:
+                logger.debug("Cache hit", extra={"cache_key": cache_key})
+                app_streams.add(cached_value)
+                continue
 
         matched_module = APP_STREAM_MODULES_BY_KEY.get((module_name, os_major, stream))
         if not matched_module:

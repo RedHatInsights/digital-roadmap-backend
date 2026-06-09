@@ -156,7 +156,7 @@ def test_get_app_stream_module_info_not_found(api_prefix, client, version):
     ),
 )
 def test_app_streams_from_modules_status_field(dnf_modules, os_major, expected_names):
-    streams = app_streams_from_modules(dnf_modules, os_major, {})
+    streams = app_streams_from_modules(dnf_modules, os_major, {}, {})
 
     stream_names = {stream.name for stream in streams}
     assert stream_names == expected_names

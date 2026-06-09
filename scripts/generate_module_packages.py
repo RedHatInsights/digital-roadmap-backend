@@ -6,7 +6,7 @@ This script parses downloaded modulemd files and creates a mapping of
 (module_name, os_major, stream) -> set of package names.
 
 Usage:
-    1. Run ./download_modulemd.sh to get modules-8.yaml and modules-9.yaml
+    1. Run ./scripts/download_modulemd.sh to get modules-8.yaml and modules-9.yaml
     2. Run this script: python scripts/generate_module_packages.py
     3. Output: src/roadmap/data/module_packages.py
 """
@@ -118,7 +118,7 @@ def extract_module_packages(modules_yaml_path):  # noqa: C901
 
     except FileNotFoundError:
         print(f"ERROR: File not found: {modules_yaml_path}", file=sys.stderr)
-        print("Run ./download_modulemd.sh first to download module metadata", file=sys.stderr)
+        print("Run ./scripts/download_modulemd.sh first to download module metadata", file=sys.stderr)
         return None
     except Exception as e:
         print(f"ERROR parsing {modules_yaml_path}: {e}", file=sys.stderr)
@@ -185,7 +185,7 @@ def main():
     # Check if modulemd directory exists
     if not modulemd_dir.exists():
         print(f"\nERROR: Directory not found: {modulemd_dir}", file=sys.stderr)
-        print("\nRun ./download_modulemd.sh first to download module metadata", file=sys.stderr)
+        print("\nRun ./scripts/download_modulemd.sh first to download module metadata", file=sys.stderr)
         return 1
 
     # Parse YAML files

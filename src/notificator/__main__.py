@@ -5,8 +5,8 @@ import asyncio
 import structlog
 
 from notificator.lifecycle import lifecycle_notification
-from notificator.lifecycle import roadmap_notification
 from notificator.notificator_config import NotificatorSettings
+from notificator.roadmap import roadmap_notification
 from roadmap.custom_logging import setup_logging
 
 

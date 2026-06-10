@@ -353,7 +353,6 @@ async def systems_by_app_stream(
     missing = defaultdict(int)
     systems_by_stream = defaultdict(set)
     module_cache = {}
-    modules_pending_verification = {}  # Stores (AppStreamKey, set[package_names]) for enabled-only modules
     package_data = defaultdict(list)
     module_app_streams = set()
     async for system in systems.yield_per(2_000).mappings():
@@ -383,11 +382,13 @@ async def systems_by_app_stream(
         # Build set of installed package names for module verification
         installed_package_names = {NEVRA.from_string(pkg).name for pkg in packages} if packages else set()
 
+        # Create per-system pending verification dict
+        modules_pending_verification = {}
         module_app_streams = app_streams_from_modules(dnf_modules, os_major, module_cache, modules_pending_verification)
         for app_stream in module_app_streams:
             systems_by_stream[app_stream].add(system_info)
 
-        # Verify enabled-only modules marked for package verification
+        # Verify enabled-only modules marked for package verification (only for THIS system)
         for app_stream_key, expected_packages in modules_pending_verification.values():
             # Check if this module's expected packages are installed on this system
             if expected_packages & installed_package_names:

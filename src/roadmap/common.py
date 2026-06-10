@@ -6,6 +6,7 @@ import typing as t
 import urllib.parse
 import urllib.request
 
+from collections.abc import AsyncGenerator
 from datetime import date
 from urllib.error import HTTPError
 from uuid import UUID
@@ -19,6 +20,7 @@ from fastapi.openapi.utils import get_openapi
 from sqlalchemy import RowMapping
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
@@ -170,7 +172,7 @@ async def query_host_inventory(
     host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
     major: MajorVersion | None = None,
     minor: MinorVersion | None = None,
-):
+) -> AsyncGenerator[AsyncResult[t.Any]]:
     """
     Query the Hosts database for system information on this org's hosts.
 

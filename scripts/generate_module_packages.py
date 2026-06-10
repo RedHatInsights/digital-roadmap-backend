@@ -14,12 +14,14 @@ Usage:
 import re
 import sys
 
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from pprint import pformat
 
 import yaml
+
+# Add src directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 def parse_nevra(nevra_string):
@@ -45,7 +47,7 @@ def parse_nevra(nevra_string):
 def extract_module_packages(modules_yaml_path):  # noqa: C901
     """Parse modulemd YAML and return module -> packages mapping."""
 
-    module_packages = defaultdict(lambda: defaultdict(set))
+    module_packages: dict[tuple[str, int, str], set[str]] = {}
     module_count = 0
     skipped_count = 0
 
@@ -130,7 +132,7 @@ def extract_module_packages(modules_yaml_path):  # noqa: C901
 
 def load_tracked_modules():
     """Load the list of modules we actually track from modules.py."""
-    from roadmap.data.modules import APP_STREAM_MODULES
+    from roadmap.data.modules import APP_STREAM_MODULES  # type: ignore[import-not-found]
 
     tracked = set()
     for module in APP_STREAM_MODULES:

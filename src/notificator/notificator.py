@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import time
 
+from collections import Counter
+from datetime import date
 from datetime import datetime
+from datetime import timedelta
 from datetime import UTC
 from uuid import uuid4
 
@@ -14,6 +17,7 @@ from roadmap.common import query_host_inventory
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
 from roadmap.models import SystemInfo
+from roadmap.v1 import upcoming
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 
@@ -177,6 +181,149 @@ class Notificator:
 
         logger.info("Built lifecycle notification", org_id=self.org_id, event_type="retiring-lifecycle-monthly-report")
         return payload
+
+    async def get_relevant_upcoming(self, hosts) -> Counter[str]:
+        """Get upcoming changes added within the last-month-to-date window.
+
+        Calls the same logic as the ``/relevant/upcoming-changes`` endpoint but
+        further filters to items whose ``dateAdded`` falls between the 1st of
+        the previous month and today (inclusive).
+
+        Returns a Counter keyed by ``UpcomingType`` value (addition, change,
+        deprecation, enhancement).  Merging enhancement into addition is done
+        at payload-build time so the raw counts stay separable.
+        """
+        start_time = time.time()
+        logger.info("Processing upcoming changes", org_id=self.org_id)
+
+        pkgs_by_system = await upcoming.packages_by_system(
+            org_id=str(self.org_id),
+            systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
+        )
+
+        upcoming_with_hosts = upcoming.get_upcoming_data_with_hosts(
+            packages_by_system=pkgs_by_system,
+            settings=self.settings,
+        )
+
+        cutoff = _upcoming_cutoff_date()
+        today = date.today()
+        counts: Counter[str] = Counter()
+
+        for item in upcoming_with_hosts:
+            if cutoff <= item.details.dateAdded <= today:
+                logger.info(f"Processing {item}")
+                counts[item.type] += 1
+
+        elapsed = time.time() - start_time
+        logger.info(
+            "Processed upcoming changes",
+            org_id=self.org_id,
+            total_upcoming=len(upcoming_with_hosts),
+            filtered_count=sum(counts.values()),
+            counts=dict(counts),
+            cutoff_date=str(cutoff),
+            duration_seconds=round(elapsed, 2),
+        )
+        return counts
+
+    async def get_roadmap_notification(self) -> dict:
+        """Gather required information for notification and build kafka message for notification backend."""
+        logger.info("Building roadmap notification", org_id=self.org_id)
+
+        hosts = await self.get_hosts()
+        upcoming_counts = await self.get_relevant_upcoming(hosts)
+
+        payload = _build_roadmap_notification_payload(
+            upcoming_counts=upcoming_counts,
+            org_id=str(self.org_id),
+        )
+
+        logger.info("Built roadmap notification", org_id=self.org_id, event_type="roadmap-monthly-report")
+        return payload
+
+
+def _upcoming_cutoff_date() -> date:
+    """Return the first day of the previous month (start of the reporting window).
+
+    The reporting window spans from the 1st of the previous month to today,
+    e.g. if today is May 2 the cutoff is April 1.
+    """
+    first_of_this_month = date.today().replace(day=1)
+    last_of_prev_month = first_of_this_month - timedelta(days=1)
+    return last_of_prev_month.replace(day=1)
+
+
+def _build_roadmap_notification_payload(
+    upcoming_counts: Counter[str],
+    org_id: str,
+    bundle: str = "rhel",
+    application: str = "roadmap",
+    event_type: str = "roadmap-monthly-report",
+) -> dict:
+    """Build kafka message for roadmap notification backend using their specified format.
+
+    ``enhancement`` counts are folded into ``addition`` for the payload.
+
+    Returns::
+
+        {
+            "version": "v1.0.0",
+            "id": "63961201-...",
+            "bundle": "rhel",
+            "application": "roadmap",
+            "event_type": "roadmap-monthly-report",
+            "timestamp": "2026-04-15T15:50:05Z",
+            "org_id": "1234",
+            "context": {
+                "roadmap": {
+                    "report_date": "April 2026"
+                }
+            },
+            "events": [{
+                "metadata": {},
+                "payload": {
+                    "addition": {"count": 4},
+                    "deprecation": {"count": 5},
+                    "change": {"count": 0},
+                }
+            }],
+            "recipients": [],
+        }
+    """
+    now = datetime.now(UTC)
+    timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    first_of_this_month = now.date().replace(day=1)
+    previous_month = first_of_this_month - timedelta(days=1)
+    report_date = previous_month.strftime("%B %Y")
+
+    payload_counts = {
+        "addition": upcoming_counts["addition"] + upcoming_counts["enhancement"],
+        "deprecation": upcoming_counts["deprecation"],
+        "change": upcoming_counts["change"],
+    }
+
+    return {
+        "version": "v1.0.0",
+        "id": str(uuid4()),
+        "bundle": bundle,
+        "application": application,
+        "event_type": event_type,
+        "timestamp": timestamp,
+        "org_id": org_id,
+        "context": {
+            application: {
+                "report_date": report_date,
+            }
+        },
+        "events": [
+            {
+                "metadata": {},
+                "payload": {type_key: {"count": count} for type_key, count in payload_counts.items()},
+            },
+        ],
+        "recipients": [],
+    }
 
 
 def _build_notification_payload(

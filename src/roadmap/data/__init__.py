@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from .app_streams import AppStreamEntity
 from .app_streams import AppStreamType
+from .module_packages import MODULE_PACKAGES as MODULE_PACKAGES
 from .modules import APP_STREAM_MODULES
 from .packages import APP_STREAM_PACKAGES
 

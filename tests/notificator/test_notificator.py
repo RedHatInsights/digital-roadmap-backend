@@ -31,7 +31,7 @@ class TestNotificator:
 
         async def _no_sessions():
             return
-            yield  # noqa: unreachable — makes this an empty async generator
+            yield
 
         mocker.patch("notificator.notificator.get_db", return_value=_no_sessions())
 

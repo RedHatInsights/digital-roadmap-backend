@@ -210,7 +210,6 @@ async def test_systems_by_app_stream_verification_loop():
     This test directly covers lines 392-397 which verify enabled-only modules
     by checking if their expected packages are installed on each system.
     """
-    from unittest.mock import AsyncMock
 
     # Mock async result that yields systems with enabled-only modules
     # The systems_by_app_stream function expects data from the database query,

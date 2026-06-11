@@ -1,5 +1,6 @@
 """Shared constants and factory functions for notificator tests."""
 
+from contextlib import asynccontextmanager
 from datetime import datetime
 from datetime import UTC
 from uuid import UUID
@@ -11,6 +12,8 @@ from roadmap.models import LifecycleType
 from roadmap.models import System
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.v1.upcoming import UpcomingOutput
+from roadmap.v1.upcoming import UpcomingOutputDetails
 
 
 FIXED_UUID = UUID("12345678-1234-5678-1234-567812345678")
@@ -52,6 +55,21 @@ def make_appstream_key(name, display_name, status, os_major):
         rolling=False,
     )
     return AppStreamKey.model_construct(name=name, app_stream_entity=entity)
+
+
+class FakeNotificationProducer:
+    """In-memory KafkaProducer stand-in that records sent payloads without I/O."""
+
+    def __init__(self):
+        self.sent: list[dict] = []
+
+    async def send_notification(self, payload: dict):
+        self.sent.append(payload)
+
+
+@asynccontextmanager
+async def fake_kafka_ctx(producer):
+    yield producer
 
 
 class FakeKafkaProducer:
@@ -98,4 +116,27 @@ def make_system(name, status, count, major, minor=None):
         related=False,
         systems_detail=set(),
         systems=set(),
+    )
+
+
+def make_upcoming_output(upcoming_type, date_added, name="test-item"):
+    """Build an UpcomingOutput with a given type and dateAdded, bypassing validators."""
+    details = UpcomingOutputDetails.model_construct(
+        architecture=None,
+        detailFormat=0,
+        summary="Test summary",
+        trainingTicket="",
+        dateAdded=date_added,
+        lastModified=date_added,
+        potentiallyAffectedSystemsCount=0,
+        potentiallyAffectedSystemsDetail=set(),
+        potentiallyAffectedSystems=set(),
+    )
+    return UpcomingOutput.model_construct(
+        name=name,
+        type=upcoming_type,
+        packages={"test-package"},
+        release="9.0",
+        date=date_added,
+        details=details,
     )

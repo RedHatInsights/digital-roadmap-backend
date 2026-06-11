@@ -568,6 +568,21 @@ class NEVRA(BaseModel, frozen=True):
         )
 
 
+def _stream_version_depth(application_stream_name: str) -> int:
+    """Determine how many version components to compare from the application stream name.
+
+    Extracts the trailing version from names like "Node.js 16" (depth 1) or
+    "NGINX 1.20" (depth 2) and returns the number of dot-separated components,
+    capped at 2 to stay within the NEVRA major/minor fields.
+    """
+    parts = application_stream_name.rsplit(" ", 1)
+    if len(parts) == 2:
+        version_str = parts[1]
+        if version_str and version_str[0].isdigit():
+            return min(len(version_str.split(".")), 2)
+    return 2
+
+
 @functools.cache
 def app_stream_from_package(
     package: str,
@@ -586,16 +601,17 @@ def app_stream_from_package(
     nevra = NEVRA.from_string(package)
     if app_stream_package := APP_STREAM_PACKAGES.get(os_major, {}).get(nevra.name):
         if app_stream_package.os_major == os_major:
-            stream = app_stream_package.stream.split(".")[:2]
-            if len(stream) == 1:
-                # If the stream value only contains a single digit, add a "0"
-                # in order to get an accurate comparison.
-                #
-                # Without this, values of "11" for the stream would fail to match
-                # packages that are "11.0".
-                stream.append("0")
+            depth = _stream_version_depth(app_stream_package.application_stream_name)
 
-            if stream == [nevra.major, nevra.minor]:
+            if depth == 1:
+                matched = app_stream_package.stream.split(".")[0] == nevra.major
+            else:
+                stream = app_stream_package.stream.split(".")[:2]
+                if len(stream) == 1:
+                    stream.append("0")
+                matched = stream == [nevra.major, nevra.minor]
+
+            if matched:
                 return AppStreamKey(
                     app_stream_entity=app_stream_package, name=app_stream_package.application_stream_name
                 )

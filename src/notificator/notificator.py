@@ -171,7 +171,7 @@ class Notificator:
         rhel_grouped = await self.get_relevant_rhel(hosts)
         appstream_grouped = await self.get_relevant_appstreams(hosts)
 
-        payload = _build_notification_payload(
+        payload = _build_lifecycle_notification_payload(
             rhel_grouped=rhel_grouped,
             appstream_grouped=appstream_grouped,
             org_id=str(self.org_id),
@@ -192,6 +192,10 @@ class Notificator:
         Returns a Counter keyed by ``UpcomingType`` value (addition, change,
         deprecation, enhancement).  Merging enhancement into addition is done
         at payload-build time so the raw counts stay separable.
+
+        Example::
+
+            Counter({"addition": 5, "deprecation": 2, "change": 1, "enhancement": 3})
         """
         start_time = time.time()
         logger.info("Processing upcoming changes", org_id=self.org_id)
@@ -212,15 +216,12 @@ class Notificator:
 
         for item in upcoming_with_hosts:
             if cutoff <= item.details.dateAdded <= today:
-                logger.info(f"Processing {item}")
                 counts[item.type] += 1
 
         elapsed = time.time() - start_time
         logger.info(
             "Processed upcoming changes",
             org_id=self.org_id,
-            total_upcoming=len(upcoming_with_hosts),
-            filtered_count=sum(counts.values()),
             counts=dict(counts),
             cutoff_date=str(cutoff),
             duration_seconds=round(elapsed, 2),
@@ -326,7 +327,7 @@ def _build_roadmap_notification_payload(
     }
 
 
-def _build_notification_payload(
+def _build_lifecycle_notification_payload(
     rhel_grouped: dict[str, dict[str, int]],
     appstream_grouped: dict[str, dict[str, dict[str, int]]],
     org_id: str,

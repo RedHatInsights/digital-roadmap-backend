@@ -895,3 +895,106 @@ def test_related_eol_boundary_conditions(mocker, end_date, today, should_be_incl
         assert list(result)[0].app_stream_entity.display_name == "Test 2.0"
     else:
         assert len(result) == 0, f"Expected no related streams when end_date={end_date}, today={today}"
+
+
+class TestStreamVersionDepth:
+    """Tests for _stream_version_depth helper."""
+
+    @pytest.mark.parametrize(
+        "name, expected_depth",
+        [
+            ("Node.js 16", 1),
+            ("PostgreSQL 13", 1),
+            ("FRR 8", 1),
+            ("Redis 6", 1),
+            ("OpenJDK 11", 1),
+            ("OpenJDK 17", 1),
+            ("gcc-toolset 14", 1),
+            ("NGINX 1.20", 2),
+            ("Apache httpd 2.4", 2),
+            (".NET 6.0", 2),
+            ("MariaDB 10.5", 2),
+            ("Ansible Core 2.14", 2),
+            ("BIND 9.16", 2),
+            # 3+ components are capped at 2
+            ("OpenJDK 1.8.0", 2),
+            ("authd 1.4.4", 2),
+            # No trailing version defaults to 2
+            ("IDM", 2),
+            ("Git", 2),
+            ("container-tools", 2),
+            ("Rust", 2),
+        ],
+    )
+    def test_stream_version_depth(self, name, expected_depth):
+        from roadmap.v1.lifecycle.app_streams import _stream_version_depth
+
+        assert _stream_version_depth(name) == expected_depth
+
+
+class TestAppStreamFromPackageBaseStreams:
+    """Tests for app_stream_from_package with base stream packages (depth=1)."""
+
+    def test_nodejs_16_base_stream_updated_minor(self):
+        """Node.js 16 on RHEL 9 should match even when minor version drifts (16.14 -> 16.20)."""
+        import importlib
+
+        from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+        importlib.reload(app_streams_module)
+        from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+        result = app_stream_from_package("nodejs-1:16.20.2-8.el9_4.x86_64", 9)
+        assert result is not None
+        assert result.name == "Node.js 16"
+
+    def test_nodejs_16_base_stream_original_version(self):
+        """Node.js 16 on RHEL 9 should also match with the original shipped version."""
+        import importlib
+
+        from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+        importlib.reload(app_streams_module)
+        from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+        result = app_stream_from_package("nodejs-1:16.14.0-5.el9.x86_64", 9)
+        assert result is not None
+        assert result.name == "Node.js 16"
+
+    def test_nodejs_wrong_major_no_match(self):
+        """A nodejs package with a completely different major version should not match."""
+        import importlib
+
+        from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+        importlib.reload(app_streams_module)
+        from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+        result = app_stream_from_package("nodejs-999.999-1.el9.x86_64", 9)
+        assert result is None
+
+    def test_mariadb_depth2_still_works(self):
+        """MariaDB 10.5 on RHEL 9 (depth=2) should continue to match as before."""
+        import importlib
+
+        from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+        importlib.reload(app_streams_module)
+        from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+        result = app_stream_from_package("mariadb-3:10.5.29-3.el9_7.x86_64", 9)
+        assert result is not None
+        assert result.name == "MariaDB 10.5"
+
+    def test_nginx_depth2_still_works(self):
+        """NGINX 1.20 on RHEL 9 (depth=2) should continue to match as before."""
+        import importlib
+
+        from roadmap.v1.lifecycle import app_streams as app_streams_module
+
+        importlib.reload(app_streams_module)
+        from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+        result = app_stream_from_package("nginx-1:1.20.1-14.el9.x86_64", 9)
+        assert result is not None
+        assert result.name == "NGINX 1.20"

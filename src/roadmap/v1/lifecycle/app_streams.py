@@ -588,11 +588,19 @@ def app_stream_from_package(
     package: str,
     os_major: int,
 ) -> AppStreamKey | None:
-    # FIXME: This approach to getting the stream from the package NEVRA is incorrect and flawed.
+    # FIXME: This approach to getting the stream from the package NEVRA is still imprecise.
     #
     #        The package major/minor are not guaranteed to match the stream major/minor.
     #        That it matches is a coincidence, one that happens pretty often, giving the illusion
     #        the code is working as intended.
+    #
+    #        the code is working as intended.
+    #
+    #        Depth-based matching (see _stream_version_depth) mitigates the worst case:
+    #        streams whose name carries only a major version (e.g. "Node.js 16") now
+    #        compare on major alone, so minor-version drift no longer causes false negatives.
+    #        Streams with a major.minor name (e.g. "NGINX 1.20") still require an exact
+    #        major.minor match.
     #
     #        In order to accurately lookup the app stream from a package NEVRA string, we need to
     #        compile a list of all the versions — at least major/minor — that are in an app stream.

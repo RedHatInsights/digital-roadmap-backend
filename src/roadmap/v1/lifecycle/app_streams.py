@@ -453,9 +453,11 @@ def app_streams_from_modules(  # noqa: C901
         # a module will be incorrectly included in the results.
         cache_key = (module_name, os_major, stream)
 
-        # Check if module is enabled but not installed - needs package verification
-        if ModuleStatus.enabled in module_status and ModuleStatus.installed not in module_status:
-            # Module is enabled but not marked as installed by DNF
+        # Verify enabled modules via actual package installation.
+        # DNF's "installed" flag can be stale (e.g. after `dnf remove <pkg>`
+        # without `dnf module remove`), so we verify all enabled modules.
+        # FIXME: A disabled module but still installed is not detected.
+        if ModuleStatus.enabled in module_status:
             # Check if we have package mapping data for this module
             expected_packages = MODULE_PACKAGES.get(cache_key)
 
@@ -468,7 +470,7 @@ def app_streams_from_modules(  # noqa: C901
                     # Store in pending_verification dict (not in cache)
                     pending_verification[cache_key] = (app_stream_key, expected_packages)
                     logger.debug(
-                        f"Module {module_name}:{stream} enabled but not installed, "
+                        f"Module {module_name}:{stream} enabled, "
                         f"marked for package verification ({len(expected_packages)} packages)"
                     )
                     continue

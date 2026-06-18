@@ -14,7 +14,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-1234",
       "dateAdded": "2025-03-10",
-      "lastModified": "2025-03-10"
+      "lastModified": "2025-03-10",
+      "deployedDate": "2026-06-14"
     }
   },
   {
@@ -32,7 +33,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-1234",
       "dateAdded": "2025-03-10",
-      "lastModified": "2025-03-10"
+      "lastModified": "2025-03-10",
+      "deployedDate": "2025-03-10"
     }
   },
   {
@@ -50,7 +52,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-1234",
       "dateAdded": "2025-03-10",
-      "lastModified": "2025-03-10"
+      "lastModified": "2025-03-10",
+      "deployedDate": "2025-03-10"
     }
   },
   {
@@ -68,7 +71,8 @@
       "summary": "lorem ipsum nodejs",
       "trainingTicket": "RHELBU-2222",
       "dateAdded": "2025-04-22",
-      "lastModified": "2025-04-22"
+      "lastModified": "2025-04-22",
+      "deployedDate": "2025-04-22"
     }
   },
   {
@@ -85,7 +89,8 @@
       "summary": "lorem ipsum nobody has",
       "trainingTicket": "RHELBU-4321",
       "dateAdded": "2025-04-22",
-      "lastModified": "2025-04-22"
+      "lastModified": "2025-04-22",
+      "deployedDate": "2025-04-22"
     }
   },
   {
@@ -102,7 +107,8 @@
       "summary": "Python 3.12 will reach end of life. Please migrate to Python 3.13 or later versions.",
       "trainingTicket": "RHELBU-5001",
       "dateAdded": "2026-04-01",
-      "lastModified": "2026-04-10"
+      "lastModified": "2026-04-10",
+      "deployedDate": "2026-04-01"
     }
   },
   {
@@ -119,7 +125,8 @@
       "summary": "Enhanced performance improvements and new JSON functions for PostgreSQL 16.",
       "trainingTicket": "RHELBU-5002",
       "dateAdded": "2026-03-25",
-      "lastModified": "2026-04-05"
+      "lastModified": "2026-04-05",
+      "deployedDate": "2026-03-25"
     }
   },
   {
@@ -136,7 +143,8 @@
       "summary": "Important security patches and performance improvements to the Linux kernel.",
       "trainingTicket": "RHELBU-5003",
       "dateAdded": "2026-02-10",
-      "lastModified": "2026-03-15"
+      "lastModified": "2026-03-15",
+      "deployedDate": "2026-02-10"
     }
   },
   {
@@ -153,7 +161,8 @@
       "summary": "New Apache HTTP Server 2.5 with improved HTTP/3 support and enhanced security features.",
       "trainingTicket": "RHELBU-5004",
       "dateAdded": "2026-01-15",
-      "lastModified": "2026-02-20"
+      "lastModified": "2026-02-20",
+      "deployedDate": "2026-01-15"
     }
   },
   {
@@ -170,7 +179,8 @@
       "summary": "OpenSSL 3.2 update includes critical security fixes and performance optimizations.",
       "trainingTicket": "RHELBU-5005",
       "dateAdded": "2025-12-01",
-      "lastModified": "2026-01-05"
+      "lastModified": "2026-01-05",
+      "deployedDate": "2025-12-01"
     }
   },
   {
@@ -187,7 +197,8 @@
       "summary": "Ruby 3.3 will be deprecated. Users should migrate to Ruby 3.4 or later.",
       "trainingTicket": "RHELBU-5006",
       "dateAdded": "2025-06-20",
-      "lastModified": "2025-08-15"
+      "lastModified": "2025-08-15",
+      "deployedDate": "2025-06-20"
     }
   },
   {
@@ -206,7 +217,8 @@
       "summary": "Enhanced container tools with better rootless support and improved performance.",
       "trainingTicket": "RHELBU-5007",
       "dateAdded": "2025-04-10",
-      "lastModified": "2025-05-22"
+      "lastModified": "2025-05-22",
+      "deployedDate": "2025-04-10"
     }
   },
   {
@@ -223,7 +235,8 @@
       "summary": "PHP 8.4 brings new features including improved JIT compilation and property hooks.",
       "trainingTicket": "RHELBU-5008",
       "dateAdded": "2024-11-30",
-      "lastModified": "2025-01-10"
+      "lastModified": "2025-01-10",
+      "deployedDate": "2024-11-30"
     }
   },
   {
@@ -240,7 +253,8 @@
       "summary": "New Ansible Core 2.17 release with improved automation capabilities and module updates.",
       "trainingTicket": "RHELBU-5009",
       "dateAdded": "2024-08-15",
-      "lastModified": "2024-09-20"
+      "lastModified": "2024-09-20",
+      "deployedDate": "2024-08-15"
     }
   },
   {
@@ -257,7 +271,8 @@
       "summary": "Golang compiler updated to version 1.23 with performance improvements and new language features.",
       "trainingTicket": "RHELBU-5010",
       "dateAdded": "2024-03-05",
-      "lastModified": "2024-04-12"
+      "lastModified": "2024-04-12",
+      "deployedDate": "2024-03-05"
     }
   },
   {
@@ -274,7 +289,8 @@
       "summary": "Perl 5.40 reaching end of life. Migration to newer Perl versions recommended.",
       "trainingTicket": "RHELBU-5011",
       "dateAdded": "2023-10-20",
-      "lastModified": "2023-11-15"
+      "lastModified": "2023-11-15",
+      "deployedDate": "2023-10-20"
     }
   },
   {
@@ -291,7 +307,8 @@
       "summary": "Systemd 256 includes improved boot performance and enhanced security features.",
       "trainingTicket": "RHELBU-5012",
       "dateAdded": "2026-03-28",
-      "lastModified": "2026-04-08"
+      "lastModified": "2026-04-08",
+      "deployedDate": "2026-03-28"
     }
   },
   {
@@ -308,7 +325,8 @@
       "summary": "MariaDB 11.0 with improved replication and new storage engine features.",
       "trainingTicket": "RHELBU-5013",
       "dateAdded": "2026-02-18",
-      "lastModified": "2026-03-05"
+      "lastModified": "2026-03-05",
+      "deployedDate": "2026-02-18"
     }
   },
   {
@@ -325,7 +343,8 @@
       "summary": "GCC 14 compiler with C++23 support and improved optimization capabilities.",
       "trainingTicket": "RHELBU-5014",
       "dateAdded": "2025-09-12",
-      "lastModified": "2025-10-18"
+      "lastModified": "2025-10-18",
+      "deployedDate": "2025-09-12"
     }
   },
   {
@@ -342,7 +361,26 @@
       "summary": "Extended Long Term Support for Java 21 with additional security updates.",
       "trainingTicket": "RHELBU-5015",
       "dateAdded": "2025-11-08",
-      "lastModified": "2025-12-20"
+      "lastModified": "2025-12-20",
+      "deployedDate": "2025-11-08"
+    }
+  },
+  {
+    "name": "Not yet deployed to production item THIS IS TEST DATA",
+    "type": "addition",
+    "packages": [
+      "java-21-openjdk"
+    ],
+    "release": "9.6",
+    "date": "2026-09-25",
+    "details": {
+      "architecture": "",
+      "detailFormat": 0,
+      "summary": "Item not yet deployed to production",
+      "trainingTicket": "RHELBU-5016",
+      "dateAdded": "2025-11-08",
+      "lastModified": "2025-12-20",
+      "deployedDate": null
     }
   }
 ]

@@ -221,6 +221,7 @@ def get_upcoming_data_with_hosts(
             trainingTicket=upcoming.details.trainingTicket,
             dateAdded=upcoming.details.dateAdded,
             lastModified=upcoming.details.lastModified,
+            deployedDate=upcoming.details.deployedDate,
             potentiallyAffectedSystemsCount=len(systems),
             potentiallyAffectedSystemsDetail=systems,
         )

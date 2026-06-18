@@ -37,9 +37,12 @@ def test_get_upcoming_changes_with_env(client, api_prefix):
     client.app.dependency_overrides[Settings.create] = settings_override
 
     response = client.get(f"{api_prefix}/upcoming-changes")
+    data = response.json()["data"]
 
     assert response.status_code == 200
-    assert response.json()["data"][0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST FROM FIXTURES"
+    assert data[0]["name"] == "Add Node.js to RHEL9 AppStream THIS IS TEST DATA TEST FROM FIXTURES"
+    assert data[0]["details"]["deployedDate"] == "2025-03-15"
+    assert data[1]["details"]["deployedDate"] is None
 
 
 def test_get_relevant_upcoming_changes_all(client, api_prefix):
@@ -130,6 +133,9 @@ def test_get_upcoming_data_with_hosts():
     assert len(result) >= 1
     assert not any(release.startswith("8") for release in releases), (
         "An upcoming item for RHEL 8 was incorrectly returned in the results"
+    )
+    assert any(item.details.deployedDate is not None for item in result), (
+        "deployedDate should be returned in output details"
     )
 
 

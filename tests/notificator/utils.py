@@ -119,15 +119,16 @@ def make_system(name, status, count, major, minor=None):
     )
 
 
-def make_upcoming_output(upcoming_type, date_added, name="test-item"):
-    """Build an UpcomingOutput with a given type and dateAdded, bypassing validators."""
+def make_upcoming_output(upcoming_type, deployed_date, name="test-item"):
+    """Build an UpcomingOutput with a given type and deployedDate, bypassing validators."""
     details = UpcomingOutputDetails.model_construct(
         architecture=None,
         detailFormat=0,
         summary="Test summary",
         trainingTicket="",
-        dateAdded=date_added,
-        lastModified=date_added,
+        dateAdded=deployed_date,
+        lastModified=deployed_date,
+        deployedDate=deployed_date,
         potentiallyAffectedSystemsCount=0,
         potentiallyAffectedSystemsDetail=set(),
         potentiallyAffectedSystems=set(),
@@ -137,6 +138,6 @@ def make_upcoming_output(upcoming_type, date_added, name="test-item"):
         type=upcoming_type,
         packages={"test-package"},
         release="9.0",
-        date=date_added,
+        date=deployed_date,
         details=details,
     )

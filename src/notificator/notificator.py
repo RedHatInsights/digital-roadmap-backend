@@ -215,7 +215,14 @@ class Notificator:
         counts: Counter[str] = Counter()
 
         for item in upcoming_with_hosts:
-            if cutoff <= item.details.dateAdded <= today:
+            if item.details.deployedDate is None:
+                # Item was not released yet, let's use today's date for testing
+                # Shouldn't happen in production, meant mainly for staging
+                logger.info(
+                    f"{item.name} was not yet deployed, added to roadmap on {item.details.dateAdded}. Using today's date."
+                )
+                item.details.deployedDate = date.today()
+            if cutoff <= item.details.deployedDate <= today:
                 counts[item.type] += 1
 
         elapsed = time.time() - start_time

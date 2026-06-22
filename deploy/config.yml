@@ -397,7 +397,7 @@ parameters:
     value: '1'
 
   - name: NOTIFICATOR_SCHEDULE
-    value: "0 6 1 * *"
+    value: "0 6 * * *"
 
   - name: CPU_REQUEST_NOTIFICATOR
     value: 500m

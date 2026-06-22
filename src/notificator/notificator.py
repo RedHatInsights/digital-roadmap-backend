@@ -210,8 +210,8 @@ class Notificator:
             settings=self.settings,
         )
 
-        cutoff = _upcoming_cutoff_date()
-        today = date.today()
+        today = datetime.now(UTC).date()
+        cutoff = _upcoming_cutoff_date(today)
         counts: Counter[str] = Counter()
 
         for item in upcoming_with_hosts:
@@ -221,7 +221,7 @@ class Notificator:
                 logger.info(
                     f"{item.name} was not yet deployed, added to roadmap on {item.details.dateAdded}. Using today's date."
                 )
-                item.details.deployedDate = date.today()
+                item.details.deployedDate = today
             if cutoff <= item.details.deployedDate <= today:
                 counts[item.type] += 1
 
@@ -251,13 +251,13 @@ class Notificator:
         return payload
 
 
-def _upcoming_cutoff_date() -> date:
+def _upcoming_cutoff_date(reference_date: date) -> date:
     """Return the first day of the previous month (start of the reporting window).
 
     The reporting window spans from the 1st of the previous month to today,
     e.g. if today is May 2 the cutoff is April 1.
     """
-    first_of_this_month = date.today().replace(day=1)
+    first_of_this_month = reference_date.replace(day=1)
     last_of_prev_month = first_of_this_month - timedelta(days=1)
     return last_of_prev_month.replace(day=1)
 

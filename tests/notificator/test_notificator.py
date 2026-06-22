@@ -1,5 +1,7 @@
 from collections import Counter
 from datetime import date
+from datetime import datetime
+from datetime import timezone
 from unittest.mock import AsyncMock
 
 import pytest
@@ -356,11 +358,8 @@ class TestUpcomingCutoffDate:
             pytest.param(date(2026, 3, 31), date(2026, 2, 1), id="last_day_of_month"),
         ),
     )
-    def test_cutoff_date(self, mocker, today_date, expected_cutoff):
-        mock_date = mocker.patch("notificator.notificator.date", wraps=date)
-        mock_date.today.return_value = today_date
-
-        result = _upcoming_cutoff_date()
+    def test_cutoff_date(self, today_date, expected_cutoff):
+        result = _upcoming_cutoff_date(today_date)
 
         assert result == expected_cutoff
 
@@ -420,11 +419,12 @@ class TestGetRelevantUpcoming:
 
     @pytest.fixture(autouse=True)
     def _freeze_today(self, mocker):
-        """Pin date.today() to May 15 2026 so the window is April 1 - May 15."""
+        """Pin datetime.now(UTC) to May 15 2026 so the window is April 1 - May 15."""
         self.today = date(2026, 5, 15)
         self.cutoff = date(2026, 4, 1)
-        mock_date = mocker.patch("notificator.notificator.date", wraps=date)
-        mock_date.today.return_value = self.today
+        frozen = datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_dt = mocker.patch("notificator.notificator.datetime", wraps=datetime)
+        mock_dt.now.return_value = frozen
 
     @pytest.fixture(autouse=True)
     def _mock_upcoming_deps(self, mocker):

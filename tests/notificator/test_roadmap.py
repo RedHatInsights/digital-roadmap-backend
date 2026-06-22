@@ -1,4 +1,4 @@
-"""Tests for notificator.__main__ — lifecycle notification orchestration and entry point."""
+"""Tests for notificator.roadmap — roadmap notification orchestration."""
 
 from __future__ import annotations
 
@@ -6,42 +6,41 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from notificator.__main__ import lifecycle_notification
-from notificator.__main__ import main
+from notificator.roadmap import roadmap_notification
 
 from .utils import fake_kafka_ctx
 from .utils import FakeNotificationProducer
 
 
-class TestLifecycleNotification:
-    """lifecycle_notification: org iteration, payload dispatch, failure collection."""
+class TestRoadmapNotification:
+    """roadmap_notification: org iteration, payload dispatch, failure collection."""
 
     @pytest.fixture(autouse=True)
     def _setup(self, mocker):
         self.producer = FakeNotificationProducer()
         mocker.patch(
-            "notificator.lifecycle.kafka_producer",
+            "notificator.roadmap.kafka_producer",
             side_effect=lambda: fake_kafka_ctx(self.producer),
         )
 
     def _patch_notificator(self, mocker, org_ids, *, return_value=None, side_effect=None):
-        """Patch get_org_ids and Notificator in one call; returns the class mock."""
-        mocker.patch("notificator.lifecycle.get_org_ids", return_value=org_ids)
-        mock_cls = mocker.patch("notificator.lifecycle.Notificator")
+        """Patch get_org_ids and Notificator in one call; returns (cls_mock, get_org_ids_mock)."""
+        get_mock = mocker.patch("notificator.roadmap.get_org_ids", new_callable=AsyncMock, return_value=org_ids)
+        mock_cls = mocker.patch("notificator.roadmap.Notificator")
         instance = AsyncMock()
         if side_effect is not None:
-            instance.get_lifecycle_notification.side_effect = side_effect
+            instance.get_roadmap_notification.side_effect = side_effect
         elif return_value is not None:
-            instance.get_lifecycle_notification.return_value = return_value
+            instance.get_roadmap_notification.return_value = return_value
         mock_cls.return_value = instance
-        return mock_cls
+        return mock_cls, get_mock
 
     async def test_single_org_sends_payload(self, mocker):
         """Happy path: one org produces a payload that reaches the producer."""
         payload = {"org_id": "42", "events": []}
         self._patch_notificator(mocker, [42], return_value=payload)
 
-        await lifecycle_notification()
+        await roadmap_notification()
 
         assert self.producer.sent == [payload]
 
@@ -49,7 +48,7 @@ class TestLifecycleNotification:
         """All orgs succeed — no error raised, each payload sent."""
         self._patch_notificator(mocker, [1, 2, 3], return_value={"ok": True})
 
-        await lifecycle_notification()
+        await roadmap_notification()
 
         assert len(self.producer.sent) == 3
 
@@ -58,7 +57,7 @@ class TestLifecycleNotification:
         self._patch_notificator(mocker, [99], side_effect=ValueError("boom"))
 
         with pytest.raises(RuntimeError, match="1/1 orgs"):
-            await lifecycle_notification()
+            await roadmap_notification()
 
     async def test_partial_failure_continues_remaining_orgs(self, mocker):
         """One org fails mid-batch; the rest still send their payloads."""
@@ -69,7 +68,7 @@ class TestLifecycleNotification:
         )
 
         with pytest.raises(RuntimeError, match=r"1/3 orgs: \[2\]"):
-            await lifecycle_notification()
+            await roadmap_notification()
 
         assert len(self.producer.sent) == 2
 
@@ -78,57 +77,24 @@ class TestLifecycleNotification:
         self._patch_notificator(mocker, [10, 20], side_effect=ValueError("fail"))
 
         with pytest.raises(RuntimeError, match=r"2/2 orgs: \[10, 20\]"):
-            await lifecycle_notification()
+            await roadmap_notification()
 
         assert len(self.producer.sent) == 0
 
-    async def test_notificator_receives_org_id(self, mocker):
-        """Each Notificator is instantiated with the correct org_id."""
-        mock_cls = self._patch_notificator(mocker, [777], return_value={})
-
-        await lifecycle_notification()
-
-        mock_cls.assert_called_once_with(org_id=777)
-
     async def test_no_subscribed_orgs_skips_processing(self, mocker):
         """When get_org_ids returns no orgs, skip without instantiating Notificator."""
-        mock_cls = self._patch_notificator(mocker, [], return_value={})
+        mock_cls, _ = self._patch_notificator(mocker, [], return_value={})
 
-        await lifecycle_notification()
+        await roadmap_notification()
 
         mock_cls.assert_not_called()
         assert len(self.producer.sent) == 0
 
     async def test_explicit_org_ids_bypass_get_org_ids(self, mocker):
         """Passing org_ids skips get_org_ids entirely."""
-        get_mock = mocker.patch("notificator.lifecycle.get_org_ids")
-        mock_cls = mocker.patch("notificator.lifecycle.Notificator")
-        instance = AsyncMock()
-        instance.get_lifecycle_notification.return_value = {"ok": True}
-        mock_cls.return_value = instance
+        _, get_mock = self._patch_notificator(mocker, [], return_value={"ok": True})
 
-        await lifecycle_notification(override_org_ids=[42, 99])
+        await roadmap_notification(override_org_ids=[42, 99])
 
         get_mock.assert_not_called()
         assert len(self.producer.sent) == 2
-
-
-class TestMain:
-    """main(): orchestrates both notification types in order."""
-
-    async def test_calls_lifecycle_then_roadmap(self, mocker):
-        """main() invokes lifecycle and then roadmap notification sequentially."""
-        call_order = []
-
-        async def fake_lifecycle():
-            call_order.append("lifecycle")
-
-        async def fake_roadmap():
-            call_order.append("roadmap")
-
-        mocker.patch("notificator.__main__.lifecycle_notification", side_effect=fake_lifecycle)
-        mocker.patch("notificator.__main__.roadmap_notification", side_effect=fake_roadmap)
-
-        await main()
-
-        assert call_order == ["lifecycle", "roadmap"]

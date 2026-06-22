@@ -49,7 +49,3 @@ async def lifecycle_notification(override_org_ids: list[int] | None = None):
 
     if failed_orgs:
         raise RuntimeError(f"Lifecycle notification failed for {len(failed_orgs)}/{len(org_ids)} orgs: {failed_orgs}")
-
-
-async def roadmap_notification():
-    pass

@@ -1,9 +1,14 @@
+from collections import Counter
 from datetime import date
+from datetime import datetime
+from datetime import timezone
 from unittest.mock import AsyncMock
 
 import pytest
 
-from notificator.notificator import _build_notification_payload
+from notificator.notificator import _build_lifecycle_notification_payload
+from notificator.notificator import _build_roadmap_notification_payload
+from notificator.notificator import _upcoming_cutoff_date
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.rhel import RelevantSystemsResponse
@@ -15,6 +20,7 @@ from .utils import FIXED_UUID
 from .utils import make_appstream_key
 from .utils import make_system
 from .utils import make_system_info
+from .utils import make_upcoming_output
 from .utils import ORG_ID
 
 
@@ -270,7 +276,7 @@ class TestNotificator:
         assert len(payload["events"]) == 1
         assert payload["events"][0]["payload"] == {**rhel, **appstreams}
 
-    def test_build_notification_payload(self, mock_deterministic):
+    def test_build_lifecycle_notification_payload(self, mock_deterministic):
         """All fields of the Kafka notification payload match the expected schema."""
         rhel = {
             "rhel_retired": {"rhel_versions_count": 2, "systems_count": 10},
@@ -281,7 +287,7 @@ class TestNotificator:
             "appstream_near_retirement": {"rhel9": {"count": 1, "systems_count": 2}},
         }
 
-        result = _build_notification_payload(
+        result = _build_lifecycle_notification_payload(
             rhel_grouped=rhel,
             appstream_grouped=appstream,
             org_id=str(ORG_ID),
@@ -301,9 +307,9 @@ class TestNotificator:
         assert len(result["events"]) == 1
         assert result["events"][0]["payload"] == {**rhel, **appstream}
 
-    def test_build_notification_payload_empty_data(self, mock_deterministic):
+    def test_build_lifecycle_notification_payload_empty_data(self, mock_deterministic):
         """With zeroed/empty inputs the payload still has the correct structure."""
-        result = _build_notification_payload(
+        result = _build_lifecycle_notification_payload(
             rhel_grouped=EMPTY_RHEL_SECTIONS,
             appstream_grouped=EMPTY_APPSTREAM_SECTIONS,
             org_id=str(ORG_ID),
@@ -315,3 +321,199 @@ class TestNotificator:
         assert result["events"][0]["payload"] == {**EMPTY_RHEL_SECTIONS, **EMPTY_APPSTREAM_SECTIONS}
         assert result["events"][0]["metadata"] == {}
         assert result["context"] == {"lifecycle": {"report_date": "March 2026"}}
+
+    async def test_get_roadmap_notification(self, notificator, mocker, mock_deterministic):
+        """Orchestration: hosts are fetched once and passed to get_relevant_upcoming."""
+        sentinel_hosts = [{"id": "sentinel"}]
+        upcoming_counts = Counter({"addition": 3, "deprecation": 1, "change": 0})
+        mock_hosts = mocker.patch.object(notificator, "get_hosts", new_callable=AsyncMock, return_value=sentinel_hosts)
+        mock_upcoming = mocker.patch.object(
+            notificator, "get_relevant_upcoming", new_callable=AsyncMock, return_value=upcoming_counts
+        )
+
+        payload = await notificator.get_roadmap_notification()
+
+        mock_hosts.assert_awaited_once()
+        mock_upcoming.assert_awaited_once_with(sentinel_hosts)
+        assert payload["event_type"] == "roadmap-monthly-report"
+        assert payload["org_id"] == str(ORG_ID)
+        assert payload["application"] == "roadmap"
+        assert len(payload["events"]) == 1
+        assert payload["events"][0]["payload"] == {
+            "addition": {"count": 3},
+            "deprecation": {"count": 1},
+            "change": {"count": 0},
+        }
+
+
+class TestUpcomingCutoffDate:
+    """_upcoming_cutoff_date: returns first of previous month for the reporting window."""
+
+    @pytest.mark.parametrize(
+        ("today_date", "expected_cutoff"),
+        (
+            pytest.param(date(2026, 5, 15), date(2026, 4, 1), id="mid_month"),
+            pytest.param(date(2026, 5, 1), date(2026, 4, 1), id="first_of_month"),
+            pytest.param(date(2026, 1, 10), date(2025, 12, 1), id="january_wraps_year"),
+            pytest.param(date(2026, 3, 31), date(2026, 2, 1), id="last_day_of_month"),
+        ),
+    )
+    def test_cutoff_date(self, today_date, expected_cutoff):
+        result = _upcoming_cutoff_date(today_date)
+
+        assert result == expected_cutoff
+
+
+class TestBuildRoadmapNotificationPayload:
+    """_build_roadmap_notification_payload: Kafka message structure for roadmap notifications."""
+
+    def test_happy_path(self, mock_deterministic):
+        """All fields match the expected schema with real counts."""
+        counts = Counter({"addition": 2, "deprecation": 3, "change": 1})
+
+        result = _build_roadmap_notification_payload(upcoming_counts=counts, org_id=str(ORG_ID))
+
+        assert result["version"] == "v1.0.0"
+        assert result["id"] == str(FIXED_UUID)
+        assert result["bundle"] == "rhel"
+        assert result["application"] == "roadmap"
+        assert result["event_type"] == "roadmap-monthly-report"
+        assert result["timestamp"] == FIXED_TIMESTAMP
+        assert result["org_id"] == str(ORG_ID)
+        assert result["recipients"] == []
+        assert len(result["events"]) == 1
+        assert result["events"][0]["metadata"] == {}
+        assert result["events"][0]["payload"] == {
+            "addition": {"count": 2},
+            "deprecation": {"count": 3},
+            "change": {"count": 1},
+        }
+
+    def test_empty_counter(self, mock_deterministic):
+        """Empty Counter produces zero counts for all three types."""
+        result = _build_roadmap_notification_payload(upcoming_counts=Counter(), org_id=str(ORG_ID))
+
+        assert result["events"][0]["payload"] == {
+            "addition": {"count": 0},
+            "deprecation": {"count": 0},
+            "change": {"count": 0},
+        }
+
+    def test_enhancement_folded_into_addition(self, mock_deterministic):
+        """Enhancement counts are merged into addition in the payload."""
+        counts = Counter({"addition": 2, "enhancement": 3})
+
+        result = _build_roadmap_notification_payload(upcoming_counts=counts, org_id=str(ORG_ID))
+
+        assert result["events"][0]["payload"]["addition"] == {"count": 5}
+
+    def test_report_date_is_previous_month(self, mock_deterministic):
+        """FIXED_DATETIME is March 15 2026, so report_date should be February 2026."""
+        result = _build_roadmap_notification_payload(upcoming_counts=Counter(), org_id=str(ORG_ID))
+
+        assert result["context"] == {"roadmap": {"report_date": "February 2026"}}
+
+
+class TestGetRelevantUpcoming:
+    """get_relevant_upcoming: date filtering and type counting of upcoming changes."""
+
+    @pytest.fixture(autouse=True)
+    def _freeze_today(self, mocker):
+        """Pin datetime.now(UTC) to May 15 2026 so the window is April 1 - May 15."""
+        self.today = date(2026, 5, 15)
+        self.cutoff = date(2026, 4, 1)
+        frozen = datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_dt = mocker.patch("notificator.notificator.datetime", wraps=datetime)
+        mock_dt.now.return_value = frozen
+
+    @pytest.fixture(autouse=True)
+    def _mock_upcoming_deps(self, mocker):
+        """Mock the data-fetching layer; tests control results via self.mock_get_upcoming."""
+        self.mock_packages = mocker.patch(
+            "notificator.notificator.upcoming.packages_by_system",
+            new_callable=AsyncMock,
+            return_value={},
+        )
+        self.mock_get_upcoming = mocker.patch(
+            "notificator.notificator.upcoming.get_upcoming_data_with_hosts",
+            return_value=[],
+        )
+
+    async def test_items_within_window_counted(self, notificator):
+        """Items with dateAdded inside the window are counted by type."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 4, 10)),
+            make_upcoming_output("addition", date(2026, 5, 1)),
+            make_upcoming_output("deprecation", date(2026, 4, 20)),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result == Counter({"addition": 2, "deprecation": 1})
+
+    async def test_items_outside_window_excluded(self, notificator):
+        """Items before cutoff or after today produce empty Counter."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 3, 31)),
+            make_upcoming_output("deprecation", date(2026, 5, 16)),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert sum(result.values()) == 0
+
+    async def test_boundary_dates_inclusive(self, notificator):
+        """Items on the exact cutoff date and exact today date are both included."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", self.cutoff),
+            make_upcoming_output("change", self.today),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result == Counter({"addition": 1, "change": 1})
+
+    async def test_enhancement_tracked_separately(self, notificator):
+        """Enhancement is counted under its own key, not merged into addition.
+
+        This scenario is not needed in actual implementation and those could be merged.
+        But in case we later decide to split those, we have an easy option.
+        """
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 4, 5)),
+            make_upcoming_output("enhancement", date(2026, 4, 5)),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result["addition"] == 1
+        assert result["enhancement"] == 1
+
+    async def test_empty_upcoming(self, notificator):
+        """No upcoming items yields empty Counter."""
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert sum(result.values()) == 0
+
+    async def test_mixed_in_and_out_of_window(self, notificator):
+        """Only items within the window are counted."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 4, 10)),
+            make_upcoming_output("deprecation", date(2026, 3, 15)),
+            make_upcoming_output("change", date(2026, 5, 10)),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result == Counter({"addition": 1, "change": 1})
+
+    async def test_same_name_different_types_counted_independently(self, notificator):
+        """Two items sharing a name but differing in type are counted separately."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 4, 10), name="shared-pkg"),
+            make_upcoming_output("change", date(2026, 4, 10), name="shared-pkg"),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result == Counter({"addition": 1, "change": 1})

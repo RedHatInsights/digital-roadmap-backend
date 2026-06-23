@@ -136,7 +136,7 @@ def make_upcoming_output(upcoming_type, deployed_date, name="test-item", affecte
         deployedDate=deployed_date,
         potentiallyAffectedSystemsCount=len(affected_systems),
         potentiallyAffectedSystemsDetail=affected_systems,
-        potentiallyAffectedSystems=affected_systems,
+        potentiallyAffectedSystems={s.id for s in affected_systems},
     )
     return UpcomingOutput.model_construct(
         name=name,

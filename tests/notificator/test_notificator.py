@@ -517,3 +517,15 @@ class TestGetRelevantUpcoming:
         result = await notificator.get_relevant_upcoming(hosts=[])
 
         assert result == Counter({"addition": 1, "change": 1})
+
+    async def test_items_without_affected_systems_excluded(self, notificator):
+        """Items with no affected systems are filtered out before counting."""
+        self.mock_get_upcoming.return_value = [
+            make_upcoming_output("addition", date(2026, 4, 10)),
+            make_upcoming_output("addition", date(2026, 4, 12), affected_systems=set()),
+            make_upcoming_output("deprecation", date(2026, 4, 15), affected_systems=set()),
+        ]
+
+        result = await notificator.get_relevant_upcoming(hosts=[])
+
+        assert result == Counter({"addition": 1})

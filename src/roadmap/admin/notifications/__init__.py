@@ -31,6 +31,8 @@ NotificationFunc = Callable[..., Coroutine[Any, Any, None]]
 
 
 class CustomNotificatorRequest(BaseModel):
+    """Request body for triggering notifications for specific orgs."""
+
     org_ids: int | list[int] = Field(
         description="A single org ID or a list of org IDs that should receive notifications."
     )
@@ -47,6 +49,8 @@ class CustomNotificatorRequest(BaseModel):
 
 
 class AllNotificatorRequest(BaseModel):
+    """Request body for triggering notifications for all subscribed orgs."""
+
     confirm_all: bool = Field(
         default=False,
         description="Set to true to confirm notifications should be triggered for every org subscribed to receive this type of notification.",
@@ -55,12 +59,24 @@ class AllNotificatorRequest(BaseModel):
 
 @dataclass
 class NotificationKind:
+    """Describes a notification type for the admin endpoint factory.
+
+    ``label`` is used in route paths and log/response messages.
+    ``subscription`` identifies the Notifications Gateway subscription.
+    ``send`` is the async callable that actually dispatches notifications.
+    """
+
     label: str
     subscription: SubscriptionType
     send: NotificationFunc
 
 
 def build_notification_router(kind: NotificationKind) -> APIRouter:
+    """Create a FastAPI router with admin endpoints for the given notification type.
+
+    Generates three routes: ``subscribed-orgs`` (GET), ``custom`` (POST),
+    and ``all`` (POST, background).
+    """
     router = APIRouter()
     prefix = f"/notifications/{kind.label}"
 

@@ -1,3 +1,5 @@
+"""Admin endpoints for roadmap notifications."""
+
 from notificator.notificator_config import ROADMAP_SUBSCRIPTION
 from notificator.roadmap import roadmap_notification
 from roadmap.admin.notifications import build_notification_router

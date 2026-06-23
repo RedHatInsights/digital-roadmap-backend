@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from notificator.kafka import KafkaBrokersNotConfigured
+from notificator.notificator_config import SubscriptionType
 from roadmap.admin.notifications.lifecycle import kind as lifecycle_kind
 from roadmap.admin.notifications.roadmap import kind as roadmap_kind
 from roadmap.config import Settings
@@ -36,6 +37,7 @@ def mock_roadmap_send(mocker):
 
 @pytest.fixture()
 def mock_get_org_ids(mocker):
+    """Mock the subscription lookup used by the subscribed-orgs endpoint."""
     return mocker.patch("roadmap.admin.notifications.get_org_ids", new_callable=AsyncMock)
 
 
@@ -50,10 +52,13 @@ def _force_prod(monkeypatch):
 
 @dataclass
 class NotificationEndpoints:
+    """Holds URLs, subscription, and mock for one notification type under test."""
+
     label: str
     custom_url: str
     all_url: str
     subscribed_url: str
+    subscription: SubscriptionType
     mock_send: AsyncMock
 
 
@@ -66,6 +71,7 @@ def endpoints(request, mock_lifecycle_send, mock_roadmap_send):
             custom_url=LIFECYCLE_CUSTOM_URL,
             all_url=LIFECYCLE_ALL_URL,
             subscribed_url=LIFECYCLE_SUBSCRIBED_URL,
+            subscription=lifecycle_kind.subscription,
             mock_send=mock_lifecycle_send,
         )
     elif request.param == "roadmap":
@@ -74,6 +80,7 @@ def endpoints(request, mock_lifecycle_send, mock_roadmap_send):
             custom_url=ROADMAP_CUSTOM_URL,
             all_url=ROADMAP_ALL_URL,
             subscribed_url=ROADMAP_SUBSCRIBED_URL,
+            subscription=roadmap_kind.subscription,
             mock_send=mock_roadmap_send,
         )
     else:
@@ -149,6 +156,8 @@ class TestAdminAuthGuardStage:
 
 
 class TestCustomEndpointValidation:
+    """Pydantic validation on the custom trigger request body."""
+
     def test_missing_body_returns_422(self, admin_client):
         response = admin_client.post(LIFECYCLE_CUSTOM_URL)
 
@@ -164,11 +173,18 @@ class TestCustomEndpointValidation:
 
         assert response.status_code == 422
 
+    def test_negative_org_id_returns_422(self, admin_client):
+        response = admin_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": [-1]})
+
+        assert response.status_code == 422
+
 
 # -- Trigger endpoints (parametrized over both notification types) -------------
 
 
 class TestTriggerNotification:
+    """Custom and broadcast trigger endpoints, parametrized over lifecycle and roadmap."""
+
     def test_custom_success_single_org(self, admin_client, endpoints):
         response = admin_client.post(endpoints.custom_url, json={"org_ids": 42})
 
@@ -229,6 +245,8 @@ class TestTriggerNotification:
 
 
 class TestSubscribedOrgs:
+    """GET subscribed-orgs endpoint, parametrized over lifecycle and roadmap."""
+
     def test_returns_subscribed_org_ids(self, admin_client, endpoints, mock_get_org_ids):
         mock_get_org_ids.return_value = [1, 2, 3]
 
@@ -236,6 +254,7 @@ class TestSubscribedOrgs:
 
         assert response.status_code == 200
         assert response.json() == {"org_ids": [1, 2, 3], "count": 3}
+        mock_get_org_ids.assert_awaited_once_with(endpoints.subscription)
 
     def test_returns_empty_list_when_no_subscriptions(self, admin_client, endpoints, mock_get_org_ids):
         mock_get_org_ids.return_value = []
@@ -244,6 +263,7 @@ class TestSubscribedOrgs:
 
         assert response.status_code == 200
         assert response.json() == {"org_ids": [], "count": 0}
+        mock_get_org_ids.assert_awaited_once_with(endpoints.subscription)
 
     def test_returns_503_when_subscriptions_url_not_configured(self, admin_client, endpoints, mock_get_org_ids):
         mock_get_org_ids.side_effect = RuntimeError("ROADMAP_SUBSCRIPTIONS_URL is not configured")
@@ -252,6 +272,7 @@ class TestSubscribedOrgs:
 
         assert response.status_code == 503
         assert "ROADMAP_SUBSCRIPTIONS_URL is not configured" in response.json()["detail"]
+        mock_get_org_ids.assert_awaited_once_with(endpoints.subscription)
 
     def test_returns_500_on_unexpected_error(self, admin_client, endpoints, mock_get_org_ids):
         mock_get_org_ids.side_effect = Exception("connection timeout")

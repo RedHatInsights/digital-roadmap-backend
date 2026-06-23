@@ -1,9 +1,8 @@
-from notificator.roadmap import roadmap_notification
 from notificator.notificator_config import ROADMAP_SUBSCRIPTION
-
-from roadmap.admin.notifications import NotificationKind
+from notificator.roadmap import roadmap_notification
 from roadmap.admin.notifications import build_notification_router
+from roadmap.admin.notifications import NotificationKind
 
-router = build_notification_router(
-    NotificationKind(label="roadmap", subscription=ROADMAP_SUBSCRIPTION, send=roadmap_notification)
-)
+
+kind = NotificationKind(label="roadmap", subscription=ROADMAP_SUBSCRIPTION, send=roadmap_notification)
+router = build_notification_router(kind)

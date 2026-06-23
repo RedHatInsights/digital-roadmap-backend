@@ -5,11 +5,13 @@ FastAPI routes (subscribed-orgs, custom trigger, and broadcast trigger) for
 any notification type described by a ``NotificationKind``.
 """
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from typing import Any
 
 import structlog
+
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Body
@@ -21,6 +23,7 @@ from pydantic import field_validator
 from notificator.kafka import KafkaBrokersNotConfigured
 from notificator.notificator_config import SubscriptionType
 from notificator.subscriptions import get_org_ids
+
 
 logger = structlog.get_logger(__name__)
 
@@ -50,7 +53,7 @@ class AllNotificatorRequest(BaseModel):
     )
 
 
-@dataclass(frozen=True)
+@dataclass
 class NotificationKind:
     label: str
     subscription: SubscriptionType

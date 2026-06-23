@@ -214,6 +214,9 @@ class Notificator:
         cutoff = _upcoming_cutoff_date(today)
         counts: Counter[str] = Counter()
 
+        # Filter out upcoming to keep only relevant
+        upcoming_with_hosts = [item for item in upcoming_with_hosts if item.details.potentiallyAffectedSystemsDetail]
+
         for item in upcoming_with_hosts:
             if item.details.deployedDate is None:
                 # Item was not released yet, let's use today's date for testing

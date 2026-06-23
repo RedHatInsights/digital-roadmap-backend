@@ -119,8 +119,13 @@ def make_system(name, status, count, major, minor=None):
     )
 
 
-def make_upcoming_output(upcoming_type, deployed_date, name="test-item"):
-    """Build an UpcomingOutput with a given type and deployedDate, bypassing validators."""
+def make_upcoming_output(upcoming_type, deployed_date, name="test-item", affected_systems=None):
+    """Build an UpcomingOutput with a given type and deployedDate, bypassing validators.
+
+    By default the item is created with one affected system so it passes the inventory filter.
+    """
+    if affected_systems is None:
+        affected_systems = {make_system_info(1)}
     details = UpcomingOutputDetails.model_construct(
         architecture=None,
         detailFormat=0,
@@ -129,9 +134,9 @@ def make_upcoming_output(upcoming_type, deployed_date, name="test-item"):
         dateAdded=deployed_date,
         lastModified=deployed_date,
         deployedDate=deployed_date,
-        potentiallyAffectedSystemsCount=0,
-        potentiallyAffectedSystemsDetail=set(),
-        potentiallyAffectedSystems=set(),
+        potentiallyAffectedSystemsCount=len(affected_systems),
+        potentiallyAffectedSystemsDetail=affected_systems,
+        potentiallyAffectedSystems=affected_systems,
     )
     return UpcomingOutput.model_construct(
         name=name,

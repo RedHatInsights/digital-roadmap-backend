@@ -1,3 +1,10 @@
+"""Admin API endpoints.
+
+All routes under ``/admin`` require the caller to be a Red Hat internal user
+(validated via the ``x-rh-identity`` header in production). Sub-routers for
+individual admin features are mounted here.
+"""
+
 import base64
 import json
 import typing as t
@@ -9,7 +16,8 @@ from fastapi import HTTPException
 
 from roadmap.config import Settings
 
-from . import notificator
+from .notifications import lifecycle
+from .notifications import roadmap
 
 
 async def require_internal_user(
@@ -44,4 +52,5 @@ async def require_internal_user(
 router = APIRouter(
     prefix="/admin", tags=["Admin"], include_in_schema=False, dependencies=[Depends(require_internal_user)]
 )
-router.include_router(notificator.router)
+router.include_router(lifecycle.router)
+router.include_router(roadmap.router)

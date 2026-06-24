@@ -93,11 +93,13 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
     async def _trigger_background(org_ids: list[int] | None = None):
         try:
             await _trigger(org_ids=org_ids)
-        except Exception:
+        except Exception as exc:
             logger.exception(
                 f"Admin trigger: Unexpected background {kind.label} notification failure",
                 org_ids=org_ids,
                 total_orgs=len(org_ids or []),
+                error=str(exc),
+                error_type=type(exc).__name__,
             )
 
     @router.get(f"{prefix}/subscribed-orgs", summary=f"List orgs subscribed to {kind.label} notifications")

@@ -179,6 +179,34 @@ def test_app_streams_from_modules_status_field(dnf_modules, os_major, expected_n
     assert pending_names == expected_pending
 
 
+def test_enabled_module_without_module_packages_excluded():
+    """Enabled module without MODULE_PACKAGES data must be excluded (RHINENG-27807).
+
+    When a module has 'enabled' status but no entry in MODULE_PACKAGES, the code
+    cannot verify whether the module's packages are actually installed.  The fix
+    skips such modules instead of falling through to unconditional inclusion.
+    """
+    from unittest.mock import patch
+
+    with patch("roadmap.v1.lifecycle.app_streams.MODULE_PACKAGES", {}):
+        pending = {}
+        streams = app_streams_from_modules(
+            [{"name": "python36", "status": ["enabled"], "stream": "3.6"}],
+            8,
+            {},
+            pending,
+        )
+        stream_names = {stream.name for stream in streams}
+        pending_names = {key[0] for key in pending}
+
+        assert "python36" not in stream_names, (
+            "Enabled module without MODULE_PACKAGES data should not appear in results"
+        )
+        assert "python36" not in pending_names, (
+            "Enabled module without MODULE_PACKAGES data should not be pending verification"
+        )
+
+
 def test_relevant_app_streams_with_enabled_module_verification(api_prefix, client):
     """Integration test: enabled-only modules verified against installed packages.
 
@@ -225,11 +253,16 @@ async def test_systems_by_app_stream_verification_loop():
 
     This test directly covers lines 392-397 which verify enabled-only modules
     by checking if their expected packages are installed on each system.
-    """
 
-    # Mock async result that yields systems with enabled-only modules
-    # The systems_by_app_stream function expects data from the database query,
-    # which flattens the structure (os_major/os_minor at top level)
+    System 4 (RHINENG-27807) verifies that an enabled module whose cache key is
+    absent from MODULE_PACKAGES is excluded even when its packages are installed.
+    """
+    from unittest.mock import patch
+
+    from roadmap.data.module_packages import MODULE_PACKAGES as _real_mp
+
+    patched_mp = {k: v for k, v in _real_mp.items() if k != ("ruby", 8, "2.5")}
+
     systems_data = [
         # System 1: Has python36 enabled + python36 packages installed
         {
@@ -249,7 +282,7 @@ async def test_systems_by_app_stream_verification_loop():
             "dnf_modules": [{"name": "nodejs", "status": ["enabled"], "stream": "18"}],
             "packages": ["bash-4.4.20-1.el8.x86_64"],
         },
-        # System 3: Has postgresql with installed status (no verification needed)
+        # System 3: Has postgresql with installed+enabled status + packages
         {
             "id": "33333333-3333-3333-3333-333333333333",
             "display_name": "test-system-3",
@@ -257,6 +290,16 @@ async def test_systems_by_app_stream_verification_loop():
             "os_minor": 10,
             "dnf_modules": [{"name": "postgresql", "status": ["installed", "enabled"], "stream": "13"}],
             "packages": ["postgresql-13.0-1.el8.x86_64", "bash-4.4.20-1.el8.x86_64"],
+        },
+        # System 4 (RHINENG-27807): ruby enabled, packages present, but no
+        # MODULE_PACKAGES entry → must be excluded.
+        {
+            "id": "44444444-4444-4444-4444-444444444444",
+            "display_name": "test-system-4",
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [{"name": "ruby", "status": ["enabled"], "stream": "2.5"}],
+            "packages": ["ruby-2.5.9-110.el8.x86_64", "bash-4.4.20-1.el8.x86_64"],
         },
     ]
 
@@ -283,20 +326,18 @@ async def test_systems_by_app_stream_verification_loop():
 
     mock_systems = MockAsyncResult(systems_data)
 
-    # Call the function
-    result = await systems_by_app_stream("test-org", mock_systems)
+    with patch("roadmap.v1.lifecycle.app_streams.MODULE_PACKAGES", patched_mp):
+        result = await systems_by_app_stream("test-org", mock_systems)
 
-    # Verify results
-    # - python36 should be detected (enabled + packages installed) <- HITS LINES 392-397
-    # - nodejs should NOT be detected (enabled but no packages)
-    # - postgresql should be detected (installed status)
     module_names = {key.name for key in result.keys()}
 
     assert "python36" in module_names, f"python36 should be detected (enabled + packages). Got: {module_names}"
     assert "nodejs" not in module_names, f"nodejs should NOT be detected (enabled but no packages). Got: {module_names}"
     assert "postgresql" in module_names, f"postgresql should be detected (installed status). Got: {module_names}"
+    assert "ruby" not in module_names, (
+        f"ruby should NOT be detected (enabled but no MODULE_PACKAGES data, RHINENG-27807). Got: {module_names}"
+    )
 
-    # Verify system counts
     python36_key = [k for k in result.keys() if k.name == "python36"][0]
     postgresql_key = [k for k in result.keys() if k.name == "postgresql"][0]
 

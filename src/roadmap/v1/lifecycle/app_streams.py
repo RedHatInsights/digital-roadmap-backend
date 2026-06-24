@@ -474,7 +474,9 @@ def app_streams_from_modules(  # noqa: C901
                         f"marked for package verification ({len(expected_packages)} packages)"
                     )
                     continue
-            # No package mapping data - fall through to old behavior
+            # No package mapping data — cannot verify; skip this module.
+            logger.debug(f"Module {module_name}:{stream} enabled but no MODULE_PACKAGES data, skipping")
+            continue
 
         # Check cache for previously processed modules
         cached_value = cache.get(cache_key)

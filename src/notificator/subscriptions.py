@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ssl
 
 import httpx
@@ -9,6 +10,8 @@ import structlog
 
 from notificator.notificator_config import DEV_ORG_IDS
 from notificator.notificator_config import NotificatorSettings
+from notificator.notificator_config import REQUEST_MAX_RETRIES
+from notificator.notificator_config import REQUEST_RETRY_INTERVAL
 from notificator.notificator_config import SubscriptionType
 
 
@@ -49,10 +52,21 @@ async def fetch_subscribed_org_ids(settings: NotificatorSettings, subscription: 
 
     logger.info("Fetching subscribed org IDs", url=url, event_type=subscription.event_type)
 
+    data: dict = {}
     async with httpx.AsyncClient(verify=ctx, timeout=180) as client:
-        response = await client.get(url, params={"eventTypeNames": subscription.event_type})
-        response.raise_for_status()
-        data = response.json()
+        for attempt in range(1, REQUEST_MAX_RETRIES + 1):
+            try:
+                response = await client.get(url, params={"eventTypeNames": subscription.event_type})
+                response.raise_for_status()
+                data = response.json()
+                break
+            except (httpx.HTTPStatusError, httpx.TransportError):
+                if attempt == REQUEST_MAX_RETRIES:
+                    raise
+                logger.warning(
+                    "Failed to fetch subscribed org IDs, retrying", attempt=attempt, max_retries=REQUEST_MAX_RETRIES
+                )
+                await asyncio.sleep(REQUEST_RETRY_INTERVAL)
 
     raw_ids = data.get(subscription.event_type, [])
     try:

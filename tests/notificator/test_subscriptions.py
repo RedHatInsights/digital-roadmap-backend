@@ -179,6 +179,33 @@ class TestFetchSubscribedOrgIds:
         with pytest.raises(ValueError, match="Invalid subscriptions payload"):
             await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
 
+    async def test_retries_on_transient_failure_then_succeeds(self, mocker, settings):
+        """First request fails with a transport error, second succeeds."""
+        ok_response = MagicMock(spec=httpx.Response)
+        ok_response.status_code = 200
+        ok_response.json.return_value = {LIFECYCLE_SUBSCRIPTION.event_type: ["42"]}
+        ok_response.raise_for_status.return_value = None
+
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = [
+            httpx.TransportError("connection reset"),
+            ok_response,
+        ]
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.__aexit__.return_value = False
+
+        mocker.patch("notificator.subscriptions.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch("notificator.subscriptions.ssl.create_default_context")
+        mocker.patch("notificator.subscriptions.asyncio.sleep", new_callable=AsyncMock)
+
+        log_warning = mocker.patch("notificator.subscriptions.logger.warning")
+
+        result = await fetch_subscribed_org_ids(settings, LIFECYCLE_SUBSCRIPTION)
+
+        assert result == [42]
+        assert mock_client.get.call_count == 2
+        log_warning.assert_called_once_with("Failed to fetch subscribed org IDs, retrying", attempt=1, max_retries=5)
+
     async def test_raises_when_subscriptions_url_not_configured(self):
         settings = _make_settings(subscriptions_url=None)
 

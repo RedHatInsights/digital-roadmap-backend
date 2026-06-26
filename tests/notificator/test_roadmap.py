@@ -52,12 +52,19 @@ class TestRoadmapNotification:
 
         assert len(self.producer.sent) == 3
 
-    async def test_single_org_failure_raises_runtime_error(self, mocker):
-        """When the only org fails, RuntimeError is raised after the loop."""
+    async def test_single_org_failure_logs_error(self, mocker):
+        """When the only org fails, the error is logged (no exception raised)."""
         self._patch_notificator(mocker, [99], side_effect=ValueError("boom"))
+        log_error = mocker.patch("notificator.roadmap.logger.error")
 
-        with pytest.raises(RuntimeError, match="1/1 orgs"):
-            await roadmap_notification()
+        await roadmap_notification()
+
+        log_error.assert_called_once_with(
+            "Roadmap notification failed for some orgs",
+            failed_orgs=[99],
+            failed_count=1,
+            total_count=1,
+        )
 
     async def test_partial_failure_continues_remaining_orgs(self, mocker):
         """One org fails mid-batch; the rest still send their payloads."""
@@ -66,20 +73,60 @@ class TestRoadmapNotification:
             [1, 2, 3],
             side_effect=[{"seq": 1}, ValueError("org 2 failed"), {"seq": 3}],
         )
+        log_error = mocker.patch("notificator.roadmap.logger.error")
 
-        with pytest.raises(RuntimeError, match=r"1/3 orgs: \[2\]"):
-            await roadmap_notification()
+        await roadmap_notification()
 
         assert len(self.producer.sent) == 2
+        log_error.assert_called_once_with(
+            "Roadmap notification failed for some orgs",
+            failed_orgs=[2],
+            failed_count=1,
+            total_count=3,
+        )
 
     async def test_all_orgs_fail_reports_all(self, mocker):
-        """When every org fails, all org IDs appear in the error message."""
+        """When every org fails, all org IDs appear in the error log."""
         self._patch_notificator(mocker, [10, 20], side_effect=ValueError("fail"))
+        log_error = mocker.patch("notificator.roadmap.logger.error")
 
-        with pytest.raises(RuntimeError, match=r"2/2 orgs: \[10, 20\]"):
-            await roadmap_notification()
+        await roadmap_notification()
 
         assert len(self.producer.sent) == 0
+        log_error.assert_called_once_with(
+            "Roadmap notification failed for some orgs",
+            failed_orgs=[10, 20],
+            failed_count=2,
+            total_count=2,
+        )
+
+    async def test_get_org_ids_failure_returns_early(self, mocker):
+        """When get_org_ids raises, the function logs and returns without processing."""
+        mocker.patch(
+            "notificator.roadmap.get_org_ids",
+            side_effect=RuntimeError("connection refused"),
+        )
+        log_exception = mocker.patch("notificator.roadmap.logger.exception")
+
+        await roadmap_notification()
+
+        log_exception.assert_called_once_with("Failed to get org_ids for roadmap notification, no orgs were notified.")
+        assert len(self.producer.sent) == 0
+
+    async def test_kafka_producer_failure_returns_early(self, mocker):
+        """When kafka_producer raises, the function logs and returns without processing."""
+        self._patch_notificator(mocker, [42], return_value={"ok": True})
+        mocker.patch(
+            "notificator.roadmap.kafka_producer",
+            side_effect=RuntimeError("broker unavailable"),
+        )
+        log_exception = mocker.patch("notificator.roadmap.logger.exception")
+
+        await roadmap_notification()
+
+        log_exception.assert_called_once_with(
+            "Failed to get kafka producer for roadmap notification, no orgs were notified."
+        )
 
     async def test_no_subscribed_orgs_skips_processing(self, mocker):
         """When get_org_ids returns no orgs, skip without instantiating Notificator."""

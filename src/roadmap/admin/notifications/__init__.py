@@ -113,12 +113,12 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
             raise HTTPException(status_code=500, detail="Failed to fetch subscribed org IDs") from exc
         return {"org_ids": org_ids, "count": len(org_ids)}
 
-    @router.post(f"{prefix}/custom", summary=f"Trigger {kind.label} notification for one or more orgs")
-    async def trigger_custom(payload: CustomNotificatorRequest = Body(...)):
+    @router.post(f"{prefix}/custom", summary=f"Trigger {kind.label} notification for one or more orgs", status_code=202)
+    async def trigger_custom(background_tasks: BackgroundTasks, payload: CustomNotificatorRequest = Body(...)):
         org_ids = [payload.org_ids] if isinstance(payload.org_ids, int) else payload.org_ids
         unique_org_ids = sorted(set(org_ids))
-        await _trigger(org_ids=unique_org_ids)
-        return {"message": f"{kind.label.capitalize()} notification completed", "requested_org_ids": unique_org_ids}
+        background_tasks.add_task(_trigger_background, org_ids=unique_org_ids)
+        return {"message": f"{kind.label.capitalize()} notification accepted", "requested_org_ids": unique_org_ids}
 
     @router.post(f"{prefix}/all", summary=f"Trigger {kind.label} notification for all orgs", status_code=202)
     async def trigger_all(background_tasks: BackgroundTasks, payload: AllNotificatorRequest = Body(...)):

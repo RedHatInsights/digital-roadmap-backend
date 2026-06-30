@@ -131,7 +131,7 @@ class TestAdminAuthGuardProd:
     def test_internal_user_passes(self, admin_client):
         response = admin_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
-        assert response.status_code == 200
+        assert response.status_code == 202
 
 
 class TestAdminAuthGuardStage:
@@ -140,7 +140,7 @@ class TestAdminAuthGuardStage:
     def test_no_header_allowed_in_stage(self, client):
         response = client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
-        assert response.status_code == 200
+        assert response.status_code == 202
 
     def test_external_user_allowed_in_stage(self, client, external_headers):
         response = client.post(
@@ -149,7 +149,7 @@ class TestAdminAuthGuardStage:
             headers=external_headers,
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 202
 
 
 # -- Request validation (shared Pydantic models, tested once) ------------------
@@ -188,10 +188,10 @@ class TestTriggerNotification:
     def test_custom_success_single_org(self, admin_client, endpoints):
         response = admin_client.post(endpoints.custom_url, json={"org_ids": 42})
 
-        assert response.status_code == 200
+        assert response.status_code == 202
         body = response.json()
         assert body == {
-            "message": f"{endpoints.label.capitalize()} notification completed",
+            "message": f"{endpoints.label.capitalize()} notification accepted",
             "requested_org_ids": [42],
         }
         endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42])
@@ -199,25 +199,25 @@ class TestTriggerNotification:
     def test_custom_deduplicates_and_sorts_org_ids(self, admin_client, endpoints):
         response = admin_client.post(endpoints.custom_url, json={"org_ids": [3, 1, 3, 2]})
 
-        assert response.status_code == 200
+        assert response.status_code == 202
         assert response.json()["requested_org_ids"] == [1, 2, 3]
         endpoints.mock_send.assert_awaited_once_with(override_org_ids=[1, 2, 3])
 
-    def test_custom_runtime_failure(self, admin_client, endpoints):
+    def test_custom_background_failure_still_returns_202(self, admin_client, endpoints):
         endpoints.mock_send.side_effect = RuntimeError("failed for 1/1 orgs")
 
         response = admin_client.post(endpoints.custom_url, json={"org_ids": 42})
 
-        assert response.status_code == 500
-        assert "failed for 1/1 orgs" in response.json()["detail"]
+        assert response.status_code == 202
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42])
 
-    def test_custom_kafka_not_configured(self, admin_client, endpoints):
+    def test_custom_kafka_not_configured_still_returns_202(self, admin_client, endpoints):
         endpoints.mock_send.side_effect = KafkaBrokersNotConfigured("no brokers")
 
         response = admin_client.post(endpoints.custom_url, json={"org_ids": 42})
 
-        assert response.status_code == 503
-        assert "Kafka brokers not configured" in response.json()["detail"]
+        assert response.status_code == 202
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42])
 
     def test_all_requires_confirmation(self, admin_client, endpoints):
         response = admin_client.post(endpoints.all_url, json={"confirm_all": False})

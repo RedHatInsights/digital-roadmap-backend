@@ -389,10 +389,17 @@ async def systems_by_app_stream(
             systems_by_stream[app_stream].add(system_info)
 
         # Verify enabled-only modules marked for package verification (only for THIS system)
-        for app_stream_key, expected_packages in modules_pending_verification.values():
-            # Check if this module's expected packages are installed on this system
-            if expected_packages & installed_package_names:
-                # At least one package from the module is installed
+        for cache_key, (app_stream_key, expected_packages) in modules_pending_verification.items():
+            module_name = cache_key[0]
+
+            # To reduce false positives from shared packages (e.g., jansi in both scala and maven),
+            # require the primary package (same name as module) to be installed if it exists
+            if module_name in expected_packages:
+                # Module has a primary package - only count if it's installed
+                if module_name in installed_package_names:
+                    systems_by_stream[app_stream_key].add(system_info)
+            elif expected_packages & installed_package_names:
+                # No primary package exists for this module, check for any package match
                 systems_by_stream[app_stream_key].add(system_info)
                 logger.debug(
                     f"Verified module {app_stream_key.name} on system {system_info.display_name}: "

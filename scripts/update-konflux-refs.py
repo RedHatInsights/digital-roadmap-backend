@@ -118,7 +118,7 @@ def image_tag_sort(value):
         version.append(value.get("start_ts", 0))
         return tuple(version)
     except ValueError:
-        return (value.get("start_ts", 0),)
+        return (0, 0, value.get("start_ts", 0))
 
 
 def filter_tags(

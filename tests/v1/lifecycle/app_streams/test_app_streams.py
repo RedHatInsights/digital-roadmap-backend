@@ -412,3 +412,59 @@ async def test_systems_by_app_stream_primary_package_verification():
         f"scala should NOT be detected (enabled but scala package not installed, "
         f"only shared packages like jansi). Got: {module_names}"
     )
+
+
+@pytest.mark.asyncio
+async def test_systems_by_app_stream_no_primary_package_module():
+    """Test module detection when the module has no primary package.
+
+    Some modules (e.g. container-tools) have no package matching the module
+    name. In that case, any matching expected package should be enough to
+    verify the module is in use.
+    """
+    systems_data = [
+        {
+            "id": "44444444-4444-4444-4444-444444444444",
+            "display_name": "test-container-tools",
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [
+                {"name": "container-tools", "status": ["enabled"], "stream": "rhel8"},
+            ],
+            "packages": [
+                "podman-4.9.4-1.el8.x86_64",
+                "buildah-1.33.7-1.el8.x86_64",
+                "bash-4.4.20-1.el8.x86_64",
+            ],
+        },
+    ]
+
+    class MockAsyncMappingsIterator:
+        def __init__(self, data):
+            self.data = data
+
+        def mappings(self):
+            return self
+
+        async def __aiter__(self):
+            for system in self.data:
+                yield system
+
+    class MockAsyncResult:
+        def __init__(self, data):
+            self.data = data
+
+        def yield_per(self, batch_size):
+            return MockAsyncMappingsIterator(self.data)
+
+        def mappings(self):
+            return self
+
+    mock_systems = MockAsyncResult(systems_data)
+    result = await systems_by_app_stream("test-org", mock_systems)
+    module_names = {key.name for key in result.keys()}
+
+    assert "container-tools" in module_names, (
+        f"container-tools should be detected (enabled, no primary package, "
+        f"but podman/buildah installed). Got: {module_names}"
+    )

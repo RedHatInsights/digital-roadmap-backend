@@ -11,7 +11,6 @@ from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 from enum import StrEnum
 from itertools import islice
-from operator import itemgetter
 from pathlib import Path
 
 
@@ -104,19 +103,33 @@ def parse_args():
     return parser.parse_args()
 
 
+def image_tag_sort(value):
+    """Sort based on the version number in the tag and the creation date."""
+
+    name = value.get("name", "").replace("-", ".")
+    name_parts = name.split(".")
+    if len(name_parts[-1]) > 16:
+        # This ends in a commit hash, not a number. Drop the hash.
+        # 0.6-622d10efb15c602b5e47d8fd98e374bb2c45c149
+        name_parts = name_parts[:-1]
+
+    try:
+        version = [int(n) for n in name_parts]
+        version.append(value.get("start_ts", 0))
+        return tuple(version)
+    except ValueError:
+        return (0, 0, value.get("start_ts", 0))
+
+
 def filter_tags(
     tags: list[dict[str, t.Any]],
-    key: list[str] | None = None,
     reverse: bool = True,
     max_tag_length: int = 128,
 ) -> list[dict[str, t.Any]]:
-    # operator.itemgetter will return a tuple of items if passed a list of items to get.
-    # This means the value used to sort will look like ('0.7', 1765550189).
-    key = key or ["name", "start_ts"]
     exclude = {"unknown"}
     return sorted(
-        (item for item in tags if len(item["name"]) < max_tag_length and item["name"] not in exclude),
-        key=itemgetter(*key),
+        (item for item in tags if len(item["name"]) <= max_tag_length and item["name"] not in exclude),
+        key=image_tag_sort,
         reverse=reverse,
     )
 

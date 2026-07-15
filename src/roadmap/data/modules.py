@@ -1185,4 +1185,16 @@ APP_STREAM_MODULES = [
         end_date=date(2029, 3, 31),
         rolling=False,
     ),
+    AppStreamEntity(
+        name="php",
+        application_stream_name="PHP 8.4",
+        application_stream_type=AppStreamType.stream,
+        stream="8.4",
+        impl=AppStreamImplementation.module,
+        os_major=9,
+        os_minor=9,
+        start_date=date(2026, 11, 1),
+        end_date=date(2029, 5, 31),
+        rolling=False,
+    ),
 ]

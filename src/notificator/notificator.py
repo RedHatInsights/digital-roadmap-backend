@@ -7,7 +7,8 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from datetime import UTC
-from uuid import uuid4
+from uuid import UUID
+from uuid import uuid5
 
 import structlog
 
@@ -26,6 +27,26 @@ logger = structlog.get_logger(__name__)
 
 
 NOTIFY_STATUSES = {SupportStatus.retired, SupportStatus.near_retirement}
+
+# Random UUID for Insights Planning
+# generated using `python -c "import uuid; print(uuid.uuid4())"`
+NOTIFICATION_NAMESPACE = UUID("e0d6dbe4-7b1b-411b-8017-24edac0ce3cd")
+
+
+def _make_notification_uuid(
+    application: str,
+    event_type: str,
+    org_id: str,
+    day: date,
+) -> UUID:
+    """Generate a deterministic UUID v5 for a notification.
+
+    The same combination of application, event_type, org_id and calendar day
+    always produces the same UUID, which lets the notification backend
+    deduplicate repeated deliveries for the same report.
+    """
+    name = f"{day.isoformat()}:{application}:{event_type}:{org_id}"
+    return uuid5(NOTIFICATION_NAMESPACE, name)
 
 
 class Notificator:
@@ -316,7 +337,7 @@ def _build_roadmap_notification_payload(
 
     return {
         "version": "v1.0.0",
-        "id": str(uuid4()),
+        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date())),
         "bundle": bundle,
         "application": application,
         "event_type": event_type,
@@ -386,7 +407,7 @@ def _build_lifecycle_notification_payload(
 
     return {
         "version": "v1.0.0",
-        "id": str(uuid4()),
+        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date())),
         "bundle": bundle,
         "application": application,
         "event_type": event_type,

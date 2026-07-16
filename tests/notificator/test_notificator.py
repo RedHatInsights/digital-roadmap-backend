@@ -8,6 +8,7 @@ import pytest
 
 from notificator.notificator import _build_lifecycle_notification_payload
 from notificator.notificator import _build_roadmap_notification_payload
+from notificator.notificator import _make_notification_uuid
 from notificator.notificator import _upcoming_cutoff_date
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
@@ -15,8 +16,8 @@ from roadmap.v1.lifecycle.rhel import RelevantSystemsResponse
 
 from .utils import EMPTY_APPSTREAM_SECTIONS
 from .utils import EMPTY_RHEL_SECTIONS
+from .utils import FIXED_DATETIME
 from .utils import FIXED_TIMESTAMP
-from .utils import FIXED_UUID
 from .utils import make_appstream_key
 from .utils import make_system
 from .utils import make_system_info
@@ -295,8 +296,14 @@ class TestNotificator:
             application="life-cycle",
         )
 
+        expected_id = str(
+            _make_notification_uuid(
+                "life-cycle", "retiring-lifecycle-monthly-report", str(ORG_ID), FIXED_DATETIME.date()
+            )
+        )
+
         assert result["version"] == "v1.0.0"
-        assert result["id"] == str(FIXED_UUID)
+        assert result["id"] == expected_id
         assert result["bundle"] == "rhel"
         assert result["application"] == "life-cycle"
         assert result["event_type"] == "retiring-lifecycle-monthly-report"
@@ -346,6 +353,28 @@ class TestNotificator:
         }
 
 
+class TestMakeNotificationUuid:
+    """_make_notification_uuid: deterministic UUID v5 generation for notifications."""
+
+    def test_same_inputs_produce_same_uuid(self):
+        first = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+        second = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+
+        assert first == second
+
+    def test_different_day_produces_different_uuid(self):
+        uuid_a = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+        uuid_b = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 17))
+
+        assert uuid_a != uuid_b
+
+    def test_different_org_produces_different_uuid(self):
+        uuid_a = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+        uuid_b = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "5678", date(2026, 7, 16))
+
+        assert uuid_a != uuid_b
+
+
 class TestUpcomingCutoffDate:
     """_upcoming_cutoff_date: returns first of previous month for the reporting window."""
 
@@ -373,8 +402,12 @@ class TestBuildRoadmapNotificationPayload:
 
         result = _build_roadmap_notification_payload(upcoming_counts=counts, org_id=str(ORG_ID))
 
+        expected_id = str(
+            _make_notification_uuid("roadmap", "roadmap-monthly-report", str(ORG_ID), FIXED_DATETIME.date())
+        )
+
         assert result["version"] == "v1.0.0"
-        assert result["id"] == str(FIXED_UUID)
+        assert result["id"] == expected_id
         assert result["bundle"] == "rhel"
         assert result["application"] == "roadmap"
         assert result["event_type"] == "roadmap-monthly-report"

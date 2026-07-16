@@ -1,10 +1,10 @@
 -r requirements-3.13.txt
 -r requirements-test-3.13.txt
-asttokens==3.0.1
+asttokens==3.0.2
 decorator==5.3.1
 executing==2.2.1
 ipdb==0.13.13
-ipython==9.13.0
+ipython==9.15.0
 ipython_pygments_lexers==1.1.1
 jedi==0.20.0
 matplotlib-inline==0.2.2
@@ -16,5 +16,5 @@ ptyprocess==0.7.0
 pure_eval==0.2.3
 Pygments==2.20.0
 stack-data==0.6.3
-traitlets==5.15.0
-wcwidth==0.7.0
+traitlets==5.15.1
+wcwidth==0.8.2

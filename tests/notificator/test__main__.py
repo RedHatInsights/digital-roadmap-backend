@@ -161,6 +161,16 @@ class TestLifecycleNotification:
         get_mock.assert_not_called()
         assert len(self.producer.sent) == 2
 
+    async def test_dry_run_generates_payload_but_skips_send(self, mocker):
+        """In dry-run mode, payloads are generated but not sent to Kafka."""
+        mock_cls = self._patch_notificator(mocker, [42, 99], return_value={"ok": True})
+        send_spy = mocker.spy(self.producer, "send_notification")
+
+        await lifecycle_notification(dry_run=True)
+
+        assert mock_cls.call_count == 2
+        send_spy.assert_not_called()
+
 
 class TestMain:
     """main(): orchestrates both notification types in order."""

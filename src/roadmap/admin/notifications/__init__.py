@@ -16,6 +16,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import HTTPException
+from fastapi import Query
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
@@ -80,19 +81,21 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
     router = APIRouter()
     prefix = f"/notifications/{kind.label}"
 
-    async def _trigger(org_ids: list[int] | None = None):
-        logger.info(f"Admin trigger: {kind.label} notification", org_ids=org_ids, total_orgs=len(org_ids or []))
+    async def _trigger(org_ids: list[int] | None = None, *, dry_run: bool = False):
+        logger.info(
+            f"Admin trigger: {kind.label} notification", org_ids=org_ids, total_orgs=len(org_ids or []), dry_run=dry_run
+        )
         try:
-            await kind.send(override_org_ids=org_ids)
+            await kind.send(override_org_ids=org_ids, dry_run=dry_run)
         except KafkaBrokersNotConfigured as exc:
             logger.error("Kafka brokers not configured")
             raise HTTPException(status_code=503, detail="Kafka brokers not configured") from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    async def _trigger_background(org_ids: list[int] | None = None):
+    async def _trigger_background(org_ids: list[int] | None = None, *, dry_run: bool = False):
         try:
-            await _trigger(org_ids=org_ids)
+            await _trigger(org_ids=org_ids, dry_run=dry_run)
         except Exception as exc:
             logger.exception(
                 f"Admin trigger: Unexpected background {kind.label} notification failure",
@@ -114,20 +117,32 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
         return {"org_ids": org_ids, "count": len(org_ids)}
 
     @router.post(f"{prefix}/custom", summary=f"Trigger {kind.label} notification for one or more orgs", status_code=202)
-    async def trigger_custom(background_tasks: BackgroundTasks, payload: CustomNotificatorRequest = Body(...)):
+    async def trigger_custom(
+        background_tasks: BackgroundTasks,
+        payload: CustomNotificatorRequest = Body(...),
+        dry_run: bool = Query(default=True, alias="dryrun"),
+    ):
         org_ids = [payload.org_ids] if isinstance(payload.org_ids, int) else payload.org_ids
         unique_org_ids = sorted(set(org_ids))
-        background_tasks.add_task(_trigger_background, org_ids=unique_org_ids)
-        return {"message": f"{kind.label.capitalize()} notification accepted", "requested_org_ids": unique_org_ids}
+        background_tasks.add_task(_trigger_background, org_ids=unique_org_ids, dry_run=dry_run)
+        return {
+            "message": f"{kind.label.capitalize()} notification accepted",
+            "requested_org_ids": unique_org_ids,
+            "dry_run": dry_run,
+        }
 
     @router.post(f"{prefix}/all", summary=f"Trigger {kind.label} notification for all orgs", status_code=202)
-    async def trigger_all(background_tasks: BackgroundTasks, payload: AllNotificatorRequest = Body(...)):
+    async def trigger_all(
+        background_tasks: BackgroundTasks,
+        payload: AllNotificatorRequest = Body(...),
+        dry_run: bool = Query(default=True, alias="dryrun"),
+    ):
         if not payload.confirm_all:
             raise HTTPException(
                 status_code=400,
                 detail="Set confirm_all=true to trigger notifications for all orgs.",
             )
-        background_tasks.add_task(_trigger_background)
-        return {"message": f"{kind.label.capitalize()} notification accepted"}
+        background_tasks.add_task(_trigger_background, dry_run=dry_run)
+        return {"message": f"{kind.label.capitalize()} notification accepted", "dry_run": dry_run}
 
     return router

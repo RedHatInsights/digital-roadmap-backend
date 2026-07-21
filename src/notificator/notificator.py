@@ -12,7 +12,6 @@ from uuid import uuid5
 
 import structlog
 
-from notificator.cache import CachedResult
 from notificator.notificator_config import NotificatorSettings
 from roadmap.common import query_host_inventory
 from roadmap.database import get_db
@@ -54,16 +53,23 @@ class Notificator:
         self.org_id = org_id
         self.settings = NotificatorSettings.create()
 
-    async def get_hosts(self):
-        """Fetch hosts from HBI to be able to process relevant systems and appstreams.
+    async def get_relevant_appstreams(self) -> dict[str, dict[str, dict[str, int]]]:
+        """Stream hosts from HBI and aggregate appstream counts for notification.
 
-        The HBI should be fetched only once for both because of the performance - there can be
-        a huge block of systems registered into inventory and fetching that twice would be
-        time consuming.
+        Opens its own DB session and streams hosts via ``yield_per`` to avoid
+        materializing all host rows in memory.  Appstreams with status in
+        ``NOTIFY_STATUSES`` are aggregated into counts grouped by os_major.
+        Appstreams with other statuses (e.g. supported) are not counted, but
+        their os_major is still tracked so that every OS major that has *any*
+        appstream gets a zero-count entry in every section.
+
+        Each status is guaranteed to exist, the key contains the status name -
+        e.g. "appstream_retired" or "appstream_near_retirement".
         """
         start_time = time.time()
-        logger.info("Fetching hosts from inventory", org_id=self.org_id)
+        logger.info("Processing appstreams", org_id=self.org_id)
 
+        relevant_appstreams = {}
         async for session in get_db():
             async for result in query_host_inventory(
                 org_id=str(self.org_id),
@@ -71,45 +77,15 @@ class Notificator:
                 settings=self.settings,
                 host_groups=set(),  # unrestricted access, response for org_id can be requested
             ):
-                hosts = [row async for row in result.mappings()]
-                elapsed = time.time() - start_time
-                logger.info(
-                    "Fetched hosts from inventory",
-                    org_id=self.org_id,
-                    host_count=len(hosts),
-                    duration_seconds=round(elapsed, 2),
+                relevant_appstreams = await systems_by_app_stream(
+                    org_id=str(self.org_id),
+                    systems=result,
                 )
-                return hosts
-
-        logger.warning("No database session available", org_id=self.org_id)
-        return []
-
-    async def get_relevant_appstreams(
-        self,
-        hosts,
-    ) -> dict[str, dict[str, dict[str, int]]]:
-        """Get relevant appstreams based on response from HBI.
-
-        Appstreams with status in `NOTIFY_STATUSES` are aggregated into counts grouped
-        by os_major.  Appstreams with other statuses (e.g. supported) are not counted,
-        but their os_major is still tracked so that every OS major that has *any*
-        appstream gets a zero-count entry in every section.
-
-        Each status is guaranteed to exist, the key contains the status name - e.g. "appstream_retired" or
-        "appstream_near_retirement".
-        """
-        start_time = time.time()
-        logger.info("Processing appstreams", org_id=self.org_id)
-
-        relevant_appstreams = await systems_by_app_stream(
-            org_id=str(self.org_id),
-            systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
-        )
 
         appstreams_sections: dict[str, dict[str, dict[str, int]]] = {
             f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
         }
-        # Track unique systems per (status, os_major) group separately — a single system
+        # Track unique systems per (status, os_major) group separately a single system
         # can appear in multiple appstreams, so naive len() summing would over-count.
         unique_systems: dict[str, dict[str, set[SystemInfo]]] = {
             f"appstream_{status.name}": {} for status in NOTIFY_STATUSES
@@ -148,49 +124,64 @@ class Notificator:
         )
         return appstreams_sections
 
-    async def get_relevant_rhel(self, hosts) -> dict[str, dict[str, int]]:
-        """Get relevant RHEL versions based on response from HBI.
+    async def get_relevant_rhel(self) -> dict[str, dict[str, int]]:
+        """Stream hosts from HBI and aggregate RHEL version counts for notification.
 
-        RHEL versions are filtered to include only ones with status specified in `NOTIFY_STATUSES`
-        and aggregated into counts.
+        Opens its own DB session and streams hosts via ``yield_per`` to avoid
+        materializing all host rows in memory.  RHEL versions are filtered to
+        include only ones with status specified in ``NOTIFY_STATUSES`` and
+        aggregated into counts.
 
-        Each status is guaranteed to exist, the key contains the status name - e.g. "rhel_retired" or
-        "rhel_near_retirement".
+        Each status is guaranteed to exist, the key contains the status name -
+        e.g. "rhel_retired" or "rhel_near_retirement".
         """
         start_time = time.time()
         logger.info("Processing RHEL releases", org_id=self.org_id)
 
-        relevant_systems = await get_relevant_systems(
-            org_id=str(self.org_id),
-            systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
-        )
+        relevant_systems = None
+        async for session in get_db():
+            async for result in query_host_inventory(
+                org_id=str(self.org_id),
+                session=session,
+                settings=self.settings,
+                host_groups=set(),
+            ):
+                relevant_systems = await get_relevant_systems(
+                    org_id=str(self.org_id),
+                    systems=result,
+                )
+
         rhel_sections: dict[str, dict[str, int]] = {
             f"rhel_{status.name}": {"rhel_versions_count": 0, "systems_count": 0} for status in NOTIFY_STATUSES
         }
-        for system in relevant_systems.data:
-            if system.name != "RHEL":
-                continue
-            if system.support_status in NOTIFY_STATUSES:
-                key = f"rhel_{system.support_status.name}"
-                rhel_sections[key]["rhel_versions_count"] += 1
-                rhel_sections[key]["systems_count"] += system.count
+        if relevant_systems is not None:
+            for system in relevant_systems.data:
+                if system.name != "RHEL":
+                    continue
+                if system.support_status in NOTIFY_STATUSES:
+                    key = f"rhel_{system.support_status.name}"
+                    rhel_sections[key]["rhel_versions_count"] += 1
+                    rhel_sections[key]["systems_count"] += system.count
 
         elapsed = time.time() - start_time
         logger.info(
             "Processed RHEL systems",
             org_id=self.org_id,
-            relevant_systems_count=len(relevant_systems.data),
+            relevant_systems_count=len(relevant_systems.data) if relevant_systems else 0,
             duration_seconds=round(elapsed, 2),
         )
         return rhel_sections
 
     async def get_lifecycle_notification(self) -> dict:
-        """Gather required information for notification and build kafka message for notification backend."""
+        """Gather required information for notification and build kafka message for notification backend.
+
+        RHEL and appstream data are each streamed from the database
+        independently so that host rows are never fully materialised in memory.
+        """
         logger.info("Building lifecycle notification", org_id=self.org_id)
 
-        hosts = await self.get_hosts()
-        rhel_grouped = await self.get_relevant_rhel(hosts)
-        appstream_grouped = await self.get_relevant_appstreams(hosts)
+        rhel_grouped = await self.get_relevant_rhel()
+        appstream_grouped = await self.get_relevant_appstreams()
 
         payload = _build_lifecycle_notification_payload(
             rhel_grouped=rhel_grouped,
@@ -203,12 +194,14 @@ class Notificator:
         logger.info("Built lifecycle notification", org_id=self.org_id, event_type="retiring-lifecycle-monthly-report")
         return payload
 
-    async def get_relevant_upcoming(self, hosts) -> Counter[str]:
-        """Get upcoming changes added within the last-month-to-date window.
+    async def get_relevant_upcoming(self) -> Counter[str]:
+        """Stream hosts from HBI and count upcoming changes for notification.
 
-        Calls the same logic as the ``/relevant/upcoming-changes`` endpoint but
-        further filters to items whose ``dateAdded`` falls between the 1st of
-        the previous month and today (inclusive).
+        Opens its own DB session and streams hosts via ``yield_per`` to avoid
+        materializing all host rows in memory.  Calls the same logic as the
+        ``/relevant/upcoming-changes`` endpoint but further filters to items
+        whose ``dateAdded`` falls between the 1st of the previous month and
+        today (inclusive).
 
         Returns a Counter keyed by ``UpcomingType`` value (addition, change,
         deprecation, enhancement).  Merging enhancement into addition is done
@@ -221,10 +214,18 @@ class Notificator:
         start_time = time.time()
         logger.info("Processing upcoming changes", org_id=self.org_id)
 
-        pkgs_by_system = await upcoming.packages_by_system(
-            org_id=str(self.org_id),
-            systems=CachedResult(hosts),  # pyright: ignore [reportArgumentType]
-        )
+        pkgs_by_system: dict = {}
+        async for session in get_db():
+            async for result in query_host_inventory(
+                org_id=str(self.org_id),
+                session=session,
+                settings=self.settings,
+                host_groups=set(),
+            ):
+                pkgs_by_system = await upcoming.packages_by_system(
+                    org_id=str(self.org_id),
+                    systems=result,
+                )
 
         upcoming_with_hosts = upcoming.get_upcoming_data_with_hosts(
             packages_by_system=pkgs_by_system,
@@ -260,11 +261,14 @@ class Notificator:
         return counts
 
     async def get_roadmap_notification(self) -> dict:
-        """Gather required information for notification and build kafka message for notification backend."""
+        """Gather required information for notification and build kafka message for notification backend.
+
+        Host data is streamed from the database so that host rows are never
+        fully materialised in memory.
+        """
         logger.info("Building roadmap notification", org_id=self.org_id)
 
-        hosts = await self.get_hosts()
-        upcoming_counts = await self.get_relevant_upcoming(hosts)
+        upcoming_counts = await self.get_relevant_upcoming()
 
         payload = _build_roadmap_notification_payload(
             upcoming_counts=upcoming_counts,

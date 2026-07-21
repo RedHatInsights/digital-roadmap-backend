@@ -26,33 +26,12 @@ from .utils import ORG_ID
 
 
 class TestNotificator:
-    async def test_get_hosts(self, notificator):
-        """Integration: fetching hosts from the test DB returns a non-empty list."""
-        hosts = await notificator.get_hosts()
-
-        assert isinstance(hosts, list)
-        assert len(hosts) > 0
-
-    async def test_get_hosts_no_db(self, notificator, mocker):
-        """When no DB session is available, get_hosts returns an empty list."""
-
-        async def _no_sessions():
-            return
-            yield
-
-        mocker.patch("notificator.notificator.get_db", return_value=_no_sessions())
-
-        hosts = await notificator.get_hosts()
-
-        assert hosts == []
-
     async def test_get_relevant_appstreams(self, notificator, mocker):
         """Integration: result has both status sections, keys are 'rhel<N>', values have count & systems_count."""
         mock_date = mocker.patch("roadmap.data.app_streams.date", wraps=date)
         mock_date.today.return_value = date(2026, 4, 8)
 
-        hosts = await notificator.get_hosts()
-        result = await notificator.get_relevant_appstreams(hosts)
+        result = await notificator.get_relevant_appstreams()
 
         assert "appstream_retired" in result
         assert "appstream_near_retirement" in result
@@ -149,7 +128,9 @@ class TestNotificator:
             ),
         ),
     )
-    async def test_get_relevant_appstreams_scenarios(self, notificator, mocker, systems_by_appstream, expected):
+    async def test_get_relevant_appstreams_scenarios(
+        self, notificator, mocker, mock_host_stream, systems_by_appstream, expected
+    ):
         """Appstream grouping with mocked systems_by_app_stream.
 
         Scenarios (systems_by_appstream -> expected grouped output):
@@ -169,7 +150,7 @@ class TestNotificator:
             return_value=systems_by_appstream,
         )
 
-        result = await notificator.get_relevant_appstreams(hosts=[])
+        result = await notificator.get_relevant_appstreams()
 
         assert result == expected
 
@@ -178,8 +159,7 @@ class TestNotificator:
         mock_date = mocker.patch("roadmap.models.date", wraps=date)
         mock_date.today.return_value = date(2026, 4, 8)
 
-        hosts = await notificator.get_hosts()
-        result = await notificator.get_relevant_rhel(hosts)
+        result = await notificator.get_relevant_rhel()
 
         assert "rhel_retired" in result
         assert "rhel_near_retirement" in result
@@ -226,7 +206,7 @@ class TestNotificator:
             ),
         ),
     )
-    async def test_get_relevant_rhel_scenarios(self, notificator, mocker, systems_data, expected):
+    async def test_get_relevant_rhel_scenarios(self, notificator, mocker, mock_host_stream, systems_data, expected):
         """RHEL grouping with mocked get_relevant_systems.
 
         Scenarios (systems_data → expected grouped output):
@@ -246,13 +226,12 @@ class TestNotificator:
             return_value=response,
         )
 
-        result = await notificator.get_relevant_rhel(hosts=[])
+        result = await notificator.get_relevant_rhel()
 
         assert result == expected
 
     async def test_get_lifecycle_notification(self, notificator, mocker, mock_deterministic):
-        """Orchestration: hosts are fetched once and passed to both rhel and appstream methods."""
-        sentinel_hosts = [{"id": "sentinel"}]
+        """Orchestration: rhel and appstream methods are called and their results combined."""
         rhel = {
             "rhel_retired": {"rhel_versions_count": 2, "systems_count": 10},
             "rhel_near_retirement": {"rhel_versions_count": 1, "systems_count": 3},
@@ -261,7 +240,6 @@ class TestNotificator:
             "appstream_retired": {"rhel8": {"count": 2, "systems_count": 5}},
             "appstream_near_retirement": {},
         }
-        mock_hosts = mocker.patch.object(notificator, "get_hosts", new_callable=AsyncMock, return_value=sentinel_hosts)
         mock_rhel = mocker.patch.object(notificator, "get_relevant_rhel", new_callable=AsyncMock, return_value=rhel)
         mock_apps = mocker.patch.object(
             notificator, "get_relevant_appstreams", new_callable=AsyncMock, return_value=appstreams
@@ -269,9 +247,8 @@ class TestNotificator:
 
         payload = await notificator.get_lifecycle_notification()
 
-        mock_hosts.assert_awaited_once()
-        mock_rhel.assert_awaited_once_with(sentinel_hosts)
-        mock_apps.assert_awaited_once_with(sentinel_hosts)
+        mock_rhel.assert_awaited_once()
+        mock_apps.assert_awaited_once()
         assert payload["event_type"] == "retiring-lifecycle-monthly-report"
         assert payload["org_id"] == str(ORG_ID)
         assert len(payload["events"]) == 1
@@ -330,18 +307,15 @@ class TestNotificator:
         assert result["context"] == {"lifecycle": {"report_date": "March 2026"}}
 
     async def test_get_roadmap_notification(self, notificator, mocker, mock_deterministic):
-        """Orchestration: hosts are fetched once and passed to get_relevant_upcoming."""
-        sentinel_hosts = [{"id": "sentinel"}]
+        """Orchestration: get_relevant_upcoming is called and its result used to build the payload."""
         upcoming_counts = Counter({"addition": 3, "deprecation": 1, "change": 0})
-        mock_hosts = mocker.patch.object(notificator, "get_hosts", new_callable=AsyncMock, return_value=sentinel_hosts)
         mock_upcoming = mocker.patch.object(
             notificator, "get_relevant_upcoming", new_callable=AsyncMock, return_value=upcoming_counts
         )
 
         payload = await notificator.get_roadmap_notification()
 
-        mock_hosts.assert_awaited_once()
-        mock_upcoming.assert_awaited_once_with(sentinel_hosts)
+        mock_upcoming.assert_awaited_once()
         assert payload["event_type"] == "roadmap-monthly-report"
         assert payload["org_id"] == str(ORG_ID)
         assert payload["application"] == "roadmap"
@@ -460,7 +434,7 @@ class TestGetRelevantUpcoming:
         mock_dt.now.return_value = frozen
 
     @pytest.fixture(autouse=True)
-    def _mock_upcoming_deps(self, mocker):
+    def _mock_upcoming_deps(self, mocker, mock_host_stream):
         """Mock the data-fetching layer; tests control results via self.mock_get_upcoming."""
         self.mock_packages = mocker.patch(
             "notificator.notificator.upcoming.packages_by_system",
@@ -480,7 +454,7 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("deprecation", date(2026, 4, 20)),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 2, "deprecation": 1})
 
@@ -491,7 +465,7 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("deprecation", date(2026, 5, 16)),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert sum(result.values()) == 0
 
@@ -502,7 +476,7 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("change", self.today),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1, "change": 1})
 
@@ -517,14 +491,14 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("enhancement", date(2026, 4, 5)),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result["addition"] == 1
         assert result["enhancement"] == 1
 
     async def test_empty_upcoming(self, notificator):
         """No upcoming items yields empty Counter."""
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert sum(result.values()) == 0
 
@@ -536,7 +510,7 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("change", date(2026, 5, 10)),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1, "change": 1})
 
@@ -547,7 +521,7 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("change", date(2026, 4, 10), name="shared-pkg"),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1, "change": 1})
 
@@ -559,6 +533,6 @@ class TestGetRelevantUpcoming:
             make_upcoming_output("deprecation", date(2026, 4, 15), affected_systems=set()),
         ]
 
-        result = await notificator.get_relevant_upcoming(hosts=[])
+        result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1})

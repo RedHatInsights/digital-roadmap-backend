@@ -343,6 +343,29 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     return relateds.difference(app_streams)
 
 
+def _verify_pending_modules(
+    modules_pending_verification: dict[tuple[str, int, str], tuple[AppStreamKey, set[str]]],
+    installed_package_names: set[str],
+    system_info: SystemInfo,
+    systems_by_stream: defaultdict[AppStreamKey, set[SystemInfo]],
+) -> None:
+    """Verify enabled-only modules by checking if expected packages are installed."""
+    for cache_key, (app_stream_key, expected_packages) in modules_pending_verification.items():
+        module_name = cache_key[0]
+
+        # To reduce false positives from shared packages (e.g., jansi in both scala and maven),
+        # require the primary package (same name as module) to be installed if it exists
+        if module_name in expected_packages:
+            if module_name in installed_package_names:
+                systems_by_stream[app_stream_key].add(system_info)
+        elif expected_packages & installed_package_names:
+            systems_by_stream[app_stream_key].add(system_info)
+            logger.debug(
+                f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
+                f"{len(expected_packages & installed_package_names)} packages installed"
+            )
+
+
 async def systems_by_app_stream(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
@@ -388,16 +411,7 @@ async def systems_by_app_stream(
         for app_stream in module_app_streams:
             systems_by_stream[app_stream].add(system_info)
 
-        # Verify enabled-only modules marked for package verification (only for THIS system)
-        for app_stream_key, expected_packages in modules_pending_verification.values():
-            # Check if this module's expected packages are installed on this system
-            if expected_packages & installed_package_names:
-                # At least one package from the module is installed
-                systems_by_stream[app_stream_key].add(system_info)
-                logger.debug(
-                    f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
-                    f"{len(expected_packages & installed_package_names)} packages installed"
-                )
+        _verify_pending_modules(modules_pending_verification, installed_package_names, system_info, systems_by_stream)
 
     # Now process the packages outside of the host record loop
     for args, systems_info in package_data.items():

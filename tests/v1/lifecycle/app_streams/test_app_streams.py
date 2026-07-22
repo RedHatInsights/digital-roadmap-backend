@@ -329,6 +329,10 @@ async def test_systems_by_app_stream_verification_loop():
     with patch("roadmap.v1.lifecycle.app_streams.MODULE_PACKAGES", patched_mp):
         result = await systems_by_app_stream("test-org", mock_systems)
 
+    # Verify results
+    # - python36 should be detected (enabled + python36 primary package installed) <- HITS LINES 391-403
+    # - nodejs should NOT be detected (enabled but nodejs primary package not installed)
+    # - postgresql should be detected (installed status)
     module_names = {key.name for key in result.keys()}
 
     assert "python36" in module_names, f"python36 should be detected (enabled + packages). Got: {module_names}"
@@ -343,3 +347,124 @@ async def test_systems_by_app_stream_verification_loop():
 
     assert len(result[python36_key]) == 1, "python36 should have 1 system"
     assert len(result[postgresql_key]) == 1, "postgresql should have 1 system"
+
+
+@pytest.mark.asyncio
+async def test_systems_by_app_stream_primary_package_verification():
+    """Test that modules with shared packages require the primary package.
+
+    Scala and Maven share packages like jansi and hawtjni. If a system has
+    Maven installed (with jansi) and Scala enabled (but not installed),
+    the old logic would incorrectly detect Scala. The new logic requires
+    the primary package (scala) to be present.
+    """
+    systems_data = [
+        # System with Maven installed and Scala enabled (but not installed)
+        {
+            "id": "11111111-1111-1111-1111-111111111111",
+            "display_name": "test-maven-not-scala",
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [
+                {"name": "maven", "status": ["installed", "enabled"], "stream": "3.5"},
+                {"name": "scala", "status": ["enabled"], "stream": "2.10"},  # Enabled but not installed
+            ],
+            "packages": [
+                "maven-3.5.4-1.el8.noarch",  # Primary maven package
+                "jansi-1.17.1-1.el8.noarch",  # Shared with scala
+                "hawtjni-runtime-1.16-1.el8.noarch",  # Shared with scala
+                "bash-4.4.20-1.el8.x86_64",
+            ],
+        },
+    ]
+
+    class MockAsyncMappingsIterator:
+        def __init__(self, data):
+            self.data = data
+
+        def mappings(self):
+            return self
+
+        async def __aiter__(self):
+            for system in self.data:
+                yield system
+
+    class MockAsyncResult:
+        def __init__(self, data):
+            self.data = data
+
+        def yield_per(self, batch_size):
+            return MockAsyncMappingsIterator(self.data)
+
+        def mappings(self):
+            return self
+
+    mock_systems = MockAsyncResult(systems_data)
+    result = await systems_by_app_stream("test-org", mock_systems)
+    module_names = {key.name for key in result.keys()}
+
+    # Maven should be detected (installed status)
+    assert "maven" in module_names, f"maven should be detected (installed). Got: {module_names}"
+
+    # Scala should NOT be detected - even though jansi is installed,
+    # the primary 'scala' package is not present
+    assert "scala" not in module_names, (
+        f"scala should NOT be detected (enabled but scala package not installed, "
+        f"only shared packages like jansi). Got: {module_names}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_systems_by_app_stream_no_primary_package_module():
+    """Test module detection when the module has no primary package.
+
+    Some modules (e.g. container-tools) have no package matching the module
+    name. In that case, any matching expected package should be enough to
+    verify the module is in use.
+    """
+    systems_data = [
+        {
+            "id": "44444444-4444-4444-4444-444444444444",
+            "display_name": "test-container-tools",
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [
+                {"name": "container-tools", "status": ["enabled"], "stream": "rhel8"},
+            ],
+            "packages": [
+                "podman-4.9.4-1.el8.x86_64",
+                "buildah-1.33.7-1.el8.x86_64",
+                "bash-4.4.20-1.el8.x86_64",
+            ],
+        },
+    ]
+
+    class MockAsyncMappingsIterator:
+        def __init__(self, data):
+            self.data = data
+
+        def mappings(self):
+            return self
+
+        async def __aiter__(self):
+            for system in self.data:
+                yield system
+
+    class MockAsyncResult:
+        def __init__(self, data):
+            self.data = data
+
+        def yield_per(self, batch_size):
+            return MockAsyncMappingsIterator(self.data)
+
+        def mappings(self):
+            return self
+
+    mock_systems = MockAsyncResult(systems_data)
+    result = await systems_by_app_stream("test-org", mock_systems)
+    module_names = {key.name for key in result.keys()}
+
+    assert "container-tools" in module_names, (
+        f"container-tools should be detected (enabled, no primary package, "
+        f"but podman/buildah installed). Got: {module_names}"
+    )

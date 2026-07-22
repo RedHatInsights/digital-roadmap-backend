@@ -328,7 +328,7 @@ class TestNotificator:
 
 
 class TestMakeNotificationUuid:
-    """_make_notification_uuid: deterministic UUID v5 generation for notifications."""
+    """_make_notification_uuid: deterministic by default, random when force_email on non-prod."""
 
     def test_same_inputs_produce_same_uuid(self):
         first = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
@@ -347,6 +347,22 @@ class TestMakeNotificationUuid:
         uuid_b = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "5678", date(2026, 7, 16))
 
         assert uuid_a != uuid_b
+
+    def test_force_email_produces_different_uuid_each_call(self):
+        first = _make_notification_uuid(
+            "life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16), force_email=True
+        )
+        second = _make_notification_uuid(
+            "life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16), force_email=True
+        )
+
+        assert first != second
+
+    def test_without_force_email_still_deduplicates(self):
+        first = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+        second = _make_notification_uuid("life-cycle", "retiring-lifecycle-monthly-report", "1234", date(2026, 7, 16))
+
+        assert first == second
 
 
 class TestUpcomingCutoffDate:

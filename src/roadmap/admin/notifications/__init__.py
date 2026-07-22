@@ -37,6 +37,10 @@ class CustomNotificatorRequest(BaseModel):
     org_ids: int | list[int] = Field(
         description="A single org ID or a list of org IDs that should receive notifications."
     )
+    force_email: bool = Field(
+        default=False,
+        description="When true, bypass same-day notification dedup so every trigger sends a fresh email.",
+    )
 
     @field_validator("org_ids")
     @classmethod
@@ -55,6 +59,10 @@ class AllNotificatorRequest(BaseModel):
     confirm_all: bool = Field(
         default=False,
         description="Set to true to confirm notifications should be triggered for every org subscribed to receive this type of notification.",
+    )
+    force_email: bool = Field(
+        default=False,
+        description="When true, bypass same-day notification dedup so every trigger sends a fresh email.",
     )
 
 
@@ -81,21 +89,27 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
     router = APIRouter()
     prefix = f"/notifications/{kind.label}"
 
-    async def _trigger(org_ids: list[int] | None = None, *, dry_run: bool = False):
+    async def _trigger(org_ids: list[int] | None = None, *, dry_run: bool = False, force_email: bool = False):
         logger.info(
-            f"Admin trigger: {kind.label} notification", org_ids=org_ids, total_orgs=len(org_ids or []), dry_run=dry_run
+            f"Admin trigger: {kind.label} notification",
+            org_ids=org_ids,
+            total_orgs=len(org_ids or []),
+            dry_run=dry_run,
+            force_email=force_email,
         )
         try:
-            await kind.send(override_org_ids=org_ids, dry_run=dry_run)
+            await kind.send(override_org_ids=org_ids, dry_run=dry_run, force_email=force_email)
         except KafkaBrokersNotConfigured as exc:
             logger.error("Kafka brokers not configured")
             raise HTTPException(status_code=503, detail="Kafka brokers not configured") from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    async def _trigger_background(org_ids: list[int] | None = None, *, dry_run: bool = False):
+    async def _trigger_background(
+        org_ids: list[int] | None = None, *, dry_run: bool = False, force_email: bool = False
+    ):
         try:
-            await _trigger(org_ids=org_ids, dry_run=dry_run)
+            await _trigger(org_ids=org_ids, dry_run=dry_run, force_email=force_email)
         except Exception as exc:
             logger.exception(
                 f"Admin trigger: Unexpected background {kind.label} notification failure",
@@ -123,12 +137,16 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
         dry_run: bool = Query(default=True, alias="dryrun"),
     ):
         org_ids = [payload.org_ids] if isinstance(payload.org_ids, int) else payload.org_ids
-        unique_org_ids = sorted(set(org_ids))
-        background_tasks.add_task(_trigger_background, org_ids=unique_org_ids, dry_run=dry_run)
+        unique_org_ids = sorted(set[int](org_ids))
+
+        background_tasks.add_task(
+            _trigger_background, org_ids=unique_org_ids, dry_run=dry_run, force_email=payload.force_email
+        )
         return {
             "message": f"{kind.label.capitalize()} notification accepted",
             "requested_org_ids": unique_org_ids,
             "dry_run": dry_run,
+            "force_email": payload.force_email,
         }
 
     @router.post(f"{prefix}/all", summary=f"Trigger {kind.label} notification for all orgs", status_code=202)
@@ -142,7 +160,12 @@ def build_notification_router(kind: NotificationKind) -> APIRouter:
                 status_code=400,
                 detail="Set confirm_all=true to trigger notifications for all orgs.",
             )
-        background_tasks.add_task(_trigger_background, dry_run=dry_run)
-        return {"message": f"{kind.label.capitalize()} notification accepted", "dry_run": dry_run}
+
+        background_tasks.add_task(_trigger_background, dry_run=dry_run, force_email=payload.force_email)
+        return {
+            "message": f"{kind.label.capitalize()} notification accepted",
+            "dry_run": dry_run,
+            "force_email": payload.force_email,
+        }
 
     return router

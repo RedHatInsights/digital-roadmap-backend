@@ -244,8 +244,6 @@ reviews:
       enabled: true
     semgrep:
       enabled: true
-    bandit:
-      enabled: true
     safety:
       enabled: true
     trivy:

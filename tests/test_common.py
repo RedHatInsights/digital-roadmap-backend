@@ -1,9 +1,11 @@
+import json
+
 from contextlib import nullcontext
 from datetime import date
-from email.message import Message
-from io import BytesIO
-from urllib.error import HTTPError
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
+import httpx
 import pytest
 
 from fastapi import HTTPException
@@ -151,10 +153,15 @@ async def test_decode_header(value, expected):
 
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=BytesIO(read_fixture_file("rbac_response.json", mode="rb")),
-    )
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     result = await query_rbac(settings)
 
@@ -163,10 +170,16 @@ async def test_query_rbac(mocker, read_fixture_file):
 
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
+    error_response = httpx.Response(401)
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "Raised intentionally", request=httpx.Request("GET", "http://example.com"), response=error_response
     )
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Raised intentionally"):
         await query_rbac(settings)
@@ -190,10 +203,14 @@ async def test_query_rbac_no_url():
 
 async def test_query_rbac_json_decode_error(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=BytesIO(b"invalid json"),
-    )
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.side_effect = ValueError("invalid json")
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
         await query_rbac(settings)
@@ -201,10 +218,11 @@ async def test_query_rbac_json_decode_error(mocker):
 
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        side_effect=Exception("Connection timeout"),
-    )
+    mock_client = AsyncMock()
+    mock_client.get.side_effect = Exception("Connection timeout")
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
         await query_rbac(settings)

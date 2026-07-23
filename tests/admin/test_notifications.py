@@ -194,15 +194,24 @@ class TestTriggerNotification:
             "message": f"{endpoints.label.capitalize()} notification accepted",
             "requested_org_ids": [42],
             "dry_run": False,
+            "force_email": False,
         }
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False, force_email=False)
+
+    def test_custom_with_force_email(self, admin_client, endpoints):
+        response = admin_client.post(f"{endpoints.custom_url}?dryrun=false", json={"org_ids": 42, "force_email": True})
+
+        assert response.status_code == 202
+        body = response.json()
+        assert body["force_email"] is True
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False, force_email=True)
 
     def test_custom_deduplicates_and_sorts_org_ids(self, admin_client, endpoints):
         response = admin_client.post(f"{endpoints.custom_url}?dryrun=false", json={"org_ids": [3, 1, 3, 2]})
 
         assert response.status_code == 202
         assert response.json()["requested_org_ids"] == [1, 2, 3]
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[1, 2, 3], dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[1, 2, 3], dry_run=False, force_email=False)
 
     def test_custom_background_failure_still_returns_202(self, admin_client, endpoints):
         endpoints.mock_send.side_effect = RuntimeError("failed for 1/1 orgs")
@@ -210,7 +219,7 @@ class TestTriggerNotification:
         response = admin_client.post(f"{endpoints.custom_url}?dryrun=false", json={"org_ids": 42})
 
         assert response.status_code == 202
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False, force_email=False)
 
     def test_custom_kafka_not_configured_still_returns_202(self, admin_client, endpoints):
         endpoints.mock_send.side_effect = KafkaBrokersNotConfigured("no brokers")
@@ -218,7 +227,7 @@ class TestTriggerNotification:
         response = admin_client.post(f"{endpoints.custom_url}?dryrun=false", json={"org_ids": 42})
 
         assert response.status_code == 202
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=[42], dry_run=False, force_email=False)
 
     def test_all_requires_confirmation(self, admin_client, endpoints):
         response = admin_client.post(endpoints.all_url, json={"confirm_all": False})
@@ -233,8 +242,19 @@ class TestTriggerNotification:
         assert response.json() == {
             "message": f"{endpoints.label.capitalize()} notification accepted",
             "dry_run": False,
+            "force_email": False,
         }
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=None, dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=None, dry_run=False, force_email=False)
+
+    def test_all_with_force_email(self, admin_client, endpoints):
+        response = admin_client.post(
+            f"{endpoints.all_url}?dryrun=false", json={"confirm_all": True, "force_email": True}
+        )
+
+        assert response.status_code == 202
+        body = response.json()
+        assert body["force_email"] is True
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=None, dry_run=False, force_email=True)
 
     def test_all_background_failure_still_returns_202(self, admin_client, endpoints):
         endpoints.mock_send.side_effect = RuntimeError("batch failed")
@@ -242,7 +262,7 @@ class TestTriggerNotification:
         response = admin_client.post(f"{endpoints.all_url}?dryrun=false", json={"confirm_all": True})
 
         assert response.status_code == 202
-        endpoints.mock_send.assert_awaited_once_with(override_org_ids=None, dry_run=False)
+        endpoints.mock_send.assert_awaited_once_with(override_org_ids=None, dry_run=False, force_email=False)
 
 
 # -- Subscribed orgs endpoint (parametrized) -----------------------------------

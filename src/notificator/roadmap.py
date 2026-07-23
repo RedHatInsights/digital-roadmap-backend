@@ -11,8 +11,13 @@ from notificator.subscriptions import get_org_ids
 logger = structlog.get_logger(__name__)
 
 
-async def roadmap_notification(override_org_ids: list[int] | None = None, *, dry_run: bool = False):
-    logger.info("Started roadmap notification", dry_run=dry_run)
+async def roadmap_notification(
+    override_org_ids: list[int] | None = None,
+    *,
+    dry_run: bool = False,
+    force_email: bool = False,
+):
+    logger.info("Started roadmap notification", dry_run=dry_run, force_email=force_email)
     roadmap_notification_start_time = time.time()
     try:
         org_ids = override_org_ids if override_org_ids is not None else await get_org_ids(ROADMAP_SUBSCRIPTION)
@@ -32,7 +37,7 @@ async def roadmap_notification(override_org_ids: list[int] | None = None, *, dry
                 logger.info("Processing roadmap notification", org_id=org_id)
                 try:
                     n = Notificator(org_id=org_id)
-                    payload = await n.get_roadmap_notification()
+                    payload = await n.get_roadmap_notification(force_email=force_email)
                     logger.debug("Payload generated", org_id=org_id, payload=payload)
                     if dry_run:
                         logger.info("Dry run: skipping send", org_id=org_id, payload=payload)

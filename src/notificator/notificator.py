@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import UTC
 from uuid import UUID
+from uuid import uuid4
 from uuid import uuid5
 
 import structlog
@@ -37,13 +38,21 @@ def _make_notification_uuid(
     event_type: str,
     org_id: str,
     day: date,
+    *,
+    force_email: bool = False,
 ) -> UUID:
     """Generate a deterministic UUID v5 for a notification.
 
     The same combination of application, event_type, org_id and calendar day
     always produces the same UUID, which lets the notification backend
     deduplicate repeated deliveries for the same report.
+
+    When ``force_email`` is true (available on admin API), a random UUID is used
+    so each trigger delivers a fresh email.
     """
+    if force_email:
+        return uuid4()
+
     name = f"{day.isoformat()}:{application}:{event_type}:{org_id}"
     return uuid5(NOTIFICATION_NAMESPACE, name)
 
@@ -172,7 +181,7 @@ class Notificator:
         )
         return rhel_sections
 
-    async def get_lifecycle_notification(self) -> dict:
+    async def get_lifecycle_notification(self, *, force_email: bool = False) -> dict:
         """Gather required information for notification and build kafka message for notification backend.
 
         RHEL and appstream data are each streamed from the database
@@ -189,6 +198,7 @@ class Notificator:
             org_id=str(self.org_id),
             event_type="retiring-lifecycle-monthly-report",
             application="life-cycle",
+            force_email=force_email,
         )
 
         logger.info("Built lifecycle notification", org_id=self.org_id, event_type="retiring-lifecycle-monthly-report")
@@ -260,7 +270,7 @@ class Notificator:
         )
         return counts
 
-    async def get_roadmap_notification(self) -> dict:
+    async def get_roadmap_notification(self, *, force_email: bool = False) -> dict:
         """Gather required information for notification and build kafka message for notification backend.
 
         Host data is streamed from the database so that host rows are never
@@ -273,6 +283,7 @@ class Notificator:
         payload = _build_roadmap_notification_payload(
             upcoming_counts=upcoming_counts,
             org_id=str(self.org_id),
+            force_email=force_email,
         )
 
         logger.info("Built roadmap notification", org_id=self.org_id, event_type="roadmap-monthly-report")
@@ -296,6 +307,8 @@ def _build_roadmap_notification_payload(
     bundle: str = "rhel",
     application: str = "roadmap",
     event_type: str = "roadmap-monthly-report",
+    *,
+    force_email: bool = False,
 ) -> dict:
     """Build kafka message for roadmap notification backend using their specified format.
 
@@ -341,7 +354,7 @@ def _build_roadmap_notification_payload(
 
     return {
         "version": "v1.0.0",
-        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date())),
+        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date(), force_email=force_email)),
         "bundle": bundle,
         "application": application,
         "event_type": event_type,
@@ -369,6 +382,8 @@ def _build_lifecycle_notification_payload(
     event_type: str,
     bundle: str = "rhel",
     application: str = "life-cycle",
+    *,
+    force_email: bool = False,
 ) -> dict:
     """Build kafka message for notification backend using their specified format.
 
@@ -411,7 +426,7 @@ def _build_lifecycle_notification_payload(
 
     return {
         "version": "v1.0.0",
-        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date())),
+        "id": str(_make_notification_uuid(application, event_type, org_id, day=now.date(), force_email=force_email)),
         "bundle": bundle,
         "application": application,
         "event_type": event_type,

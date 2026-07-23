@@ -110,9 +110,9 @@ def main():  # noqa: C901
         h.display_name,
         sps.operating_system,
         sps.os_release,
-        sps.dnf_modules,
-        spd.installed_packages,
-        spd.installed_products
+        to_jsonb(sps.dnf_modules) AS dnf_modules,
+        to_jsonb(spd.installed_packages) AS installed_packages,
+        to_jsonb(spd.installed_products) AS installed_products
     FROM hbi.hosts h
         INNER JOIN hbi.system_profiles_static sps
             ON h.id = sps.host_id
@@ -147,6 +147,9 @@ def main():  # noqa: C901
         response = query_gabi(environment, query, offset, query_limit)
         headers = response[0]
         records = response[1:]
+
+        if not records:
+            break
 
         for record in records:
             inner_record = {}

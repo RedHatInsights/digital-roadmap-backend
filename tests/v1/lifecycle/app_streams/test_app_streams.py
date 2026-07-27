@@ -472,7 +472,7 @@ async def test_systems_by_app_stream_no_primary_package_module():
 
 @pytest.mark.asyncio
 async def test_systems_by_app_stream_module_detected_via_unique_subpackages_without_meta_package():
-    """Regression test (RHINENG-9999): module detected via sub-packages installed by
+    """Regression test (RHINENG-29220): module detected via sub-packages installed by
     `dnf module install`, even when the module's own meta-package is absent.
 
     PHP's default profile (installed by `sudo dnf module install php:8.2`) installs
@@ -536,7 +536,7 @@ async def test_systems_by_app_stream_module_detected_via_unique_subpackages_with
 
 
 def test_shared_package_names_scoped_per_os_major():
-    """Regression test (RHINENG-9999 follow-up): package-name collisions across
+    """Regression test (RHINENG-29220 follow-up): package-name collisions across
     different RHEL major versions must NOT be treated as ambiguous.
 
     A single host only ever reports dnf_modules/packages for its own RHEL major
@@ -571,7 +571,7 @@ def test_shared_package_names_scoped_per_os_major():
 
 
 def test_shared_package_names_real_data_perl_dbd_mysql_not_ambiguous_on_rhel8():
-    """Regression test (RHINENG-9999 follow-up) against the real MODULE_PACKAGES data.
+    """Regression test (RHINENG-29220 follow-up) against the real MODULE_PACKAGES data.
 
     perl-DBD-MySQL is its own module on RHEL 8 (single-package: {"perl-DBD-MySQL"})
     and is also bundled as a sub-package of the "mysql" module on RHEL 9. These must

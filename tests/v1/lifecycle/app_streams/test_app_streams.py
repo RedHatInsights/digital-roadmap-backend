@@ -468,3 +468,119 @@ async def test_systems_by_app_stream_no_primary_package_module():
         f"container-tools should be detected (enabled, no primary package, "
         f"but podman/buildah installed). Got: {module_names}"
     )
+
+
+@pytest.mark.asyncio
+async def test_systems_by_app_stream_module_detected_via_unique_subpackages_without_meta_package():
+    """Regression test (RHINENG-29220): module detected via sub-packages installed by
+    `dnf module install`, even when the module's own meta-package is absent.
+
+    PHP's default profile (installed by `sudo dnf module install php:8.2`) installs
+    php-cli, php-common, php-fpm, php-mbstring, php-xml, etc., but not the base
+    `php` meta-package itself. Since none of PHP's sub-packages are shared with any
+    other module, they are trustworthy evidence on their own and the module must
+    still be detected, even though the primary `php` package is missing and the
+    module's status includes "installed" alongside "enabled" (as `dnf module
+    install` produces).
+    """
+    systems_data = [
+        {
+            "id": "55555555-5555-5555-5555-555555555555",
+            "display_name": "test-php-no-meta-package",
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [
+                {"name": "php", "status": ["enabled", "installed"], "stream": "8.2"},
+            ],
+            "packages": [
+                "php-cli-8.2.31-1.module+el8.10.0+24323+abc2b0db.x86_64",
+                "php-common-8.2.31-1.module+el8.10.0+24323+abc2b0db.x86_64",
+                "php-fpm-8.2.31-1.module+el8.10.0+24323+abc2b0db.x86_64",
+                "php-mbstring-8.2.31-1.module+el8.10.0+24323+abc2b0db.x86_64",
+                "php-xml-8.2.31-1.module+el8.10.0+24323+abc2b0db.x86_64",
+                "bash-4.4.20-1.el8.x86_64",
+            ],
+        },
+    ]
+
+    class MockAsyncMappingsIterator:
+        def __init__(self, data):
+            self.data = data
+
+        def mappings(self):
+            return self
+
+        async def __aiter__(self):
+            for system in self.data:
+                yield system
+
+    class MockAsyncResult:
+        def __init__(self, data):
+            self.data = data
+
+        def yield_per(self, batch_size):
+            return MockAsyncMappingsIterator(self.data)
+
+        def mappings(self):
+            return self
+
+    mock_systems = MockAsyncResult(systems_data)
+    result = await systems_by_app_stream("test-org", mock_systems)
+    module_names = {key.name for key in result.keys()}
+
+    assert "php" in module_names, (
+        f"php should be detected (enabled+installed, meta-package 'php' absent, but "
+        f"unique sub-packages php-cli/php-common/php-fpm/php-mbstring/php-xml installed). "
+        f"Got: {module_names}"
+    )
+
+
+def test_shared_package_names_scoped_per_os_major():
+    """Regression test (RHINENG-29220 follow-up): package-name collisions across
+    different RHEL major versions must NOT be treated as ambiguous.
+
+    A single host only ever reports dnf_modules/packages for its own RHEL major
+    version, so two modules on *different* os_major values can never actually
+    collide for the same system — e.g. perl-DBD-MySQL is its own module on RHEL 8
+    but also a bundled sub-package of mysql on RHEL 9 in the real MODULE_PACKAGES
+    data. Computing shared-ness globally (ignoring os_major) would incorrectly
+    flag such packages as ambiguous, which is overly conservative and risks the
+    same silent-exclusion bug this ticket fixes, for unrelated modules on
+    unrelated RHEL versions.
+    """
+    from roadmap.data import _shared_package_names
+
+    fake_module_packages = {
+        # RHEL 8: "widget" and "gadget" genuinely share "shared-lib" -> ambiguous on RHEL 8.
+        ("widget", 8, "1.0"): {"widget-core", "shared-lib"},
+        ("gadget", 8, "2.0"): {"gadget-core", "shared-lib"},
+        # RHEL 9: "gizmo" happens to reuse the package name "widget-core" from the
+        # RHEL 8 "widget" module above. This must NOT make "widget-core" ambiguous
+        # on RHEL 8, since RHEL 8 and RHEL 9 module data never coexist on one host.
+        ("gizmo", 9, "1.0"): {"widget-core", "gizmo-core"},
+    }
+
+    result = _shared_package_names(fake_module_packages)
+
+    assert result[8] == {"shared-lib"}, f"Expected only 'shared-lib' ambiguous on RHEL 8. Got: {result.get(8)}"
+    assert "widget-core" not in result[8], (
+        "widget-core must not be ambiguous on RHEL 8 just because RHEL 9's unrelated "
+        "'gizmo' module happens to reuse the same package name."
+    )
+    assert result[9] == set(), f"No package is shared by two modules within RHEL 9 itself. Got: {result.get(9)}"
+
+
+def test_shared_package_names_real_data_perl_dbd_mysql_not_ambiguous_on_rhel8():
+    """Regression test (RHINENG-29220 follow-up) against the real MODULE_PACKAGES data.
+
+    perl-DBD-MySQL is its own module on RHEL 8 (single-package: {"perl-DBD-MySQL"})
+    and is also bundled as a sub-package of the "mysql" module on RHEL 9. These must
+    not be treated as ambiguous with each other, since they are on different RHEL
+    major versions and can never coexist on the same host.
+    """
+    from roadmap.data import SHARED_PACKAGE_NAMES_BY_OS_MAJOR
+
+    assert "perl-DBD-MySQL" not in SHARED_PACKAGE_NAMES_BY_OS_MAJOR.get(8, set()), (
+        "perl-DBD-MySQL must not be ambiguous on RHEL 8 merely because RHEL 9's "
+        "unrelated 'mysql' module happens to bundle a package of the same name."
+    )

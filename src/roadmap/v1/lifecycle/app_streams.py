@@ -32,6 +32,7 @@ from roadmap.data import APP_STREAM_PACKAGES
 from roadmap.data import APP_STREAMS
 from roadmap.data import MODULE_PACKAGES
 from roadmap.data import OS_MAJORS_BY_APP_NAME
+from roadmap.data import SHARED_PACKAGE_NAMES_BY_OS_MAJOR
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import AppStreamType
@@ -351,18 +352,23 @@ def _verify_pending_modules(
 ) -> None:
     """Verify enabled-only modules by checking if expected packages are installed."""
     for cache_key, (app_stream_key, expected_packages) in modules_pending_verification.items():
-        module_name = cache_key[0]
+        module_name, os_major, _stream = cache_key
+        matched_packages = expected_packages & installed_package_names
+        if not matched_packages:
+            continue
 
-        # To reduce false positives from shared packages (e.g., jansi in both scala and maven),
-        # require the primary package (same name as module) to be installed if it exists
-        if module_name in expected_packages:
-            if module_name in installed_package_names:
-                systems_by_stream[app_stream_key].add(system_info)
-        elif expected_packages & installed_package_names:
+        # Packages unique to this module (within the same os_major) are trustworthy on
+        # their own. Only require the primary package (matching the module name) when
+        # every matched package is ambiguous/shared with another module's package list
+        # on the same RHEL major version (e.g. jansi is shared between scala and maven
+        # on RHEL 8).
+        shared_package_names = SHARED_PACKAGE_NAMES_BY_OS_MAJOR.get(os_major, set())
+        unambiguous_matches = matched_packages - shared_package_names
+        if unambiguous_matches or module_name in installed_package_names:
             systems_by_stream[app_stream_key].add(system_info)
             logger.debug(
                 f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
-                f"{len(expected_packages & installed_package_names)} packages installed"
+                f"{len(matched_packages)} packages installed"
             )
 
 

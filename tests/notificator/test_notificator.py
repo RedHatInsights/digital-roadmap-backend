@@ -624,7 +624,7 @@ class TestGetRelevantUpcoming:
         """A host with os_major=9 does not match upcoming items with os_major=8."""
         self._set_matching_scenario(
             [make_upcoming_input("addition", date(2026, 4, 10), os_major=8)],
-            hosts=[make_host_mapping(1, os_major=9, packages=["test-package-1.0-1.el9.x86_64"])],
+            hosts=[make_host_mapping(1, os_major=9, packages=["testpkg-1.0-1.el9.x86_64"])],
         )
 
         result = await notificator.get_relevant_upcoming()

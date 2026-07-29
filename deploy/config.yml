@@ -337,10 +337,10 @@ parameters:
     value: "8000"
 
   - name: MEMORY_LIMIT_SERVICE
-    value: 2048Mi
+    value: 8192Mi
 
   - name: MEMORY_REQUEST_SERVICE
-    value: 1024Mi
+    value: 4096Mi1
 
   - name: CPU_LIMIT_SERVICE
     value: "2"

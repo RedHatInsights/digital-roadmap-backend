@@ -340,7 +340,7 @@ parameters:
     value: 8192Mi
 
   - name: MEMORY_REQUEST_SERVICE
-    value: 4096Mi1
+    value: 4096Mi
 
   - name: CPU_LIMIT_SERVICE
     value: "2"

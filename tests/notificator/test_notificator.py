@@ -19,9 +19,10 @@ from .utils import EMPTY_RHEL_SECTIONS
 from .utils import FIXED_DATETIME
 from .utils import FIXED_TIMESTAMP
 from .utils import make_appstream_key
+from .utils import make_host_mapping
 from .utils import make_system
 from .utils import make_system_info
-from .utils import make_upcoming_output
+from .utils import make_upcoming_input
 from .utils import ORG_ID
 
 
@@ -438,7 +439,7 @@ class TestBuildRoadmapNotificationPayload:
 
 
 class TestGetRelevantUpcoming:
-    """get_relevant_upcoming: date filtering and type counting of upcoming changes."""
+    """get_relevant_upcoming: fused streaming, date filtering and type counting."""
 
     @pytest.fixture(autouse=True)
     def _freeze_today(self, mocker):
@@ -450,25 +451,80 @@ class TestGetRelevantUpcoming:
         mock_dt.now.return_value = frozen
 
     @pytest.fixture(autouse=True)
-    def _mock_upcoming_deps(self, mocker, mock_host_stream):
-        """Mock the data-fetching layer; tests control results via self.mock_get_upcoming."""
-        self.mock_packages = mocker.patch(
-            "notificator.notificator.upcoming.packages_by_system",
-            new_callable=AsyncMock,
-            return_value={},
-        )
-        self.mock_get_upcoming = mocker.patch(
-            "notificator.notificator.upcoming.get_upcoming_data_with_hosts",
-            return_value=[],
+    def _mock_streaming(self, mocker):
+        """Mock the streaming layer so tests control upcoming items and host data.
+
+        Tests set ``self.upcoming_items`` (list of UpcomingInput) and
+        ``self.hosts`` (list of host mapping dicts) before calling get_relevant_upcoming.
+        """
+        self.upcoming_items = []
+        self.hosts = []
+
+        mocker.patch(
+            "notificator.notificator.upcoming.read_upcoming_file",
+            side_effect=lambda *a, **kw: self.upcoming_items,
         )
 
+        async def _fake_get_db():
+            yield mocker.MagicMock()
+
+        class FakeAsyncMappings:
+            def __init__(self, data):
+                self._data = data
+                self._index = 0
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self._index >= len(self._data):
+                    raise StopAsyncIteration
+                item = self._data[self._index]
+                self._index += 1
+                return item
+
+        class FakeResult:
+            def __init__(self, data):
+                self._data = data
+
+            def yield_per(self, n):
+                return self
+
+            def mappings(self):
+                return FakeAsyncMappings(self._data)
+
+        _hosts_ref = self
+
+        async def _fake_query_inventory(*args, **kwargs):
+            yield FakeResult(_hosts_ref.hosts)
+
+        mocker.patch("notificator.notificator.get_db", side_effect=lambda: _fake_get_db())
+        mocker.patch(
+            "notificator.notificator.query_host_inventory",
+            side_effect=lambda *a, **kw: _fake_query_inventory(),
+        )
+
+    def _set_matching_scenario(self, upcoming_items, hosts=None):
+        """Configure upcoming items and hosts for a test.
+
+        If *hosts* is None, provides a default host that matches the default
+        ``test-package`` at os_major=9.
+        """
+        self.upcoming_items = upcoming_items
+        if hosts is not None:
+            self.hosts = hosts
+        else:
+            self.hosts = [make_host_mapping(1, os_major=9)]
+
     async def test_items_within_window_counted(self, notificator):
-        """Items with dateAdded inside the window are counted by type."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 4, 10)),
-            make_upcoming_output("addition", date(2026, 5, 1)),
-            make_upcoming_output("deprecation", date(2026, 4, 20)),
-        ]
+        """Items with deployedDate inside the window are counted by type."""
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 10)),
+                make_upcoming_input("addition", date(2026, 5, 1)),
+                make_upcoming_input("deprecation", date(2026, 4, 20)),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
@@ -476,10 +532,12 @@ class TestGetRelevantUpcoming:
 
     async def test_items_outside_window_excluded(self, notificator):
         """Items before cutoff or after today produce empty Counter."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 3, 31)),
-            make_upcoming_output("deprecation", date(2026, 5, 16)),
-        ]
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 3, 31)),
+                make_upcoming_input("deprecation", date(2026, 5, 16)),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
@@ -487,25 +545,25 @@ class TestGetRelevantUpcoming:
 
     async def test_boundary_dates_inclusive(self, notificator):
         """Items on the exact cutoff date and exact today date are both included."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", self.cutoff),
-            make_upcoming_output("change", self.today),
-        ]
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", self.cutoff),
+                make_upcoming_input("change", self.today),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1, "change": 1})
 
     async def test_enhancement_tracked_separately(self, notificator):
-        """Enhancement is counted under its own key, not merged into addition.
-
-        This scenario is not needed in actual implementation and those could be merged.
-        But in case we later decide to split those, we have an easy option.
-        """
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 4, 5)),
-            make_upcoming_output("enhancement", date(2026, 4, 5)),
-        ]
+        """Enhancement is counted under its own key, not merged into addition."""
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 5)),
+                make_upcoming_input("enhancement", date(2026, 4, 5)),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
@@ -514,17 +572,21 @@ class TestGetRelevantUpcoming:
 
     async def test_empty_upcoming(self, notificator):
         """No upcoming items yields empty Counter."""
+        self._set_matching_scenario([], hosts=[make_host_mapping(1)])
+
         result = await notificator.get_relevant_upcoming()
 
         assert sum(result.values()) == 0
 
     async def test_mixed_in_and_out_of_window(self, notificator):
         """Only items within the window are counted."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 4, 10)),
-            make_upcoming_output("deprecation", date(2026, 3, 15)),
-            make_upcoming_output("change", date(2026, 5, 10)),
-        ]
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 10)),
+                make_upcoming_input("deprecation", date(2026, 3, 15)),
+                make_upcoming_input("change", date(2026, 5, 10)),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
@@ -532,22 +594,145 @@ class TestGetRelevantUpcoming:
 
     async def test_same_name_different_types_counted_independently(self, notificator):
         """Two items sharing a name but differing in type are counted separately."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 4, 10), name="shared-pkg"),
-            make_upcoming_output("change", date(2026, 4, 10), name="shared-pkg"),
-        ]
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 10), name="shared-pkg"),
+                make_upcoming_input("change", date(2026, 4, 10), name="shared-pkg"),
+            ]
+        )
 
         result = await notificator.get_relevant_upcoming()
 
         assert result == Counter({"addition": 1, "change": 1})
 
     async def test_items_without_affected_systems_excluded(self, notificator):
-        """Items with no affected systems are filtered out before counting."""
-        self.mock_get_upcoming.return_value = [
-            make_upcoming_output("addition", date(2026, 4, 10)),
-            make_upcoming_output("addition", date(2026, 4, 12), affected_systems=set()),
-            make_upcoming_output("deprecation", date(2026, 4, 15), affected_systems=set()),
-        ]
+        """Items with packages that no host has are excluded from counting."""
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 10)),
+                make_upcoming_input("addition", date(2026, 4, 12), packages={"uninstalled-pkg"}),
+                make_upcoming_input("deprecation", date(2026, 4, 15), packages={"another-uninstalled"}),
+            ],
+            hosts=[make_host_mapping(1, os_major=9)],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert result == Counter({"addition": 1})
+
+    async def test_os_major_mismatch_excluded(self, notificator):
+        """A host with os_major=9 does not match upcoming items with os_major=8."""
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10), os_major=8)],
+            hosts=[make_host_mapping(1, os_major=9, packages=["test-package-1.0-1.el9.x86_64"])],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert sum(result.values()) == 0
+
+    async def test_package_intersection_match(self, notificator):
+        """A host with packages matching an upcoming item's packages is counted."""
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10), packages={"nginx"})],
+            hosts=[make_host_mapping(1, os_major=9, packages=["nginx-1.20.1-1.el9.x86_64", "curl-7.76-1.el9.x86_64"])],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert result == Counter({"addition": 1})
+
+    async def test_package_no_intersection(self, notificator):
+        """A host with no matching packages does not count the upcoming item."""
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10), packages={"nginx"})],
+            hosts=[make_host_mapping(1, os_major=9, packages=["vim-8.2-1.el9.x86_64", "curl-7.76-1.el9.x86_64"])],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert sum(result.values()) == 0
+
+    async def test_host_missing_packages_skipped(self, notificator):
+        """A host with packages=None or packages=[] is skipped without error."""
+        host_none = make_host_mapping(1, os_major=9)
+        host_none["packages"] = None
+        host_empty = make_host_mapping(2, os_major=9)
+        host_empty["packages"] = []
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10))],
+            hosts=[host_none, host_empty],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert sum(result.values()) == 0
+
+    async def test_host_missing_os_version_skipped(self, notificator):
+        """A host with no os_major/os_release is skipped without error."""
+        host = make_host_mapping(1, os_major=9)
+        host["os_major"] = None
+        host["os_minor"] = None
+        host["os_release"] = None
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10))],
+            hosts=[host],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert sum(result.values()) == 0
+
+    async def test_multiple_hosts_same_upcoming_item(self, notificator):
+        """Multiple hosts matching the same upcoming item count it once by type."""
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10))],
+            hosts=[
+                make_host_mapping(1, os_major=9),
+                make_host_mapping(2, os_major=9),
+                make_host_mapping(3, os_major=9),
+            ],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert result == Counter({"addition": 1})
+
+    async def test_affected_system_count_accuracy(self, notificator):
+        """Items are counted by type, not by number of affected hosts."""
+        self._set_matching_scenario(
+            [
+                make_upcoming_input("addition", date(2026, 4, 10), packages={"nginx"}),
+                make_upcoming_input("deprecation", date(2026, 4, 12), packages={"curl"}),
+            ],
+            hosts=[
+                make_host_mapping(1, os_major=9, packages=["nginx-1.20-1.el9.x86_64", "curl-7.76-1.el9.x86_64"]),
+                make_host_mapping(2, os_major=9, packages=["nginx-1.20-1.el9.x86_64"]),
+                make_host_mapping(3, os_major=9, packages=["curl-7.76-1.el9.x86_64"]),
+            ],
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert result == Counter({"addition": 1, "deprecation": 1})
+
+    async def test_large_batch_streaming(self, notificator):
+        """Correct results when hosts exceed the yield_per batch size."""
+        hosts = [make_host_mapping(i, os_major=9) for i in range(1, 101)]
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10))],
+            hosts=hosts,
+        )
+
+        result = await notificator.get_relevant_upcoming()
+
+        assert result == Counter({"addition": 1})
+
+    async def test_deployed_date_none_uses_today(self, notificator):
+        """Items with deployedDate=None use today's date and pass the window check."""
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", None)],
+        )
 
         result = await notificator.get_relevant_upcoming()
 

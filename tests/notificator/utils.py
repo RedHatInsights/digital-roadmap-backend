@@ -12,6 +12,8 @@ from roadmap.models import LifecycleType
 from roadmap.models import System
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.v1.upcoming import UpcomingInput
+from roadmap.v1.upcoming import UpcomingInputDetails
 from roadmap.v1.upcoming import UpcomingOutput
 from roadmap.v1.upcoming import UpcomingOutputDetails
 
@@ -146,3 +148,52 @@ def make_upcoming_output(upcoming_type, deployed_date, name="test-item", affecte
         date=deployed_date,
         details=details,
     )
+
+
+def make_upcoming_input(upcoming_type, deployed_date, name="test-item", packages=None, os_major=9):
+    """Build an UpcomingInput with a given type, deployedDate, and packages.
+
+    By default creates an item for RHEL 9 with a single package ``testpkg``.
+    The package name must be a single word (no hyphens) because the NEVRA parser
+    uses partition("-") to separate name from version.
+    """
+    if packages is None:
+        packages = {"testpkg"}
+    details = UpcomingInputDetails.model_construct(
+        architecture=None,
+        detailFormat=0,
+        summary="Test summary",
+        trainingTicket="",
+        dateAdded=deployed_date,
+        lastModified=deployed_date,
+        deployedDate=deployed_date,
+    )
+    return UpcomingInput.model_construct(
+        name=name,
+        type=upcoming_type,
+        packages=packages,
+        release=f"{os_major}.0",
+        os_major=os_major,
+        date=deployed_date,
+        details=details,
+    )
+
+
+def make_host_mapping(n, os_major=9, os_minor=1, packages=None):
+    """Build a dict resembling a SQLAlchemy RowMapping for a host.
+
+    *packages* should be a list of NEVRA-format strings (e.g. ``["nginx-1.0-1.el9.x86_64"]``).
+    Defaults to a single package ``testpkg-1.0-1.el<os_major>.x86_64`` whose NEVRA name
+    is ``testpkg`` (matching the default in ``make_upcoming_input``).
+    """
+    if packages is None:
+        packages = [f"testpkg-1.0-1.el{os_major}.x86_64"]
+    return {
+        "id": UUID(int=n),
+        "display_name": f"host-{n}",
+        "os_major": os_major,
+        "os_minor": os_minor,
+        "os_release": f"{os_major}.{os_minor}",
+        "packages": packages,
+        "products": [],
+    }

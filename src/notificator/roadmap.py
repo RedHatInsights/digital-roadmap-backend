@@ -2,6 +2,7 @@ import time
 
 import structlog
 
+from notificator.cache import clear_caches
 from notificator.kafka import kafka_producer
 from notificator.notificator import Notificator
 from notificator.notificator_config import ROADMAP_SUBSCRIPTION
@@ -52,6 +53,8 @@ async def roadmap_notification(
                         "Failed to process roadmap notification", org_id=org_id, duration_seconds=round(elapsed, 2)
                     )
                     failed_orgs.append(org_id)
+                finally:
+                    clear_caches()
     except Exception:
         logger.exception("Failed to get kafka producer for roadmap notification, no orgs were notified.")
         return

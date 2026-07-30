@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import logging
 import typing as t
@@ -384,7 +385,12 @@ async def systems_by_app_stream(
     module_cache = {}
     package_data = defaultdict(list)
     module_app_streams = set()
+    system_count = 0
     async for system in systems.yield_per(2_000).mappings():
+        system_count += 1
+        if system_count % 2_000 == 0:
+            logger.info(f"Processed {system_count} systems for app streams for org {org_id or 'UNKNOWN'}")
+            await asyncio.sleep(0)
         dnf_modules = system["dnf_modules"] or []
         packages = system["packages"] or []
 

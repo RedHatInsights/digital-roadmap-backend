@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import typing as t
 
@@ -149,7 +150,12 @@ async def get_relevant_systems(  # noqa: C901
     system_counts = defaultdict(int)
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(set)
+    system_count = 0
     async for system in systems.yield_per(2_000).mappings():
+        system_count += 1
+        if system_count % 2_000 == 0:
+            logger.info(f"Processed {system_count} systems for RHEL lifecycle for org {org_id or 'UNKNOWN'}")
+            await asyncio.sleep(0)
         if (os_name := system["os_name"]) is None:
             missing["os_name"] += 1
             continue

@@ -233,7 +233,7 @@ class Notificator:
             ):
                 async for system in result.yield_per(2_000).mappings():
                     system_count += 1
-                    if system_count % 2_000 == 0:
+                    if system_count % 1_000 == 0:
                         logger.info("Processed systems for upcoming changes", org_id=self.org_id, count=system_count)
                         await asyncio.sleep(0)
 

@@ -1,0 +1,334 @@
+# CodeRabbit configuration for digital-roadmap-backend
+# Python FastAPI backend with PostgreSQL, Kafka, and OpenTelemetry
+#
+# Schema: https://coderabbit.ai/integrations/schema.v2.json
+# Validate: comment "@coderabbitai configuration" on any PR
+#
+language: "en-US"
+tone_instructions: "Security-focused. State risk severity and impact. Focus on production readiness."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+
+  path_filters:
+    - "!.venv/**"
+    - "!.venvs/**"
+    - "!__pycache__/**"
+    - "!*.pyc"
+    - "!.pytest_cache/**"
+    - "!.coverage/**"
+    - "!htmlcov/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!*.egg-info/**"
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "release/.*"
+
+  path_instructions:
+
+    # ── Python backend security ──────────────────────────────────
+    - path: "**/*.py"
+      instructions: |
+        Python security (digital-roadmap-backend):
+        - SQL injection: use SQLAlchemy parameterized queries; no string formatting in queries
+        - Command injection: never use os.system, subprocess with shell=True on user input
+        - Deserialization: no pickle.loads(), yaml.load() (use yaml.safe_load()) on untrusted data
+        - Path traversal: validate and canonicalize file paths, reject ../
+        - Input validation: validate all FastAPI request bodies, query params with Pydantic
+        - No eval(), exec() on user-controlled data
+        - Authentication: verify JWT tokens on protected endpoints
+        - Rate limiting: ensure rate limits on public endpoints
+        - Logging: no PII, passwords, tokens, or API keys in logs
+        - Error handling: don't leak stack traces or internal paths to API responses
+        - Async safety: proper exception handling in async/await code
+        - Database: use connection pooling, prepare for concurrent access
+
+    # ── FastAPI specific ─────────────────────────────────────────
+    - path: "**/v{1,2}/**/*.py"
+      instructions: |
+        FastAPI security:
+        - Dependency injection: validate auth in route dependencies
+        - CORS: strict origin whitelist, no Access-Control-Allow-Origin: *
+        - Request validation: enforce strict Pydantic models, no extra fields
+        - Response models: use response_model to prevent data leaks
+        - File uploads: validate content type by magic bytes, size limits
+        - Rate limiting: implement per-endpoint rate limits
+        - Security headers: CSP, HSTS, X-Content-Type-Options, X-Frame-Options
+        - No debug=True in production settings
+        - HTTP methods: only allow needed methods per route
+
+    # ── Database & SQLAlchemy ────────────────────────────────────
+    - path: "**/models.py"
+      instructions: |
+        Database security:
+        - Parameterized queries only; no text() with f-strings
+        - Input sanitization: validate before DB writes
+        - Indexes: ensure proper indexing for performance
+        - Migrations: review for breaking changes, data loss risks
+        - Transactions: proper rollback on errors
+        - Connection strings: no hardcoded credentials
+        - Least privilege: app DB user has minimal grants
+
+    - path: "**/database.py"
+      instructions: |
+        Database connection security:
+        - TLS/SSL for PostgreSQL connections in production
+        - Connection pooling: proper max_overflow and pool_size
+        - No credentials in code; use environment variables
+        - Connection timeout and retry logic
+        - Proper connection cleanup in finally blocks
+
+    # ── Configuration & secrets ──────────────────────────────────
+    - path: "**/config.py"
+      instructions: |
+        Configuration security:
+        - No hardcoded secrets, API keys, passwords
+        - Use environment variables or secret managers
+        - Validate all config values at startup
+        - Separate dev/staging/prod configurations
+        - No default admin credentials
+        - Log config loading failures clearly
+
+    # ── Kafka integration ────────────────────────────────────────
+    - path: "**/kafka.py"
+      instructions: |
+        Kafka security:
+        - SASL/TLS authentication required for production
+        - Topic ACLs: least privilege per consumer/producer
+        - Message validation: validate schema before processing
+        - Error handling: dead letter queues for poison messages
+        - Offset management: proper commit strategies
+        - No sensitive data in message keys or headers
+        - Consumer group isolation
+
+    # ── Lifecycle & notifications ────────────────────────────────
+    - path: "**/lifecycle.py"
+      instructions: |
+        Notification security:
+        - Email content: sanitize user data before templating
+        - No PII in email logs
+        - Rate limiting: prevent email bombing
+        - Template injection: use safe templating (Jinja2 autoescaping)
+        - Validate email addresses properly
+        - Unsubscribe mechanism compliance
+
+    # ── API endpoints ────────────────────────────────────────────
+    - path: "**/main.py"
+      instructions: |
+        API security:
+        - Authentication middleware on all protected routes
+        - CORS: whitelist specific origins
+        - Request size limits to prevent DoS
+        - Error handling: catch-all exception handler, no debug info leaks
+        - Health/metrics endpoints: consider if they should be public
+        - Startup/shutdown: proper resource initialization and cleanup
+        - OpenTelemetry: no sensitive data in traces
+
+    # ── Authentication & authorization ───────────────────────────
+    - path: "**/*{auth,jwt,token}*.py"
+      instructions: |
+        Authentication security:
+        - JWT: verify signature, issuer, audience, expiry, nbf
+        - Token storage: never log tokens
+        - Password hashing: use Argon2id (not bcrypt for new code)
+        - Session management: secure cookies (HttpOnly, Secure, SameSite)
+        - Rate limit login attempts
+        - No bearer tokens in URLs or logs
+        - Token refresh: proper rotation and revocation
+
+    # ── Dependencies & supply chain ──────────────────────────────
+    - path: "**/requirements*.txt"
+      instructions: |
+        Dependency security:
+        - Pin exact versions (==, not >=)
+        - Review new dependencies: license, maintenance, CVEs
+        - No pre-release versions in production
+        - Cross-reference vulnerabilities with osv.dev
+        - Keep FastAPI, Pydantic, SQLAlchemy updated
+        - Remove unused dependencies
+
+    - path: "pyproject.toml"
+      instructions: |
+        Project configuration:
+        - Verify tool configurations (ruff, pytest, coverage)
+        - No development dependencies in production installs
+        - Review linter rule changes for security implications
+        - Coverage thresholds: ensure they don't decrease
+
+    # ── Tests ────────────────────────────────────────────────────
+    - path: "tests/**/*.py"
+      instructions: |
+        Test security:
+        - No hardcoded credentials, even in tests
+        - Mock external services (don't hit production)
+        - Test authentication/authorization paths
+        - Test input validation edge cases
+        - Test rate limiting behavior
+        - Integration tests: use test database, not production
+        - Clean up test data after runs
+
+    # ── CI/CD workflows ──────────────────────────────────────────
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: |
+        CI/CD security:
+        - Pin GitHub Actions by full commit SHA (not tags)
+        - Minimal GITHUB_TOKEN permissions
+        - No secrets in logs; mask sensitive outputs
+        - SAST/dependency scanning in pipeline
+        - No pull_request_target with untrusted code checkout
+        - Codecov token: verify it's scoped correctly
+        - Container images: scan with Trivy before deploy
+
+    # ── Docker & containers ──────────────────────────────────────
+    - path: "**/Dockerfile*"
+      instructions: |
+        Container security:
+        - Base image: use official Python slim or alpine
+        - Pin base image by digest, not tag
+        - Multi-stage builds; no dev dependencies in final image
+        - USER non-root; never run as root
+        - COPY specific files, not entire context
+        - No secrets in ENV or ARG
+        - Minimize layers; clean up apt/pip cache
+        - HEALTHCHECK defined
+        - Read-only filesystem where possible
+
+    # ── Kubernetes/OpenShift manifests ───────────────────────────
+    - path: "**/*.{yaml,yml}"
+      instructions: |
+        If this is a Kubernetes/OpenShift manifest:
+        - securityContext: runAsNonRoot, readOnlyRootFilesystem,
+          allowPrivilegeEscalation: false
+        - Drop ALL capabilities
+        - Resource limits (cpu, memory) on every container
+        - No hostPID, hostNetwork, hostIPC, privileged: true
+        - NetworkPolicy defined
+        - Liveness + readiness probes
+        - automountServiceAccountToken: false unless needed
+        - RBAC: least privilege
+        - ConfigMaps/Secrets: proper volume mounts, no hardcoded values
+
+    # ── Observability & logging ──────────────────────────────────
+    - path: "**/custom_logging.py"
+      instructions: |
+        Logging security:
+        - No PII: emails, SSNs, credit cards, names
+        - No credentials: passwords, tokens, API keys, session IDs
+        - No internal IPs or hostnames unless necessary
+        - Sanitize user input before logging
+        - Structured logging: use JSON format for security events
+        - Log levels: appropriate sensitivity (DEBUG only in dev)
+
+    - path: "**/sentry_config.py"
+      instructions: |
+        Sentry/observability security:
+        - Scrub sensitive data from error reports
+        - No environment variables with secrets
+        - Sample rate: balance cost vs. visibility
+        - Release tracking: tag with git SHA
+        - No user PII in custom tags
+
+  # ── Security scanners ────────────────────────────────────────
+  tools:
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    safety:
+      enabled: true
+    trivy:
+      enabled: true
+    osvScanner:
+      enabled: true
+    actionlint:
+      enabled: true
+
+  # ── Pre-merge checks (hard gates) ───────────────────────────
+  pre_merge_checks:
+    description:
+      mode: "warning"
+    custom_checks:
+      - name: "no-hardcoded-secrets"
+        instructions: |
+          Flag hardcoded secrets: API keys, tokens, passwords, database
+          credentials, AWS keys. Also flag base64 strings >32 chars in
+          config files, URLs with embedded credentials, environment
+          variables assigned string literals containing 'key', 'secret',
+          'password', 'token'.
+        mode: "error"
+
+      - name: "no-sql-injection"
+        instructions: |
+          Flag SQL queries built with string formatting, f-strings,
+          or concatenation. Require parameterized queries or
+          SQLAlchemy ORM methods. Flag raw SQL in text() without
+          bound parameters.
+        mode: "error"
+
+      - name: "no-command-injection"
+        instructions: |
+          Flag subprocess calls with shell=True, os.system, os.popen,
+          commands.getoutput when used with user input or variables.
+          Require shell=False with argument lists.
+        mode: "error"
+
+      - name: "no-unsafe-deserialization"
+        instructions: |
+          Flag pickle.loads, yaml.load (without SafeLoader),
+          eval, exec, compile on untrusted data. Require
+          yaml.safe_load, json.loads, or safe alternatives.
+        mode: "error"
+
+      - name: "authentication-required"
+        instructions: |
+          Flag FastAPI routes without authentication dependencies
+          on endpoints that handle user data or state changes.
+          Verify Depends(get_current_user) or similar is present.
+        mode: "warning"
+
+      - name: "no-sensitive-data-in-logs"
+        instructions: |
+          Flag logging that may expose passwords, tokens, API keys,
+          JWT contents, PII (email, SSN), session IDs, internal IPs,
+          or customer data. Check logger.info/debug/error calls.
+        mode: "error"
+
+      - name: "pydantic-validation"
+        instructions: |
+          Ensure FastAPI endpoints use Pydantic models for request
+          validation. Flag endpoints accepting raw dict or Any types
+          without validation. Verify response_model is set to prevent
+          data leaks.
+        mode: "warning"
+
+      - name: "test-coverage"
+        instructions: |
+          For new endpoint or core logic changes, verify corresponding
+          tests exist. Flag missing tests for authentication, input
+          validation, or error handling paths.
+        mode: "warning"
+
+# ── Knowledge base ───────────────────────────────────────────
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/CLAUDE.md"
+      - "**/CONTRIBUTING.md"
+      - "**/README.md"
+      - "**/SECURITY.md"
+
+  issues:
+    scope: "auto"
+  pull_requests:
+    scope: "auto"

@@ -166,9 +166,6 @@ async def packages_by_system(
     system_count = 0
     async for system in systems.yield_per(2_000).mappings():
         system_count += 1
-        if system_count % 2_000 == 0:
-            logger.info(f"Processed {system_count} systems for upcoming changes for org {org_id or 'UNKNOWN'}")
-            await asyncio.sleep(0)
         packages = system["packages"] or []
 
         try:
@@ -191,6 +188,10 @@ async def packages_by_system(
         # In the future, it will most likely be necessary to store the NEVRA object and not just
         # the package name to improve matching.
         packages_by_system[system_info] = {NEVRA.from_string(package).name for package in packages}
+
+        if system_count % 2_000 == 0:
+            logger.info(f"Processed {system_count} systems for upcoming changes for org {org_id or 'UNKNOWN'}")
+            await asyncio.sleep(0)
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())

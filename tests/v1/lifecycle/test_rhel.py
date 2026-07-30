@@ -6,6 +6,8 @@ from roadmap.common import decode_header
 from roadmap.common import query_rbac
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import System
+from tests.utils import make_host_rows
+from tests.utils import MockAsyncMappings
 
 
 def test_rhel_lifecycle(client, api_prefix):
@@ -164,3 +166,14 @@ def test_rhel_relevant_related(client, api_prefix):
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"
     )
+
+
+async def test_get_relevant_systems_yields_to_event_loop(mocker):
+    from roadmap.v1.lifecycle.rhel import get_relevant_systems
+
+    rows = make_host_rows(2_001)
+    mock_sleep = mocker.patch("roadmap.v1.lifecycle.rhel.asyncio.sleep")
+
+    await get_relevant_systems(org_id="test", systems=MockAsyncMappings(rows))
+
+    mock_sleep.assert_called_once_with(0)

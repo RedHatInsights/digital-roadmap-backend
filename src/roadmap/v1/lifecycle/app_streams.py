@@ -388,9 +388,6 @@ async def systems_by_app_stream(
     system_count = 0
     async for system in systems.yield_per(2_000).mappings():
         system_count += 1
-        if system_count % 2_000 == 0:
-            logger.info(f"Processed {system_count} systems for app streams for org {org_id or 'UNKNOWN'}")
-            await asyncio.sleep(0)
         dnf_modules = system["dnf_modules"] or []
         packages = system["packages"] or []
 
@@ -424,6 +421,10 @@ async def systems_by_app_stream(
             systems_by_stream[app_stream].add(system_info)
 
         _verify_pending_modules(modules_pending_verification, installed_package_names, system_info, systems_by_stream)
+
+        if system_count % 2_000 == 0:
+            logger.info(f"Processed {system_count} systems for app streams for org {org_id or 'UNKNOWN'}")
+            await asyncio.sleep(0)
 
     # Now process the packages outside of the host record loop
     for args, systems_info in package_data.items():

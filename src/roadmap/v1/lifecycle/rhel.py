@@ -153,9 +153,6 @@ async def get_relevant_systems(  # noqa: C901
     system_count = 0
     async for system in systems.yield_per(2_000).mappings():
         system_count += 1
-        if system_count % 2_000 == 0:
-            logger.info(f"Processed {system_count} systems for RHEL lifecycle for org {org_id or 'UNKNOWN'}")
-            await asyncio.sleep(0)
         if (os_name := system["os_name"]) is None:
             missing["os_name"] += 1
             continue
@@ -181,6 +178,10 @@ async def get_relevant_systems(  # noqa: C901
 
         count_key = HostCount(name=os_name, major=os_major, minor=os_minor, lifecycle=lifecycle_type)
         system_counts[count_key] += 1
+
+        if system_count % 2_000 == 0:
+            logger.info(f"Processed {system_count} systems for RHEL lifecycle for org {org_id or 'UNKNOWN'}")
+            await asyncio.sleep(0)
 
     results = []
     system_keys = set()

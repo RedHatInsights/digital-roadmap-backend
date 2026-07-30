@@ -9,6 +9,8 @@ from roadmap.config import Settings
 from roadmap.models import SystemInfo
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
 from roadmap.v1.upcoming import UpcomingOutputDetails
+from tests.utils import make_host_rows
+from tests.utils import MockAsyncMappings
 
 
 def test_get_upcoming_changes(client, api_prefix):
@@ -157,3 +159,14 @@ def test_upcoming_populate_systems_from_systems_detail(make_systems):
     )
 
     assert upcoming.potentiallyAffectedSystems == system_ids
+
+
+async def test_packages_by_system_yields_to_event_loop(mocker):
+    from roadmap.v1.upcoming import packages_by_system
+
+    rows = make_host_rows(2_001, packages=["bash-0:5.1.8-6.el9.x86_64"])
+    mock_sleep = mocker.patch("roadmap.v1.upcoming.asyncio.sleep")
+
+    await packages_by_system(org_id="test", systems=MockAsyncMappings(rows))
+
+    mock_sleep.assert_called_once_with(0)

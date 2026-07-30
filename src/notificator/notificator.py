@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 
 from collections import Counter
@@ -222,6 +223,7 @@ class Notificator:
         os_major_versions: set[int] = set()
         missing: defaultdict[str, int] = defaultdict(int)
 
+        system_count = 0
         async for session in get_db():
             async for result in query_host_inventory(
                 org_id=str(self.org_id),
@@ -230,6 +232,11 @@ class Notificator:
                 host_groups=set(),
             ):
                 async for system in result.yield_per(2_000).mappings():
+                    system_count += 1
+                    if system_count % 2_000 == 0:
+                        logger.info("Processed systems for upcoming changes", org_id=self.org_id, count=system_count)
+                        await asyncio.sleep(0)
+
                     packages = system["packages"] or []
 
                     try:

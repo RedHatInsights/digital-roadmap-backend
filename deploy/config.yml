@@ -115,7 +115,8 @@ objects:
                 path: /api/roadmap/v1/ping
                 port: ${{WEB_PORT}}
               initialDelaySeconds: 15
-              periodSeconds: 10
+              periodSeconds: 15
+              timeoutSeconds: 10
               failureThreshold: 6
 
             readinessProbe:
@@ -123,7 +124,8 @@ objects:
                 path: /api/roadmap/v1/ping
                 port: ${{WEB_PORT}}
               initialDelaySeconds: 15
-              periodSeconds: 10
+              periodSeconds: 15
+              timeoutSeconds: 10
               failureThreshold: 6
 
             volumeMounts:
@@ -337,10 +339,10 @@ parameters:
     value: "8000"
 
   - name: MEMORY_LIMIT_SERVICE
-    value: 32768Mi
+    value: 4096Mi
 
   - name: MEMORY_REQUEST_SERVICE
-    value: 4096Mi
+    value: 2048Mi
 
   - name: CPU_LIMIT_SERVICE
     value: "2"
@@ -406,10 +408,10 @@ parameters:
     value: 750m
 
   - name: MEMORY_REQUEST_NOTIFICATOR
-    value: 1024Mi
+    value: 2048Mi
 
   - name: MEMORY_LIMIT_NOTIFICATOR
-    value: 2048Mi
+    value: 4096Mi
 
   - name: LOG_LEVEL
     value: DEBUG

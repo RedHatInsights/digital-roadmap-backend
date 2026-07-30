@@ -14,8 +14,6 @@ from roadmap.models import SupportStatus
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
-from tests.utils import make_host_rows
-from tests.utils import MockAsyncMappings
 from tests.utils import SUPPORT_STATUS_TEST_CASES
 
 
@@ -1000,15 +998,3 @@ class TestAppStreamFromPackageBaseStreams:
         result = app_stream_from_package("nginx-1:1.20.1-14.el9.x86_64", 9)
         assert result is not None
         assert result.name == "NGINX 1.20"
-
-
-async def test_systems_by_app_stream_yields_to_event_loop(mocker):
-    """Verify the cooperative yield fires every 2000 systems."""
-    from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
-
-    rows = make_host_rows(2_001)
-    mock_sleep = mocker.patch("roadmap.v1.lifecycle.app_streams.asyncio.sleep")
-
-    await systems_by_app_stream(org_id="test", systems=MockAsyncMappings(rows))
-
-    mock_sleep.assert_called_once_with(0)

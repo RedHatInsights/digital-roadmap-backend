@@ -728,6 +728,19 @@ class TestGetRelevantUpcoming:
 
         assert result == Counter({"addition": 1})
 
+    async def test_cooperative_yield_fires_every_2000_hosts(self, notificator, mocker):
+        """Verify asyncio.sleep(0) is called to yield control back to the event loop."""
+        hosts = [make_host_mapping(i, os_major=9) for i in range(1, 2_002)]
+        self._set_matching_scenario(
+            [make_upcoming_input("addition", date(2026, 4, 10))],
+            hosts=hosts,
+        )
+        mock_sleep = mocker.patch("notificator.notificator.asyncio.sleep")
+
+        await notificator.get_relevant_upcoming()
+
+        mock_sleep.assert_called_once_with(0)
+
     async def test_deployed_date_none_uses_today(self, notificator):
         """Items with deployedDate=None use today's date and pass the window check."""
         self._set_matching_scenario(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 
 from collections import Counter
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -15,10 +16,12 @@ import structlog
 
 from notificator.notificator_config import NotificatorSettings
 from roadmap.common import query_host_inventory
+from roadmap.common import rhel_major_minor
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
 from roadmap.models import SystemInfo
 from roadmap.v1 import upcoming
+from roadmap.v1.lifecycle.app_streams import NEVRA
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 
@@ -204,14 +207,73 @@ class Notificator:
         logger.info("Built lifecycle notification", org_id=self.org_id, event_type="retiring-lifecycle-monthly-report")
         return payload
 
+    async def _stream_and_match_hosts(
+        self,
+        reverse_index: dict[tuple[int, str], set[int]],
+    ) -> tuple[defaultdict[int, int], set[int]]:
+        """Stream hosts from HBI and match packages against the reverse index.
+
+        Returns (affected_counts, os_major_versions) where affected_counts maps
+        upcoming item indices to the number of hosts that have at least one
+        matching package, and os_major_versions is the set of all OS major
+        versions observed across hosts.
+        """
+        affected_counts: defaultdict[int, int] = defaultdict(int)
+        os_major_versions: set[int] = set()
+        missing: defaultdict[str, int] = defaultdict(int)
+
+        async for session in get_db():
+            async for result in query_host_inventory(
+                org_id=str(self.org_id),
+                session=session,
+                settings=self.settings,
+                host_groups=set(),
+            ):
+                async for system in result.yield_per(2_000).mappings():
+                    packages = system["packages"] or []
+
+                    try:
+                        os_major, _ = rhel_major_minor(system)
+                    except ValueError:
+                        missing["os_version"] += 1
+                        continue
+
+                    if not packages:
+                        missing["packages"] += 1
+                        continue
+
+                    os_major_versions.add(os_major)
+
+                    matched_items: set[int] = set()
+                    for package in packages:
+                        pkg_name = NEVRA.from_string(package).name
+                        indices = reverse_index.get((os_major, pkg_name))
+                        if indices:
+                            matched_items.update(indices)
+
+                    for idx in matched_items:
+                        affected_counts[idx] += 1
+
+        if missing:
+            missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
+            logger.info(f"Missing {missing_items} for org {self.org_id}")
+
+        return affected_counts, os_major_versions
+
     async def get_relevant_upcoming(self) -> Counter[str]:
         """Stream hosts from HBI and count upcoming changes for notification.
 
-        Opens its own DB session and streams hosts via ``yield_per`` to avoid
-        materializing all host rows in memory.  Calls the same logic as the
-        ``/relevant/upcoming-changes`` endpoint but further filters to items
-        whose ``dateAdded`` falls between the 1st of the previous month and
-        today (inclusive).
+        Uses a fused single-pass streaming approach to avoid materializing
+        the full per-host package mapping in memory.  Instead of building a
+        ``dict[SystemInfo, set[str]]`` (16+ GB for large orgs), this method:
+
+        1. Pre-loads upcoming items and builds a reverse index
+           ``(os_major, package_name) → set[item_index]``
+        2. Streams hosts via ``yield_per`` batches, matching each host's
+           packages against the reverse index and discarding per-host data
+           after each row
+        3. Counts items by type using only those with affected systems
+           within the date window
 
         Returns a Counter keyed by ``UpcomingType`` value (addition, change,
         deprecation, enhancement).  Merging enhancement into addition is done
@@ -224,40 +286,34 @@ class Notificator:
         start_time = time.time()
         logger.info("Processing upcoming changes", org_id=self.org_id)
 
-        pkgs_by_system: dict = {}
-        async for session in get_db():
-            async for result in query_host_inventory(
-                org_id=str(self.org_id),
-                session=session,
-                settings=self.settings,
-                host_groups=set(),
-            ):
-                pkgs_by_system = await upcoming.packages_by_system(
-                    org_id=str(self.org_id),
-                    systems=result,
-                )
+        # Step 1: Pre-load upcoming items and build reverse index
+        upcoming_items = upcoming.read_upcoming_file(self.settings.upcoming_json_path)
+        reverse_index: dict[tuple[int, str], set[int]] = defaultdict(set)
+        for idx, item in enumerate(upcoming_items):
+            for pkg_name in item.packages:
+                reverse_index[(item.os_major, pkg_name)].add(idx)
 
-        upcoming_with_hosts = upcoming.get_upcoming_data_with_hosts(
-            packages_by_system=pkgs_by_system,
-            settings=self.settings,
-        )
+        # Step 2: Stream hosts and match against reverse index
+        affected_counts, os_major_versions = await self._stream_and_match_hosts(reverse_index)
 
+        # Step 3: Apply date and type counting
         today = datetime.now(UTC).date()
         cutoff = _upcoming_cutoff_date(today)
         counts: Counter[str] = Counter()
 
-        # Filter out upcoming to keep only relevant
-        upcoming_with_hosts = [item for item in upcoming_with_hosts if item.details.potentiallyAffectedSystemsDetail]
+        for idx, item in enumerate(upcoming_items):
+            if affected_counts.get(idx, 0) == 0:
+                continue
+            if item.os_major not in os_major_versions:
+                continue
 
-        for item in upcoming_with_hosts:
-            if item.details.deployedDate is None:
-                # Item was not released yet, let's use today's date for testing
-                # Shouldn't happen in production, meant mainly for staging
+            deployed_date = item.details.deployedDate
+            if deployed_date is None:
                 logger.info(
                     f"{item.name} was not yet deployed, added to roadmap on {item.details.dateAdded}. Using today's date."
                 )
-                item.details.deployedDate = today
-            if cutoff <= item.details.deployedDate <= today:
+                deployed_date = today
+            if cutoff <= deployed_date <= today:
                 counts[item.type] += 1
 
         elapsed = time.time() - start_time

@@ -14,12 +14,14 @@ from roadmap.common import _normalize_version
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
 from roadmap.common import get_allowed_host_groups
+from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import query_rbac
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.config import Settings
 from roadmap.database import get_db
+from roadmap.models import LifecycleType
 
 
 @pytest.fixture(scope="module")
@@ -325,3 +327,41 @@ def test_rhel_major_minor(profile, expected, context):
         #
         # https://docs.pytest.org/en/6.2.x/reference.html#pytest.raises
         assert result == expected
+
+
+@pytest.mark.parametrize(
+    "products, expected",
+    (
+        # Mainline — no recognized product IDs
+        ([{}], LifecycleType.mainline),
+        ([{"id": "999"}], LifecycleType.mainline),
+        # Mainline — base RHEL product (must NOT trigger E4S)
+        ([{"id": "479"}], LifecycleType.mainline),
+        # EUS
+        ([{"id": "70"}], LifecycleType.eus),
+        ([{"id": "73"}], LifecycleType.eus),
+        ([{"id": "75"}], LifecycleType.eus),
+        # ELS
+        ([{"id": "204"}], LifecycleType.els),
+        # E4S — existing product IDs
+        ([{"id": "241"}], LifecycleType.e4s),
+        ([{"id": "323"}], LifecycleType.e4s),
+        # E4S — new SAP product IDs (RHINENG-27803)
+        ([{"id": "387"}], LifecycleType.e4s),
+        ([{"id": "389"}], LifecycleType.e4s),
+        # Hierarchy: E4S wins over EUS
+        ([{"id": "70"}, {"id": "387"}], LifecycleType.e4s),
+        # Hierarchy: E4S wins over ELS
+        ([{"id": "204"}, {"id": "241"}], LifecycleType.e4s),
+        # Hierarchy: ELS wins over EUS
+        ([{"id": "70"}, {"id": "204"}], LifecycleType.els),
+        # Real SAP system (from Jira comment): 387 + 389 + 479
+        ([{"id": "387"}, {"id": "389"}, {"id": "479"}], LifecycleType.e4s),
+        # Base RHEL + EUS — 479 does not upgrade beyond EUS
+        ([{"id": "479"}, {"id": "70"}], LifecycleType.eus),
+    ),
+)
+def test_get_lifecycle_type(products, expected):
+    result = get_lifecycle_type(products)
+
+    assert result == expected

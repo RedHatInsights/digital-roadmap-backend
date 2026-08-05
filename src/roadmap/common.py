@@ -309,7 +309,7 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
 
     EUS --> 70, 73, 75
     ELS --> 204
-    E4S --> 241, 323
+    E4S --> 241, 323, 387, 389
 
     """
     ids = {item.get("id") for item in products}
@@ -321,7 +321,7 @@ def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     if "204" in ids:
         type = LifecycleType.els
 
-    if any(id in ids for id in {"241", "323"}):
+    if any(id in ids for id in {"241", "323", "387", "389"}):
         type = LifecycleType.e4s
 
     return type

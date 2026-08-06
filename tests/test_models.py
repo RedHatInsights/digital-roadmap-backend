@@ -125,3 +125,44 @@ def test_system_supported_status_when_count_non_zero(mocker):
     )
 
     assert system.support_status == SupportStatus.supported
+
+
+@pytest.mark.parametrize(
+    ("lifecycle_type", "expected_display_name"),
+    (
+        (LifecycleType.mainline, "RHEL 9.4"),
+        (LifecycleType.eus, "RHEL 9.4 EUS"),
+        (LifecycleType.els, "RHEL 9.4 ELS"),
+        (LifecycleType.e4s, "RHEL 9.4 for SAP"),
+    ),
+)
+def test_system_display_name_includes_lifecycle_suffix(lifecycle_type, expected_display_name):
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=4,
+        lifecycle_type=lifecycle_type,
+        count=1,
+        start_date=date(2024, 4, 30),
+        end_date=date(2034, 4, 30),
+        systems_detail=set(),
+    )
+
+    assert system.display_name == expected_display_name
+
+
+def test_system_display_name_not_overwritten_when_explicit():
+    """Explicit display_name should not be overwritten by the validator."""
+    system = System(
+        name="RHEL",
+        major=9,
+        minor=4,
+        display_name="Custom Name",
+        lifecycle_type=LifecycleType.e4s,
+        count=1,
+        start_date=date(2024, 4, 30),
+        end_date=date(2034, 4, 30),
+        systems_detail=set(),
+    )
+
+    assert system.display_name == "Custom Name"

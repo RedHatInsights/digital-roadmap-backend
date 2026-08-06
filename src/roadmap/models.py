@@ -142,7 +142,13 @@ class System(BaseModel):
     @model_validator(mode="after")
     def set_display_name(self):
         if not self.display_name:
-            self.display_name = _get_rhel_display_name(self.name, self.major, self.minor)
+            base = _get_rhel_display_name(self.name, self.major, self.minor)
+            suffix = {
+                LifecycleType.eus: " EUS",
+                LifecycleType.els: " ELS",
+                LifecycleType.e4s: " for SAP",
+            }.get(self.lifecycle_type, "")
+            self.display_name = f"{base}{suffix}"
 
         return self
 

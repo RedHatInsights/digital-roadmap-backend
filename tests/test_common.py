@@ -346,17 +346,18 @@ def test_rhel_major_minor(profile, expected, context):
         # E4S — existing product IDs
         ([{"id": "241"}], LifecycleType.e4s),
         ([{"id": "323"}], LifecycleType.e4s),
-        # E4S — new SAP product IDs (RHINENG-27803)
-        ([{"id": "387"}], LifecycleType.e4s),
+        # E4S — SAP product IDs per rhsm-subscriptions rhel_for_sap_x86.yaml (RHINENG-27803)
+        ([{"id": "146"}], LifecycleType.e4s),
+        ([{"id": "388"}], LifecycleType.e4s),
         ([{"id": "389"}], LifecycleType.e4s),
         # Hierarchy: E4S wins over EUS
-        ([{"id": "70"}, {"id": "387"}], LifecycleType.e4s),
+        ([{"id": "70"}, {"id": "388"}], LifecycleType.e4s),
         # Hierarchy: E4S wins over ELS
         ([{"id": "204"}, {"id": "241"}], LifecycleType.e4s),
         # Hierarchy: ELS wins over EUS
         ([{"id": "70"}, {"id": "204"}], LifecycleType.els),
-        # Real SAP system (from Jira comment): 387 + 389 + 479
-        ([{"id": "387"}, {"id": "389"}, {"id": "479"}], LifecycleType.e4s),
+        # Real SAP system combo: 388 + 389 + 479 (generic RHEL base)
+        ([{"id": "388"}, {"id": "389"}, {"id": "479"}], LifecycleType.e4s),
         # Base RHEL + EUS — 479 does not upgrade beyond EUS
         ([{"id": "479"}, {"id": "70"}], LifecycleType.eus),
     ),

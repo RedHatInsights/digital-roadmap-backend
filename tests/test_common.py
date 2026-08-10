@@ -216,6 +216,20 @@ async def test_query_rbac_json_decode_error(mocker):
         await query_rbac(settings)
 
 
+async def test_query_rbac_timeout(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mock_client = AsyncMock()
+    mock_client.get.side_effect = httpx.ReadTimeout("Timed out")
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
+        await query_rbac(settings)
+
+    assert exc_info.value.status_code == 504
+
+
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()

@@ -3,9 +3,13 @@ import uuid
 import pytest
 
 from roadmap.common import decode_header
+from roadmap.common import get_allowed_host_groups
+from roadmap.common import get_db
 from roadmap.common import query_rbac
+from roadmap.config import Settings
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import System
+from roadmap.services import relevant_cache as cache_module
 
 
 def test_rhel_lifecycle(client, api_prefix):
@@ -96,6 +100,65 @@ def test_rhel_relevant(client, api_prefix, ids_by_os):
     assert rhel_9_1_mainline == ids_by_os["9.1"]
     for item in data:
         assert item["count"] == len(item["systems"]), "Mismatch between count and number of system IDs"
+
+
+def test_rhel_relevant_response_cache_hit_and_ttl_expiry(client, api_prefix, monkeypatch):
+    async def query_rbac_override():
+        return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+
+    async def decode_header_override():
+        return "1234"
+
+    async def get_allowed_host_groups_override():
+        return {"group-a"}
+
+    async def get_db_override():
+        yield object()
+
+    settings = Settings(dev=True, relevant_cache_ttl_seconds=1, relevant_cache_maxsize=32)
+    timeline = iter([0.0, 0.1, 0.2, 1.5, 1.6])
+    monkeypatch.setattr(cache_module.time, "monotonic", lambda: next(timeline))
+    monkeypatch.setattr(cache_module.relevant_response_cache, "_entries", {})
+
+    rows = [
+        {
+            "id": "02f7e6ea-a0f6-4a98-b857-b0e9f9f0f111",
+            "display_name": "cache-host",
+            "os_name": "RHEL",
+            "os_major": 9,
+            "os_minor": 2,
+            "os_release": "9.2",
+            "dnf_modules": [],
+            "packages": [],
+            "products": [],
+        }
+    ]
+    load_calls = {"count": 0}
+
+    async def fake_load_host_inventory_rows(*args, **kwargs):
+        load_calls["count"] += 1
+        return rows
+
+    monkeypatch.setattr(
+        "roadmap.v1.lifecycle.rhel.load_host_inventory_rows",
+        fake_load_host_inventory_rows,
+    )
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[get_db] = get_db_override
+    client.app.dependency_overrides[Settings.create] = lambda: settings
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    third = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert third.status_code == 200
+    assert load_calls["count"] == 2, "Expected one cache hit between two misses"
 
 
 def test_rhel_relevant_extended_dates(client, api_prefix):

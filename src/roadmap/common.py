@@ -299,6 +299,28 @@ async def query_host_inventory(
         raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
+async def load_host_inventory_rows(
+    org_id: str,
+    session: AsyncSession,
+    settings: Settings,
+    host_groups: set[str | None],
+    major: int | None = None,
+    minor: int | None = None,
+) -> list[RowMapping]:
+    """Load host inventory rows into memory for endpoint-level processing/caching."""
+    async for result in query_host_inventory(
+        org_id=org_id,
+        session=session,
+        settings=settings,
+        host_groups=host_groups,
+        major=major,
+        minor=minor,
+    ):
+        return [row async for row in result.mappings()]
+
+    return []
+
+
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     """Calculate lifecycle type based on the product ID.
 

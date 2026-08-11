@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     env_name: str = "stage"
     log_level: str = "info"
     json_logging: bool = False
+    relevant_cache_ttl_seconds: int = 60
+    relevant_cache_maxsize: int = 512
 
     @property
     def database_url(self) -> PostgresDsn:

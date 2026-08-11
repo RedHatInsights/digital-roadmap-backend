@@ -6,11 +6,14 @@ from urllib.error import HTTPError
 import pytest
 
 from roadmap.common import decode_header
+from roadmap.common import get_allowed_host_groups
+from roadmap.common import get_db
 from roadmap.common import query_rbac
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamType
 from roadmap.models import SupportStatus
+from roadmap.services import relevant_cache as cache_module
 from roadmap.v1.lifecycle.app_streams import AppStreamImplementation
 from roadmap.v1.lifecycle.app_streams import NEVRA
 from roadmap.v1.lifecycle.app_streams import RelevantAppStream
@@ -55,6 +58,69 @@ def test_get_relevant_app_stream(api_prefix, client):
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"
     )
+
+
+def test_get_relevant_app_stream_response_cache_and_key_isolation(api_prefix, client, monkeypatch):
+    async def query_rbac_override():
+        return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+
+    async def decode_header_override():
+        return "1234"
+
+    async def get_allowed_host_groups_override():
+        return {"group-a"}
+
+    async def get_db_override():
+        yield object()
+
+    settings = Settings(dev=True, relevant_cache_ttl_seconds=1, relevant_cache_maxsize=32)
+    timeline = iter([0.0, 0.1, 0.2, 0.3, 1.5, 1.6, 1.7, 1.8, 1.9])
+    monkeypatch.setattr(cache_module.time, "monotonic", lambda: next(timeline))
+    monkeypatch.setattr(cache_module.relevant_response_cache, "_entries", {})
+
+    rows = [
+        {
+            "id": "02f7e6ea-a0f6-4a98-b857-b0e9f9f0f111",
+            "display_name": "cache-host",
+            "os_name": "RHEL",
+            "os_major": 9,
+            "os_minor": 2,
+            "os_release": "9.2",
+            "dnf_modules": [{"name": "nodejs", "stream": "18", "status": ["installed"]}],
+            "packages": ["nodejs-1:18.18.0-1.el9.x86_64"],
+            "products": [],
+        }
+    ]
+    load_calls = {"count": 0}
+
+    async def fake_load_host_inventory_rows(*args, **kwargs):
+        load_calls["count"] += 1
+        return rows
+
+    monkeypatch.setattr(
+        "roadmap.v1.lifecycle.app_streams.load_host_inventory_rows",
+        fake_load_host_inventory_rows,
+    )
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[get_db] = get_db_override
+    client.app.dependency_overrides[Settings.create] = lambda: settings
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+    third = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": "true"})
+    fourth = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": "true"})
+    fifth = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert third.status_code == 200
+    assert fourth.status_code == 200
+    assert fifth.status_code == 200
+    assert load_calls["count"] == 3, "Expected misses only for first, related=true key, and post-ttl request"
 
 
 def test_get_relevant_app_stream_error(api_prefix, client, mocker):

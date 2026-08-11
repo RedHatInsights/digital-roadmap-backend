@@ -17,14 +17,17 @@ from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.result import AsyncResult
 
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
-from roadmap.common import query_host_inventory
+from roadmap.common import get_allowed_host_groups
+from roadmap.common import load_host_inventory_rows
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
+from roadmap.config import Settings
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data import APP_STREAM_MODULES_BY_KEY
 from roadmap.data import APP_STREAM_MODULES_PACKAGES
@@ -37,11 +40,15 @@ from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.data.app_streams import AppStreamType
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.database import get_db
 from roadmap.models import _calculate_support_status
 from roadmap.models import _get_system_uuids
 from roadmap.models import Meta
 from roadmap.models import SupportStatus
 from roadmap.models import SystemInfo
+from roadmap.services.relevant_cache import build_relevant_cache_key
+from roadmap.services.relevant_cache import CachedResult
+from roadmap.services.relevant_cache import relevant_response_cache
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -373,8 +380,8 @@ def _verify_pending_modules(
 
 
 async def systems_by_app_stream(
-    org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[AsyncResult, Depends(query_host_inventory)],
+    org_id: str,
+    systems: AsyncResult | CachedResult,
 ) -> dict[AppStreamKey, set[SystemInfo]]:
     """Return a mapping of AppStreams to informations about systems using that stream."""
     logger.info(f"Getting relevant app streams for {org_id or 'UNKNOWN'}")
@@ -662,9 +669,36 @@ relevant = APIRouter(
     response_model=RelevantAppStreamsResponse,
 )
 async def get_relevant_app_streams(
-    systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
+    org_id: t.Annotated[str, Depends(decode_header)],
     related: bool = False,
+    settings: t.Annotated[Settings | None, Depends(Settings.create)] = None,
+    session: t.Annotated[AsyncSession | None, Depends(get_db)] = None,
+    host_groups: t.Annotated[set[str | None] | None, Depends(get_allowed_host_groups)] = None,
 ):
+    cache_key = build_relevant_cache_key(
+        endpoint="relevant-lifecycle-app-streams",
+        org_id=org_id,
+        related=related,
+        host_groups=host_groups,
+    )
+    if cache_key is not None:
+        if cached := relevant_response_cache.get(cache_key):
+            logger.debug("Relevant lifecycle app-streams response cache hit")
+            return cached
+
+    if session is None or settings is None:
+        raise RuntimeError("Missing database session for app stream lifecycle lookup")
+    rows = await load_host_inventory_rows(
+        org_id=org_id,
+        session=session,
+        settings=settings,
+        host_groups=host_groups or set(),
+    )
+    systems_by_stream = await systems_by_app_stream(
+        org_id=org_id,
+        systems=CachedResult(rows),
+    )
+
     relevant_app_streams = []
     for app_stream, systems in systems_by_stream.items():
         # Omit rolling app streams.
@@ -717,10 +751,18 @@ async def get_relevant_app_streams(
             except Exception as exc:
                 raise HTTPException(detail=str(exc), status_code=400)
 
-    return {
+    response = {
         "meta": {
             "count": len(relevant_app_streams),
             "total": sum(item.count for item in relevant_app_streams),
         },
         "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor")),
     }
+    if settings is not None and cache_key is not None:
+        relevant_response_cache.set(
+            cache_key,
+            response,
+            ttl_seconds=settings.relevant_cache_ttl_seconds,
+            maxsize=settings.relevant_cache_maxsize,
+        )
+    return response

@@ -9,13 +9,17 @@ from fastapi import Depends
 from fastapi import Path
 from pydantic import BaseModel
 from pydantic import model_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from roadmap.common import decode_header
+from roadmap.common import get_allowed_host_groups
 from roadmap.common import get_lifecycle_type
-from roadmap.common import query_host_inventory
+from roadmap.common import load_host_inventory_rows
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
+from roadmap.config import Settings
 from roadmap.data.systems import OS_LIFECYCLE_DATES
+from roadmap.database import get_db
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
@@ -23,6 +27,9 @@ from roadmap.models import RHELLifecycle
 from roadmap.models import SupportStatus
 from roadmap.models import System
 from roadmap.models import SystemInfo
+from roadmap.services.relevant_cache import build_relevant_cache_key
+from roadmap.services.relevant_cache import CachedResult
+from roadmap.services.relevant_cache import relevant_response_cache
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -143,9 +150,34 @@ relevant = APIRouter(
 )
 async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
     related: bool = False,
+    systems: t.Any | None = None,
+    session: t.Annotated[AsyncSession | None, Depends(get_db)] = None,
+    settings: t.Annotated[Settings | None, Depends(Settings.create)] = None,
+    host_groups: t.Annotated[set[str | None] | None, Depends(get_allowed_host_groups)] = None,
 ) -> RelevantSystemsResponse:
+    cache_key = build_relevant_cache_key(
+        endpoint="relevant-lifecycle-rhel",
+        org_id=org_id,
+        related=related,
+        host_groups=host_groups,
+    )
+    if cache_key is not None:
+        if cached := relevant_response_cache.get(cache_key):
+            logger.debug("Relevant lifecycle rhel response cache hit")
+            return RelevantSystemsResponse.model_validate(cached)
+
+    if systems is None:
+        if session is None or settings is None:
+            raise RuntimeError("Missing database session for relevant lifecycle lookup")
+        rows = await load_host_inventory_rows(
+            org_id=org_id,
+            session=session,
+            settings=settings,
+            host_groups=host_groups or set(),
+        )
+        systems = CachedResult(rows)
+
     system_counts = defaultdict(int)
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(set)
@@ -245,7 +277,15 @@ async def get_relevant_systems(  # noqa: C901
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
-    return RelevantSystemsResponse(
+    response = RelevantSystemsResponse(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_attrs("lifecycle_type", "major", "minor"), reverse=True),
     )
+    if settings is not None and cache_key is not None:
+        relevant_response_cache.set(
+            cache_key,
+            response.model_dump(mode="json"),
+            ttl_seconds=settings.relevant_cache_ttl_seconds,
+            maxsize=settings.relevant_cache_maxsize,
+        )
+    return response

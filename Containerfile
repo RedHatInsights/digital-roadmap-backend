@@ -15,14 +15,9 @@ RUN microdnf install -y --nodocs \
     && rm -rf /var/cache/yum/*
 
 ADD "requirements/requirements-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements.txt
-ADD "requirements/requirements-replication-${PYTHON_VERSION}.txt" /usr/share/container-setup/requirements-replication.txt
 RUN "python${PYTHON_VERSION}" -m venv "$VENV" \
     && "$PYTHON" -m pip install --no-cache-dir --upgrade pip \
-    && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt \
-    # Inventory sync venv setup
-    && "python${PYTHON_VERSION}" -m venv /opt/venvs/replication \
-    && "$PYTHON" -m pip install --no-cache-dir --upgrade pip \
-    && /opt/venvs/replication/bin/python -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements-replication.txt
+    && "$PYTHON" -m pip install --no-cache-dir --requirement /usr/share/container-setup/requirements.txt
 
 
 FROM base AS final
@@ -63,7 +58,6 @@ RUN useradd --key HOME_MODE=0755 --system --create-home --home-dir /srv/roady ro
 ADD /src/roadmap/ /srv/roady/roadmap/
 ADD /src/notificator /srv/roady/notificator/
 ADD uvicorn_disable_logging.json /srv/roady/uvicorn_disable_logging.json
-ADD /scripts/replication.py /usr/local/bin/replication.py
 
 ADD scripts/.release /srv/roady/
 ADD --chmod=0644 \

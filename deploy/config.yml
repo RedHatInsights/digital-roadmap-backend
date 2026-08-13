@@ -21,10 +21,6 @@ objects:
           partitions: 24
           replicas: 3
 
-      database:
-        name: ${DB_NAME}
-        version: 16
-
       deployments:
         - name: api
           minReplicas: ${{MIN_REPLICAS}}
@@ -224,95 +220,6 @@ objects:
                   secretName: notification-backend-cert
                   optional: true
 
-        - name: inventory-sync
-          restartPolicy: Never
-          podSpec:
-            image: ${IMAGE}:${IMAGE_TAG}
-            env:
-              - name: LOG_LEVEL
-                value: ${LOG_LEVEL}
-
-              - name: DB_SSL_MODE
-                value: ${DB_SSL_MODE}
-
-              - name: CLOWDER_ENABLED
-                value: "true"
-
-              - name: HBI_PUBLICATION
-                value: hbi_hosts_pub_v1_0_0
-
-              - name: HBI_SUBSCRIPTION
-                value: ${APP_NAME}_hosts_sub
-
-              - name: ALTER_SUBSCRIPTION
-                value: ${ALTER_SUBSCRIPTION}
-
-              - name: DROP_SUBSCRIPTION
-                value: ${DROP_SUBSCRIPTION}
-
-              - name: DROP_HBI_TABLE
-                value: ${DROP_HBI_TABLE}
-
-              - name: DB_NAME
-                valueFrom:
-                  secretKeyRef:
-                    name: ${ROADMAP_DB_SECRET_NAME}
-                    key: db.name
-
-            args:
-              - /opt/venvs/replication/bin/python
-              - /usr/local/bin/replication.py
-
-            resources:
-              limits:
-                cpu: ${CPU_LIMIT_INVENTORY_SYNC}
-                memory: ${MEMORY_LIMIT_INVENTORY_SYNC}
-
-              requests:
-                cpu: ${CPU_REQUEST_INVENTORY_SYNC}
-                memory: ${MEMORY_REQUEST_INVENTORY_SYNC}
-
-            database:
-              sharedDbAppName: ${DB_NAME}
-
-            volumeMounts:
-              - name: host-inventory-db
-                mountPath: /etc/db/hbi
-                readOnly: true
-
-              - name: rds-client-ca
-                mountPath: /etc/db/rdsclientca
-                readOnly: true
-
-            volumes:
-              - name: host-inventory-db
-                secret:
-                  secretName: host-inventory-db
-                  optional: true
-                  items:
-                    - key: db.host
-                      path: db_host
-
-                    - key: db.name
-                      path: db_name
-
-                    - key: db.password
-                      path: db_password
-
-                    - key: db.port
-                      path: db_port
-
-                    - key: db.user
-                      path: db_user
-
-              - name: rds-client-ca
-                secret:
-                  secretName: rds-client-ca
-                  optional: true
-                  items:
-                    - key: rds-cacert
-                      path: rds_cacert
-
 parameters:
   - name: IMAGE_TAG
     description: Image tag
@@ -365,38 +272,7 @@ parameters:
   - name: ROADMAP_DB_MAX_OVERFLOW
     value: ""
 
-  - name: DB_NAME
-    required: true
-    value: roadmap
-
   - name: ROADMAP_HOST_INVENTORY_URL
-
-  - name: CPU_REQUEST_INVENTORY_SYNC
-    value: 250m
-
-  - name: CPU_LIMIT_INVENTORY_SYNC
-    value: 500m
-
-  - name: MEMORY_REQUEST_INVENTORY_SYNC
-    value: 256Mi
-
-  - name: MEMORY_LIMIT_INVENTORY_SYNC
-    value: 512Mi
-
-  - name: DB_SSL_MODE
-    value: prefer
-
-  - name: ALTER_SUBSCRIPTION
-    value: ''
-
-  - name: DROP_SUBSCRIPTION
-    value: ''
-
-  - name: DROP_HBI_TABLE
-    value: ''
-
-  - name: INVENTORY_SYNC_COUNTER
-    value: '1'
 
   - name: NOTIFICATOR_SCHEDULE
     value: "0 6 1 * *"
@@ -412,6 +288,3 @@ parameters:
 
   - name: MEMORY_LIMIT_NOTIFICATOR
     value: 4096Mi
-
-  - name: LOG_LEVEL
-    value: DEBUG

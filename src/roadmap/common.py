@@ -75,11 +75,12 @@ async def query_rbac(
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(url, headers=headers)
+            request = httpx.Request("GET", url, headers=headers)
+            response = await client.send(request)
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as err:
-        logger.error(f"Problem querying RBAC: {err}")
+        logger.error(f"Problem querying RBAC: {err}, body={err.response.text}")
         raise HTTPException(status_code=err.response.status_code, detail=str(err))
     except (json.JSONDecodeError, ValueError) as err:
         logger.error(f"Invalid JSON response from RBAC: {err}")

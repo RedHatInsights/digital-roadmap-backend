@@ -1,8 +1,8 @@
 from datetime import date
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
+from urllib.error import HTTPError
 
-import httpx
 import pytest
 
 from roadmap.common import decode_header
@@ -61,17 +61,10 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
     def settings_override():
         return Settings(rbac_hostname="example.com")
 
-    error_response = httpx.Response(400)
-    mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-        "Raised intentionally", request=httpx.Request("GET", "http://example.com"), response=error_response
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=HTTPError("http://example.com", 400, "Bad Request", {}, None),
     )
-
-    mock_client = AsyncMock()
-    mock_client.send.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[Settings.create] = settings_override

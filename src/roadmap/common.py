@@ -1,15 +1,16 @@
+import asyncio
 import base64
 import json
 import logging
 import textwrap
 import typing as t
 import urllib.parse
+import urllib.request
 
 from collections.abc import AsyncGenerator
 from datetime import date
+from urllib.error import HTTPError
 from uuid import UUID
-
-import httpx
 
 from fastapi import Depends
 from fastapi import FastAPI
@@ -73,21 +74,19 @@ async def query_rbac(
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
+    def _fetch_rbac():
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            return json.load(response)
+
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            request = httpx.Request("GET", url, headers=headers)
-            response = await client.send(request)
-            response.raise_for_status()
-            data = response.json()
-    except httpx.HTTPStatusError as err:
-        logger.error(f"Problem querying RBAC: {err}, body={err.response.text}")
-        raise HTTPException(status_code=err.response.status_code, detail=str(err))
-    except (json.JSONDecodeError, ValueError) as err:
+        data = await asyncio.to_thread(_fetch_rbac)
+    except HTTPError as err:
+        logger.error("Problem querying RBAC: status=%s %s", err.code, err)
+        raise HTTPException(status_code=err.code, detail=err.msg)
+    except json.JSONDecodeError as err:
         logger.error(f"Invalid JSON response from RBAC: {err}")
         raise HTTPException(status_code=502, detail="Invalid JSON response from RBAC service")
-    except httpx.TimeoutException as err:
-        logger.error(f"Timeout querying RBAC: {err}")
-        raise HTTPException(status_code=504, detail="RBAC service timed out")
     except Exception as err:
         logger.error(f"Unexpected error querying RBAC: {err}", exc_info=True)
         raise HTTPException(status_code=502, detail="Error communicating with RBAC service")

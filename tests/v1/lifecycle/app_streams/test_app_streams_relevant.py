@@ -1,6 +1,4 @@
 from datetime import date
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
 from urllib.error import HTTPError
 
 import pytest

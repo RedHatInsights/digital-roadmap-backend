@@ -2,9 +2,7 @@ import json
 
 from contextlib import nullcontext
 from datetime import date
-from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
-from unittest.mock import patch
 from urllib.error import HTTPError
 
 import pytest
@@ -158,7 +156,9 @@ async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
     fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
     mock_urlopen = MagicMock()
-    mock_urlopen.__enter__ = MagicMock(return_value=MagicMock(read=MagicMock(return_value=json.dumps(fixture_data).encode())))
+    mock_urlopen.__enter__ = MagicMock(
+        return_value=MagicMock(read=MagicMock(return_value=json.dumps(fixture_data).encode()))
+    )
     mock_urlopen.__exit__ = MagicMock(return_value=False)
     mocker.patch("roadmap.common.urllib.request.urlopen", return_value=mock_urlopen)
 

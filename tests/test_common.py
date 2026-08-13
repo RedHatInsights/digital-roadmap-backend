@@ -160,7 +160,7 @@ async def test_query_rbac(mocker, read_fixture_file):
     mock_response.json.return_value = fixture_data
     mock_response.raise_for_status = MagicMock()
     mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
+    mock_client.send.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
@@ -178,7 +178,7 @@ async def test_query_rbac_error(mocker):
         "Raised intentionally", request=httpx.Request("GET", "http://example.com"), response=error_response
     )
     mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
+    mock_client.send.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
@@ -209,7 +209,7 @@ async def test_query_rbac_json_decode_error(mocker):
     mock_response.raise_for_status = MagicMock()
     mock_response.json.side_effect = ValueError("invalid json")
     mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
+    mock_client.send.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
@@ -221,7 +221,7 @@ async def test_query_rbac_json_decode_error(mocker):
 async def test_query_rbac_timeout(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
-    mock_client.get.side_effect = httpx.ReadTimeout("Timed out")
+    mock_client.send.side_effect = httpx.ReadTimeout("Timed out")
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
@@ -235,7 +235,7 @@ async def test_query_rbac_timeout(mocker):
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
-    mock_client.get.side_effect = Exception("Connection timeout")
+    mock_client.send.side_effect = Exception("Connection timeout")
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)

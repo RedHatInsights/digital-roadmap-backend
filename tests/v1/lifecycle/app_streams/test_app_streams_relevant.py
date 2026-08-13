@@ -68,7 +68,7 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
     )
 
     mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
+    mock_client.send.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)

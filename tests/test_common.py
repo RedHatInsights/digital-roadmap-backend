@@ -223,6 +223,33 @@ def test_query_rbac_redirect_blocked():
         handler.redirect_request(req, None, 302, "Found", {}, "http://evil.com/steal")
 
     assert exc_info.value.code == 302
+    assert exc_info.value.msg == "RBAC redirect blocked"
+
+
+async def test_query_rbac_socket_timeout(mocker):
+    from urllib.error import URLError
+
+    settings = Settings(rbac_hostname="example.com")
+    mock_opener = MagicMock()
+    mock_opener.open.side_effect = URLError(TimeoutError("timed out"))
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
+
+    with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
+        await query_rbac(settings)
+
+    assert exc_info.value.status_code == 504
+
+
+async def test_query_rbac_direct_timeout(mocker):
+    settings = Settings(rbac_hostname="example.com")
+    mock_opener = MagicMock()
+    mock_opener.open.side_effect = TimeoutError("read timed out")
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
+
+    with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
+        await query_rbac(settings)
+
+    assert exc_info.value.status_code == 504
 
 
 async def test_query_rbac_generic_exception(mocker):

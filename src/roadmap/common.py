@@ -10,6 +10,7 @@ import urllib.request
 from collections.abc import AsyncGenerator
 from datetime import date
 from urllib.error import HTTPError
+from urllib.error import URLError
 from uuid import UUID
 
 from fastapi import Depends
@@ -90,6 +91,15 @@ async def query_rbac(
     except HTTPError as err:
         logger.error("Problem querying RBAC: status=%s %s", err.code, err)
         raise HTTPException(status_code=err.code, detail=err.msg)
+    except URLError as err:
+        if isinstance(err.reason, TimeoutError):
+            logger.error("Timeout querying RBAC: %s", err)
+            raise HTTPException(status_code=504, detail="RBAC service timed out")
+        logger.error(f"Unexpected error querying RBAC: {err}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Error communicating with RBAC service")
+    except TimeoutError as err:
+        logger.error("Timeout querying RBAC: %s", err)
+        raise HTTPException(status_code=504, detail="RBAC service timed out")
     except json.JSONDecodeError as err:
         logger.error(f"Invalid JSON response from RBAC: {err}")
         raise HTTPException(status_code=502, detail="Invalid JSON response from RBAC service")

@@ -113,12 +113,28 @@ def image_tag_sort(value):
         # 0.6-622d10efb15c602b5e47d8fd98e374bb2c45c149
         name_parts = name_parts[:-1]
 
+    # Version tags contain a varying number of parts. Some examples:
+    #   - 0.3.2-0
+    #   - 0.3
+    #   - 0.12.0
+    #   - 0.11.2-0
+    #
+    # Sort using a two item sequence.
+    #
+    # The first item is a tuple of integers padded with zeros to always be
+    # four items long, such as (0, 3, 2, 0). The padding is necessary because
+    # a shorter sequence would stop the comparison process and ignore the
+    # timestamp value.
+    #
+    # The second item is the epoch timestamp.
+    timestamp = value.get("start_ts", 0)
+    number_parts = 4
+    pad: tuple[int, ...] = (0,) * number_parts
     try:
-        version = [int(n) for n in name_parts]
-        version.append(value.get("start_ts", 0))
-        return tuple(version)
+        padded_version = tuple([int(n) for n in name_parts] + [*pad])[:number_parts]
+        return (padded_version, timestamp)
     except ValueError:
-        return (0, 0, value.get("start_ts", 0))
+        return (pad, timestamp)
 
 
 def filter_tags(

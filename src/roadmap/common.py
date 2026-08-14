@@ -52,8 +52,8 @@ async def decode_header(
 
 
 class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        raise HTTPError(req.full_url, code, f"Redirect to {newurl} blocked", headers, fp)
+    def redirect_request(self, req, fp, code, _msg, headers, _newurl):
+        raise HTTPError(req.full_url, code, "RBAC redirect blocked", headers, fp)
 
 
 async def query_rbac(

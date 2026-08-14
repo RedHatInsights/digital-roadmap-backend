@@ -82,7 +82,7 @@ async def query_rbac(
     logger.debug(
         "RBAC request: url=%s identity_present=%s identity_type=%s",
         url,
-        x_rh_identity is not None,
+        "X-RH-Identity" in headers,
         type(x_rh_identity).__name__,
     )
 

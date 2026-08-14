@@ -155,29 +155,32 @@ async def test_decode_header(value, expected):
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
     fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
-    mock_urlopen = MagicMock()
-    mock_urlopen.__enter__ = MagicMock(
+    mock_response = MagicMock()
+    mock_response.__enter__ = MagicMock(
         return_value=MagicMock(read=MagicMock(return_value=json.dumps(fixture_data).encode()))
     )
-    mock_urlopen.__exit__ = MagicMock(return_value=False)
-    mocker.patch("roadmap.common.urllib.request.urlopen", return_value=mock_urlopen)
+    mock_response.__exit__ = MagicMock(return_value=False)
+    mock_opener = MagicMock()
+    mock_opener.open.return_value = mock_response
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
 
     result = await query_rbac(settings)
 
     assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
+    assert mock_opener.open.call_args.kwargs["timeout"] == 30
 
 
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError("http://example.com", 401, "Unauthorized", {}, None),
-    )
+    mock_opener = MagicMock()
+    mock_opener.open.side_effect = HTTPError("http://example.com", 401, "Unauthorized", {}, None)
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
 
     with pytest.raises(HTTPException) as exc_info:
         await query_rbac(settings)
 
     assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Unauthorized"
 
 
 async def test_query_rbac_dev_mode():
@@ -198,18 +201,35 @@ async def test_query_rbac_no_url():
 
 async def test_query_rbac_json_decode_error(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mock_urlopen = MagicMock()
-    mock_urlopen.__enter__ = MagicMock(return_value=MagicMock(read=MagicMock(return_value=b"not json")))
-    mock_urlopen.__exit__ = MagicMock(return_value=False)
-    mocker.patch("roadmap.common.urllib.request.urlopen", return_value=mock_urlopen)
+    mock_response = MagicMock()
+    mock_response.__enter__ = MagicMock(return_value=MagicMock(read=MagicMock(return_value=b"not json")))
+    mock_response.__exit__ = MagicMock(return_value=False)
+    mock_opener = MagicMock()
+    mock_opener.open.return_value = mock_response
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
         await query_rbac(settings)
 
 
+def test_query_rbac_redirect_blocked():
+    from roadmap.common import _NoRedirectHandler
+
+    handler = _NoRedirectHandler()
+    req = MagicMock()
+    req.full_url = "http://rbac-service.svc:8000/api/rbac/v1/access/"
+
+    with pytest.raises(HTTPError) as exc_info:
+        handler.redirect_request(req, None, 302, "Found", {}, "http://evil.com/steal")
+
+    assert exc_info.value.code == 302
+
+
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
-    mocker.patch("roadmap.common.urllib.request.urlopen", side_effect=Exception("Connection timeout"))
+    mock_opener = MagicMock()
+    mock_opener.open.side_effect = Exception("Connection timeout")
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
         await query_rbac(settings)

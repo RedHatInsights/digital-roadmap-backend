@@ -51,6 +51,11 @@ async def decode_header(
     return org_id
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise HTTPError(req.full_url, code, f"Redirect to {newurl} blocked", headers, fp)
+
+
 async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
@@ -75,8 +80,9 @@ async def query_rbac(
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
     def _fetch_rbac():
+        opener = urllib.request.build_opener(_NoRedirectHandler)
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        with opener.open(req, timeout=30) as response:
             return json.load(response)
 
     try:

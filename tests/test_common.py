@@ -252,6 +252,20 @@ async def test_query_rbac_direct_timeout(mocker):
     assert exc_info.value.status_code == 504
 
 
+async def test_query_rbac_url_error(mocker):
+    from urllib.error import URLError
+
+    settings = Settings(rbac_hostname="example.com")
+    mock_opener = MagicMock()
+    mock_opener.open.side_effect = URLError("Name or service not known")
+    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
+
+    with pytest.raises(HTTPException, match="Error communicating with RBAC service") as exc_info:
+        await query_rbac(settings)
+
+    assert exc_info.value.status_code == 502
+
+
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_opener = MagicMock()

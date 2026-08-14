@@ -79,6 +79,12 @@ async def query_rbac(
         return [{}]
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
+    logger.debug(
+        "RBAC request: url=%s identity_present=%s identity_type=%s",
+        url,
+        "X-RH-Identity" in headers,
+        type(x_rh_identity).__name__,
+    )
 
     def _fetch_rbac():
         opener = urllib.request.build_opener(_NoRedirectHandler)
@@ -89,7 +95,7 @@ async def query_rbac(
     try:
         data = await asyncio.to_thread(_fetch_rbac)
     except HTTPError as err:
-        logger.error("Problem querying RBAC: status=%s %s", err.code, err)
+        logger.error("Problem querying RBAC: status=%s url=%s %s", err.code, url, err)
         raise HTTPException(status_code=err.code, detail=err.msg)
     except URLError as err:
         if isinstance(err.reason, TimeoutError):

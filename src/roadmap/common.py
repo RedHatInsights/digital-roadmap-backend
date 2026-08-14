@@ -79,7 +79,12 @@ async def query_rbac(
         return [{}]
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
-    logger.debug("RBAC request: url=%s identity_present=%s identity_type=%s", url, x_rh_identity is not None, type(x_rh_identity).__name__)
+    logger.debug(
+        "RBAC request: url=%s identity_present=%s identity_type=%s",
+        url,
+        x_rh_identity is not None,
+        type(x_rh_identity).__name__,
+    )
 
     def _fetch_rbac():
         opener = urllib.request.build_opener(_NoRedirectHandler)

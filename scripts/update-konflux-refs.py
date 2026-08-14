@@ -105,7 +105,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def image_tag_sort(value):
+def image_tag_sort(value) -> tuple[int, ...]:
     """Sort based on the version number in the tag and the creation date."""
 
     name = value.get("name", "").replace("-", ".")
@@ -121,22 +121,19 @@ def image_tag_sort(value):
     #   - 0.12.0
     #   - 0.11.2-0
     #
-    # Sort using a two item sequence.
+    # Sort using a fixed length sequence.
     #
-    # The first item is a tuple of integers padded with zeros to always be
-    # four items long, such as (0, 3, 2, 0). The padding is necessary because
-    # a shorter sequence would stop the comparison process and ignore the
-    # timestamp value.
-    #
-    # The second item is the epoch timestamp.
+    # Pad the version sequence with zeros to always be four items long,
+    # such as (0, 3, 2, 0). The padding is necessary so that all values in
+    # each sequence are compared.
     timestamp = value.get("start_ts", 0)
     number_parts = 4
-    pad: tuple[int, ...] = (0,) * number_parts
+    pad = [0] * number_parts
     try:
-        padded_version = tuple([int(n) for n in name_parts] + [*pad])[:number_parts]
-        return (padded_version, timestamp)
+        padded_version = ([int(n) for n in name_parts] + pad)[:number_parts]
+        return tuple(padded_version + [timestamp])
     except ValueError:
-        return (pad, timestamp)
+        return tuple(pad + [timestamp])
 
 
 def filter_tags(

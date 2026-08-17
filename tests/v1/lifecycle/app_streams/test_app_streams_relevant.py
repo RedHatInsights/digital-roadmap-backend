@@ -59,11 +59,10 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
     def settings_override():
         return Settings(rbac_hostname="example.com")
 
-    from unittest.mock import MagicMock
-
-    mock_opener = MagicMock()
-    mock_opener.open.side_effect = HTTPError("http://example.com", 400, "Bad Request", {}, None)
-    mocker.patch("roadmap.common.urllib.request.build_opener", return_value=mock_opener)
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        side_effect=HTTPError("http://example.com", 400, "Bad Request", {}, None),
+    )
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[Settings.create] = settings_override

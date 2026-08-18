@@ -57,6 +57,12 @@ def _fetch_rbac(fetch_url: str, fetch_headers: dict) -> dict:
     Takes url and headers as explicit arguments to ensure they are
     evaluated in the main thread before being passed to the worker thread.
     """
+    logger.info(f"RBAC request - URL: {fetch_url}")
+    logger.info(f"RBAC request - Headers keys: {list(fetch_headers.keys())}")
+    logger.info(f"RBAC request - Has X-RH-Identity: {bool(fetch_headers.get('X-RH-Identity'))}")
+    if fetch_headers.get("X-RH-Identity"):
+        logger.info(f"RBAC request - X-RH-Identity length: {len(fetch_headers.get('X-RH-Identity', ''))}")
+
     req = urllib.request.Request(fetch_url, headers=fetch_headers)
     with urllib.request.urlopen(req, timeout=30) as response:
         return json.load(response)

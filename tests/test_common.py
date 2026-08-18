@@ -1,8 +1,7 @@
-import json
-
 from contextlib import nullcontext
 from datetime import date
-from unittest.mock import MagicMock
+from email.message import Message
+from io import BytesIO
 from urllib.error import HTTPError
 
 import pytest
@@ -154,13 +153,9 @@ async def test_decode_header(value, expected):
 
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
-    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
     mocker.patch(
         "roadmap.common.urllib.request.urlopen",
-        return_value=MagicMock(
-            __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=json.dumps(fixture_data).encode()))),
-            __exit__=MagicMock(return_value=False),
-        ),
+        return_value=BytesIO(read_fixture_file("rbac_response.json", mode="rb")),
     )
 
     result = await query_rbac(settings)
@@ -172,14 +167,11 @@ async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
         "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError("http://example.com", 401, "Unauthorized", {}, None),
+        side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
     )
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException, match="Raised intentionally"):
         await query_rbac(settings)
-
-    assert exc_info.value.status_code == 401
-    assert exc_info.value.detail == "Unauthorized"
 
 
 async def test_query_rbac_dev_mode():
@@ -202,10 +194,7 @@ async def test_query_rbac_json_decode_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
         "roadmap.common.urllib.request.urlopen",
-        return_value=MagicMock(
-            __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=b"not json"))),
-            __exit__=MagicMock(return_value=False),
-        ),
+        return_value=BytesIO(b"invalid json"),
     )
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):

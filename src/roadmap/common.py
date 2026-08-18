@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import json
 import logging
@@ -72,15 +71,14 @@ async def query_rbac(
     if not settings.rbac_url:
         return [{}]
 
-    url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
-
-    def _fetch_rbac():
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=30) as response:
-            return json.load(response)
+    req = urllib.request.Request(
+        f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
+        headers=headers,
+    )
 
     try:
-        data = await asyncio.to_thread(_fetch_rbac)
+        with urllib.request.urlopen(req) as response:
+            data = json.load(response)
     except HTTPError as err:
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.code, detail=err.msg)

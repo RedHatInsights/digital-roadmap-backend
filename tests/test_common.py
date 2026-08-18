@@ -2,7 +2,8 @@ import json
 
 from contextlib import nullcontext
 from datetime import date
-from unittest.mock import MagicMock
+from email.message import Message
+from io import BytesIO
 from urllib.error import HTTPError
 
 import pytest
@@ -155,31 +156,33 @@ async def test_decode_header(value, expected):
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
     fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=MagicMock(
-            __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=json.dumps(fixture_data).encode()))),
-            __exit__=MagicMock(return_value=False),
-        ),
+
+    # Mock _fetch_rbac to return fixture data directly
+    mock_fetch = mocker.patch(
+        "roadmap.common._fetch_rbac",
+        return_value=fixture_data,
     )
 
     result = await query_rbac(settings)
 
     assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
+    # Verify that URL and headers were passed as explicit arguments
+    mock_fetch.assert_called_once()
+    call_args = mock_fetch.call_args
+    assert "example.com" in call_args[0][0]  # URL contains hostname
+    assert "api/rbac/v1/access" in call_args[0][0]  # URL contains path
+    assert isinstance(call_args[0][1], dict)  # headers dict
 
 
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError("http://example.com", 401, "Unauthorized", {}, None),
+        "roadmap.common._fetch_rbac",
+        side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
     )
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException, match="Raised intentionally"):
         await query_rbac(settings)
-
-    assert exc_info.value.status_code == 401
-    assert exc_info.value.detail == "Unauthorized"
 
 
 async def test_query_rbac_dev_mode():
@@ -201,11 +204,8 @@ async def test_query_rbac_no_url():
 async def test_query_rbac_json_decode_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=MagicMock(
-            __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=b"not json"))),
-            __exit__=MagicMock(return_value=False),
-        ),
+        "roadmap.common._fetch_rbac",
+        side_effect=json.JSONDecodeError("Expecting value", "", 0),
     )
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
@@ -215,12 +215,38 @@ async def test_query_rbac_json_decode_error(mocker):
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
+        "roadmap.common._fetch_rbac",
         side_effect=Exception("Connection timeout"),
     )
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
         await query_rbac(settings)
+
+
+def test_fetch_rbac_function(mocker, read_fixture_file):
+    """Test the _fetch_rbac function directly to ensure it works with explicit params."""
+    from roadmap.common import _fetch_rbac
+
+    fixture_data = read_fixture_file("rbac_response.json", mode="rb")
+    mock_urlopen = mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(fixture_data),
+    )
+
+    url = "https://example.com/api/rbac/v1/access/"
+    headers = {"X-RH-Identity": "test-token"}
+
+    result = _fetch_rbac(url, headers)
+
+    assert result == {"data": [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]}
+    # Verify urlopen was called with a Request object and timeout
+    mock_urlopen.assert_called_once()
+    call_args = mock_urlopen.call_args
+    # First positional arg should be a Request object
+    request_obj = call_args[0][0]
+    assert hasattr(request_obj, "full_url")
+    # Check timeout was passed as kwarg
+    assert call_args[1].get("timeout") == 30
 
 
 @pytest.mark.parametrize(

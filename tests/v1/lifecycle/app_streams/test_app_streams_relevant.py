@@ -1,4 +1,6 @@
 from datetime import date
+from email.message import Message
+from io import BytesIO
 from urllib.error import HTTPError
 
 import pytest
@@ -60,16 +62,17 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
         return Settings(rbac_hostname="example.com")
 
     mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        side_effect=HTTPError("http://example.com", 400, "Bad Request", {}, None),
+        "roadmap.common._fetch_rbac",
+        side_effect=HTTPError(url="url", code=400, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
     )
-
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[Settings.create] = settings_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+    detail = result.json().get("detail", "")
 
     assert result.status_code == 400
+    assert detail == "Raised intentionally"
 
 
 def test_get_relevant_app_stream_error_building_response(api_prefix, client, mocker):

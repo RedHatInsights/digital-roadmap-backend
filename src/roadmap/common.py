@@ -51,6 +51,17 @@ async def decode_header(
     return org_id
 
 
+def _fetch_rbac(fetch_url: str, fetch_headers: dict) -> dict:
+    """Synchronous RBAC fetch function to run in thread pool.
+
+    Takes url and headers as explicit arguments to ensure they are
+    evaluated in the main thread before being passed to the worker thread.
+    """
+    req = urllib.request.Request(fetch_url, headers=fetch_headers)
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return json.load(response)
+
+
 async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
@@ -68,19 +79,16 @@ async def query_rbac(
         "limit": 1000,
     }
 
+    # Evaluate headers and URL in the main thread before passing to worker thread
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
     if not settings.rbac_url:
         return [{}]
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
-    def _fetch_rbac():
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=30) as response:
-            return json.load(response)
-
     try:
-        data = await asyncio.to_thread(_fetch_rbac)
+        # Pass url and headers explicitly so they are evaluated in the main thread
+        data = await asyncio.to_thread(_fetch_rbac, url, headers)
     except HTTPError as err:
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.code, detail=err.msg)

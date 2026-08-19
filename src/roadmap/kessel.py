@@ -15,13 +15,19 @@ Reference implementations:
 * RedHatInsights/compliance-backend (Ruby) -- app/services/kessel_rbac.rb
 """
 
+# The kessel-sdk package is not present in the shared CI type-check image, so
+# pyright cannot resolve these imports there. It is a real, pinned runtime
+# dependency (see requirements/requirements-*.txt); suppress the missing-import
+# diagnostic for this module rather than weakening type checking globally.
+# pyright: reportMissingImports=false
+
 import logging
 import typing as t
 
 from fastapi import HTTPException
 from kessel.auth import fetch_oidc_discovery
-from kessel.auth import OAuth2ClientCredentials
 from kessel.auth import oauth2_auth_request
+from kessel.auth import OAuth2ClientCredentials
 from kessel.inventory.v1beta2 import ClientBuilder
 from kessel.rbac.v2 import fetch_default_workspace
 from kessel.rbac.v2 import fetch_root_workspace

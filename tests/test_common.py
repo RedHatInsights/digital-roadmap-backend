@@ -421,6 +421,22 @@ async def test_allowed_host_groups_kessel_denied(mocker):
         await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
 
 
+async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
+    """An HTTPException from the Kessel lookup propagates unchanged, not wrapped as 502."""
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch(
+        "roadmap.kessel.host_groups_for",
+        side_effect=HTTPException(status_code=403, detail="denied"),
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+
+    assert exc.value.status_code == 403
+
+
 async def test_allowed_host_groups_kessel_service_error(mocker):
     """A Kessel communication failure surfaces as a 502."""
     settings = Settings(kessel_enabled=True)

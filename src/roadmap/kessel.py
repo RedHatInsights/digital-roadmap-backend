@@ -90,7 +90,8 @@ def get_client(settings: Settings) -> t.Any:
 
     # build() returns (stub, channel); we only need the stub.
     _client, _ = builder.build()
-    logger.info("Built Kessel client for %s", settings.kessel_url)
+    # Do not log settings.kessel_url; it may reveal an internal hostname/IP.
+    logger.info("Built Kessel client")
     return _client
 
 

@@ -35,6 +35,18 @@ class Settings(BaseSettings):
     log_level: str = "info"
     json_logging: bool = False
 
+    # Kessel / RBAC v2 authorization. When kessel_enabled is False (the default),
+    # host authorization uses the legacy RBAC v1 /access/ path. When True, host
+    # groups are determined via the Kessel gRPC Inventory API instead.
+    kessel_enabled: bool = False
+    kessel_url: str = ""
+    kessel_insecure: bool = False
+    kessel_auth_enabled: bool = True
+    kessel_auth_client_id: str = ""
+    kessel_auth_client_secret: SecretStr = SecretStr("")
+    kessel_auth_oidc_issuer: str = ""
+    kessel_principal_domain: str = "redhat"
+
     @property
     def database_url(self) -> PostgresDsn:
         return PostgresDsn(

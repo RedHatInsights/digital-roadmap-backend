@@ -2,8 +2,10 @@ import uuid
 
 import pytest
 
+from fastapi import HTTPException
+
 from roadmap.common import decode_header
-from roadmap.common import query_rbac
+from roadmap.common import get_allowed_host_groups
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import System
 
@@ -67,19 +69,14 @@ def test_rhel_lifecycle_full_major(client, api_prefix, os_major):
 
 
 def test_rhel_relevant(client, api_prefix, ids_by_os):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
@@ -99,19 +96,14 @@ def test_rhel_relevant(client, api_prefix, ids_by_os):
 
 
 def test_rhel_relevant_extended_dates(client, api_prefix):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
@@ -128,11 +120,11 @@ def test_rhel_relevant_extended_dates(client, api_prefix):
 
 
 def test_get_relevant_rhel_no_rbac_access(api_prefix, client):
-    async def query_rbac_override():
-        return [{}]
+    async def get_allowed_host_groups_override():
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
 
@@ -140,19 +132,14 @@ def test_get_relevant_rhel_no_rbac_access(api_prefix, client):
 
 
 def test_rhel_relevant_related(client, api_prefix):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     response = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")

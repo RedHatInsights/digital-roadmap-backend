@@ -1,5 +1,3 @@
-import json
-
 from contextlib import nullcontext
 from datetime import date
 from email.message import Message
@@ -155,29 +153,20 @@ async def test_decode_header(value, expected):
 
 async def test_query_rbac(mocker, read_fixture_file):
     settings = Settings(rbac_hostname="example.com")
-    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
-
-    # Mock _fetch_rbac to return fixture data directly
-    mock_fetch = mocker.patch(
-        "roadmap.common._fetch_rbac",
-        return_value=fixture_data,
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(read_fixture_file("rbac_response.json", mode="rb")),
     )
 
     result = await query_rbac(settings)
 
     assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
-    # Verify that URL and headers were passed as explicit arguments
-    mock_fetch.assert_called_once()
-    call_args = mock_fetch.call_args
-    assert "example.com" in call_args[0][0]  # URL contains hostname
-    assert "api/rbac/v1/access" in call_args[0][0]  # URL contains path
-    assert isinstance(call_args[0][1], dict)  # headers dict
 
 
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common._fetch_rbac",
+        "roadmap.common.urllib.request.urlopen",
         side_effect=HTTPError(url="url", code=401, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
     )
 
@@ -204,8 +193,8 @@ async def test_query_rbac_no_url():
 async def test_query_rbac_json_decode_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common._fetch_rbac",
-        side_effect=json.JSONDecodeError("Expecting value", "", 0),
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(b"invalid json"),
     )
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
@@ -215,62 +204,12 @@ async def test_query_rbac_json_decode_error(mocker):
 async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mocker.patch(
-        "roadmap.common._fetch_rbac",
+        "roadmap.common.urllib.request.urlopen",
         side_effect=Exception("Connection timeout"),
     )
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
         await query_rbac(settings)
-
-
-def test_fetch_rbac_function(mocker, read_fixture_file):
-    """Test the _fetch_rbac function directly to ensure it works with explicit params."""
-    from roadmap.common import _fetch_rbac
-
-    fixture_data = read_fixture_file("rbac_response.json", mode="rb")
-    mock_urlopen = mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=BytesIO(fixture_data),
-    )
-    mock_logger = mocker.patch("roadmap.common.logger")
-
-    url = "https://example.com/api/rbac/v1/access/"
-    headers = {"X-RH-Identity": "test-token"}
-
-    result = _fetch_rbac(url, headers)
-
-    assert result == {"data": [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]}
-    # Verify urlopen was called with a Request object and timeout
-    mock_urlopen.assert_called_once()
-    call_args = mock_urlopen.call_args
-    # First positional arg should be a Request object
-    request_obj = call_args[0][0]
-    assert hasattr(request_obj, "full_url")
-    # Check timeout was passed as kwarg
-    assert call_args[1].get("timeout") == 30
-    # Verify logging calls were made
-    assert mock_logger.info.call_count == 4  # 4 logging statements when X-RH-Identity is present
-
-
-def test_fetch_rbac_function_no_identity_header(mocker, read_fixture_file):
-    """Test the _fetch_rbac function without X-RH-Identity header."""
-    from roadmap.common import _fetch_rbac
-
-    fixture_data = read_fixture_file("rbac_response.json", mode="rb")
-    mocker.patch(
-        "roadmap.common.urllib.request.urlopen",
-        return_value=BytesIO(fixture_data),
-    )
-    mock_logger = mocker.patch("roadmap.common.logger")
-
-    url = "https://example.com/api/rbac/v1/access/"
-    headers = {}
-
-    result = _fetch_rbac(url, headers)
-
-    assert result == {"data": [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]}
-    # Verify logging calls were made (3 logs when no X-RH-Identity)
-    assert mock_logger.info.call_count == 3
 
 
 @pytest.mark.parametrize(

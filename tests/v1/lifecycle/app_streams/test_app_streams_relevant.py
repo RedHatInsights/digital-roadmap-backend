@@ -62,7 +62,7 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
         return Settings(rbac_hostname="example.com")
 
     mocker.patch(
-        "roadmap.common._fetch_rbac",
+        "roadmap.common.urllib.request.urlopen",
         side_effect=HTTPError(url="url", code=400, hdrs=Message(), msg="Raised intentionally", fp=BytesIO()),
     )
     client.app.dependency_overrides = {}

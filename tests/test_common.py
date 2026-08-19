@@ -232,6 +232,7 @@ def test_fetch_rbac_function(mocker, read_fixture_file):
         "roadmap.common.urllib.request.urlopen",
         return_value=BytesIO(fixture_data),
     )
+    mock_logger = mocker.patch("roadmap.common.logger")
 
     url = "https://example.com/api/rbac/v1/access/"
     headers = {"X-RH-Identity": "test-token"}
@@ -247,6 +248,29 @@ def test_fetch_rbac_function(mocker, read_fixture_file):
     assert hasattr(request_obj, "full_url")
     # Check timeout was passed as kwarg
     assert call_args[1].get("timeout") == 30
+    # Verify logging calls were made
+    assert mock_logger.info.call_count == 4  # 4 logging statements when X-RH-Identity is present
+
+
+def test_fetch_rbac_function_no_identity_header(mocker, read_fixture_file):
+    """Test the _fetch_rbac function without X-RH-Identity header."""
+    from roadmap.common import _fetch_rbac
+
+    fixture_data = read_fixture_file("rbac_response.json", mode="rb")
+    mocker.patch(
+        "roadmap.common.urllib.request.urlopen",
+        return_value=BytesIO(fixture_data),
+    )
+    mock_logger = mocker.patch("roadmap.common.logger")
+
+    url = "https://example.com/api/rbac/v1/access/"
+    headers = {}
+
+    result = _fetch_rbac(url, headers)
+
+    assert result == {"data": [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]}
+    # Verify logging calls were made (3 logs when no X-RH-Identity)
+    assert mock_logger.info.call_count == 3
 
 
 @pytest.mark.parametrize(

@@ -116,7 +116,10 @@ def host_groups_for(client: t.Any, subject: t.Any) -> list[str]:
     Enumerates workspaces via the Kessel Inventory ``StreamedListObjects`` API
     (pagination handled by the SDK) using the ``inventory_host_view`` relation.
     """
-    return [response.object.resource_id for response in list_workspaces(client, subject, HOST_VIEW_RELATION)]
+    # We always consume the whole result, so materialise it eagerly via list()
+    # per the kessel-sdk list_workspaces guidance, then project each response.
+    responses = list(list_workspaces(client, subject, HOST_VIEW_RELATION))
+    return [response.object.resource_id for response in responses]
 
 
 def _auth_for_rbac(settings: Settings) -> t.Any:

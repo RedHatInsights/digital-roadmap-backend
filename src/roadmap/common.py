@@ -167,27 +167,26 @@ def _allowed_host_groups_v1(permissions: list[dict[t.Any, t.Any]]) -> set[str | 
 
 async def _allowed_host_groups_kessel(
     settings: Settings,
-    org_id: str,
     x_rh_identity: str | None,
 ) -> set[str | None]:
     """Determine allowed host groups via the Kessel gRPC Inventory API.
 
     ``kessel.host_groups_for`` returns the ids of the workspaces the caller may
-    view hosts in (``workspace_ids`` below). Those ids are translated into the
-    host-group filter query_host_inventory expects (empty set = unrestricted;
-    ids = restricted to those groups; None = the ungrouped group).
+    view hosts in. Those ids are used directly as the host-group filter consumed
+    by query_host_inventory (each equals a host's groups[].id):
 
-    Note the two distinct empty sets, which mean opposite things:
+    * No viewable workspaces -> deny (403).
+    * Otherwise -> restrict to exactly the listed workspace ids.
 
-    * ``workspace_ids`` is empty -> the caller may view *no* workspaces, which is
-      a deny (403). This is what Kessel returned.
-    * The *returned* set is empty -> unrestricted access. This happens when the
-      caller can view the org's root/default workspace, i.e. they are an
-      org-wide reader. Ungrouped hosts live in the default workspace, so this
-      also covers ungrouped-host access.
+    Unlike the RBAC v1 path, this never returns None (the ungrouped group) nor an
+    empty "unrestricted" set. Ungrouped hosts are matched via their own
+    ungrouped-hosts workspace id, if the caller can view it. Root/default
+    workspace ids, if present in the list, are harmless extras: hosts are not
+    stored on those workspace types, so groups[].id never matches them.
 
-    Otherwise the caller is restricted to specific (standard) workspaces, whose
-    ids each equal a host's groups[].id, and those ids are returned as-is.
+    This mirrors host-based inventory (HBI): the list_workspaces path is not used
+    to grant unfiltered org-level access, so callers are always filtered by the
+    listed ids rather than expanded to all hosts.
     """
     if settings.dev:
         return set()
@@ -208,19 +207,11 @@ async def _allowed_host_groups_kessel(
         # Kessel returned no viewable workspaces, so the caller may see nothing.
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    # If any workspace the caller can view is the org's root or default
-    # workspace, they are an org-wide reader. isdisjoint() is used (rather than a
-    # bitwise "&") to make the set-intersection test explicit.
-    if not workspace_ids.isdisjoint(kessel.org_wide_workspace_ids(settings, org_id)):
-        # Org-wide reader -> unrestricted access (empty filter).
-        return set()
-
     return {t.cast(str | None, ws_id) for ws_id in workspace_ids}
 
 
 async def get_allowed_host_groups(
     settings: t.Annotated[Settings, Depends(Settings.create)],
-    org_id: t.Annotated[str, Depends(decode_header)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> set[str | None]:
     """Return the set of host groups the caller is permitted to read.
@@ -228,9 +219,10 @@ async def get_allowed_host_groups(
     Uses Kessel / RBAC v2 when settings.kessel_enabled is True, otherwise the
     legacy RBAC v1 path. See _allowed_host_groups_v1 for the returned set's
     semantics (empty = unrestricted; ids = restricted; None = ungrouped group).
+    Note the Kessel path never returns an empty (unrestricted) set or None.
     """
     if settings.kessel_enabled:
-        return await _allowed_host_groups_kessel(settings, org_id, x_rh_identity)
+        return await _allowed_host_groups_kessel(settings, x_rh_identity)
 
     permissions = await query_rbac(settings, x_rh_identity)
     return _allowed_host_groups_v1(permissions)

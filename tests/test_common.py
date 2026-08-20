@@ -357,7 +357,7 @@ async def test_get_allowed_host_groups_v1_path(mocker):
         return_value=[{"resourceDefinitions": [], "permission": "inventory:*:*"}],
     )
 
-    result = await get_allowed_host_groups(settings=settings, org_id="1234", x_rh_identity=None)
+    result = await get_allowed_host_groups(settings=settings, x_rh_identity=None)
 
     assert result == set()
 
@@ -368,7 +368,7 @@ async def test_get_allowed_host_groups_kessel_path(mocker):
     kessel_mock = mocker.patch("roadmap.common._allowed_host_groups_kessel", return_value={"grp-1"})
     rbac_mock = mocker.patch("roadmap.common.query_rbac")
 
-    result = await get_allowed_host_groups(settings=settings, org_id="1234", x_rh_identity="header")
+    result = await get_allowed_host_groups(settings=settings, x_rh_identity="header")
 
     assert result == {"grp-1"}
     kessel_mock.assert_awaited_once()
@@ -379,35 +379,38 @@ async def test_allowed_host_groups_kessel_dev_mode():
     """Dev mode short-circuits to unrestricted without contacting Kessel."""
     settings = Settings(kessel_enabled=True, dev=True)
 
-    result = await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
-
-    assert result == set()
-
-
-async def test_allowed_host_groups_kessel_unrestricted(mocker):
-    """A user with access to the org's default workspace has unrestricted access."""
-    settings = Settings(kessel_enabled=True)
-    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
-    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
-    mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
-    mocker.patch("roadmap.kessel.org_wide_workspace_ids", return_value=frozenset({"root-ws", "default-ws"}))
-
-    result = await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
     assert result == set()
 
 
 async def test_allowed_host_groups_kessel_scoped(mocker):
-    """A workspace-scoped user gets the set of standard workspace ids."""
+    """A workspace-scoped user is restricted to exactly the listed workspace ids."""
     settings = Settings(kessel_enabled=True)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
-    mocker.patch("roadmap.kessel.org_wide_workspace_ids", return_value=frozenset({"root-ws", "default-ws"}))
 
-    result = await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
     assert result == {"grp-1", "grp-2"}
+
+
+async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
+    """Root/default workspace ids in the list are returned as harmless extras.
+
+    They do not expand to unrestricted access: hosts are not stored on those
+    workspace types, so groups[].id never matches them. The Kessel path never
+    returns an empty (unrestricted) set.
+    """
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
+
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+    assert result == {"root-ws", "grp-1"}
 
 
 async def test_allowed_host_groups_kessel_denied(mocker):
@@ -418,7 +421,7 @@ async def test_allowed_host_groups_kessel_denied(mocker):
     mocker.patch("roadmap.kessel.host_groups_for", return_value=[])
 
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
 
 async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
@@ -432,7 +435,7 @@ async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
     )
 
     with pytest.raises(HTTPException) as exc:
-        await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
     assert exc.value.status_code == 403
 
@@ -445,7 +448,7 @@ async def test_allowed_host_groups_kessel_service_error(mocker):
     mocker.patch("roadmap.kessel.host_groups_for", side_effect=Exception("gRPC unavailable"))
 
     with pytest.raises(HTTPException, match="Error communicating with authorization service"):
-        await _allowed_host_groups_kessel(settings, org_id="1234", x_rh_identity=None)
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
 
 def test_sort_attrs(mocker):

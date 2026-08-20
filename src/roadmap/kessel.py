@@ -7,8 +7,8 @@ True; the default authorization path remains RBAC v1 (see
 
 The one operation Digital Roadmap needs is enumerating the workspaces a user is
 allowed to view hosts in (relation ``inventory_host_view``). Those workspace ids
-are then mapped to the ``set[str | None]`` host-group filter consumed by
-``roadmap.common.query_host_inventory``.
+are used directly as the host-group filter consumed by
+``roadmap.common.query_host_inventory`` (each equals a host's groups[].id).
 
 Reference implementations:
 * RedHatInsights/advisor-backend (Python) -- api/kessel.py, api/permissions.py
@@ -26,11 +26,8 @@ import typing as t
 
 from fastapi import HTTPException
 from kessel.auth import fetch_oidc_discovery
-from kessel.auth import oauth2_auth_request
 from kessel.auth import OAuth2ClientCredentials
 from kessel.inventory.v1beta2 import ClientBuilder
-from kessel.rbac.v2 import fetch_default_workspace
-from kessel.rbac.v2 import fetch_root_workspace
 from kessel.rbac.v2 import list_workspaces
 from kessel.rbac.v2 import principal_subject
 
@@ -49,20 +46,15 @@ _USER_ID_FIELD = {
     "ServiceAccount": "service_account",
 }
 
-# Module-level caches. The gRPC channel is expensive to build, and the org's
-# root/default workspace ids are stable, so both are memoized for the process
-# lifetime. Cleared by reset_caches() in tests.
+# Module-level cache. The gRPC channel is expensive to build, so the client is
+# memoized for the process lifetime. Cleared by reset_caches() in tests.
 _client: t.Any = None
-_rbac_auth: t.Any = None
-_org_wide_workspace_ids: dict[str, frozenset[str]] = {}
 
 
 def reset_caches() -> None:
     """Reset module-level caches. Intended for use in tests."""
-    global _client, _rbac_auth
+    global _client
     _client = None
-    _rbac_auth = None
-    _org_wide_workspace_ids.clear()
 
 
 def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:
@@ -120,28 +112,3 @@ def host_groups_for(client: t.Any, subject: t.Any) -> list[str]:
     # per the kessel-sdk list_workspaces guidance, then project each response.
     responses = list(list_workspaces(client, subject, HOST_VIEW_RELATION))
     return [response.object.resource_id for response in responses]
-
-
-def _auth_for_rbac(settings: Settings) -> t.Any:
-    """Service-account auth used for RBAC v2 REST calls (fetch_*_workspace)."""
-    global _rbac_auth
-    if _rbac_auth is None:
-        _rbac_auth = oauth2_auth_request(_build_credentials(settings))
-    return _rbac_auth
-
-
-def org_wide_workspace_ids(settings: Settings, org_id: str) -> frozenset[str]:
-    """Return the org's root and default workspace ids (cached per org).
-
-    A user granted ``inventory_host_view`` on either of these workspaces is an
-    org-wide reader, which maps to unrestricted access.
-    """
-    if org_id in _org_wide_workspace_ids:
-        return _org_wide_workspace_ids[org_id]
-
-    auth = _auth_for_rbac(settings)
-    root = fetch_root_workspace(settings.rbac_url, org_id, auth=auth)
-    default = fetch_default_workspace(settings.rbac_url, org_id, auth=auth)
-    ids = frozenset(ws_id for ws_id in (root.id, default.id) if ws_id)
-    _org_wide_workspace_ids[org_id] = ids
-    return ids

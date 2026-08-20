@@ -15,6 +15,7 @@ objects:
       dependencies:
         - host-inventory
         - rbac
+        - kessel-inventory
 
       kafkaTopics:
         - topicName: platform.notifications.ingress
@@ -100,6 +101,44 @@ objects:
 
               - name: ROADMAP_ENV_NAME
                 value: ${ENV_NAME}
+
+              # Kessel / RBAC v2 authorization. Off by default; set the
+              # KESSEL_ENABLED parameter to "true" per environment to use the
+              # Kessel gRPC Inventory API instead of the legacy RBAC v1 path.
+              # The container env vars keep the ROADMAP_ prefix (Settings uses
+              # env_prefix="ROADMAP_"); the template parameters are unprefixed
+              # to match the shared app-sre KESSEL_* parameters.
+              - name: ROADMAP_KESSEL_ENABLED
+                value: ${KESSEL_ENABLED}
+
+              - name: ROADMAP_KESSEL_URL
+                value: ${KESSEL_URL}
+
+              - name: ROADMAP_KESSEL_INSECURE
+                value: ${KESSEL_INSECURE}
+
+              - name: ROADMAP_KESSEL_AUTH_ENABLED
+                value: ${KESSEL_AUTH_ENABLED}
+
+              - name: ROADMAP_KESSEL_AUTH_OIDC_ISSUER
+                value: ${KESSEL_AUTH_OIDC_ISSUER}
+
+              - name: ROADMAP_KESSEL_PRINCIPAL_DOMAIN
+                value: ${KESSEL_PRINCIPAL_DOMAIN}
+
+              - name: ROADMAP_KESSEL_AUTH_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: client-id
+                    key: kessel-authentication
+                    optional: true
+
+              - name: ROADMAP_KESSEL_AUTH_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: client-secret
+                    key: kessel-authentication
+                    optional: true
 
             resources:
               limits:
@@ -415,3 +454,30 @@ parameters:
 
   - name: LOG_LEVEL
     value: DEBUG
+
+  # Kessel / RBAC v2 authorization. Defaults keep Kessel OFF, so the legacy
+  # RBAC v1 path is used until KESSEL_ENABLED is set to "true" for a given
+  # environment in app-interface. These parameters are unprefixed to match the
+  # shared app-sre KESSEL_* parameters; the template maps them onto the
+  # ROADMAP_-prefixed container env vars the app reads.
+  - name: KESSEL_ENABLED
+    value: "false"
+
+  # In-cluster Kessel Inventory gRPC endpoint. Confirm the hostname for each
+  # environment with the Kessel/Inventory team before enabling.
+  - name: KESSEL_URL
+    value: "kessel-inventory-api:9000"
+
+  # Set to "true" only for local/mock Kessel (no TLS, no OAuth).
+  - name: KESSEL_INSECURE
+    value: "false"
+
+  - name: KESSEL_AUTH_ENABLED
+    value: "true"
+
+  # OIDC issuer (SSO realm URL) used for the OAuth2 client-credentials token.
+  - name: KESSEL_AUTH_OIDC_ISSUER
+    value: ""
+
+  - name: KESSEL_PRINCIPAL_DOMAIN
+    value: "redhat"

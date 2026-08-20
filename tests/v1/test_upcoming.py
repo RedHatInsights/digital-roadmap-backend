@@ -4,7 +4,7 @@ from datetime import date
 from pathlib import Path
 
 from roadmap.common import decode_header
-from roadmap.common import query_rbac
+from roadmap.common import get_allowed_host_groups
 from roadmap.config import Settings
 from roadmap.models import SystemInfo
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
@@ -46,19 +46,14 @@ def test_get_upcoming_changes_with_env(client, api_prefix):
 
 
 def test_get_relevant_upcoming_changes_all(client, api_prefix):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     response = client.get(f"{api_prefix}/relevant/upcoming-changes?all=true")
@@ -83,19 +78,14 @@ def test_get_relevant_upcoming_changes_all(client, api_prefix):
 
 
 def test_get_relevant_upcoming_changes(client, api_prefix):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     response = client.get(f"{api_prefix}/relevant/upcoming-changes")

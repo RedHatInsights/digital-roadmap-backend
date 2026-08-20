@@ -9,6 +9,8 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.exc import DBAPIError
 
+from roadmap.common import _allowed_host_groups_kessel
+from roadmap.common import _allowed_host_groups_v1
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
@@ -259,9 +261,9 @@ def test_get_group_list_from_resource_definition_error(resource_definition):
         _get_group_list_from_resource_definition(resource_definition)
 
 
-async def test_get_allowed_host_groups():
+def test_allowed_host_groups_v1():
     perms = [{"resourceDefinitions": [], "permission": "inventory:*:*"}]
-    result = await get_allowed_host_groups(perms)
+    result = _allowed_host_groups_v1(perms)
 
     # Empty set means unrestricted access.
     assert result == set()
@@ -275,9 +277,178 @@ async def test_get_allowed_host_groups():
         [{"resourceDefinitions": [], "permission": "nope"}],
     ),
 )
-async def test_get_allowed_host_groups_no_access(permissions):
+def test_allowed_host_groups_v1_no_access(permissions):
     with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
-        await get_allowed_host_groups(permissions)
+        _allowed_host_groups_v1(permissions)
+
+
+def test_allowed_host_groups_v1_group_read_does_not_501():
+    """Regression: inventory:groups:read perms with a group.id resourceDefinition
+    must not raise, because an inventory:hosts:read perm grants unrestricted access."""
+    permissions = [
+        {"permission": "inventory:hosts:read", "resourceDefinitions": []},
+        {"permission": "inventory:groups:write", "resourceDefinitions": []},
+        {"permission": "inventory:groups:read", "resourceDefinitions": []},
+        {
+            "permission": "inventory:groups:read",
+            "resourceDefinitions": [
+                {
+                    "attributeFilter": {
+                        "key": "group.id",
+                        "operation": "in",
+                        "value": ["c22abc43-62f9-4a03-94e0-2a49d0e3c3d8"],
+                    }
+                }
+            ],
+        },
+    ]
+
+    assert _allowed_host_groups_v1(permissions) == set()
+
+
+@pytest.mark.parametrize(
+    ("permissions", "expected"),
+    (
+        (
+            [
+                {
+                    "permission": "inventory:*:*",
+                    "resourceDefinitions": [
+                        {
+                            "attributeFilter": {
+                                "key": "group.id",
+                                "operation": "in",
+                                "value": ["ebeaf62a-9713-4dad-8d63-32b51cadbda3"],
+                            }
+                        }
+                    ],
+                }
+            ],
+            {"ebeaf62a-9713-4dad-8d63-32b51cadbda3"},
+        ),
+        (
+            [
+                {
+                    "permission": "inventory:hosts:read",
+                    "resourceDefinitions": [
+                        {
+                            "attributeFilter": {
+                                "key": "group.id",
+                                "operation": "in",
+                                "value": [None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"],
+                            }
+                        }
+                    ],
+                }
+            ],
+            {None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"},
+        ),
+    ),
+)
+def test_allowed_host_groups_v1_restricted(permissions, expected):
+    assert _allowed_host_groups_v1(permissions) == expected
+
+
+async def test_get_allowed_host_groups_v1_path(mocker):
+    """With Kessel disabled (default), get_allowed_host_groups uses RBAC v1."""
+    settings = Settings(kessel_enabled=False)
+    mocker.patch(
+        "roadmap.common.query_rbac",
+        return_value=[{"resourceDefinitions": [], "permission": "inventory:*:*"}],
+    )
+
+    result = await get_allowed_host_groups(settings=settings, x_rh_identity=None)
+
+    assert result == set()
+
+
+async def test_get_allowed_host_groups_kessel_path(mocker):
+    """With Kessel enabled, get_allowed_host_groups uses the Kessel path."""
+    settings = Settings(kessel_enabled=True)
+    kessel_mock = mocker.patch("roadmap.common._allowed_host_groups_kessel", return_value={"grp-1"})
+    rbac_mock = mocker.patch("roadmap.common.query_rbac")
+
+    result = await get_allowed_host_groups(settings=settings, x_rh_identity="header")
+
+    assert result == {"grp-1"}
+    kessel_mock.assert_awaited_once()
+    rbac_mock.assert_not_called()
+
+
+async def test_allowed_host_groups_kessel_dev_mode():
+    """Dev mode short-circuits to unrestricted without contacting Kessel."""
+    settings = Settings(kessel_enabled=True, dev=True)
+
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+    assert result == set()
+
+
+async def test_allowed_host_groups_kessel_scoped(mocker):
+    """A workspace-scoped user is restricted to exactly the listed workspace ids."""
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
+
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+    assert result == {"grp-1", "grp-2"}
+
+
+async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
+    """Root/default workspace ids in the list are returned as harmless extras.
+
+    They do not expand to unrestricted access: hosts are not stored on those
+    workspace types, so groups[].id never matches them. The Kessel path never
+    returns an empty (unrestricted) set.
+    """
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
+
+    result = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+    assert result == {"root-ws", "grp-1"}
+
+
+async def test_allowed_host_groups_kessel_denied(mocker):
+    """A user with no accessible workspaces is denied."""
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.host_groups_for", return_value=[])
+
+    with pytest.raises(HTTPException, match="Not authorized to access host inventory"):
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+
+async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
+    """An HTTPException from the Kessel lookup propagates unchanged, not wrapped as 502."""
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch(
+        "roadmap.kessel.host_groups_for",
+        side_effect=HTTPException(status_code=403, detail="denied"),
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
+
+    assert exc.value.status_code == 403
+
+
+async def test_allowed_host_groups_kessel_service_error(mocker):
+    """A Kessel communication failure surfaces as a 502."""
+    settings = Settings(kessel_enabled=True)
+    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
+    mocker.patch("roadmap.kessel.host_groups_for", side_effect=Exception("gRPC unavailable"))
+
+    with pytest.raises(HTTPException, match="Error communicating with authorization service"):
+        await _allowed_host_groups_kessel(settings, x_rh_identity=None)
 
 
 def test_sort_attrs(mocker):

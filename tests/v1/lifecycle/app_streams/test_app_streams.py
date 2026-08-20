@@ -214,17 +214,17 @@ def test_relevant_app_streams_with_enabled_module_verification(api_prefix, clien
     enabled-only modules by checking if their expected packages are installed.
     """
     from roadmap.common import decode_header
-    from roadmap.common import query_rbac
+    from roadmap.common import get_allowed_host_groups
 
     async def decode_header_override():
         return "1234"
 
-    async def query_rbac_override():
-        return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+    async def get_allowed_host_groups_override():
+        return set()
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[decode_header] = decode_header_override
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
 
     # Call the API which uses the fixture data
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")

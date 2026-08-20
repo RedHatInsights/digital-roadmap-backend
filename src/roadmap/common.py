@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
+from roadmap import kessel
 from roadmap.config import Settings
 from roadmap.database import get_db
 from roadmap.models import LifecycleType
@@ -35,19 +36,20 @@ MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, 
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
 
-async def decode_header(
-    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
-) -> str:
+def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
     # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
     if x_rh_identity is None:
-        return ""
+        return {}
 
     decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
     id_header = json.loads(decoded_id_header)
-    identity = id_header.get("identity", {})
-    org_id = identity.get("org_id", "")
+    return id_header.get("identity", {})
 
-    return org_id
+
+async def decode_header(
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+) -> str:
+    return _decode_identity(x_rh_identity).get("org_id", "")
 
 
 async def query_rbac(
@@ -128,10 +130,8 @@ def _get_group_list_from_resource_definition(resource_definition: dict) -> list[
     raise HTTPException(501, detail="RBAC resourceDefinition had no attributeFilter.")
 
 
-async def get_allowed_host_groups(
-    permissions: t.Annotated[list[dict[t.Any, t.Any]], Depends(query_rbac)],
-) -> set[str | None]:
-    """Check the given permissions for inventory access.
+def _allowed_host_groups_v1(permissions: list[dict[t.Any, t.Any]]) -> set[str | None]:
+    """Interpret RBAC v1 inventory permissions into allowed host groups.
 
     Raise HTTPException if no permissions allow access.
 
@@ -163,6 +163,69 @@ async def get_allowed_host_groups(
             allowed_group_ids.update(group_list)
 
     return allowed_group_ids
+
+
+async def _allowed_host_groups_kessel(
+    settings: Settings,
+    x_rh_identity: str | None,
+) -> set[str | None]:
+    """Determine allowed host groups via the Kessel gRPC Inventory API.
+
+    ``kessel.host_groups_for`` returns the ids of the workspaces the caller may
+    view hosts in. Those ids are used directly as the host-group filter consumed
+    by query_host_inventory (each equals a host's groups[].id):
+
+    * No viewable workspaces -> deny (403).
+    * Otherwise -> restrict to exactly the listed workspace ids.
+
+    Unlike the RBAC v1 path, this never returns None (the ungrouped group) nor an
+    empty "unrestricted" set. Ungrouped hosts are matched via their own
+    ungrouped-hosts workspace id, if the caller can view it. Root/default
+    workspace ids, if present in the list, are harmless extras: hosts are not
+    stored on those workspace types, so groups[].id never matches them.
+
+    This mirrors host-based inventory (HBI): the list_workspaces path is not used
+    to grant unfiltered org-level access, so callers are always filtered by the
+    listed ids rather than expanded to all hosts.
+    """
+    if settings.dev:
+        return set()
+
+    identity = _decode_identity(x_rh_identity)
+    subject = kessel.subject_from_identity(identity, settings.kessel_principal_domain)
+    client = kessel.get_client(settings)
+
+    try:
+        workspace_ids = set(kessel.host_groups_for(client, subject))
+    except HTTPException:
+        raise
+    except Exception as err:
+        logger.error(f"Error querying Kessel for host groups: {err}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Error communicating with authorization service")
+
+    if not workspace_ids:
+        # Kessel returned no viewable workspaces, so the caller may see nothing.
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
+
+    return {t.cast(str | None, ws_id) for ws_id in workspace_ids}
+
+
+async def get_allowed_host_groups(
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
+) -> set[str | None]:
+    """Return the set of host groups the caller is permitted to read.
+
+    Uses Kessel / RBAC v2 when settings.kessel_enabled is True, otherwise the
+    legacy RBAC v1 path. See _allowed_host_groups_v1 for the returned set's
+    semantics (empty = unrestricted; ids = restricted; None = ungrouped group).
+    Note the Kessel path never returns an empty (unrestricted) set or None.
+    """
+    if settings.kessel_enabled:
+        return await _allowed_host_groups_kessel(settings, x_rh_identity)
+
+    permissions = await query_rbac(settings, x_rh_identity)
+    return _allowed_host_groups_v1(permissions)
 
 
 async def query_host_inventory(

@@ -5,8 +5,10 @@ from urllib.error import HTTPError
 
 import pytest
 
+from fastapi import HTTPException
+
 from roadmap.common import decode_header
-from roadmap.common import query_rbac
+from roadmap.common import get_allowed_host_groups
 from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamType
@@ -18,19 +20,14 @@ from tests.utils import SUPPORT_STATUS_TEST_CASES
 
 
 def test_get_relevant_app_stream(api_prefix, client):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 
@@ -76,19 +73,14 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
 
 
 def test_get_relevant_app_stream_error_building_response(api_prefix, client, mocker):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
 
@@ -100,11 +92,11 @@ def test_get_relevant_app_stream_error_building_response(api_prefix, client, moc
 
 
 def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
-    async def query_rbac_override():
-        return [{}]
+    async def get_allowed_host_groups_override():
+        raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 
@@ -112,54 +104,29 @@ def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):
 
 
 def test_get_relevant_app_stream_resource_definitions(api_prefix, client):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "value": ["ebeaf62a-9713-4dad-8d63-32b51cadbda3"],
-                            "operation": "in",
-                        },
-                    }
-                ],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return {"ebeaf62a-9713-4dad-8d63-32b51cadbda3"}
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
     assert result.status_code == 200
 
 
 def test_get_relevant_app_stream_resource_definitions_with_group_restriction(api_prefix, client):
-    """Testing a specific case that used to cause 501s"""
+    """A user with an unrestricted inventory:hosts:read grant has full access.
 
-    # Note the restriction is on _groups_, not on _hosts_.
-    async def query_rbac_override():
-        return [
-            {"permission": "inventory:hosts:read", "resourceDefinitions": []},
-            {"permission": "inventory:groups:write", "resourceDefinitions": []},
-            {"permission": "inventory:groups:read", "resourceDefinitions": []},
-            {
-                "permission": "inventory:groups:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "operation": "in",
-                            "value": ["c22abc43-62f9-4a03-94e0-2a49d0e3c3d8"],
-                        }
-                    }
-                ],
-            },
-        ]
+    The RBAC v1 parsing of the underlying permissions (which used to 501 on
+    inventory:groups:read resourceDefinitions) is covered by
+    tests/test_common.py::test_allowed_host_groups_v1_group_read_does_not_501.
+    """
+
+    async def get_allowed_host_groups_override():
+        return set()
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
 
@@ -173,27 +140,14 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
 
     """
 
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "operation": "in",
-                            "value": [None],
-                        }
-                    }
-                ],
-            },
-        ]
+    async def get_allowed_host_groups_override():
+        return {None}
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
@@ -212,27 +166,14 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_permission(
 def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped_permission(api_prefix, client):
     """Testing a case with group None, which means 'ungrouped', and another non-None group id"""
 
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "operation": "in",
-                            "value": [None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"],
-                        }
-                    }
-                ],
-            },
-        ]
+    async def get_allowed_host_groups_override():
+        return {None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"}
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
@@ -249,13 +190,8 @@ def test_get_relevant_app_stream_resource_definitions_with_ungrouped_and_grouped
 
 
 def test_get_revelent_app_stream_related(api_prefix, client, mocker):
-    async def query_rbac_override():
-        return [
-            {
-                "permission": "inventory:*:*",
-                "resourceDefinitions": [],
-            }
-        ]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
@@ -271,7 +207,7 @@ def test_get_revelent_app_stream_related(api_prefix, client, mocker):
     mock_date.today.return_value = date(2030, 6, 1)
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": True})
@@ -286,47 +222,21 @@ def test_get_revelent_app_stream_related(api_prefix, client, mocker):
 
 
 @pytest.mark.parametrize(
-    "rbac",
+    "host_groups",
     (
-        [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "operation": "in",
-                            "value": ["aec18a86-3593-11f0-8426-5e43c8b8aa2f", "397e1696-34f2-11f0-a718-5e43c8b8aa2f"],
-                        }
-                    }
-                ],
-            },
-        ],
-        [
-            {
-                "permission": "inventory:hosts:read",
-                "resourceDefinitions": [
-                    {
-                        "attributeFilter": {
-                            "key": "group.id",
-                            "operation": "equal",
-                            "value": "aec18a86-3593-11f0-8426-5e43c8b8aa2f",
-                        }
-                    }
-                ],
-            },
-        ],
+        {"aec18a86-3593-11f0-8426-5e43c8b8aa2f", "397e1696-34f2-11f0-a718-5e43c8b8aa2f"},
+        {"aec18a86-3593-11f0-8426-5e43c8b8aa2f"},
     ),
 )
-def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, client, rbac):
-    async def query_rbac_override():
-        return rbac
+def test_get_revelent_app_stream_related_with_group_permissions(api_prefix, client, host_groups):
+    async def get_allowed_host_groups_override():
+        return host_groups
 
     async def decode_header_override():
         return "1234"
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams?related=true")
     data = result.json().get("data", "")
@@ -714,10 +624,9 @@ def test_related_app_streams_with_none_start_date():
 def test_get_relevant_app_stream_exception_in_related(api_prefix, client, mocker):
     """Test exception handling in the related app streams endpoint."""
     from roadmap.common import decode_header
-    from roadmap.common import query_rbac
 
-    async def query_rbac_override():
-        return [{"permission": "inventory:*:*", "resourceDefinitions": []}]
+    async def get_allowed_host_groups_override():
+        return set()
 
     async def decode_header_override():
         return "1234"
@@ -738,7 +647,7 @@ def test_get_relevant_app_stream_exception_in_related(api_prefix, client, mocker
     )
 
     client.app.dependency_overrides = {}
-    client.app.dependency_overrides[query_rbac] = query_rbac_override
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
     client.app.dependency_overrides[decode_header] = decode_header_override
 
     result = client.get(f"{api_prefix}/relevant/lifecycle/app-streams", params={"related": True})

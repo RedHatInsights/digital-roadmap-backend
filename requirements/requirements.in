@@ -4,6 +4,7 @@ asgi-correlation-id
 ddtrace
 fastapi[standard-no-fastapi-cloud-cli]
 greenlet
+kessel-sdk[auth]
 prometheus-fastapi-instrumentator
 psycopg[c]
 pydantic-settings

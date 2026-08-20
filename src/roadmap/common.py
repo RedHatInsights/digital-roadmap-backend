@@ -172,15 +172,22 @@ async def _allowed_host_groups_kessel(
 ) -> set[str | None]:
     """Determine allowed host groups via the Kessel gRPC Inventory API.
 
-    Enumerate the workspaces the user may view hosts in and map them to the
-    host-group filter consumed by query_host_inventory:
+    ``kessel.host_groups_for`` returns the ids of the workspaces the caller may
+    view hosts in (``workspace_ids`` below). Those ids are translated into the
+    host-group filter query_host_inventory expects (empty set = unrestricted;
+    ids = restricted to those groups; None = the ungrouped group).
 
-    * The org's root/default workspace implies org-wide access -> empty set
-      (unrestricted). Ungrouped hosts live in the default workspace, so this
+    Note the two distinct empty sets, which mean opposite things:
+
+    * ``workspace_ids`` is empty -> the caller may view *no* workspaces, which is
+      a deny (403). This is what Kessel returned.
+    * The *returned* set is empty -> unrestricted access. This happens when the
+      caller can view the org's root/default workspace, i.e. they are an
+      org-wide reader. Ungrouped hosts live in the default workspace, so this
       also covers ungrouped-host access.
-    * Any other (standard) workspace maps to its id, which equals a host's
-      groups[].id.
-    * No accessible workspaces is a deny.
+
+    Otherwise the caller is restricted to specific (standard) workspaces, whose
+    ids each equal a host's groups[].id, and those ids are returned as-is.
     """
     if settings.dev:
         return set()
@@ -198,10 +205,14 @@ async def _allowed_host_groups_kessel(
         raise HTTPException(status_code=502, detail="Error communicating with authorization service")
 
     if not workspace_ids:
+        # Kessel returned no viewable workspaces, so the caller may see nothing.
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    if workspace_ids & kessel.org_wide_workspace_ids(settings, org_id):
-        # Org-wide reader -> unrestricted access.
+    # If any workspace the caller can view is the org's root or default
+    # workspace, they are an org-wide reader. isdisjoint() is used (rather than a
+    # bitwise "&") to make the set-intersection test explicit.
+    if not workspace_ids.isdisjoint(kessel.org_wide_workspace_ids(settings, org_id)):
+        # Org-wide reader -> unrestricted access (empty filter).
         return set()
 
     return {t.cast(str | None, ws_id) for ws_id in workspace_ids}

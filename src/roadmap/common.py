@@ -4,12 +4,12 @@ import logging
 import textwrap
 import typing as t
 import urllib.parse
-import urllib.request
 
 from collections.abc import AsyncGenerator
 from datetime import date
-from urllib.error import HTTPError
 from uuid import UUID
+
+import httpx
 
 from fastapi import Depends
 from fastapi import FastAPI
@@ -73,20 +73,22 @@ async def query_rbac(
     if not settings.rbac_url:
         return [{}]
 
-    req = urllib.request.Request(
-        f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}",
-        headers=headers,
-    )
+    url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
     try:
-        with urllib.request.urlopen(req) as response:
-            data = json.load(response)
-    except HTTPError as err:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPStatusError as err:
         logger.error(f"Problem querying RBAC: {err}")
-        raise HTTPException(status_code=err.code, detail=err.msg)
-    except json.JSONDecodeError as err:
+        raise HTTPException(status_code=err.response.status_code, detail=str(err))
+    except (json.JSONDecodeError, ValueError) as err:
         logger.error(f"Invalid JSON response from RBAC: {err}")
         raise HTTPException(status_code=502, detail="Invalid JSON response from RBAC service")
+    except httpx.TimeoutException as err:
+        logger.error(f"Timeout querying RBAC: {err}")
+        raise HTTPException(status_code=504, detail="RBAC service timed out")
     except Exception as err:
         logger.error(f"Unexpected error querying RBAC: {err}", exc_info=True)
         raise HTTPException(status_code=502, detail="Error communicating with RBAC service")

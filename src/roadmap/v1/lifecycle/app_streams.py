@@ -539,7 +539,7 @@ class NEVRA(BaseModel, frozen=True):
     arch: str
 
     @classmethod
-    @functools.cache
+    @functools.lru_cache(maxsize=100_000)
     def from_string(cls, package: str) -> "NEVRA":
         """Parse a package string and return an instance of this class.
 
@@ -607,7 +607,7 @@ def _stream_version_depth(application_stream_name: str) -> int:
     return 2
 
 
-@functools.cache
+@functools.lru_cache(maxsize=100_000)
 def app_stream_from_package(
     package: str,
     os_major: int,

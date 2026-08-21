@@ -193,10 +193,10 @@ async def _allowed_host_groups_kessel(
 
     identity = _decode_identity(x_rh_identity)
     subject = kessel.subject_from_identity(identity, settings.kessel_principal_domain)
-    client = kessel.get_client(settings)
 
     try:
-        workspace_ids = set(kessel.host_groups_for(client, subject))
+        client = kessel.get_client(settings)
+        workspace_ids = set(await kessel.host_groups_for(client, subject))
     except HTTPException:
         raise
     except Exception as err:

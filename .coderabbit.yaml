@@ -7,6 +7,12 @@
 language: "en-US"
 tone_instructions: "Security-focused. State risk severity and impact. Focus on production readiness."
 
+inheritance: true
+remote_config:
+  repository: "project-kessel/docs"
+  ref: "main"
+  path: ".coderabbit.yaml"
+
 reviews:
   profile: "assertive"
   request_changes_workflow: true

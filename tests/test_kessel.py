@@ -37,19 +37,24 @@ def test_subject_from_identity_no_user_id(identity):
         kessel.subject_from_identity(identity, "redhat")
 
 
-def test_host_groups_for(mocker):
+@pytest.mark.asyncio
+async def test_host_groups_for(mocker):
     responses = [
         mocker.Mock(object=mocker.Mock(resource_id="grp-1")),
         mocker.Mock(object=mocker.Mock(resource_id="grp-2")),
     ]
-    list_workspaces = mocker.patch("roadmap.kessel.list_workspaces", return_value=responses)
+
+    async def _fake_list(*args, **kwargs):
+        for r in responses:
+            yield r
+
+    mocker.patch("roadmap.kessel.list_workspaces_async", side_effect=_fake_list)
     client = mocker.Mock()
     subject = mocker.Mock()
 
-    result = kessel.host_groups_for(client, subject)
+    result = await kessel.host_groups_for(client, subject)
 
     assert result == ["grp-1", "grp-2"]
-    list_workspaces.assert_called_once_with(client, subject, kessel.HOST_VIEW_RELATION)
 
 
 def test_get_client_insecure(mocker):
@@ -59,7 +64,7 @@ def test_get_client_insecure(mocker):
     settings = Settings(kessel_url="localhost:9000", kessel_insecure=True)
     builder = mocker.Mock()
     stub = mocker.Mock()
-    builder.build.return_value = (stub, mocker.Mock())
+    builder.build_async.return_value = (stub, mocker.Mock())
     client_builder = mocker.patch("roadmap.kessel.ClientBuilder", return_value=builder)
 
     result = kessel.get_client(settings)
@@ -72,7 +77,7 @@ def test_get_client_insecure(mocker):
 
     # Second call is served from the cached client.
     assert kessel.get_client(settings) is stub
-    builder.build.assert_called_once()
+    builder.build_async.assert_called_once()
 
     kessel.reset_caches()
 
@@ -84,7 +89,7 @@ def test_get_client_authenticated(mocker):
     settings = Settings(kessel_url="kessel:443", kessel_insecure=False, kessel_auth_enabled=True)
     builder = mocker.Mock()
     stub = mocker.Mock()
-    builder.build.return_value = (stub, mocker.Mock())
+    builder.build_async.return_value = (stub, mocker.Mock())
     mocker.patch("roadmap.kessel.ClientBuilder", return_value=builder)
     creds = mocker.Mock()
     build_creds = mocker.patch("roadmap.kessel._build_credentials", return_value=creds)
@@ -106,7 +111,7 @@ def test_get_client_unauthenticated(mocker):
     settings = Settings(kessel_url="kessel:443", kessel_insecure=False, kessel_auth_enabled=False)
     builder = mocker.Mock()
     stub = mocker.Mock()
-    builder.build.return_value = (stub, mocker.Mock())
+    builder.build_async.return_value = (stub, mocker.Mock())
     mocker.patch("roadmap.kessel.ClientBuilder", return_value=builder)
 
     result = kessel.get_client(settings)

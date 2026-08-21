@@ -28,7 +28,7 @@ from fastapi import HTTPException
 from kessel.auth import fetch_oidc_discovery
 from kessel.auth import OAuth2ClientCredentials
 from kessel.inventory.v1beta2 import ClientBuilder
-from kessel.rbac.v2 import list_workspaces
+from kessel.rbac.v2 import list_workspaces_async
 from kessel.rbac.v2 import principal_subject
 
 from roadmap.config import Settings
@@ -67,7 +67,7 @@ def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:
 
 
 def get_client(settings: Settings) -> t.Any:
-    """Return a cached Kessel Inventory gRPC stub, building it on first use."""
+    """Return a cached async Kessel Inventory gRPC stub, building it on first use."""
     global _client
     if _client is not None:
         return _client
@@ -80,10 +80,12 @@ def get_client(settings: Settings) -> t.Any:
     else:
         builder.unauthenticated()
 
-    # build() returns (stub, channel); we only need the stub.
-    _client, _ = builder.build()
-    # Do not log settings.kessel_url; it may reveal an internal hostname/IP.
-    logger.info("Built Kessel client")
+    # build_async() returns an async stub that uses grpc.aio channels, which
+    # integrate with the asyncio event loop. The sync build() sets
+    # SingleThreadedUnaryStream which deadlocks when the calling thread is
+    # the asyncio event loop (FastAPI runs async handlers on the loop).
+    _client, _ = builder.build_async()
+    logger.info("Built Kessel client (async)")
     return _client
 
 
@@ -102,13 +104,11 @@ def subject_from_identity(identity: dict[str, t.Any], domain: str) -> t.Any:
     return principal_subject(str(user_id), domain)
 
 
-def host_groups_for(client: t.Any, subject: t.Any) -> list[str]:
+async def host_groups_for(client: t.Any, subject: t.Any) -> list[str]:
     """Return the workspace ids the subject may view hosts in.
 
     Enumerates workspaces via the Kessel Inventory ``StreamedListObjects`` API
     (pagination handled by the SDK) using the ``inventory_host_view`` relation.
     """
-    # We always consume the whole result, so materialise it eagerly via list()
-    # per the kessel-sdk list_workspaces guidance, then project each response.
-    responses = list(list_workspaces(client, subject, HOST_VIEW_RELATION))
+    responses = [r async for r in list_workspaces_async(client, subject, HOST_VIEW_RELATION)]
     return [response.object.resource_id for response in responses]

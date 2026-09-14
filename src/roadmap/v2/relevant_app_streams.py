@@ -27,12 +27,17 @@ relevant = APIRouter(
 async def get_relevant_app_streams_v2(
     systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
-):
+) -> RelevantAppStreamsResponse:
+    """Return app stream lifecycle data with counts only (v2 thin wrapper).
+
+    Delegates to the v1 endpoint and strips host-detail arrays from the
+    response to reduce payload size.
+    """
     response = await get_relevant_app_streams(systems_by_stream, related)
     for item in response["data"]:
         item.systems_detail = set()
         item.systems = set()
-    return response
+    return t.cast(RelevantAppStreamsResponse, response)
 
 
 @relevant.get(
@@ -49,6 +54,12 @@ async def get_app_streams_systems_v2(
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
 ) -> PaginatedSystemsResponse:
+    """Return paginated host details for a specific app stream.
+
+    Matches hosts by stream name and OS version from the pre-computed
+    systems-by-stream mapping, then applies Python-level pagination and
+    optional display-name search.
+    """
     matching_systems: set[SystemInfo] = set()
     for key, systems in systems_by_stream.items():
         if (
@@ -59,7 +70,7 @@ async def get_app_streams_systems_v2(
             matching_systems = systems
             break
 
-    filtered = sorted(matching_systems, key=lambda s: s.display_name)
+    filtered = sorted(matching_systems, key=lambda s: (s.display_name, str(s.id)))
 
     if search:
         search_lower = search.lower()

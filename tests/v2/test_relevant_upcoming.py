@@ -1,3 +1,5 @@
+import pytest
+
 from fastapi import HTTPException
 
 from roadmap.common import decode_header
@@ -105,7 +107,7 @@ class TestV2UpcomingSystems:
         _apply_auth_overrides(client)
         first = self._get_first_upcoming_with_systems(client, v2_prefix)
         if first is None:
-            return
+            pytest.skip("No upcoming changes with affected systems found in test data")
 
         response = client.get(
             f"{v2_prefix}/relevant/upcoming-changes/systems",
@@ -123,7 +125,7 @@ class TestV2UpcomingSystems:
         _apply_auth_overrides(client)
         first = self._get_first_upcoming_with_systems(client, v2_prefix)
         if first is None:
-            return
+            pytest.skip("No upcoming changes with affected systems found in test data")
 
         params = {"name": first["name"], "release": first["release"]}
 
@@ -149,7 +151,7 @@ class TestV2UpcomingSystems:
         _apply_auth_overrides(client)
         first = self._get_first_upcoming_with_systems(client, v2_prefix)
         if first is None:
-            return
+            pytest.skip("No upcoming changes with affected systems found in test data")
 
         all_response = client.get(
             f"{v2_prefix}/relevant/upcoming-changes/systems",
@@ -157,8 +159,11 @@ class TestV2UpcomingSystems:
         )
 
         all_data = all_response.json()["data"]
-        if not all_data:
-            return
+        assert all_response.status_code == 200
+        assert len(all_data) > 0, (
+            f"Systems endpoint returned empty data for upcoming change '{first['name']}' "
+            f"which has count={first['details']['potentiallyAffectedSystemsCount']}"
+        )
 
         search_term = all_data[0]["display_name"][:5]
         search_response = client.get(
@@ -180,7 +185,7 @@ class TestV2UpcomingSystems:
         _apply_auth_overrides(client)
         first = self._get_first_upcoming_with_systems(client, v2_prefix)
         if first is None:
-            return
+            pytest.skip("No upcoming changes with affected systems found in test data")
 
         systems_response = client.get(
             f"{v2_prefix}/relevant/upcoming-changes/systems",
@@ -220,6 +225,7 @@ class TestV2UpcomingSystems:
         assert result.status_code == 403
 
     def test_v2_upcoming_systems_limit_bounds(self, client, v2_prefix):
+        """Verify limit min 1 and max 100 are enforced by validation."""
         _apply_auth_overrides(client)
 
         response = client.get(
@@ -231,5 +237,15 @@ class TestV2UpcomingSystems:
         response = client.get(
             f"{v2_prefix}/relevant/upcoming-changes/systems",
             params={"name": "test", "release": "9.0", "limit": 101},
+        )
+        assert response.status_code == 422
+
+    def test_v2_upcoming_systems_negative_offset(self, client, v2_prefix):
+        """Verify offset min 0 is enforced by validation."""
+        _apply_auth_overrides(client)
+
+        response = client.get(
+            f"{v2_prefix}/relevant/upcoming-changes/systems",
+            params={"name": "test", "release": "9.0", "offset": -1},
         )
         assert response.status_code == 422

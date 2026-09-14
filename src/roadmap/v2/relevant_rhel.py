@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
 from fastapi import Query
+from sqlalchemy.ext.asyncio import AsyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from roadmap.common import decode_header
@@ -34,9 +35,14 @@ relevant = APIRouter(
 )
 async def get_relevant_systems_v2(
     org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
+    systems: t.Annotated[AsyncResult[t.Any], Depends(query_host_inventory)],
     related: bool = False,
 ) -> RelevantSystemsResponse:
+    """Return RHEL lifecycle data with counts only (v2 thin wrapper).
+
+    Delegates to the v1 endpoint and strips host-detail arrays from the
+    response to reduce payload size.
+    """
     response = await get_relevant_systems(org_id, systems, related)
     for item in response.data:
         item.systems_detail = set()
@@ -61,6 +67,11 @@ async def get_rhel_systems_v2(
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
 ) -> PaginatedSystemsResponse:
+    """Return paginated host details for a specific RHEL major.minor version.
+
+    Uses a dedicated SQL query with DB-level pagination, lifecycle type
+    filtering, and optional display-name search.
+    """
     return await query_rhel_systems(
         org_id=org_id,
         session=session,

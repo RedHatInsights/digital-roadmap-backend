@@ -205,6 +205,8 @@ class RHELLifecycle(BaseModel):
 
 
 class PaginatedSystemsResponse(BaseModel):
+    """Paginated response for v2 systems endpoints with offset/limit metadata."""
+
     meta: Meta
     data: list[SystemInfo]
 

@@ -12,6 +12,7 @@ from roadmap.v1.upcoming import get_upcoming_data_with_hosts
 from roadmap.v1.upcoming import get_upcoming_relevant
 from roadmap.v1.upcoming import packages_by_system
 from roadmap.v1.upcoming import read_upcoming_file
+from roadmap.v1.upcoming import UpcomingOutput
 from roadmap.v1.upcoming import WrappedUpcomingOutput
 
 
@@ -27,14 +28,19 @@ relevant = APIRouter(
     response_model=WrappedUpcomingOutput,
 )
 async def get_upcoming_relevant_v2(
-    data: t.Annotated[t.Any, Depends(get_upcoming_data_with_hosts)],
+    data: t.Annotated[list[UpcomingOutput], Depends(get_upcoming_data_with_hosts)],
     all: bool = False,
-):
+) -> WrappedUpcomingOutput:
+    """Return upcoming changes with counts only (v2 thin wrapper).
+
+    Delegates to the v1 endpoint and strips affected-systems arrays from the
+    response to reduce payload size.
+    """
     response = await get_upcoming_relevant(data, all)
     for item in response["data"]:
         item.details.potentiallyAffectedSystemsDetail = set()
         item.details.potentiallyAffectedSystems = set()
-    return response
+    return t.cast(WrappedUpcomingOutput, response)
 
 
 @relevant.get(
@@ -51,6 +57,12 @@ async def get_upcoming_systems_v2(
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
 ) -> PaginatedSystemsResponse:
+    """Return paginated host details for a specific upcoming change.
+
+    Matches hosts by comparing their installed packages against the upcoming
+    change's affected package set, then applies Python-level pagination and
+    optional display-name search.
+    """
     upcoming_items = read_upcoming_file(settings.upcoming_json_path)
 
     target = None
@@ -71,7 +83,7 @@ async def get_upcoming_systems_v2(
             if target.packages.intersection(packages):
                 matching_systems.add(system)
 
-    filtered = sorted(matching_systems, key=lambda s: s.display_name)
+    filtered = sorted(matching_systems, key=lambda s: (s.display_name, str(s.id)))
 
     if search:
         search_lower = search.lower()

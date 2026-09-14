@@ -1,8 +1,11 @@
 import uuid
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from fastapi import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 
 from roadmap.common import decode_header
 from roadmap.common import get_allowed_host_groups
@@ -94,15 +97,9 @@ class TestV2RhelSystems:
     Note: The RHEL systems endpoint uses a SQL query against hbi.hosts which
     requires a running Postgres database with loaded test data. In the test
     environment, this database is set up via `make start-db load-host-data`.
-    Tests that require the database are marked accordingly — if the database
-    is not available, they will fail with a 500 error.
+    Tests that require the database use the `requires_db` fixture which probes
+    the connection once per session and skips when unavailable.
     """
-
-    @staticmethod
-    def _skip_if_no_db(response):
-        """Skip the test if the database is not available (500 from connection refused)."""
-        if response.status_code == 500:
-            pytest.skip("PostgreSQL database not available — run `make start-db load-host-data`")
 
     def _get_first_rhel_with_systems(self, client, v2_prefix):
         """Helper: fetch v2 RHEL list and return the first item with count > 0."""
@@ -114,7 +111,7 @@ class TestV2RhelSystems:
                 return item
         return None
 
-    def test_v2_rhel_systems_count_consistency(self, client, v2_prefix):
+    def test_v2_rhel_systems_count_consistency(self, client, v2_prefix, requires_db):
         """Verify list endpoint count matches systems endpoint total for each version.
 
         This is the critical data consistency test: the v2 list wrapper uses
@@ -136,8 +133,6 @@ class TestV2RhelSystems:
             params={"lifecycle_type": lifecycle_type, "limit": 1},
         )
 
-        self._skip_if_no_db(systems_response)
-
         assert systems_response.status_code == 200
         systems_total = systems_response.json()["meta"]["total"]
         assert systems_total == list_count, (
@@ -145,7 +140,7 @@ class TestV2RhelSystems:
             f"({systems_total}) for RHEL {major}.{minor} [{lifecycle_type}]"
         )
 
-    def test_v2_rhel_systems_count_consistency_all_versions(self, client, v2_prefix):
+    def test_v2_rhel_systems_count_consistency_all_versions(self, client, v2_prefix, requires_db):
         """Verify count consistency across ALL RHEL versions, not just the first."""
         _apply_auth_overrides(client)
 
@@ -169,8 +164,6 @@ class TestV2RhelSystems:
                 params={"lifecycle_type": lifecycle_type, "limit": 1},
             )
 
-            self._skip_if_no_db(systems_response)
-
             assert systems_response.status_code == 200
             systems_total = systems_response.json()["meta"]["total"]
             assert systems_total == list_count, (
@@ -181,13 +174,11 @@ class TestV2RhelSystems:
 
         assert checked > 0, "Expected at least one RHEL version with systems to check"
 
-    def test_v2_rhel_systems_empty_result(self, client, v2_prefix):
+    def test_v2_rhel_systems_empty_result(self, client, v2_prefix, requires_db):
         """Call with a version that has no hosts — should return empty result."""
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/7/0/systems")
-
-        self._skip_if_no_db(response)
 
         assert response.status_code == 200
         data = response.json()
@@ -224,13 +215,11 @@ class TestV2RhelSystems:
         result = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems")
         assert result.status_code == 403
 
-    def test_v2_rhel_systems_basic(self, client, v2_prefix, ids_by_os):
+    def test_v2_rhel_systems_basic(self, client, v2_prefix, ids_by_os, requires_db):
         """Call with a known version. Verify response structure and content."""
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems")
-
-        self._skip_if_no_db(response)
 
         assert response.status_code == 200
         data = response.json()
@@ -246,14 +235,11 @@ class TestV2RhelSystems:
             assert "os_minor" in system
             assert uuid.UUID(system["id"]), "System ID should be a valid UUID"
 
-    def test_v2_rhel_systems_pagination(self, client, v2_prefix):
+    def test_v2_rhel_systems_pagination(self, client, v2_prefix, requires_db):
         """Call with small limit, then offset — verify different pages."""
         _apply_auth_overrides(client)
 
         page1 = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?offset=0&limit=2")
-
-        self._skip_if_no_db(page1)
-
         page2 = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?offset=2&limit=2")
 
         assert page1.status_code == 200
@@ -267,18 +253,17 @@ class TestV2RhelSystems:
         if page1_ids and page2_ids:
             assert page1_ids.isdisjoint(page2_ids), "Pages should not overlap"
 
-    def test_v2_rhel_systems_search(self, client, v2_prefix):
+    def test_v2_rhel_systems_search(self, client, v2_prefix, requires_db):
         """Call with a search filter — verify only matching systems are returned."""
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=100")
 
-        self._skip_if_no_db(response)
-
+        assert response.status_code == 200
         all_data = response.json()["data"]
 
         if not all_data:
-            return
+            pytest.skip("No RHEL 9.1 systems in test data to test search")
 
         search_term = all_data[0]["display_name"][:5]
         search_response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?search={search_term}&limit=100")
@@ -287,17 +272,15 @@ class TestV2RhelSystems:
         for system in search_response.json()["data"]:
             assert search_term.lower() in system["display_name"].lower()
 
-    def test_v2_rhel_systems_lifecycle_type_filter(self, client, v2_prefix):
+    def test_v2_rhel_systems_lifecycle_type_filter(self, client, v2_prefix, requires_db):
         """Call with lifecycle_type=EUS — verify only that type's systems are returned."""
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/2/systems?lifecycle_type=EUS")
 
-        self._skip_if_no_db(response)
-
         assert response.status_code == 200
 
-    def test_v2_rhel_systems_os_release_fallback(self, client, v2_prefix):
+    def test_v2_rhel_systems_os_release_fallback(self, client, v2_prefix, requires_db):
         """Verify hosts with os_name but no major/minor (only os_release) are included.
 
         The test fixture contains a host with operating_system={'name': 'RHEL'}
@@ -309,8 +292,6 @@ class TestV2RhelSystems:
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/6/systems?limit=100")
-
-        self._skip_if_no_db(response)
 
         assert response.status_code == 200
         systems_total = response.json()["meta"]["total"]
@@ -329,7 +310,7 @@ class TestV2RhelSystems:
             f"incomplete operating_system JSONB data."
         )
 
-    def test_v2_rhel_systems_excludes_null_os_name(self, client, v2_prefix):
+    def test_v2_rhel_systems_excludes_null_os_name(self, client, v2_prefix, requires_db):
         """Verify hosts with empty operating_system dict (os_name=None) are excluded.
 
         The test fixture has a host with operating_system={} and os_release='9.6'.
@@ -340,11 +321,50 @@ class TestV2RhelSystems:
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/6/systems?limit=100")
 
-        self._skip_if_no_db(response)
-
         assert response.status_code == 200
         system_ids = {s["id"] for s in response.json()["data"]}
 
         assert "96e0810e-1fc6-496f-ba52-a609a382ee86" not in system_ids, (
             "Host with empty operating_system dict (no os_name) should be excluded from RHEL systems query"
         )
+
+    def test_v2_rhel_systems_db_error_returns_500(self, client, v2_prefix):
+        """Verify the endpoint returns HTTP 500 when a database error occurs."""
+        _apply_auth_overrides(client)
+
+        mock_session = AsyncMock()
+        mock_session.execute.side_effect = SQLAlchemyError("connection refused")
+
+        async def get_db_override():
+            yield mock_session
+
+        from roadmap.database import get_db
+
+        client.app.dependency_overrides[get_db] = get_db_override
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems")
+
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Error querying host inventory"
+
+        del client.app.dependency_overrides[get_db]
+
+    def test_v2_rhel_systems_major_out_of_range(self, client, v2_prefix):
+        """Verify major version path parameter rejects values outside 7-10."""
+        _apply_auth_overrides(client)
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/6/0/systems")
+        assert response.status_code == 422
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/11/0/systems")
+        assert response.status_code == 422
+
+    def test_v2_rhel_systems_minor_out_of_range(self, client, v2_prefix):
+        """Verify minor version path parameter rejects values outside 0-10."""
+        _apply_auth_overrides(client)
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/-1/systems")
+        assert response.status_code == 422
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/11/systems")
+        assert response.status_code == 422

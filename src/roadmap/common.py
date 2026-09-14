@@ -509,8 +509,13 @@ _E4S_PRODUCT_IDS = ("146", "241", "323", "388", "389")
 _ALL_EXTENDED_PRODUCT_IDS = (*_EUS_PRODUCT_IDS, *_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
 
 
-def _lifecycle_type_sql_filter(lifecycle_type: LifecycleType) -> str:
+def _lifecycle_type_sql_filter(
+    lifecycle_type: LifecycleType,
+) -> tuple[str, dict[str, list[str]]]:
     """Build a SQL WHERE clause fragment that filters hosts by lifecycle type.
+
+    Returns a tuple of (sql_fragment, params_dict). The SQL fragment uses named
+    bind parameters (via ``= ANY(:name)``) rather than interpolated values.
 
     Replicates the priority chain in get_lifecycle_type():
     mainline < EUS < ELS < E4S. A host is classified at the highest matching
@@ -518,21 +523,37 @@ def _lifecycle_type_sql_filter(lifecycle_type: LifecycleType) -> str:
     """
     products_col = "COALESCE(spd.installed_products, '[]'::jsonb)"
 
-    def _exists(ids: tuple[str, ...]) -> str:
-        id_list = ", ".join(f"'{pid}'" for pid in ids)
-        return f"EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' IN ({id_list}))"
+    counter: dict[str, int] = {"n": 0}
 
-    def _not_exists(ids: tuple[str, ...]) -> str:
-        id_list = ", ".join(f"'{pid}'" for pid in ids)
-        return f"NOT EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' IN ({id_list}))"
+    def _next_param(ids: tuple[str, ...]) -> tuple[str, str, list[str]]:
+        """Return (param_name, :param_name, list_of_ids) for a unique bind parameter."""
+        counter["n"] += 1
+        name = f"lc_pids_{counter['n']}"
+        return name, f":{name}", list(ids)
+
+    def _exists(ids: tuple[str, ...]) -> tuple[str, dict[str, list[str]]]:
+        name, placeholder, values = _next_param(ids)
+        sql = f"EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' = ANY({placeholder}))"
+        return sql, {name: values}
+
+    def _not_exists(ids: tuple[str, ...]) -> tuple[str, dict[str, list[str]]]:
+        name, placeholder, values = _next_param(ids)
+        sql = (
+            f"NOT EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' = ANY({placeholder}))"
+        )
+        return sql, {name: values}
 
     if lifecycle_type == LifecycleType.e4s:
         return _exists(_E4S_PRODUCT_IDS)
     elif lifecycle_type == LifecycleType.els:
-        return f"{_exists(_ELS_PRODUCT_IDS)} AND {_not_exists(_E4S_PRODUCT_IDS)}"
+        ex_sql, ex_p = _exists(_ELS_PRODUCT_IDS)
+        nex_sql, nex_p = _not_exists(_E4S_PRODUCT_IDS)
+        return f"{ex_sql} AND {nex_sql}", {**ex_p, **nex_p}
     elif lifecycle_type == LifecycleType.eus:
         higher = (*_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
-        return f"{_exists(_EUS_PRODUCT_IDS)} AND {_not_exists(higher)}"
+        ex_sql, ex_p = _exists(_EUS_PRODUCT_IDS)
+        nex_sql, nex_p = _not_exists(higher)
+        return f"{ex_sql} AND {nex_sql}", {**ex_p, **nex_p}
     else:
         return _not_exists(_ALL_EXTENDED_PRODUCT_IDS)
 
@@ -553,7 +574,7 @@ async def query_rhel_systems(
     if settings.dev:
         org_id = "1234"
 
-    lifecycle_filter = _lifecycle_type_sql_filter(lifecycle_type)
+    lifecycle_filter, lifecycle_params = _lifecycle_type_sql_filter(lifecycle_type)
 
     # Build host groups filter (reuses the pattern from query_host_inventory)
     host_groups_filter = ""
@@ -626,7 +647,7 @@ async def query_rhel_systems(
                ) AS os_minor
         {base_from}
         {base_where}
-        ORDER BY h.display_name ASC
+        ORDER BY h.display_name ASC, h.id ASC
         LIMIT :limit OFFSET :offset
     """
 
@@ -637,6 +658,7 @@ async def query_rhel_systems(
         "host_groups": list(host_groups),
         "limit": limit,
         "offset": offset,
+        **lifecycle_params,
     }
     if search:
         escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -648,8 +670,8 @@ async def query_rhel_systems(
 
         data_result = await session.execute(text(data_query), params)
         rows = data_result.mappings().all()
-    except (DBAPIError, SQLAlchemyError) as err:
-        logger.error(f"Database error querying RHEL systems for org_id {org_id}: {err}", exc_info=True)
+    except (DBAPIError, SQLAlchemyError):
+        logger.error("Database error querying RHEL systems", extra={"error_type": "db_query_failure"})
         raise HTTPException(status_code=500, detail="Error querying host inventory")
 
     systems = [

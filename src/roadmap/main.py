@@ -17,6 +17,7 @@ from uvicorn.protocols.utils import get_path_with_query_string
 
 import roadmap.admin
 import roadmap.v1
+import roadmap.v2
 
 from roadmap.common import extend_openapi
 from roadmap.config import Settings
@@ -117,9 +118,11 @@ api_router = APIRouter(prefix="/api/roadmap", tags=["Roadmap"])
 
 # Additional route to the OpenAPI JSON under the versioned path
 roadmap.v1.router.add_api_route("/openapi.json", app.openapi, include_in_schema=False)
+roadmap.v2.router.add_api_route("/openapi.json", app.openapi, include_in_schema=False)
 
 # Include individual service routers under the main API router
 api_router.include_router(roadmap.v1.router)
+api_router.include_router(roadmap.v2.router)
 api_router.include_router(roadmap.admin.router)
 
 

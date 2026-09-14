@@ -204,6 +204,11 @@ class RHELLifecycle(BaseModel):
         return self
 
 
+class PaginatedSystemsResponse(BaseModel):
+    meta: Meta
+    data: list[SystemInfo]
+
+
 class ReleaseModel(BaseModel):
     major: int = Field(gt=8, le=10, description="Major version number, e.g., 7 in version 7.0")
     minor: int = Field(ge=0, le=100, description="Minor version number, e.g., 0 in version 7.0")

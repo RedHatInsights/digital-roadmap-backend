@@ -37,10 +37,25 @@ async def get_upcoming_relevant_v2(
     response to reduce payload size.
     """
     response = await get_upcoming_relevant(data, all)
-    for item in response["data"]:
-        item.details.potentiallyAffectedSystemsDetail = set()
-        item.details.potentiallyAffectedSystems = set()
-    return t.cast(WrappedUpcomingOutput, response)
+    return t.cast(
+        WrappedUpcomingOutput,
+        {
+            "meta": response["meta"],
+            "data": [
+                item.model_copy(
+                    update={
+                        "details": item.details.model_copy(
+                            update={
+                                "potentiallyAffectedSystemsDetail": set(),
+                                "potentiallyAffectedSystems": set(),
+                            }
+                        )
+                    }
+                )
+                for item in response["data"]
+            ],
+        },
+    )
 
 
 @relevant.get(

@@ -44,10 +44,10 @@ async def get_relevant_systems_v2(
     response to reduce payload size.
     """
     response = await get_relevant_systems(org_id, systems, related)
-    for item in response.data:
-        item.systems_detail = set()
-        item.systems = set()
-    return response
+    return RelevantSystemsResponse(
+        meta=response.meta,
+        data=[item.model_copy(update={"systems": set(), "systems_detail": set()}) for item in response.data],
+    )
 
 
 @relevant.get(

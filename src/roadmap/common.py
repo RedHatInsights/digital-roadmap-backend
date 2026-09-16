@@ -367,29 +367,35 @@ async def query_host_inventory(
         raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
+# Product IDs for lifecycle type classification.
+# Must match the priority chain in get_lifecycle_type(): mainline < EUS < ELS < E4S
+# Sources:
+#   https://downloads.corp.redhat.com/internal/products
+#   https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
+_EUS_PRODUCT_IDS = ("70", "73", "75")
+_ELS_PRODUCT_IDS = ("204",)
+_E4S_PRODUCT_IDS = ("146", "241", "323", "388", "389")
+_ALL_EXTENDED_PRODUCT_IDS = (*_EUS_PRODUCT_IDS, *_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
+
+
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     """Calculate lifecycle type based on the product ID.
 
-    https://downloads.corp.redhat.com/internal/products
-    https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
-
     Mainline < EUS < ELS < E4S < AUS
 
-    EUS --> 70, 73, 75
-    ELS --> 204
-    E4S --> 146, 241, 323, 388, 389
-
+    See _EUS_PRODUCT_IDS, _ELS_PRODUCT_IDS, _E4S_PRODUCT_IDS for the
+    product ID mappings and their sources.
     """
     ids = {item.get("id") for item in products}
     type = LifecycleType.mainline
 
-    if any(id in ids for id in {"70", "73", "75"}):
+    if any(id in ids for id in _EUS_PRODUCT_IDS):
         type = LifecycleType.eus
 
-    if "204" in ids:
+    if any(id in ids for id in _ELS_PRODUCT_IDS):
         type = LifecycleType.els
 
-    if any(id in ids for id in {"146", "241", "323", "388", "389"}):
+    if any(id in ids for id in _E4S_PRODUCT_IDS):
         type = LifecycleType.e4s
 
     return type
@@ -499,14 +505,6 @@ def extend_openapi(app: FastAPI):
         return app.openapi_schema
 
     return _extend_openapi
-
-
-# Product IDs for lifecycle type classification.
-# Must match the priority chain in get_lifecycle_type(): mainline < EUS < ELS < E4S
-_EUS_PRODUCT_IDS = ("70", "73", "75")
-_ELS_PRODUCT_IDS = ("204",)
-_E4S_PRODUCT_IDS = ("146", "241", "323", "388", "389")
-_ALL_EXTENDED_PRODUCT_IDS = (*_EUS_PRODUCT_IDS, *_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
 
 
 def _lifecycle_type_sql_filter(

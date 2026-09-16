@@ -34,10 +34,13 @@ async def get_relevant_app_streams_v2(
     response to reduce payload size.
     """
     response = await get_relevant_app_streams(systems_by_stream, related)
-    for item in response["data"]:
-        item.systems_detail = set()
-        item.systems = set()
-    return t.cast(RelevantAppStreamsResponse, response)
+    return t.cast(
+        RelevantAppStreamsResponse,
+        {
+            "meta": response["meta"],
+            "data": [item.model_copy(update={"systems": set(), "systems_detail": set()}) for item in response["data"]],
+        },
+    )
 
 
 @relevant.get(

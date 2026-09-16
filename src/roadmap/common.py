@@ -28,6 +28,9 @@ from roadmap import kessel
 from roadmap.config import Settings
 from roadmap.database import get_db
 from roadmap.models import LifecycleType
+from roadmap.models import Meta
+from roadmap.models import PaginatedSystemsResponse
+from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -364,29 +367,35 @@ async def query_host_inventory(
         raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
+# Product IDs for lifecycle type classification.
+# Must match the priority chain in get_lifecycle_type(): mainline < EUS < ELS < E4S
+# Sources:
+#   https://downloads.corp.redhat.com/internal/products
+#   https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
+_EUS_PRODUCT_IDS = ("70", "73", "75")
+_ELS_PRODUCT_IDS = ("204",)
+_E4S_PRODUCT_IDS = ("146", "241", "323", "388", "389")
+_ALL_EXTENDED_PRODUCT_IDS = (*_EUS_PRODUCT_IDS, *_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
+
+
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:
     """Calculate lifecycle type based on the product ID.
 
-    https://downloads.corp.redhat.com/internal/products
-    https://github.com/RedHatInsights/rhsm-subscriptions/tree/main/swatch-product-configuration/src/main/resources/subscription_configs/RHEL
-
     Mainline < EUS < ELS < E4S < AUS
 
-    EUS --> 70, 73, 75
-    ELS --> 204
-    E4S --> 146, 241, 323, 388, 389
-
+    See _EUS_PRODUCT_IDS, _ELS_PRODUCT_IDS, _E4S_PRODUCT_IDS for the
+    product ID mappings and their sources.
     """
     ids = {item.get("id") for item in products}
     type = LifecycleType.mainline
 
-    if any(id in ids for id in {"70", "73", "75"}):
+    if any(id in ids for id in _EUS_PRODUCT_IDS):
         type = LifecycleType.eus
 
-    if "204" in ids:
+    if any(id in ids for id in _ELS_PRODUCT_IDS):
         type = LifecycleType.els
 
-    if any(id in ids for id in {"146", "241", "323", "388", "389"}):
+    if any(id in ids for id in _E4S_PRODUCT_IDS):
         type = LifecycleType.e4s
 
     return type
@@ -496,3 +505,184 @@ def extend_openapi(app: FastAPI):
         return app.openapi_schema
 
     return _extend_openapi
+
+
+def _lifecycle_type_sql_filter(
+    lifecycle_type: LifecycleType,
+) -> tuple[str, dict[str, list[str]]]:
+    """Build a SQL WHERE clause fragment that filters hosts by lifecycle type.
+
+    Returns a tuple of (sql_fragment, params_dict). The SQL fragment uses named
+    bind parameters (via ``= ANY(:name)``) rather than interpolated values.
+
+    Replicates the priority chain in get_lifecycle_type():
+    mainline < EUS < ELS < E4S. A host is classified at the highest matching
+    level, so lower-level filters must exclude hosts that match higher levels.
+    """
+    products_col = "COALESCE(spd.installed_products, '[]'::jsonb)"
+
+    counter: dict[str, int] = {"n": 0}
+
+    def _next_param(ids: tuple[str, ...]) -> tuple[str, str, list[str]]:
+        """Return (param_name, :param_name, list_of_ids) for a unique bind parameter."""
+        counter["n"] += 1
+        name = f"lc_pids_{counter['n']}"
+        return name, f":{name}", list(ids)
+
+    def _exists(ids: tuple[str, ...]) -> tuple[str, dict[str, list[str]]]:
+        name, placeholder, values = _next_param(ids)
+        sql = f"EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' = ANY({placeholder}))"
+        return sql, {name: values}
+
+    def _not_exists(ids: tuple[str, ...]) -> tuple[str, dict[str, list[str]]]:
+        name, placeholder, values = _next_param(ids)
+        sql = (
+            f"NOT EXISTS (SELECT 1 FROM jsonb_array_elements({products_col}) AS p WHERE p->>'id' = ANY({placeholder}))"
+        )
+        return sql, {name: values}
+
+    if lifecycle_type == LifecycleType.e4s:
+        return _exists(_E4S_PRODUCT_IDS)
+    elif lifecycle_type == LifecycleType.els:
+        ex_sql, ex_p = _exists(_ELS_PRODUCT_IDS)
+        nex_sql, nex_p = _not_exists(_E4S_PRODUCT_IDS)
+        return f"{ex_sql} AND {nex_sql}", {**ex_p, **nex_p}
+    elif lifecycle_type == LifecycleType.eus:
+        higher = (*_ELS_PRODUCT_IDS, *_E4S_PRODUCT_IDS)
+        ex_sql, ex_p = _exists(_EUS_PRODUCT_IDS)
+        nex_sql, nex_p = _not_exists(higher)
+        return f"{ex_sql} AND {nex_sql}", {**ex_p, **nex_p}
+    else:
+        return _not_exists(_ALL_EXTENDED_PRODUCT_IDS)
+
+
+async def query_rhel_systems(
+    org_id: str,
+    session: AsyncSession,
+    settings: Settings,
+    host_groups: set[str | None],
+    major: int,
+    minor: int,
+    lifecycle_type: LifecycleType = LifecycleType.mainline,
+    offset: int = 0,
+    limit: int = 10,
+    search: str | None = None,
+) -> PaginatedSystemsResponse:
+    """Query paginated host details for a specific RHEL version and lifecycle type."""
+    if settings.dev:
+        org_id = "1234"
+
+    lifecycle_filter, lifecycle_params = _lifecycle_type_sql_filter(lifecycle_type)
+
+    # Build host groups filter (reuses the pattern from query_host_inventory)
+    host_groups_filter = ""
+    if host_groups:
+        ungrouped_query = (
+            "EXISTS (SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj "
+            "WHERE (group_obj->>'ungrouped')::boolean = true)"
+        )
+        grouped_query = (
+            "EXISTS (SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj "
+            "WHERE group_obj->>'id' = ANY(:host_groups))"
+        )
+        if None in host_groups:
+            if len(host_groups) > 1:
+                host_groups_filter = f"AND ({ungrouped_query} OR {grouped_query})"
+            else:
+                host_groups_filter = f"AND {ungrouped_query}"
+        else:
+            host_groups_filter = f"AND {grouped_query}"
+
+    search_filter = ""
+    if search:
+        search_filter = "AND h.display_name ILIKE :search_pattern"
+
+    # Match v1's host classification logic: v1 skips hosts where os_name IS NULL
+    # but does NOT filter by os_name='RHEL' — any non-null os_name passes.
+    # Then rhel_major_minor() extracts (major, minor) from operating_system JSONB
+    # or falls back to parsing os_release. We replicate both behaviors here.
+    version_match = """(
+            (
+                (sps.operating_system ->> 'name') IS NOT NULL
+                AND (sps.operating_system ->> 'major') = :major
+                AND (sps.operating_system ->> 'minor') = :minor
+            )
+            OR (
+                (sps.operating_system ->> 'name') IS NOT NULL
+                AND sps.operating_system ->> 'major' IS NULL
+                AND sps.os_release IS NOT NULL
+                AND split_part(sps.os_release, '.', 1) = :major
+                AND split_part(sps.os_release, '.', 2) = :minor
+            )
+        )"""
+
+    base_where = f"""
+        WHERE h.org_id = :org_id
+          AND {version_match}
+          AND {lifecycle_filter}
+          {host_groups_filter}
+          {search_filter}
+    """
+
+    base_from = """
+        FROM hbi.hosts h
+          INNER JOIN hbi.system_profiles_static sps
+            ON h.id = sps.host_id AND h.org_id = sps.org_id
+          LEFT JOIN hbi.system_profiles_dynamic spd
+            ON h.id = spd.host_id AND h.org_id = spd.org_id
+    """
+
+    count_query = f"SELECT COUNT(*) {base_from} {base_where}"
+    data_query = f"""
+        SELECT h.id, h.display_name,
+               COALESCE(
+                   (sps.operating_system -> 'major')::int,
+                   split_part(sps.os_release, '.', 1)::int
+               ) AS os_major,
+               COALESCE(
+                   (sps.operating_system -> 'minor')::int,
+                   split_part(sps.os_release, '.', 2)::int
+               ) AS os_minor
+        {base_from}
+        {base_where}
+        ORDER BY h.display_name ASC, h.id ASC
+        LIMIT :limit OFFSET :offset
+    """
+
+    params: dict[str, t.Any] = {
+        "org_id": org_id,
+        "major": str(major),
+        "minor": str(minor),
+        "host_groups": list(host_groups),
+        "limit": limit,
+        "offset": offset,
+        **lifecycle_params,
+    }
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        params["search_pattern"] = f"%{escaped}%"
+
+    try:
+        count_result = await session.execute(text(count_query), params)
+        total = count_result.scalar() or 0
+
+        data_result = await session.execute(text(data_query), params)
+        rows = data_result.mappings().all()
+    except (DBAPIError, SQLAlchemyError):
+        logger.error("Database error querying RHEL systems", extra={"error_type": "db_query_failure"})
+        raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+    systems = [
+        SystemInfo(
+            id=row["id"],
+            display_name=row["display_name"],
+            os_major=row["os_major"],
+            os_minor=row["os_minor"],
+        )
+        for row in rows
+    ]
+
+    return PaginatedSystemsResponse(
+        meta=Meta(count=len(systems), total=total),
+        data=systems,
+    )

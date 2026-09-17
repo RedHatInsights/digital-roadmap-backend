@@ -67,6 +67,11 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
     def settings_override():
         return Settings(rbac_hostname="example.com")
 
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
+
     error_response = httpx.Response(400)
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(

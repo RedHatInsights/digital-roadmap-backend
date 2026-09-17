@@ -163,6 +163,11 @@ async def test_query_rbac(mocker, read_fixture_file):
     mock_response.raise_for_status = MagicMock()
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     result = await query_rbac(settings)
@@ -179,6 +184,11 @@ async def test_query_rbac_error(mocker):
     )
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Raised intentionally"):
@@ -208,6 +218,11 @@ async def test_query_rbac_json_decode_error(mocker):
     mock_response.json.side_effect = ValueError("invalid json")
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
@@ -218,6 +233,11 @@ async def test_query_rbac_timeout(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
     mock_client.get.side_effect = httpx.ReadTimeout("Timed out")
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
@@ -230,6 +250,11 @@ async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
     mock_client.get.side_effect = Exception("Connection timeout")
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
@@ -409,6 +434,11 @@ async def test_allowed_host_groups_kessel_dev_mode():
 async def test_allowed_host_groups_kessel_scoped(mocker):
     """A workspace-scoped user is restricted to exactly the listed workspace ids."""
     settings = Settings(kessel_enabled=True)
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
@@ -426,6 +456,11 @@ async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
     returns an empty (unrestricted) set.
     """
     settings = Settings(kessel_enabled=True)
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
@@ -438,6 +473,11 @@ async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
 async def test_allowed_host_groups_kessel_denied(mocker):
     """A user with no accessible workspaces is denied."""
     settings = Settings(kessel_enabled=True)
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=[])
@@ -449,6 +489,11 @@ async def test_allowed_host_groups_kessel_denied(mocker):
 async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
     """An HTTPException from the Kessel lookup propagates unchanged, not wrapped as 502."""
     settings = Settings(kessel_enabled=True)
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch(
@@ -465,6 +510,11 @@ async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
 async def test_allowed_host_groups_kessel_service_error(mocker):
     """A Kessel communication failure surfaces as a 502."""
     settings = Settings(kessel_enabled=True)
+
+    # Mock cache to return None (cache miss)
+    mock_cache = MagicMock()
+    mock_cache.get.return_value = None
+    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", side_effect=Exception("gRPC unavailable"))

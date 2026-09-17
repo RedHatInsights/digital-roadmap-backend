@@ -14,6 +14,7 @@ from sqlalchemy.exc import DBAPIError
 from roadmap.common import _allowed_host_groups_kessel
 from roadmap.common import _allowed_host_groups_v1
 from roadmap.common import _get_group_list_from_resource_definition
+from roadmap.common import _get_rbac_client
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
@@ -164,10 +165,6 @@ async def test_query_rbac(mocker, read_fixture_file):
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     result = await query_rbac(settings)
@@ -185,14 +182,17 @@ async def test_query_rbac_error(mocker):
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Raised intentionally"):
         await query_rbac(settings)
+
+
+def test_get_rbac_client_is_reused():
+    """The client is pooled so repeated requests reuse the same connections."""
+    settings = Settings(rbac_hostname="example.com")
+
+    assert _get_rbac_client(settings) is _get_rbac_client(settings)
 
 
 async def test_query_rbac_dev_mode():
@@ -219,10 +219,6 @@ async def test_query_rbac_json_decode_error(mocker):
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
@@ -234,10 +230,6 @@ async def test_query_rbac_timeout(mocker):
     mock_client = AsyncMock()
     mock_client.get.side_effect = httpx.ReadTimeout("Timed out")
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
@@ -251,10 +243,6 @@ async def test_query_rbac_generic_exception(mocker):
     mock_client = AsyncMock()
     mock_client.get.side_effect = Exception("Connection timeout")
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_rbac_cache", return_value=mock_cache)
     mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
@@ -435,10 +423,6 @@ async def test_allowed_host_groups_kessel_scoped(mocker):
     """A workspace-scoped user is restricted to exactly the listed workspace ids."""
     settings = Settings(kessel_enabled=True)
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
@@ -457,10 +441,6 @@ async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
     """
     settings = Settings(kessel_enabled=True)
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
@@ -474,10 +454,6 @@ async def test_allowed_host_groups_kessel_denied(mocker):
     """A user with no accessible workspaces is denied."""
     settings = Settings(kessel_enabled=True)
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=[])
@@ -490,10 +466,6 @@ async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
     """An HTTPException from the Kessel lookup propagates unchanged, not wrapped as 502."""
     settings = Settings(kessel_enabled=True)
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch(
@@ -511,10 +483,6 @@ async def test_allowed_host_groups_kessel_service_error(mocker):
     """A Kessel communication failure surfaces as a 502."""
     settings = Settings(kessel_enabled=True)
 
-    # Mock cache to return None (cache miss)
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
-    mocker.patch("roadmap.common._get_kessel_cache", return_value=mock_cache)
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", side_effect=Exception("gRPC unavailable"))
@@ -613,49 +581,30 @@ def test_get_lifecycle_type(products, expected):
 
 async def test_query_rbac_cache_hit(mocker):
     """Second call to query_rbac with same identity should hit cache."""
-    settings = Settings(rbac_hostname="rbac.example.com")
-
-    # Clear any existing cache
-    import roadmap.common
-
-    roadmap.common._rbac_cache = None
-
-    # Mock the HTTP call - it should only be called once
-    mock_response = mocker.Mock()
+    settings = Settings(rbac_hostname="example.com")
+    mock_response = MagicMock()
     mock_response.json.return_value = {"data": [{"permission": "inventory:*:*"}]}
-    mock_get = mocker.patch("roadmap.common.httpx.AsyncClient.get", return_value=mock_response)
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
 
-    # First call - should hit the API
-    result1 = await query_rbac(settings, x_rh_identity=None)
-    assert result1 == [{"permission": "inventory:*:*"}]
-    assert mock_get.call_count == 1
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
-    # Second call with same identity (None) - should hit cache
-    result2 = await query_rbac(settings, x_rh_identity=None)
-    assert result2 == [{"permission": "inventory:*:*"}]
-    assert mock_get.call_count == 1  # Still 1, cache was used
+    assert await query_rbac(settings) == [{"permission": "inventory:*:*"}]
+    assert mock_client.get.call_count == 1
+
+    assert await query_rbac(settings) == [{"permission": "inventory:*:*"}]
+    assert mock_client.get.call_count == 1, "Second call should have been served from the cache"
 
 
 async def test_allowed_host_groups_kessel_cache_hit(mocker):
     """Second call to _allowed_host_groups_kessel with same identity should hit cache."""
     settings = Settings(kessel_enabled=True)
-
-    # Clear any existing cache
-    import roadmap.common
-
-    roadmap.common._kessel_cache = None
-
-    # Mock Kessel calls
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mock_host_groups = mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
 
-    # First call - should call Kessel
-    result1 = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
-    assert result1 == {"grp-1", "grp-2"}
+    assert await _allowed_host_groups_kessel(settings, x_rh_identity=None) == {"grp-1", "grp-2"}
     assert mock_host_groups.call_count == 1
 
-    # Second call with same identity (None) - should hit cache
-    result2 = await _allowed_host_groups_kessel(settings, x_rh_identity=None)
-    assert result2 == {"grp-1", "grp-2"}
-    assert mock_host_groups.call_count == 1  # Still 1, cache was used
+    assert await _allowed_host_groups_kessel(settings, x_rh_identity=None) == {"grp-1", "grp-2"}
+    assert mock_host_groups.call_count == 1, "Second call should have been served from the cache"

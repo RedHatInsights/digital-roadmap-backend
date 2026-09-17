@@ -151,3 +151,28 @@ def test_rhel_relevant_related(client, api_prefix):
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"
     )
+
+
+def test_rhel_relevant_second_request_is_cached(client, api_prefix, mocker):
+    """A repeated request is served from the cache instead of being rebuilt."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    assert first.status_code == 200
+
+    # Building the response again would now raise, so a successful second
+    # response can only have come from the cache.
+    mocker.patch("roadmap.v1.lifecycle.rhel.System", side_effect=ValueError("Raised intentionally"))
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert second.status_code == 200
+    assert second.json() == first.json()

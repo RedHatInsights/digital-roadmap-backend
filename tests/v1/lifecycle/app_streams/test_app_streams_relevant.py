@@ -19,6 +19,15 @@ from roadmap.v1.lifecycle.app_streams import RelevantAppStream
 from tests.utils import SUPPORT_STATUS_TEST_CASES
 
 
+@pytest.fixture(autouse=True)
+def clear_app_streams_cache():
+    """Clear the app_streams cache before each test to prevent cross-test contamination."""
+    import roadmap.v1.lifecycle.app_streams
+
+    roadmap.v1.lifecycle.app_streams._app_streams_cache = None
+    yield
+
+
 def test_get_relevant_app_stream(api_prefix, client):
     async def get_allowed_host_groups_override():
         return set()

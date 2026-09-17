@@ -106,6 +106,11 @@ async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> list[dict[t.Any, t.Any]]:
+    """Return the caller's inventory permissions from RBAC v1.
+
+    Responses are cached per identity for a short TTL. Permissions change
+    infrequently, so this removes the RBAC round trip from most requests.
+    """
     if settings.dev:
         return [
             {

@@ -682,17 +682,19 @@ async def get_relevant_app_streams(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
-    major: int | None = None,
-    minor: int | None = None,
 ):
-    # Check cache first. Key on org_id and query parameters.
+    """Return the app streams relevant to the hosts in the caller's inventory.
+
+    Responses are cached per org for a short TTL, since they only change when
+    hosts are added or removed or when packages change via replication.
+    """
+    # Check cache first. Key on org_id and the query parameters that alter the
+    # response, so callers with different parameters do not share an entry.
     cache = _get_app_streams_cache(settings)
-    cache_key = (org_id, major, minor, related)
+    cache_key = (org_id, related)
     cached = cache.get(cache_key)
     if cached is not None:
-        logger.debug(
-            "App streams cache hit", extra={"org_id": org_id, "major": major, "minor": minor, "related": related}
-        )
+        logger.debug("App streams cache hit", extra={"related": related})
         return cached
 
     relevant_app_streams = []

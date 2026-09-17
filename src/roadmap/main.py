@@ -64,6 +64,11 @@ app.openapi = extend_openapi(app)
 # Setup logging
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next) -> Response:
+    """Emit a structured access log entry for each request and time it.
+
+    Uncaught exceptions are re-raised after logging so they are not swallowed,
+    which means no access log entry is written for them.
+    """
     structlog.contextvars.clear_contextvars()
     # These context vars will be added to all log entries emitted during the request
     request_id = correlation_id.get()
@@ -76,7 +81,6 @@ async def logging_middleware(request: Request, call_next) -> Response:
     try:
         response = await call_next(request)
     except Exception:
-        # TODO: Validate that we don't swallow exceptions (unit test?)
         structlog.stdlib.get_logger("api.error").exception("Uncaught exception")
         raise
 

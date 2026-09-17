@@ -1,6 +1,7 @@
 aiokafka
 app-common-python
 asgi-correlation-id
+cachetools
 ddtrace
 fastapi[standard-no-fastapi-cloud-cli]
 greenlet

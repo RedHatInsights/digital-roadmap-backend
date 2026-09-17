@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import metrics
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from uvicorn.protocols.utils import get_path_with_query_string
@@ -25,9 +26,10 @@ from roadmap.sentry_config import before_send
 
 
 if os.getenv("SENTRY_DSN"):
+    settings_early = Settings.create()
     sentry_sdk.init(
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
+        traces_sample_rate=settings_early.sentry_traces_sample_rate,
+        profiles_sample_rate=settings_early.sentry_profiles_sample_rate,
         before_send=before_send,
         integrations=[
             FastApiIntegration(
@@ -108,8 +110,15 @@ app.add_middleware(CorrelationIdMiddleware)
 
 
 # Add Prometheus metrics
+# Custom buckets to include 2.0s threshold for measuring the SLO
 instrumentor = Instrumentator()
-instrumentor.instrument(app, metric_namespace="roadmap")
+instrumentor.add(
+    metrics.default(
+        metric_namespace="roadmap",
+        latency_lowr_buckets=(0.1, 0.5, 1.0, 2.0, 5.0),
+    )
+)
+instrumentor.instrument(app)
 instrumentor.expose(app, include_in_schema=False)
 
 # Create a main API router with the base prefix

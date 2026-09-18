@@ -33,6 +33,22 @@ def test_openapi_docs_v1(client):
     assert "paths" in response.json()
 
 
+def test_logging_middleware_does_not_swallow_exceptions(client, caplog):
+    """An endpoint error propagates out of the middleware instead of being logged away."""
+
+    @client.app.get("/_test/boom", include_in_schema=False)
+    async def boom():
+        raise RuntimeError("Raised intentionally")
+
+    try:
+        with pytest.raises(RuntimeError, match="Raised intentionally"):
+            client.get("/_test/boom")
+    finally:
+        client.app.router.routes = [r for r in client.app.router.routes if getattr(r, "path", None) != "/_test/boom"]
+
+    assert "Uncaught exception" in caplog.text
+
+
 def test_sentry_sdk_init(monkeypatch):
     try:
         sys.modules.pop("roadmap.main")

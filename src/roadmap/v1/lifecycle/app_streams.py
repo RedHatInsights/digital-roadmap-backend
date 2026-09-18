@@ -8,6 +8,7 @@ from enum import auto
 from enum import StrEnum
 from uuid import UUID
 
+from cachetools import TTLCache
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
@@ -25,6 +26,7 @@ from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
+from roadmap.config import Settings
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data import APP_STREAM_MODULES_BY_KEY
 from roadmap.data import APP_STREAM_MODULES_PACKAGES
@@ -45,6 +47,20 @@ from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
+
+# Response cache for the /relevant/lifecycle/app-streams endpoint. Results
+# change slowly (only when hosts are added/removed or packages change via the
+# replication pipeline), so caching with a short TTL eliminates most latency.
+_app_streams_cache: TTLCache | None = None
+
+
+def _get_app_streams_cache(settings: Settings) -> TTLCache:
+    """Return the app streams response cache, creating it on first use."""
+    global _app_streams_cache
+    if _app_streams_cache is None:
+        _app_streams_cache = TTLCache(maxsize=settings.lifecycle_cache_maxsize, ttl=settings.lifecycle_cache_ttl)
+    return _app_streams_cache
+
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int, Path(description="Major version number", ge=8, le=10)]
@@ -662,9 +678,25 @@ relevant = APIRouter(
     response_model=RelevantAppStreamsResponse,
 )
 async def get_relevant_app_streams(
+    org_id: t.Annotated[str, Depends(decode_header)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
     systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
+    """Return the app streams relevant to the hosts in the caller's inventory.
+
+    Responses are cached per org for a short TTL, since they only change when
+    hosts are added or removed or when packages change via replication.
+    """
+    # Check cache first. Key on org_id and the query parameters that alter the
+    # response, so callers with different parameters do not share an entry.
+    cache = _get_app_streams_cache(settings)
+    cache_key = (org_id, related)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        logger.debug("App streams cache hit", extra={"related": related})
+        return cached
+
     relevant_app_streams = []
     for app_stream, systems in systems_by_stream.items():
         # Omit rolling app streams.
@@ -717,10 +749,12 @@ async def get_relevant_app_streams(
             except Exception as exc:
                 raise HTTPException(detail=str(exc), status_code=400)
 
-    return {
+    result = {
         "meta": {
             "count": len(relevant_app_streams),
             "total": sum(item.count for item in relevant_app_streams),
         },
         "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor")),
     }
+    cache[cache_key] = result
+    return result

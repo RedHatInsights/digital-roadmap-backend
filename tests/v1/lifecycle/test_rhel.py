@@ -151,3 +151,72 @@ def test_rhel_relevant_related(client, api_prefix):
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"
     )
+
+
+def test_rhel_relevant_second_request_is_cached(client, api_prefix, mocker):
+    """A repeated request is served from the cache instead of being rebuilt."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    assert first.status_code == 200
+
+    # Building the response again would now raise, so a successful second
+    # response can only have come from the cache.
+    mocker.patch("roadmap.v1.lifecycle.rhel.System", side_effect=ValueError("Raised intentionally"))
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+
+def test_rhel_relevant_related_is_not_served_from_the_unrelated_cache(client, api_prefix):
+    """The cache is keyed on 'related', so the two variants do not share an entry."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    unrelated = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    related = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")
+
+    assert unrelated.status_code == 200
+    assert related.status_code == 200
+    assert related.json() != unrelated.json(), "The related response was served from the unrelated cache entry"
+
+
+def test_rhel_relevant_cache_is_per_org(client, api_prefix):
+    """A second org does not receive the first org's cached response."""
+    org_ids = iter(("1234", "5678"))
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return next(org_ids)
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert len(first.json()["data"]) > 0, "The first org should have systems for this test to be meaningful"
+    assert second.json()["data"] != first.json()["data"], "The second org was served the first org's cached response"

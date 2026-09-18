@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import metrics
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from uvicorn.protocols.utils import get_path_with_query_string
@@ -25,9 +26,10 @@ from roadmap.sentry_config import before_send
 
 
 if os.getenv("SENTRY_DSN"):
+    settings_early = Settings.create()
     sentry_sdk.init(
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
+        traces_sample_rate=settings_early.sentry_traces_sample_rate,
+        profiles_sample_rate=settings_early.sentry_profiles_sample_rate,
         before_send=before_send,
         integrations=[
             FastApiIntegration(
@@ -62,6 +64,11 @@ app.openapi = extend_openapi(app)
 # Setup logging
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next) -> Response:
+    """Emit a structured access log entry for each request and time it.
+
+    Uncaught exceptions are re-raised after logging so they are not swallowed,
+    which means no access log entry is written for them.
+    """
     structlog.contextvars.clear_contextvars()
     # These context vars will be added to all log entries emitted during the request
     request_id = correlation_id.get()
@@ -74,32 +81,31 @@ async def logging_middleware(request: Request, call_next) -> Response:
     try:
         response = await call_next(request)
     except Exception:
-        # TODO: Validate that we don't swallow exceptions (unit test?)
         structlog.stdlib.get_logger("api.error").exception("Uncaught exception")
         raise
-    finally:
-        process_time = time.perf_counter_ns() - start_time
-        status_code = response.status_code
-        url = get_path_with_query_string(request.scope)  # pyright: ignore[reportArgumentType]
-        client_host = getattr(request.client, "host", None)
-        client_port = getattr(request.client, "port", None)
-        http_method = request.method
-        http_version = request.scope["http_version"]
-        # Recreate the Uvicorn access log format, but add all parameters as structured information
-        access_logger.info(
-            f"""{client_host}:{client_port} - "{http_method} {url} HTTP/{http_version}" {status_code}""",
-            http={
-                "url": str(request.url),
-                "status_code": status_code,
-                "method": http_method,
-                "request_id": request_id,
-                "version": http_version,
-            },
-            network={"client": {"ip": client_host, "port": client_port}},
-            duration=process_time,
-        )
-        response.headers["X-Process-Time"] = str(process_time / 10**9)
-        return response
+
+    process_time = time.perf_counter_ns() - start_time
+    status_code = response.status_code
+    url = get_path_with_query_string(request.scope)  # pyright: ignore[reportArgumentType]
+    client_host = getattr(request.client, "host", None)
+    client_port = getattr(request.client, "port", None)
+    http_method = request.method
+    http_version = request.scope["http_version"]
+    # Recreate the Uvicorn access log format, but add all parameters as structured information
+    access_logger.info(
+        f"""{client_host}:{client_port} - "{http_method} {url} HTTP/{http_version}" {status_code}""",
+        http={
+            "url": str(request.url),
+            "status_code": status_code,
+            "method": http_method,
+            "request_id": request_id,
+            "version": http_version,
+        },
+        network={"client": {"ip": client_host, "port": client_port}},
+        duration=process_time,
+    )
+    response.headers["X-Process-Time"] = str(process_time / 10**9)
+    return response
 
 
 # This middleware must be placed after the logging, to populate the context with the request ID,
@@ -108,8 +114,15 @@ app.add_middleware(CorrelationIdMiddleware)
 
 
 # Add Prometheus metrics
+# Custom buckets to include 2.0s threshold for measuring the SLO
 instrumentor = Instrumentator()
-instrumentor.instrument(app, metric_namespace="roadmap")
+instrumentor.add(
+    metrics.default(
+        metric_namespace="roadmap",
+        latency_lowr_buckets=(0.1, 0.5, 1.0, 2.0, 5.0),
+    )
+)
+instrumentor.instrument(app)
 instrumentor.expose(app, include_in_schema=False)
 
 # Create a main API router with the base prefix

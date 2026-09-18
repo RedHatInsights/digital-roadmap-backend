@@ -31,6 +31,31 @@ class Settings(BaseSettings):
     rbac_hostname: str = ""
     rbac_port: int = 8000
 
+    # RBAC client timeouts. The 2000ms latency SLO is measured at the 3scale
+    # gateway, so a slow RBAC call makes the entire request breach the SLO.
+    # Fail fast instead of hanging 30s. Matches notifications-backend.
+    rbac_timeout: float = 2.0
+    rbac_connect_timeout: float = 1.0
+
+    # RBAC response cache TTL (seconds). RBAC permissions change infrequently,
+    # and most requests in a burst are from the same caller. Matches the 120s
+    # TTL used in notifications-backend. Set to 0 to disable.
+    rbac_cache_ttl: int = 120
+    rbac_cache_maxsize: int = 1000
+
+    # Lifecycle endpoint response cache. These endpoints process the full org's
+    # host inventory on every call, which takes ~1.5s for 15k hosts. Results
+    # change slowly (only when hosts are added/removed or packages change via
+    # the replication pipeline), so caching with a short TTL eliminates most
+    # of the latency. Set ttl=0 to disable.
+    lifecycle_cache_ttl: int = 60
+    lifecycle_cache_maxsize: int = 8
+
+    # Sentry samples every request by default, which adds span recording,
+    # profile collection and network egress to each one. Sample a subset.
+    sentry_traces_sample_rate: float = 0.1
+    sentry_profiles_sample_rate: float = 0.1
+
     env_name: str = "stage"
     log_level: str = "info"
     json_logging: bool = False

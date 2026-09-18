@@ -66,8 +66,6 @@ def test_get_relevant_app_stream_error(api_prefix, client, mocker):
 
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
     mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
 
     client.app.dependency_overrides = {}
@@ -95,6 +93,31 @@ def test_get_relevant_app_stream_error_building_response(api_prefix, client, moc
 
     assert result.status_code == 400
     assert detail == "Raised intentionally"
+
+
+def test_get_relevant_app_stream_second_request_is_cached(api_prefix, client, mocker):
+    """A repeated request is served from the cache instead of being rebuilt."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+    assert first.status_code == 200
+
+    # Building the response again would now raise, so a successful second
+    # response can only have come from the cache.
+    mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))
+    second = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
+
+    assert second.status_code == 200
+    assert second.json() == first.json()
 
 
 def test_get_relevant_app_stream_no_rbac_access(api_prefix, client):

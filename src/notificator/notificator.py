@@ -161,6 +161,7 @@ class Notificator:
             ):
                 relevant_systems = await get_relevant_systems(
                     org_id=str(self.org_id),
+                    settings=self.settings,
                     systems=result,
                 )
 

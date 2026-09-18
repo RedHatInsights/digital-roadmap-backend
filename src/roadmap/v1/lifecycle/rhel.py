@@ -4,6 +4,7 @@ import typing as t
 from collections import defaultdict
 from datetime import date
 
+from cachetools import TTLCache
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
@@ -15,6 +16,7 @@ from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
+from roadmap.config import Settings
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
@@ -26,6 +28,19 @@ from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
+
+# Response cache for the /relevant/lifecycle/rhel endpoint. Results change
+# slowly (only when hosts are added/removed or products change via the
+# replication pipeline), so caching with a short TTL eliminates most latency.
+_rhel_cache: TTLCache | None = None
+
+
+def _get_rhel_cache(settings: Settings) -> TTLCache:
+    """Return the RHEL lifecycle response cache, creating it on first use."""
+    global _rhel_cache
+    if _rhel_cache is None:
+        _rhel_cache = TTLCache(maxsize=settings.lifecycle_cache_maxsize, ttl=settings.lifecycle_cache_ttl)
+    return _rhel_cache
 
 
 router = APIRouter(
@@ -143,9 +158,24 @@ relevant = APIRouter(
 )
 async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
     related: bool = False,
 ) -> RelevantSystemsResponse:
+    """Return RHEL lifecycle dates for the systems in the caller's inventory.
+
+    Responses are cached per org for a short TTL, since they only change when
+    hosts are added or removed or when products change via replication.
+    """
+    # Check cache first. Key on org_id and the query parameters that alter the
+    # response, so callers with different parameters do not share an entry.
+    cache = _get_rhel_cache(settings)
+    cache_key = (org_id, related)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        logger.debug("RHEL cache hit", extra={"related": related})
+        return cached
+
     system_counts = defaultdict(int)
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(set)
@@ -245,7 +275,9 @@ async def get_relevant_systems(  # noqa: C901
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
-    return RelevantSystemsResponse(
+    result = RelevantSystemsResponse(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_attrs("lifecycle_type", "major", "minor"), reverse=True),
     )
+    cache[cache_key] = result
+    return result

@@ -8,6 +8,7 @@ from enum import auto
 from enum import StrEnum
 from uuid import UUID
 
+from cachetools import TTLCache
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
@@ -19,12 +20,16 @@ from pydantic import Field
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio.result import AsyncResult
 
+from roadmap.common import cached_response_size
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
+from roadmap.common import host_inventory_scope
+from roadmap.common import InventoryScope
 from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.common import streams_lt
+from roadmap.config import Settings
 from roadmap.data import APP_STREAM_MODULES
 from roadmap.data import APP_STREAM_MODULES_BY_KEY
 from roadmap.data import APP_STREAM_MODULES_PACKAGES
@@ -45,6 +50,29 @@ from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
+
+# Response cache for the /relevant/lifecycle/app-streams endpoint. Results
+# change slowly (only when hosts are added/removed or packages change via the
+# replication pipeline), so caching with a short TTL eliminates most latency.
+_app_streams_cache: TTLCache | None = None
+
+
+def _response_size(response: dict) -> int:
+    """Estimate what a cached app streams response costs in memory, in bytes."""
+    return cached_response_size(response["data"])
+
+
+def _get_app_streams_cache(settings: Settings) -> TTLCache:
+    """Return the app streams response cache, creating it on first use."""
+    global _app_streams_cache
+    if _app_streams_cache is None:
+        _app_streams_cache = TTLCache(
+            maxsize=settings.lifecycle_cache_max_bytes,
+            ttl=settings.lifecycle_cache_ttl,
+            getsizeof=_response_size,
+        )
+    return _app_streams_cache
+
 
 Date = t.Annotated[str | date, AfterValidator(ensure_date)]
 MajorVersion = t.Annotated[int, Path(description="Major version number", ge=8, le=10)]
@@ -662,10 +690,27 @@ relevant = APIRouter(
     response_model=RelevantAppStreamsResponse,
 )
 async def get_relevant_app_streams(
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    scope: t.Annotated[InventoryScope, Depends(host_inventory_scope)],
     systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
-    """Return the app streams relevant to the hosts in the caller's inventory."""
+    """Return the app streams relevant to the hosts in the caller's inventory.
+
+    Responses are cached for a short TTL, since they only change when hosts are
+    added or removed or when packages change via replication.
+    """
+    # Check cache first. The key is the inventory scope, which covers the org,
+    # the caller's permitted host groups and the version filters, plus the
+    # remaining query parameters that alter the response. Anything that changes
+    # the response must be in here or callers will be served each other's data.
+    cache = _get_app_streams_cache(settings)
+    cache_key = (*scope, related)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        logger.debug("App streams cache hit", extra={"related": related})
+        return cached
+
     relevant_app_streams = []
     for app_stream, systems in systems_by_stream.items():
         # Omit rolling app streams.
@@ -718,10 +763,18 @@ async def get_relevant_app_streams(
             except Exception as exc:
                 raise HTTPException(detail=str(exc), status_code=400)
 
-    return {
+    result = {
         "meta": {
             "count": len(relevant_app_streams),
             "total": sum(item.count for item in relevant_app_streams),
         },
         "data": sorted(relevant_app_streams, key=sort_attrs("name", "os_major", "os_minor")),
     }
+    try:
+        cache[cache_key] = result
+    except ValueError:
+        # The cache rejects a response bigger than its whole byte budget. An
+        # org large enough to hit that should still get its response.
+        logger.debug("Response too large to cache", extra={"related": related})
+
+    return result

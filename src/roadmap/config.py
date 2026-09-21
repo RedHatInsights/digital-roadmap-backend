@@ -37,17 +37,19 @@ class Settings(BaseSettings):
     rbac_timeout: float = 2.0
     rbac_connect_timeout: float = 1.0
 
-    # Lifecycle endpoint response cache. The endpoint processes the full org's
-    # host inventory on every call, which takes ~1.5s for 15k hosts. Results
-    # change slowly (only when hosts are added/removed or products change via
-    # the replication pipeline), so caching with a short TTL eliminates most
-    # of the latency. Set ttl=0 to disable.
+    # Lifecycle endpoint response caches. These endpoints process the full
+    # org's host inventory on every call, which takes ~1.5s for 15k hosts.
+    # Results change slowly (only when hosts are added/removed or packages
+    # change via the replication pipeline), so caching with a short TTL
+    # eliminates most of the latency. Set ttl=0 to disable.
     #
-    # The cache is bounded in bytes rather than in entries, because a response
-    # costs what the org is large: measured at ~480 bytes per host, so ~7 MiB
-    # for a 15k host org and ~23 MiB for 50k. Bounding entries instead would
-    # make the memory ceiling a function of who happens to call. A response
-    # bigger than the whole budget is served normally but not cached.
+    # The caches are bounded in bytes rather than in entries, because a
+    # response costs what the org is large: measured at ~480 bytes per host,
+    # so ~7 MiB for a 15k host org and ~23 MiB for 50k. Bounding entries
+    # instead would make the memory ceiling a function of who happens to call.
+    # A response bigger than the whole budget is served normally but not
+    # cached. The budget is per cache and there are two of them (RHEL and app
+    # streams), so the ceiling is twice this per pod, against a 4 GiB request.
     lifecycle_cache_ttl: int = 60
     lifecycle_cache_max_bytes: int = 128 * 1024 * 1024
 

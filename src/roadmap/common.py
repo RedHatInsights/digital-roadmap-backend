@@ -6,6 +6,7 @@ import typing as t
 import urllib.parse
 
 from collections.abc import AsyncGenerator
+from collections.abc import Iterable
 from datetime import date
 from uuid import UUID
 
@@ -404,6 +405,27 @@ async def host_inventory_scope(
     would let a restricted user be served an unrestricted user's response.
     """
     return (org_id, frozenset(host_groups), major, minor)
+
+
+# Measured cost of one host in a cached lifecycle response: a SystemInfo in
+# the entry's "systems_detail" plus a UUID in its "systems". The response's
+# fixed overhead is negligible beside it, and the total is linear in the host
+# count from 1k to 50k hosts.
+BYTES_PER_HOST = 480
+
+
+def cached_response_size(items: Iterable[t.Any]) -> int:
+    """Estimate what a cached lifecycle response costs in memory, in bytes.
+
+    "items" is the response's data list, whose entries each hold a set of
+    SystemInfo. The caches bound the total of these, so what matters is not
+    that the estimate is exact but that it tracks the real cost, which the
+    per-host entries dominate. Never returns zero, so that a response holding
+    no hosts still consumes some of the budget.
+    """
+    hosts = sum(len(item.systems_detail) for item in items)
+
+    return max(hosts * BYTES_PER_HOST, 1)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

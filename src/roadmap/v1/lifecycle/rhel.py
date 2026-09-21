@@ -11,6 +11,7 @@ from fastapi import Path
 from pydantic import BaseModel
 from pydantic import model_validator
 
+from roadmap.common import cached_response_size
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
 from roadmap.common import host_inventory_scope
@@ -50,22 +51,10 @@ class RelevantSystemsResponse(BaseModel):
 # replication pipeline), so caching with a short TTL eliminates most latency.
 _rhel_cache: TTLCache | None = None
 
-# Measured cost of one host in a response: a SystemInfo in "systems_detail"
-# plus a UUID in "systems". The response's fixed overhead is negligible
-# beside it, and the cost is linear in the host count from 1k to 50k hosts.
-_BYTES_PER_HOST = 480
-
 
 def _response_size(response: RelevantSystemsResponse) -> int:
-    """Estimate what a cached response costs in memory, in bytes.
-
-    The cache bounds the total of these, so what matters is that the estimate
-    tracks the real cost, which the per-host entries dominate. Never returns
-    zero, so that an empty response cannot be cached without limit.
-    """
-    hosts = sum(len(item.systems_detail) for item in response.data)
-
-    return max(hosts * _BYTES_PER_HOST, 1)
+    """Estimate what a cached RHEL response costs in memory, in bytes."""
+    return cached_response_size(response.data)
 
 
 def _get_rhel_cache(settings: Settings) -> TTLCache:

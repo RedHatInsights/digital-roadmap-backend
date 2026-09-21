@@ -6,6 +6,7 @@ import typing as t
 import urllib.parse
 
 from collections.abc import AsyncGenerator
+from collections.abc import Iterable
 from datetime import date
 from uuid import UUID
 
@@ -32,8 +33,16 @@ from roadmap.models import LifecycleType
 
 logger = logging.getLogger("uvicorn.error")
 
+# Shared httpx client for RBAC calls. Reusing the client enables HTTP
+# connection pooling, so subsequent requests to the same host reuse existing
+# TCP connections instead of opening a new one for each call.
+_rbac_client: httpx.AsyncClient | None = None
+
 MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
+
+# org, permitted host groups, major, minor. See "host_inventory_scope".
+InventoryScope = tuple[str, frozenset[str | None], int | None, int | None]
 
 
 def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
@@ -52,10 +61,27 @@ async def decode_header(
     return _decode_identity(x_rh_identity).get("org_id", "")
 
 
+def _get_rbac_client(settings: Settings) -> httpx.AsyncClient:
+    """Return the shared RBAC httpx client, creating it on first use."""
+    global _rbac_client
+    if _rbac_client is None:
+        _rbac_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(
+                connect=settings.rbac_connect_timeout,
+                read=settings.rbac_timeout,
+                write=settings.rbac_timeout,
+                pool=settings.rbac_timeout,
+            ),
+            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+        )
+    return _rbac_client
+
+
 async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> list[dict[t.Any, t.Any]]:
+    """Return the caller's inventory permissions from RBAC v1."""
     if settings.dev:
         return [
             {
@@ -64,22 +90,22 @@ async def query_rbac(
             }
         ]
 
+    if not settings.rbac_url:
+        return [{}]
+
     params = {
         "application": "inventory",
         "limit": 1000,
     }
 
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
-    if not settings.rbac_url:
-        return [{}]
-
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
+    client = _get_rbac_client(settings)
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            data = response.json()
+        response = await client.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
     except httpx.HTTPStatusError as err:
         logger.error(f"Problem querying RBAC: {err}")
         raise HTTPException(status_code=err.response.status_code, detail=str(err))
@@ -362,6 +388,44 @@ async def query_host_inventory(
     except (DBAPIError, SQLAlchemyError) as err:
         logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+
+async def host_inventory_scope(
+    org_id: t.Annotated[str, Depends(decode_header)],
+    host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
+    major: MajorVersion | None = None,
+    minor: MinorVersion | None = None,
+) -> InventoryScope:
+    """Return everything about a request that determines which hosts it sees.
+
+    Two requests with an equal scope get an identical set of hosts back from
+    "query_host_inventory", so this is what a cached response may be keyed on.
+    Note that "host_groups" must be part of it: two users in the same org can
+    have different permissions, and leaving their groups out of a cache key
+    would let a restricted user be served an unrestricted user's response.
+    """
+    return (org_id, frozenset(host_groups), major, minor)
+
+
+# Measured cost of one host in a cached lifecycle response: a SystemInfo in
+# the entry's "systems_detail" plus a UUID in its "systems". The response's
+# fixed overhead is negligible beside it, and the total is linear in the host
+# count from 1k to 50k hosts.
+BYTES_PER_HOST = 480
+
+
+def cached_response_size(items: Iterable[t.Any]) -> int:
+    """Estimate what a cached lifecycle response costs in memory, in bytes.
+
+    "items" is the response's data list, whose entries each hold a set of
+    SystemInfo. The caches bound the total of these, so what matters is not
+    that the estimate is exact but that it tracks the real cost, which the
+    per-host entries dominate. Never returns zero, so that a response holding
+    no hosts still consumes some of the budget.
+    """
+    hosts = sum(len(item.systems_detail) for item in items)
+
+    return max(hosts * BYTES_PER_HOST, 1)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

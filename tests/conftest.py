@@ -40,6 +40,23 @@ def clear_settings_cache():
     Settings.create.cache_clear()
 
 
+@pytest.fixture(autouse=True)
+def clear_module_caches():
+    """Reset the process-lifetime lifecycle caches and the pooled RBAC client.
+
+    These are module globals built on first use, so without this a value cached
+    by one test is visible to the next, and a client constructed before a test
+    patches ``httpx.AsyncClient`` is used in place of the patched one.
+    """
+    import roadmap.common
+    import roadmap.v1.lifecycle.app_streams
+    import roadmap.v1.lifecycle.rhel
+
+    roadmap.common._rbac_client = None
+    roadmap.v1.lifecycle.app_streams._app_streams_cache = None
+    roadmap.v1.lifecycle.rhel._rhel_cache = None
+
+
 @pytest.fixture(scope="session")
 def read_json_fixture():
     fixture_path = Path(__file__).parent.joinpath("fixtures").resolve()

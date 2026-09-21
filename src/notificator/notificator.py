@@ -152,15 +152,21 @@ class Notificator:
         logger.info("Processing RHEL releases", org_id=self.org_id)
 
         relevant_systems = None
+        # The notificator runs unrestricted and unfiltered. It calls the
+        # endpoint directly rather than through FastAPI, so it has to pass the
+        # inventory scope that matches the query it made below.
+        host_groups: set[str | None] = set()
         async for session in get_db():
             async for result in query_host_inventory(
                 org_id=str(self.org_id),
                 session=session,
                 settings=self.settings,
-                host_groups=set(),
+                host_groups=host_groups,
             ):
                 relevant_systems = await get_relevant_systems(
                     org_id=str(self.org_id),
+                    settings=self.settings,
+                    scope=(str(self.org_id), frozenset(host_groups), None, None),
                     systems=result,
                 )
 

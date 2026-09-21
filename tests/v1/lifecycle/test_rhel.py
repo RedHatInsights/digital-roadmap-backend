@@ -151,3 +151,151 @@ def test_rhel_relevant_related(client, api_prefix):
     assert all([len(set(item["systems"])) == len(item["systems"]) for item in data]), (
         "Found duplicate system IDs in results"
     )
+
+
+def test_rhel_relevant_second_request_is_cached(client, api_prefix, mocker):
+    """A repeated request is served from the cache instead of being rebuilt."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    assert first.status_code == 200
+
+    # Building the response again would now raise, so a successful second
+    # response can only have come from the cache.
+    mocker.patch("roadmap.v1.lifecycle.rhel.System", side_effect=ValueError("Raised intentionally"))
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+
+def test_rhel_relevant_related_is_not_served_from_the_unrelated_cache(client, api_prefix):
+    """The cache is keyed on 'related', so the two variants do not share an entry."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    unrelated = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    related = client.get(f"{api_prefix}/relevant/lifecycle/rhel?related=true")
+
+    assert unrelated.status_code == 200
+    assert related.status_code == 200
+    assert related.json() != unrelated.json(), "The related response was served from the unrelated cache entry"
+
+
+def test_rhel_relevant_cache_is_per_org(client, api_prefix):
+    """A second org does not receive the first org's cached response."""
+    org_ids = iter(("1234", "5678"))
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return next(org_ids)
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert len(first.json()["data"]) > 0, "The first org should have systems for this test to be meaningful"
+    assert second.json()["data"] != first.json()["data"], "The second org was served the first org's cached response"
+
+
+def test_rhel_relevant_cache_is_per_permission_scope(client, api_prefix):
+    """A restricted caller is not served an unrestricted caller's cached response.
+
+    Two users in one org can have different host group permissions, so the
+    permissions have to be part of the cache key.
+    """
+    # An empty set means unrestricted. The group id matches no host, so the
+    # second caller is entitled to see nothing.
+    host_groups = iter((set(), {str(uuid.uuid4())}))
+
+    async def get_allowed_host_groups_override():
+        return next(host_groups)
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    unrestricted = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    restricted = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert unrestricted.status_code == 200
+    assert restricted.status_code == 200
+    assert len(unrestricted.json()["data"]) > 0, "The first caller should see systems for this test to be meaningful"
+    assert restricted.json()["data"] == [], "The restricted caller was served the unrestricted cached response"
+
+
+def test_rhel_relevant_response_too_large_to_cache(client, api_prefix, monkeypatch, mocker):
+    """A response bigger than the whole cache budget is still served, just not cached."""
+    monkeypatch.setenv("ROADMAP_LIFECYCLE_CACHE_MAX_BYTES", "1")
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    assert first.status_code == 200
+    assert len(first.json()["data"]) > 0, "There should be systems for this test to be meaningful"
+
+    # Nothing was cached, so the second response has to be built from scratch
+    # and the raising mock is reached. A cache hit would return 200 instead.
+    mocker.patch("roadmap.v1.lifecycle.rhel.System", side_effect=ValueError("Raised intentionally"))
+    with pytest.raises(ValueError, match="Raised intentionally"):
+        client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+
+@pytest.mark.parametrize(("first_major", "second_major"), ((9, 8), (8, 9)))
+def test_rhel_relevant_cache_is_per_major_version(client, api_prefix, first_major, second_major):
+    """A request filtered to one major version is not served another version's response."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel?major={first_major}")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel?major={second_major}")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert {item["major"] for item in first.json()["data"]} == {first_major}
+    assert {item["major"] for item in second.json()["data"]} == {second_major}, (
+        "The second request was served the first major version's cached response"
+    )

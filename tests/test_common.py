@@ -14,6 +14,7 @@ from sqlalchemy.exc import DBAPIError
 from roadmap.common import _allowed_host_groups_kessel
 from roadmap.common import _allowed_host_groups_v1
 from roadmap.common import _get_group_list_from_resource_definition
+from roadmap.common import _get_rbac_client
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
@@ -163,9 +164,8 @@ async def test_query_rbac(mocker, read_fixture_file):
     mock_response.raise_for_status = MagicMock()
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     result = await query_rbac(settings)
 
@@ -181,12 +181,18 @@ async def test_query_rbac_error(mocker):
     )
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Raised intentionally"):
         await query_rbac(settings)
+
+
+def test_get_rbac_client_is_reused():
+    """The client is pooled so repeated requests reuse the same connections."""
+    settings = Settings(rbac_hostname="example.com")
+
+    assert _get_rbac_client(settings) is _get_rbac_client(settings)
 
 
 async def test_query_rbac_dev_mode():
@@ -212,9 +218,8 @@ async def test_query_rbac_json_decode_error(mocker):
     mock_response.json.side_effect = ValueError("invalid json")
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Invalid JSON response from RBAC service"):
         await query_rbac(settings)
@@ -224,9 +229,8 @@ async def test_query_rbac_timeout(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
     mock_client.get.side_effect = httpx.ReadTimeout("Timed out")
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="RBAC service timed out") as exc_info:
         await query_rbac(settings)
@@ -238,9 +242,8 @@ async def test_query_rbac_generic_exception(mocker):
     settings = Settings(rbac_hostname="example.com")
     mock_client = AsyncMock()
     mock_client.get.side_effect = Exception("Connection timeout")
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service"):
         await query_rbac(settings)
@@ -419,6 +422,7 @@ async def test_allowed_host_groups_kessel_dev_mode():
 async def test_allowed_host_groups_kessel_scoped(mocker):
     """A workspace-scoped user is restricted to exactly the listed workspace ids."""
     settings = Settings(kessel_enabled=True)
+
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
@@ -436,6 +440,7 @@ async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
     returns an empty (unrestricted) set.
     """
     settings = Settings(kessel_enabled=True)
+
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=["root-ws", "grp-1"])
@@ -448,6 +453,7 @@ async def test_allowed_host_groups_kessel_returns_ids_verbatim(mocker):
 async def test_allowed_host_groups_kessel_denied(mocker):
     """A user with no accessible workspaces is denied."""
     settings = Settings(kessel_enabled=True)
+
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", return_value=[])
@@ -459,6 +465,7 @@ async def test_allowed_host_groups_kessel_denied(mocker):
 async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
     """An HTTPException from the Kessel lookup propagates unchanged, not wrapped as 502."""
     settings = Settings(kessel_enabled=True)
+
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch(
@@ -475,6 +482,7 @@ async def test_allowed_host_groups_kessel_http_exception_propagates(mocker):
 async def test_allowed_host_groups_kessel_service_error(mocker):
     """A Kessel communication failure surfaces as a 502."""
     settings = Settings(kessel_enabled=True)
+
     mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
     mocker.patch("roadmap.kessel.host_groups_for", side_effect=Exception("gRPC unavailable"))

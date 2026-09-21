@@ -4,17 +4,22 @@ import typing as t
 from collections import defaultdict
 from datetime import date
 
+from cachetools import TTLCache
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
 from pydantic import BaseModel
 from pydantic import model_validator
 
+from roadmap.common import cached_response_size
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
+from roadmap.common import host_inventory_scope
+from roadmap.common import InventoryScope
 from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
+from roadmap.config import Settings
 from roadmap.data.systems import OS_LIFECYCLE_DATES
 from roadmap.models import HostCount
 from roadmap.models import LifecycleType
@@ -26,7 +31,6 @@ from roadmap.models import SystemInfo
 
 
 logger = logging.getLogger("uvicorn.error")
-
 
 router = APIRouter(
     prefix="/rhel",
@@ -40,6 +44,29 @@ MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, l
 class RelevantSystemsResponse(BaseModel):
     meta: Meta
     data: list[System]
+
+
+# Response cache for the /relevant/lifecycle/rhel endpoint. Results change
+# slowly (only when hosts are added/removed or products change via the
+# replication pipeline), so caching with a short TTL eliminates most latency.
+_rhel_cache: TTLCache | None = None
+
+
+def _response_size(response: RelevantSystemsResponse) -> int:
+    """Estimate what a cached RHEL response costs in memory, in bytes."""
+    return cached_response_size(response.data)
+
+
+def _get_rhel_cache(settings: Settings) -> TTLCache:
+    """Return the RHEL lifecycle response cache, creating it on first use."""
+    global _rhel_cache
+    if _rhel_cache is None:
+        _rhel_cache = TTLCache(
+            maxsize=settings.lifecycle_cache_max_bytes,
+            ttl=settings.lifecycle_cache_ttl,
+            getsizeof=_response_size,
+        )
+    return _rhel_cache
 
 
 class LifecycleResponse(BaseModel):
@@ -143,9 +170,27 @@ relevant = APIRouter(
 )
 async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    scope: t.Annotated[InventoryScope, Depends(host_inventory_scope)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
     related: bool = False,
 ) -> RelevantSystemsResponse:
+    """Return RHEL lifecycle dates for the systems in the caller's inventory.
+
+    Responses are cached for a short TTL, since they only change when hosts are
+    added or removed or when products change via replication.
+    """
+    # Check cache first. The key is the inventory scope, which covers the org,
+    # the caller's permitted host groups and the version filters, plus the
+    # remaining query parameters that alter the response. Anything that changes
+    # the response must be in here or callers will be served each other's data.
+    cache = _get_rhel_cache(settings)
+    cache_key = (*scope, related)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        logger.debug("RHEL cache hit", extra={"related": related})
+        return cached
+
     system_counts = defaultdict(int)
     missing = defaultdict(int)
     systems_by_version_lifecycle = defaultdict(set)
@@ -245,7 +290,14 @@ async def get_relevant_systems(  # noqa: C901
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
         logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
 
-    return RelevantSystemsResponse(
+    result = RelevantSystemsResponse(
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_attrs("lifecycle_type", "major", "minor"), reverse=True),
     )
+    try:
+        cache[cache_key] = result
+    except ValueError:
+        # The cache rejects a response bigger than its whole byte budget. An
+        # org large enough to hit that should still get its response.
+        logger.debug("Response too large to cache", extra={"related": related})
+    return result

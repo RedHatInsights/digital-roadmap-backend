@@ -22,6 +22,8 @@ from sqlalchemy.ext.asyncio.result import AsyncResult
 
 from roadmap.common import decode_header
 from roadmap.common import ensure_date
+from roadmap.common import host_inventory_scope
+from roadmap.common import InventoryScope
 from roadmap.common import query_host_inventory
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
@@ -678,20 +680,22 @@ relevant = APIRouter(
     response_model=RelevantAppStreamsResponse,
 )
 async def get_relevant_app_streams(
-    org_id: t.Annotated[str, Depends(decode_header)],
     settings: t.Annotated[Settings, Depends(Settings.create)],
+    scope: t.Annotated[InventoryScope, Depends(host_inventory_scope)],
     systems_by_stream: t.Annotated[dict[AppStreamKey, set[SystemInfo]], Depends(systems_by_app_stream)],
     related: bool = False,
 ):
     """Return the app streams relevant to the hosts in the caller's inventory.
 
-    Responses are cached per org for a short TTL, since they only change when
-    hosts are added or removed or when packages change via replication.
+    Responses are cached for a short TTL, since they only change when hosts are
+    added or removed or when packages change via replication.
     """
-    # Check cache first. Key on org_id and the query parameters that alter the
-    # response, so callers with different parameters do not share an entry.
+    # Check cache first. The key is the inventory scope, which covers the org,
+    # the caller's permitted host groups and the version filters, plus the
+    # remaining query parameters that alter the response. Anything that changes
+    # the response must be in here or callers will be served each other's data.
     cache = _get_app_streams_cache(settings)
-    cache_key = (org_id, related)
+    cache_key = (*scope, related)
     cached = cache.get(cache_key)
     if cached is not None:
         logger.debug("App streams cache hit", extra={"related": related})

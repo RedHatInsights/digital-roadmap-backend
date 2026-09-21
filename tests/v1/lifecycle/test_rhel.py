@@ -220,3 +220,57 @@ def test_rhel_relevant_cache_is_per_org(client, api_prefix):
     assert second.status_code == 200
     assert len(first.json()["data"]) > 0, "The first org should have systems for this test to be meaningful"
     assert second.json()["data"] != first.json()["data"], "The second org was served the first org's cached response"
+
+
+def test_rhel_relevant_cache_is_per_permission_scope(client, api_prefix):
+    """A restricted caller is not served an unrestricted caller's cached response.
+
+    Two users in one org can have different host group permissions, so the
+    permissions have to be part of the cache key.
+    """
+    # An empty set means unrestricted. The group id matches no host, so the
+    # second caller is entitled to see nothing.
+    host_groups = iter((set(), {str(uuid.uuid4())}))
+
+    async def get_allowed_host_groups_override():
+        return next(host_groups)
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    unrestricted = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    restricted = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+    assert unrestricted.status_code == 200
+    assert restricted.status_code == 200
+    assert len(unrestricted.json()["data"]) > 0, "The first caller should see systems for this test to be meaningful"
+    assert restricted.json()["data"] == [], "The restricted caller was served the unrestricted cached response"
+
+
+@pytest.mark.parametrize(("first_major", "second_major"), ((9, 8), (8, 9)))
+def test_rhel_relevant_cache_is_per_major_version(client, api_prefix, first_major, second_major):
+    """A request filtered to one major version is not served another version's response."""
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel?major={first_major}")
+    second = client.get(f"{api_prefix}/relevant/lifecycle/rhel?major={second_major}")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert {item["major"] for item in first.json()["data"]} == {first_major}
+    assert {item["major"] for item in second.json()["data"]} == {second_major}, (
+        "The second request was served the first major version's cached response"
+    )

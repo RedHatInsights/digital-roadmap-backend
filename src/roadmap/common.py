@@ -40,6 +40,9 @@ _rbac_client: httpx.AsyncClient | None = None
 MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
+# org, permitted host groups, major, minor. See "host_inventory_scope".
+InventoryScope = tuple[str, frozenset[str | None], int | None, int | None]
+
 
 def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
     # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
@@ -384,6 +387,23 @@ async def query_host_inventory(
     except (DBAPIError, SQLAlchemyError) as err:
         logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+
+async def host_inventory_scope(
+    org_id: t.Annotated[str, Depends(decode_header)],
+    host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
+    major: MajorVersion | None = None,
+    minor: MinorVersion | None = None,
+) -> InventoryScope:
+    """Return everything about a request that determines which hosts it sees.
+
+    Two requests with an equal scope get an identical set of hosts back from
+    "query_host_inventory", so this is what a cached response may be keyed on.
+    Note that "host_groups" must be part of it: two users in the same org can
+    have different permissions, and leaving their groups out of a cache key
+    would let a restricted user be served an unrestricted user's response.
+    """
+    return (org_id, frozenset(host_groups), major, minor)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

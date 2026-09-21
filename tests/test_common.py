@@ -577,34 +577,3 @@ def test_get_lifecycle_type(products, expected):
     result = get_lifecycle_type(products)
 
     assert result == expected
-
-
-async def test_query_rbac_cache_hit(mocker):
-    """Second call to query_rbac with same identity should hit cache."""
-    settings = Settings(rbac_hostname="example.com")
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"data": [{"permission": "inventory:*:*"}]}
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-
-    mocker.patch("roadmap.common._get_rbac_client", return_value=mock_client)
-
-    assert await query_rbac(settings) == [{"permission": "inventory:*:*"}]
-    assert mock_client.get.call_count == 1
-
-    assert await query_rbac(settings) == [{"permission": "inventory:*:*"}]
-    assert mock_client.get.call_count == 1, "Second call should have been served from the cache"
-
-
-async def test_allowed_host_groups_kessel_cache_hit(mocker):
-    """Second call to _allowed_host_groups_kessel with same identity should hit cache."""
-    settings = Settings(kessel_enabled=True)
-    mocker.patch("roadmap.kessel.subject_from_identity", return_value=mocker.Mock())
-    mocker.patch("roadmap.kessel.get_client", return_value=mocker.Mock())
-    mock_host_groups = mocker.patch("roadmap.kessel.host_groups_for", return_value=["grp-1", "grp-2"])
-
-    assert await _allowed_host_groups_kessel(settings, x_rh_identity=None) == {"grp-1", "grp-2"}
-    assert mock_host_groups.call_count == 1
-
-    assert await _allowed_host_groups_kessel(settings, x_rh_identity=None) == {"grp-1", "grp-2"}
-    assert mock_host_groups.call_count == 1, "Second call should have been served from the cache"

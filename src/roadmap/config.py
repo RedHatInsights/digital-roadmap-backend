@@ -37,17 +37,17 @@ class Settings(BaseSettings):
     rbac_timeout: float = 2.0
     rbac_connect_timeout: float = 1.0
 
-    # RBAC response cache TTL (seconds). RBAC permissions change infrequently,
-    # and most requests in a burst are from the same caller. Matches the 120s
-    # TTL used in notifications-backend. Set to 0 to disable.
-    rbac_cache_ttl: int = 120
-    rbac_cache_maxsize: int = 1000
-
     # Lifecycle endpoint response cache. These endpoints process the full org's
     # host inventory on every call, which takes ~1.5s for 15k hosts. Results
     # change slowly (only when hosts are added/removed or packages change via
     # the replication pipeline), so caching with a short TTL eliminates most
     # of the latency. Set ttl=0 to disable.
+    #
+    # maxsize bounds the number of cached responses, not their size. A response
+    # holds a SystemInfo per host, measured at ~480 bytes each, so its cost
+    # scales with the org: ~7 MiB for 15k hosts, ~23 MiB for 50k. Eight entries
+    # is therefore a worst case of roughly 54 MiB (15k) to 187 MiB (50k) per
+    # pod, against a 4 GiB request. Raise maxsize only with that in mind.
     lifecycle_cache_ttl: int = 60
     lifecycle_cache_maxsize: int = 8
 

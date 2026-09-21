@@ -42,8 +42,7 @@ def clear_settings_cache():
 
 @pytest.fixture(autouse=True)
 def clear_module_caches():
-    """Reset the process-lifetime RBAC/Kessel/lifecycle caches and the pooled
-    RBAC client.
+    """Reset the process-lifetime lifecycle caches and the pooled RBAC client.
 
     These are module globals built on first use, so without this a value cached
     by one test is visible to the next, and a client constructed before a test
@@ -54,8 +53,6 @@ def clear_module_caches():
     import roadmap.v1.lifecycle.rhel
 
     roadmap.common._rbac_client = None
-    roadmap.common._rbac_cache = None
-    roadmap.common._kessel_cache = None
     roadmap.v1.lifecycle.app_streams._app_streams_cache = None
     roadmap.v1.lifecycle.rhel._rhel_cache = None
 

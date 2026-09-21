@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import json
 import logging
 import textwrap
@@ -12,7 +11,6 @@ from uuid import UUID
 
 import httpx
 
-from cachetools import TTLCache
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Header
@@ -38,17 +36,6 @@ logger = logging.getLogger("uvicorn.error")
 # connection pooling, so subsequent requests to the same host reuse existing
 # TCP connections instead of opening a new one for each call.
 _rbac_client: httpx.AsyncClient | None = None
-
-# RBAC response cache, keyed on a hash of the x-rh-identity header. Most
-# requests in a burst are from the same caller, and RBAC permissions change
-# infrequently, so caching with a short TTL removes the RBAC round trip from
-# most requests entirely.
-_rbac_cache: TTLCache | None = None
-
-# Kessel host groups cache, keyed on a hash of the x-rh-identity header.
-# This prevents the expensive gRPC call AND the expensive JSONB query
-# (jsonb_array_elements on h.groups) that runs on every host row.
-_kessel_cache: TTLCache | None = None
 
 MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
@@ -86,31 +73,11 @@ def _get_rbac_client(settings: Settings) -> httpx.AsyncClient:
     return _rbac_client
 
 
-def _get_rbac_cache(settings: Settings) -> TTLCache:
-    """Return the RBAC response cache, creating it on first use."""
-    global _rbac_cache
-    if _rbac_cache is None:
-        _rbac_cache = TTLCache(maxsize=settings.rbac_cache_maxsize, ttl=settings.rbac_cache_ttl)
-    return _rbac_cache
-
-
-def _get_kessel_cache(settings: Settings) -> TTLCache:
-    """Return the Kessel host groups cache, creating it on first use."""
-    global _kessel_cache
-    if _kessel_cache is None:
-        _kessel_cache = TTLCache(maxsize=settings.rbac_cache_maxsize, ttl=settings.rbac_cache_ttl)
-    return _kessel_cache
-
-
 async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> list[dict[t.Any, t.Any]]:
-    """Return the caller's inventory permissions from RBAC v1.
-
-    Responses are cached per identity for a short TTL. Permissions change
-    infrequently, so this removes the RBAC round trip from most requests.
-    """
+    """Return the caller's inventory permissions from RBAC v1."""
     if settings.dev:
         return [
             {
@@ -121,15 +88,6 @@ async def query_rbac(
 
     if not settings.rbac_url:
         return [{}]
-
-    # Check cache first. Key on the identity header since RBAC permissions are
-    # caller-specific. Most requests in a burst are from the same caller.
-    cache = _get_rbac_cache(settings)
-    cache_key = hashlib.sha256((x_rh_identity or "").encode()).hexdigest()
-    cached = cache.get(cache_key)
-    if cached is not None:
-        logger.debug("RBAC cache hit", extra={"cache_key": cache_key[:12]})
-        return cached
 
     params = {
         "application": "inventory",
@@ -157,9 +115,7 @@ async def query_rbac(
         logger.error(f"Unexpected error querying RBAC: {err}", exc_info=True)
         raise HTTPException(status_code=502, detail="Error communicating with RBAC service")
 
-    result = data.get("data", [{}])
-    cache[cache_key] = result
-    return result
+    return data.get("data", [{}])
 
 
 def _get_group_list_from_resource_definition(resource_definition: dict) -> list[str]:
@@ -259,15 +215,6 @@ async def _allowed_host_groups_kessel(
     if settings.dev:
         return set()
 
-    # Check cache first. This prevents both the gRPC round trip AND the
-    # expensive jsonb_array_elements(h.groups) query that runs on every request.
-    cache = _get_kessel_cache(settings)
-    cache_key = hashlib.sha256((x_rh_identity or "").encode()).hexdigest()
-    cached = cache.get(cache_key)
-    if cached is not None:
-        logger.debug("Kessel cache hit", extra={"cache_key": cache_key[:12]})
-        return cached
-
     identity = _decode_identity(x_rh_identity)
     subject = kessel.subject_from_identity(identity, settings.kessel_principal_domain)
 
@@ -284,9 +231,7 @@ async def _allowed_host_groups_kessel(
         # Kessel returned no viewable workspaces, so the caller may see nothing.
         raise HTTPException(status_code=403, detail="Not authorized to access host inventory")
 
-    result = {t.cast(str | None, ws_id) for ws_id in workspace_ids}
-    cache[cache_key] = result
-    return result
+    return {t.cast(str | None, ws_id) for ws_id in workspace_ids}
 
 
 async def get_allowed_host_groups(

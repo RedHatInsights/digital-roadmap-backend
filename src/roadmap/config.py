@@ -51,11 +51,6 @@ class Settings(BaseSettings):
     lifecycle_cache_ttl: int = 60
     lifecycle_cache_maxsize: int = 8
 
-    # Sentry samples every request by default, which adds span recording,
-    # profile collection and network egress to each one. Sample a subset.
-    sentry_traces_sample_rate: float = 0.1
-    sentry_profiles_sample_rate: float = 0.1
-
     env_name: str = "stage"
     log_level: str = "info"
     json_logging: bool = False

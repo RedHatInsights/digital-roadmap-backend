@@ -26,10 +26,9 @@ from roadmap.sentry_config import before_send
 
 
 if os.getenv("SENTRY_DSN"):
-    settings_early = Settings.create()
     sentry_sdk.init(
-        traces_sample_rate=settings_early.sentry_traces_sample_rate,
-        profiles_sample_rate=settings_early.sentry_profiles_sample_rate,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
         before_send=before_send,
         integrations=[
             FastApiIntegration(

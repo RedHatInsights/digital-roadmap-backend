@@ -43,7 +43,8 @@ def mock_host_stream(mocker):
         yield mocker.MagicMock()
 
     mocker.patch("notificator.notificator.get_db", side_effect=lambda: _fake_get_db())
-    mocker.patch(
-        "notificator.notificator.query_host_inventory",
-        side_effect=lambda *a, **kw: _fake_query_inventory(),
-    )
+    for target in ("query_host_inventory", "query_host_inventory_without_packages"):
+        mocker.patch(
+            f"notificator.notificator.{target}",
+            side_effect=lambda *a, **kw: _fake_query_inventory(),
+        )

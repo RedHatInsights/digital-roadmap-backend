@@ -230,43 +230,35 @@ async def get_allowed_host_groups(
     return _allowed_host_groups_v1(permissions)
 
 
-async def query_host_inventory(
-    org_id: t.Annotated[str, Depends(decode_header)],
-    session: t.Annotated[AsyncSession, Depends(get_db)],
-    settings: t.Annotated[Settings, Depends(Settings.create)],
-    host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
-    major: MajorVersion | None = None,
-    minor: MinorVersion | None = None,
-) -> AsyncGenerator[AsyncResult[t.Any]]:
-    """
-    Query the Hosts database for system information on this org's hosts.
+def _build_host_inventory_query(
+    major: int | None = None,
+    minor: int | None = None,
+    host_groups: t.Collection[str | None] = (),
+    include_packages: bool = True,
+) -> str:
+    """Build the SQL used to read this org's hosts from the Hosts database.
 
-    Only return data the authenticated user is permitted to read. Specifically,
-    if "host_groups" is not empty (which implies unrestricted access), only
-    return hosts that belong to a group present in "host_groups"
-
-    Note there is a special case in the result "get_allowed_host_groups"
-    returns, in that the return value may contain (with or without other group
-    ids) a None value. If None is present in "host_groups", one of the
-    permitted  groups is the "ungrouped" group. While other groups are
-    identified by the value of their "id" field, the "ungrouped" group is
-    identified by the fact that the value of its "ungrouped" field is `true`.
+    When "include_packages" is False, the installed packages and dnf modules
+    columns are left out of the SELECT. Consumers that only need the operating
+    system version and the subscription products (the RHEL lifecycle path) can
+    avoid reading those large JSON columns for every host.
 
     """
-    if settings.dev:
-        org_id = "1234"
-
     # Build up a query for this org's hosts.
-    query = """
+    package_columns = ""
+    if include_packages:
+        package_columns = """
+            sps.dnf_modules as dnf_modules,
+            spd.installed_packages AS packages,"""
+
+    query = f"""
         SELECT
             h.id,
             h.display_name,
             sps.operating_system ->> 'name' AS os_name,
             (sps.operating_system -> 'major')::int AS os_major,
             (sps.operating_system -> 'minor')::int AS os_minor,
-            sps.os_release as os_release,
-            sps.dnf_modules as dnf_modules,
-            spd.installed_packages AS packages,
+            sps.os_release as os_release,{package_columns}
             spd.installed_products AS products
         FROM hbi.hosts h
             INNER JOIN hbi.system_profiles_static sps
@@ -348,20 +340,73 @@ async def query_host_inventory(
 
         query += suffix
 
-    try:
-        result = await session.stream(
-            text(textwrap.dedent(query)),
-            params={
-                "org_id": org_id,
-                "major": str(major),
-                "minor": str(minor),
-                "host_groups": list(host_groups),
-            },
+    return query
+
+
+def host_inventory_query(include_packages: bool = True) -> t.Callable[..., AsyncGenerator[AsyncResult[t.Any]]]:
+    """Create a dependency that queries the Hosts database for this org's hosts.
+
+    Pass include_packages=False for callers that do not read installed packages
+    or dnf modules, so those columns are not read from the database.
+
+    """
+
+    async def query_host_inventory(
+        org_id: t.Annotated[str, Depends(decode_header)],
+        session: t.Annotated[AsyncSession, Depends(get_db)],
+        settings: t.Annotated[Settings, Depends(Settings.create)],
+        host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
+        major: MajorVersion | None = None,
+        minor: MinorVersion | None = None,
+    ) -> AsyncGenerator[AsyncResult[t.Any]]:
+        """
+        Query the Hosts database for system information on this org's hosts.
+
+        Only return data the authenticated user is permitted to read. Specifically,
+        if "host_groups" is not empty (which implies unrestricted access), only
+        return hosts that belong to a group present in "host_groups"
+
+        Note there is a special case in the result "get_allowed_host_groups"
+        returns, in that the return value may contain (with or without other group
+        ids) a None value. If None is present in "host_groups", one of the
+        permitted  groups is the "ungrouped" group. While other groups are
+        identified by the value of their "id" field, the "ungrouped" group is
+        identified by the fact that the value of its "ungrouped" field is `true`.
+
+        """
+        if settings.dev:
+            org_id = "1234"
+
+        query = _build_host_inventory_query(
+            major=major,
+            minor=minor,
+            host_groups=host_groups,
+            include_packages=include_packages,
         )
-        yield result
-    except (DBAPIError, SQLAlchemyError) as err:
-        logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+        try:
+            result = await session.stream(
+                text(textwrap.dedent(query)),
+                params={
+                    "org_id": org_id,
+                    "major": str(major),
+                    "minor": str(minor),
+                    "host_groups": list(host_groups),
+                },
+            )
+            yield result
+        except (DBAPIError, SQLAlchemyError) as err:
+            logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
+            raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+    return query_host_inventory
+
+
+# Default dependency: includes installed packages and dnf modules.
+query_host_inventory = host_inventory_query()
+
+# Slim dependency for callers that only need OS version and installed products.
+query_host_inventory_without_packages = host_inventory_query(include_packages=False)
 
 
 def get_lifecycle_type(products: list[dict[str, str]]) -> LifecycleType:

@@ -12,7 +12,7 @@ from pydantic import model_validator
 
 from roadmap.common import decode_header
 from roadmap.common import get_lifecycle_type
-from roadmap.common import query_host_inventory
+from roadmap.common import query_host_inventory_without_packages
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
 from roadmap.data.systems import OS_LIFECYCLE_DATES
@@ -143,7 +143,9 @@ relevant = APIRouter(
 )
 async def get_relevant_systems(  # noqa: C901
     org_id: t.Annotated[str, Depends(decode_header)],
-    systems: t.Annotated[t.Any, Depends(query_host_inventory)],
+    # This endpoint only needs the OS version and the installed products, so it
+    # queries without the installed packages and dnf modules columns.
+    systems: t.Annotated[t.Any, Depends(query_host_inventory_without_packages)],
     related: bool = False,
 ) -> RelevantSystemsResponse:
     system_counts = defaultdict(int)

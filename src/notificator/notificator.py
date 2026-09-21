@@ -17,6 +17,7 @@ import structlog
 
 from notificator.notificator_config import NotificatorSettings
 from roadmap.common import query_host_inventory
+from roadmap.common import query_host_inventory_without_packages
 from roadmap.common import rhel_major_minor
 from roadmap.database import get_db
 from roadmap.models import SupportStatus
@@ -153,7 +154,8 @@ class Notificator:
 
         relevant_systems = None
         async for session in get_db():
-            async for result in query_host_inventory(
+            # RHEL aggregation only reads the OS version and installed products.
+            async for result in query_host_inventory_without_packages(
                 org_id=str(self.org_id),
                 session=session,
                 settings=self.settings,

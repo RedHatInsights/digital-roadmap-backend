@@ -230,117 +230,151 @@ async def get_allowed_host_groups(
     return _allowed_host_groups_v1(permissions)
 
 
+# Every statement below is a literal. No value is ever formatted into the SQL:
+# org_id, major, minor and host_groups are passed to the driver as bound
+# parameters (":org_id" and friends). The query for a given request is chosen
+# from these constants, never built from request data.
+
+# The two forms of the host query. The slim one leaves out the installed
+# packages and dnf modules columns for consumers that only need the operating
+# system version and the subscription products (the RHEL lifecycle path), so
+# those large JSON columns are not read for every host.
+_HOSTS_QUERY = """
+    SELECT
+        h.id,
+        h.display_name,
+        sps.operating_system ->> 'name' AS os_name,
+        (sps.operating_system -> 'major')::int AS os_major,
+        (sps.operating_system -> 'minor')::int AS os_minor,
+        sps.os_release as os_release,
+        sps.dnf_modules as dnf_modules,
+        spd.installed_packages AS packages,
+        spd.installed_products AS products
+    FROM hbi.hosts h
+        INNER JOIN hbi.system_profiles_static sps
+            ON h.id = sps.host_id
+            AND h.org_id = sps.org_id
+        LEFT JOIN hbi.system_profiles_dynamic spd
+            ON h.id = spd.host_id
+            AND h.org_id = spd.org_id
+    WHERE h.org_id = :org_id
+"""
+
+_HOSTS_QUERY_WITHOUT_PACKAGES = """
+    SELECT
+        h.id,
+        h.display_name,
+        sps.operating_system ->> 'name' AS os_name,
+        (sps.operating_system -> 'major')::int AS os_major,
+        (sps.operating_system -> 'minor')::int AS os_minor,
+        sps.os_release as os_release,
+        spd.installed_products AS products
+    FROM hbi.hosts h
+        INNER JOIN hbi.system_profiles_static sps
+            ON h.id = sps.host_id
+            AND h.org_id = sps.org_id
+        LEFT JOIN hbi.system_profiles_dynamic spd
+            ON h.id = spd.host_id
+            AND h.org_id = spd.org_id
+    WHERE h.org_id = :org_id
+"""
+
+# ->> fetches the attribute from the "operating_system" subobject in the host's
+# record. This subobject is kept as JSON, and the operator decodes and accesses
+# into it.
+_MAJOR_FILTER = " AND sps.operating_system ->> 'major' = :major"
+_MINOR_FILTER = " AND sps.operating_system ->> 'minor' = :minor"
+
+# Filters that keep out hosts this user is not permitted to see.
+#
+# The hosts database keeps groups data in a JSONB field, with contents like
+# this:
+# [
+#    {
+#     "account": "123456",
+#     "created": "2025-01-07T12:58:59.569065+00:00",
+#     "host_count": 1,
+#     "id": "f770fbf4-359d-11f0-b21b-5e43c8b8aa2f",
+#     "name": "GroupTwo",
+#     "org_id": "1234",
+#     "ungrouped": false,
+#     "updated": "2025-01-07T12:59:52.471612+00:00"
+#    }
+# ]
+#
+# The following subqueries efficiently search for a match on criteria, and
+# return TRUE if a match is found, FALSE otherwise. Here is how they work:
+#
+# * "jsonb_array_elements" queries into the denormalized JSON present in the
+#   "groups" field. Each subquery tests a condition on a certain field of that
+#   json data. The first is searching for an "ungrouped" field to have a value
+#   of "true", and the second is searching for the value held in the "id" field
+#   to be present in a given set of ids.
+# * "SELECT 1" causes the query to stop at the first match it finds.
+# * "EXISTS" returns a BOOLEAN instead of the result of the query.
+#
+# There is a special case. If None is in host_groups, we must query for a group
+# that has ungrouped == True. When both a None and a string based group id are
+# permitted, the two clauses are combined with an OR.
+_UNGROUPED_FILTER = """
+     AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
+            WHERE (group_obj->>'ungrouped')::boolean = true)
+"""
+
+_GROUPED_FILTER = """
+     AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
+            WHERE group_obj->>'id' = ANY(:host_groups))
+"""
+
+_UNGROUPED_OR_GROUPED_FILTER = """
+     AND (
+        EXISTS (
+            SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
+                WHERE (group_obj->>'ungrouped')::boolean = true)
+        OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
+                WHERE group_obj->>'id' = ANY(:host_groups)))
+"""
+
+
 def _build_host_inventory_query(
     major: int | None = None,
     minor: int | None = None,
     host_groups: t.Collection[str | None] = (),
     include_packages: bool = True,
 ) -> str:
-    """Build the SQL used to read this org's hosts from the Hosts database.
+    """Select the SQL used to read this org's hosts from the Hosts database.
 
-    When "include_packages" is False, the installed packages and dnf modules
-    columns are left out of the SELECT. Consumers that only need the operating
-    system version and the subscription products (the RHEL lifecycle path) can
-    avoid reading those large JSON columns for every host.
+    The statement is assembled by choosing among the literal fragments above
+    based on which filters apply. No caller supplied value is interpolated into
+    the SQL; they are all bound parameters.
 
     """
-    # Build up a query for this org's hosts.
-    package_columns = ""
     if include_packages:
-        package_columns = """
-            sps.dnf_modules as dnf_modules,
-            spd.installed_packages AS packages,"""
+        statements = [_HOSTS_QUERY]
+    else:
+        statements = [_HOSTS_QUERY_WITHOUT_PACKAGES]
 
-    query = f"""
-        SELECT
-            h.id,
-            h.display_name,
-            sps.operating_system ->> 'name' AS os_name,
-            (sps.operating_system -> 'major')::int AS os_major,
-            (sps.operating_system -> 'minor')::int AS os_minor,
-            sps.os_release as os_release,{package_columns}
-            spd.installed_products AS products
-        FROM hbi.hosts h
-            INNER JOIN hbi.system_profiles_static sps
-                ON h.id = sps.host_id
-                AND h.org_id = sps.org_id
-            LEFT JOIN hbi.system_profiles_dynamic spd
-                ON h.id = spd.host_id
-                AND h.org_id = spd.org_id
-        WHERE h.org_id = :org_id
-    """
-
-    # #>> '{{operating_system,major}}' fetches the attribute "major" from the
-    # "operating_system" subobject in the host's record. This subobject is kept
-    # as JSON, and the #>> operator decodes and accesses into it.
     if major is not None:
-        query = f"{query} AND sps.operating_system ->> 'major' = :major"
+        statements.append(_MAJOR_FILTER)
 
     if minor is not None:
-        query = f"{query} AND sps.operating_system ->> 'minor' = :minor"
+        statements.append(_MINOR_FILTER)
 
-    # If host group data is given, we need to filter out hosts that this user
-    # is not permitted to see. To do this we add more WHERE clauses to our
-    # query.
+    # An empty "host_groups" implies unrestricted access, so no group filter is
+    # added in that case.
     if host_groups:
-        # the hosts database keeps groups data in a JSONB field, with contents
-        # like this:
-        # [
-        #    {
-        #     "account": "123456",
-        #     "created": "2025-01-07T12:58:59.569065+00:00",
-        #     "host_count": 1,
-        #     "id": "f770fbf4-359d-11f0-b21b-5e43c8b8aa2f",
-        #     "name": "GroupTwo",
-        #     "org_id": "1234",
-        #     "ungrouped": false,
-        #     "updated": "2025-01-07T12:59:52.471612+00:00"
-        #    }
-        # ]
+        if None not in host_groups:
+            statements.append(_GROUPED_FILTER)
+        elif len(host_groups) > 1:
+            # Accept either a group id match or ungrouped = true.
+            statements.append(_UNGROUPED_OR_GROUPED_FILTER)
+        else:
+            statements.append(_UNGROUPED_FILTER)
 
-        # The following two lines of SQL efficiently search for a match on
-        # criteria, and return TRUE if a match is found, FALSE otherwise. Here
-        # is how the lines work:
-        #
-        # * "jsonb_array_elements" queries into the denormalized JSON present
-        #   in the "groups" field. In each line the code tests a condition on a
-        #   certain field of that json data. The first line is searching for an
-        #   "ungrouped" field to have a value of "true", and the second line is
-        #   searching for the value held in the "id" field to be present in a
-        #   given set of ids.
-        # * "SELECT 1" causes the query to stop at the first match it
-        #   finds.
-        # * "EXISTS" returns a BOOLEAN instead of the result of the query.
-
-        # There is a special case. If None is in host_groups, we must query
-        # for a group that has ungrouped == True.
-        ungrouped_query = """
-            EXISTS (
-                SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
-                    WHERE (group_obj->>'ungrouped')::boolean = true)
-        """
-        # This query searches for any group record with an id that matches any
-        # of our eligible host group ids.
-        grouped_query = """
-            EXISTS (
-                SELECT 1 FROM jsonb_array_elements(h.groups::jsonb) AS group_obj
-                    WHERE group_obj->>'id' = ANY(:host_groups))
-        """
-
-        # Here we add our "group" subqueries to the WHERE clause of our final
-        # query. If the query contains both a None and string-based group id
-        # then the clauses that detect them must be comibined with on OR
-        # statement.
-        suffix = f" AND {grouped_query}"
-        if None in host_groups:
-            suffix = f" AND {ungrouped_query}"
-            if len(host_groups) > 1:
-                # Accept either a group id match or ungrouped = true.
-                suffix = f" AND ({ungrouped_query} OR {grouped_query})"
-
-        query += suffix
-
-    return query
+    return "".join(statements)
 
 
 def host_inventory_query(include_packages: bool = True) -> t.Callable[..., AsyncGenerator[AsyncResult[t.Any]]]:

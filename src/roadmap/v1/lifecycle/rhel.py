@@ -31,20 +31,6 @@ from roadmap.models import SystemInfo
 
 logger = logging.getLogger("uvicorn.error")
 
-# Response cache for the /relevant/lifecycle/rhel endpoint. Results change
-# slowly (only when hosts are added/removed or products change via the
-# replication pipeline), so caching with a short TTL eliminates most latency.
-_rhel_cache: TTLCache | None = None
-
-
-def _get_rhel_cache(settings: Settings) -> TTLCache:
-    """Return the RHEL lifecycle response cache, creating it on first use."""
-    global _rhel_cache
-    if _rhel_cache is None:
-        _rhel_cache = TTLCache(maxsize=settings.lifecycle_cache_maxsize, ttl=settings.lifecycle_cache_ttl)
-    return _rhel_cache
-
-
 router = APIRouter(
     prefix="/rhel",
     tags=["RHEL"],
@@ -57,6 +43,41 @@ MinorVersion = t.Annotated[int, Path(description="Minor version number", ge=0, l
 class RelevantSystemsResponse(BaseModel):
     meta: Meta
     data: list[System]
+
+
+# Response cache for the /relevant/lifecycle/rhel endpoint. Results change
+# slowly (only when hosts are added/removed or products change via the
+# replication pipeline), so caching with a short TTL eliminates most latency.
+_rhel_cache: TTLCache | None = None
+
+# Measured cost of one host in a response: a SystemInfo in "systems_detail"
+# plus a UUID in "systems". The response's fixed overhead is negligible
+# beside it, and the cost is linear in the host count from 1k to 50k hosts.
+_BYTES_PER_HOST = 480
+
+
+def _response_size(response: RelevantSystemsResponse) -> int:
+    """Estimate what a cached response costs in memory, in bytes.
+
+    The cache bounds the total of these, so what matters is that the estimate
+    tracks the real cost, which the per-host entries dominate. Never returns
+    zero, so that an empty response cannot be cached without limit.
+    """
+    hosts = sum(len(item.systems_detail) for item in response.data)
+
+    return max(hosts * _BYTES_PER_HOST, 1)
+
+
+def _get_rhel_cache(settings: Settings) -> TTLCache:
+    """Return the RHEL lifecycle response cache, creating it on first use."""
+    global _rhel_cache
+    if _rhel_cache is None:
+        _rhel_cache = TTLCache(
+            maxsize=settings.lifecycle_cache_max_bytes,
+            ttl=settings.lifecycle_cache_ttl,
+            getsizeof=_response_size,
+        )
+    return _rhel_cache
 
 
 class LifecycleResponse(BaseModel):
@@ -284,5 +305,10 @@ async def get_relevant_systems(  # noqa: C901
         meta=Meta(total=sum(system.count for system in results), count=len(results)),
         data=sorted(results, key=sort_attrs("lifecycle_type", "major", "minor"), reverse=True),
     )
-    cache[cache_key] = result
+    try:
+        cache[cache_key] = result
+    except ValueError:
+        # The cache rejects a response bigger than its whole byte budget. An
+        # org large enough to hit that should still get its response.
+        logger.debug("Response too large to cache", extra={"related": related})
     return result

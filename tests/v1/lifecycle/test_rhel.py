@@ -251,6 +251,31 @@ def test_rhel_relevant_cache_is_per_permission_scope(client, api_prefix):
     assert restricted.json()["data"] == [], "The restricted caller was served the unrestricted cached response"
 
 
+def test_rhel_relevant_response_too_large_to_cache(client, api_prefix, monkeypatch, mocker):
+    """A response bigger than the whole cache budget is still served, just not cached."""
+    monkeypatch.setenv("ROADMAP_LIFECYCLE_CACHE_MAX_BYTES", "1")
+
+    async def get_allowed_host_groups_override():
+        return set()
+
+    async def decode_header_override():
+        return "1234"
+
+    client.app.dependency_overrides = {}
+    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+    client.app.dependency_overrides[decode_header] = decode_header_override
+
+    first = client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+    assert first.status_code == 200
+    assert len(first.json()["data"]) > 0, "There should be systems for this test to be meaningful"
+
+    # Nothing was cached, so the second response has to be built from scratch
+    # and the raising mock is reached. A cache hit would return 200 instead.
+    mocker.patch("roadmap.v1.lifecycle.rhel.System", side_effect=ValueError("Raised intentionally"))
+    with pytest.raises(ValueError, match="Raised intentionally"):
+        client.get(f"{api_prefix}/relevant/lifecycle/rhel")
+
+
 @pytest.mark.parametrize(("first_major", "second_major"), ((9, 8), (8, 9)))
 def test_rhel_relevant_cache_is_per_major_version(client, api_prefix, first_major, second_major):
     """A request filtered to one major version is not served another version's response."""

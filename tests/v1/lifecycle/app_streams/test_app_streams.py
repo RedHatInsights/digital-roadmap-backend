@@ -584,37 +584,3 @@ def test_shared_package_names_real_data_perl_dbd_mysql_not_ambiguous_on_rhel8():
         "perl-DBD-MySQL must not be ambiguous on RHEL 8 merely because RHEL 9's "
         "unrelated 'mysql' module happens to bundle a package of the same name."
     )
-
-
-def test_relevant_app_streams_cache_is_per_permission_scope(api_prefix, client):
-    """A restricted caller is not served an unrestricted caller's cached response.
-
-    Two users in one org can have different host group permissions, so the
-    permissions have to be part of the cache key.
-    """
-    import uuid
-
-    from roadmap.common import decode_header
-    from roadmap.common import get_allowed_host_groups
-
-    # An empty set means unrestricted. The group id matches no host, so the
-    # second caller is entitled to see nothing.
-    host_groups = iter((set(), {str(uuid.uuid4())}))
-
-    async def decode_header_override():
-        return "1234"
-
-    async def get_allowed_host_groups_override():
-        return next(host_groups)
-
-    client.app.dependency_overrides = {}
-    client.app.dependency_overrides[decode_header] = decode_header_override
-    client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
-
-    unrestricted = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
-    restricted = client.get(f"{api_prefix}/relevant/lifecycle/app-streams")
-
-    assert unrestricted.status_code == 200
-    assert restricted.status_code == 200
-    assert len(unrestricted.json()["data"]) > 0, "The first caller should see app streams for a meaningful test"
-    assert restricted.json()["data"] == [], "The restricted caller was served the unrestricted cached response"

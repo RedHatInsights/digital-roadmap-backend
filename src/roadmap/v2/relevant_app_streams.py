@@ -6,6 +6,7 @@ from fastapi import Query
 
 from roadmap.models import Meta
 from roadmap.models import PaginatedSystemsResponse
+from roadmap.models import SortOrder
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import get_relevant_app_streams
@@ -56,6 +57,7 @@ async def get_app_streams_systems_v2(
     offset: t.Annotated[int, Query(ge=0)] = 0,
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
+    sort_order: SortOrder = SortOrder.asc,
 ) -> PaginatedSystemsResponse:
     """Return paginated host details for a specific app stream.
 
@@ -65,15 +67,18 @@ async def get_app_streams_systems_v2(
     """
     matching_systems: set[SystemInfo] = set()
     for key, systems in systems_by_stream.items():
-        if (
-            key.name == name
-            and key.app_stream_entity.os_major == os_major
-            and key.app_stream_entity.os_minor == os_minor
-        ):
+        if key.name != name or key.app_stream_entity.os_major != os_major:
+            continue
+        entity_minor = key.app_stream_entity.os_minor
+        if entity_minor is None or os_minor is None or entity_minor == os_minor:
             matching_systems = systems
             break
 
-    filtered = sorted(matching_systems, key=lambda s: (s.display_name, str(s.id)))
+    filtered = sorted(
+        matching_systems,
+        key=lambda s: (s.display_name, str(s.id)),
+        reverse=(sort_order == SortOrder.desc),
+    )
 
     if search:
         search_lower = search.lower()

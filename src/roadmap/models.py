@@ -69,6 +69,11 @@ class Meta(BaseModel):
     total: int | None = None
 
 
+class SortOrder(StrEnum):
+    asc = "asc"
+    desc = "desc"
+
+
 class LifecycleType(StrEnum):
     mainline = "mainline"
     eus = "EUS"

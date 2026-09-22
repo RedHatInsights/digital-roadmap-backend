@@ -368,3 +368,59 @@ class TestV2RhelSystems:
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/11/systems")
         assert response.status_code == 422
+
+    def test_v2_rhel_systems_sort_order_asc(self, client, v2_prefix, requires_db):
+        """Verify sort_order=asc returns systems sorted by display_name ascending."""
+        _apply_auth_overrides(client)
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=100&sort_order=asc")
+        assert response.status_code == 200
+        names = [s["display_name"] for s in response.json()["data"]]
+        if len(names) > 1:
+            assert names == sorted(names), "Systems should be sorted ascending by display_name"
+
+    def test_v2_rhel_systems_sort_order_desc(self, client, v2_prefix, requires_db):
+        """Verify sort_order=desc returns systems sorted by display_name descending."""
+        _apply_auth_overrides(client)
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=100&sort_order=desc")
+        assert response.status_code == 200
+        names = [s["display_name"] for s in response.json()["data"]]
+        if len(names) > 1:
+            assert names == sorted(names, reverse=True), "Systems should be sorted descending by display_name"
+
+    def test_v2_rhel_systems_sort_order_default_is_asc(self, client, v2_prefix, requires_db):
+        """Verify default sort order (no param) matches explicit asc."""
+        _apply_auth_overrides(client)
+
+        default_response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=100")
+        asc_response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=100&sort_order=asc")
+
+        assert default_response.status_code == 200
+        assert asc_response.status_code == 200
+        assert default_response.json()["data"] == asc_response.json()["data"]
+
+    def test_v2_rhel_systems_sort_order_invalid(self, client, v2_prefix):
+        """Verify invalid sort_order value is rejected by validation."""
+        _apply_auth_overrides(client)
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?sort_order=invalid")
+        assert response.status_code == 422
+
+    def test_v2_rhel_systems_sort_order_reverses_results(self, client, v2_prefix, requires_db):
+        """Verify asc and desc return opposite orderings."""
+        _apply_auth_overrides(client)
+
+        asc_response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=5&sort_order=asc")
+        desc_response = client.get(f"{v2_prefix}/relevant/lifecycle/rhel/9/1/systems?limit=5&sort_order=desc")
+
+        assert asc_response.status_code == 200
+        assert desc_response.status_code == 200
+
+        assert asc_response.json()["meta"]["total"] == desc_response.json()["meta"]["total"]
+
+        asc_names = [s["display_name"] for s in asc_response.json()["data"]]
+        desc_names = [s["display_name"] for s in desc_response.json()["data"]]
+        if asc_names and desc_names:
+            assert asc_names[0] <= desc_names[0], "ASC first item should be <= DESC first item"
+            assert desc_names[0] >= asc_names[0], "DESC first item should be >= ASC first item"

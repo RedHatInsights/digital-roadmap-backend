@@ -36,8 +36,8 @@ from roadmap.models import SystemInfo
 
 logger = logging.getLogger("uvicorn.error")
 
-_SQL_ASC = "ASC"
-_SQL_DESC = "DESC"
+_ORDER_BY_ASC = "ORDER BY h.display_name ASC, h.id ASC"
+_ORDER_BY_DESC = "ORDER BY h.display_name DESC, h.id ASC"
 
 MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
@@ -650,7 +650,7 @@ async def query_rhel_systems(
                ) AS os_minor
         {base_from}
         {base_where}
-        ORDER BY h.display_name {_SQL_ASC if sort_order == SortOrder.asc else _SQL_DESC}, h.id ASC
+        {_ORDER_BY_ASC if sort_order == SortOrder.asc else _ORDER_BY_DESC}
         LIMIT :limit OFFSET :offset
     """
 

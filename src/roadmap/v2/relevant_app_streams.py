@@ -74,7 +74,7 @@ async def get_app_streams_systems_v2(
         if entity_minor is not None and os_minor is not None and entity_minor == os_minor:
             matching_systems = systems
             break
-        if entity_minor is None or os_minor is None:
+        if entity_minor is None:
             wildcard_systems = systems
     if not matching_systems:
         matching_systems = wildcard_systems

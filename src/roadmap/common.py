@@ -36,9 +36,6 @@ from roadmap.models import SystemInfo
 
 logger = logging.getLogger("uvicorn.error")
 
-_ORDER_BY_ASC = "ORDER BY h.display_name ASC, h.id ASC"
-_ORDER_BY_DESC = "ORDER BY h.display_name DESC, h.id ASC"
-
 MajorVersion = t.Annotated[int, Query(description="Major version number", ge=8, le=10)]
 MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, le=10)]
 
@@ -638,6 +635,7 @@ async def query_rhel_systems(
     """
 
     count_query = f"SELECT COUNT(*) {base_from} {base_where}"
+    # Bound :sort_order selects which CASE arm sorts; ASC/DESC keywords stay static.
     data_query = f"""
         SELECT h.id, h.display_name,
                COALESCE(
@@ -650,7 +648,10 @@ async def query_rhel_systems(
                ) AS os_minor
         {base_from}
         {base_where}
-        {_ORDER_BY_ASC if sort_order == SortOrder.asc else _ORDER_BY_DESC}
+        ORDER BY
+            CASE WHEN :sort_order = 'asc' THEN h.display_name END ASC,
+            CASE WHEN :sort_order = 'desc' THEN h.display_name END DESC,
+            h.id ASC
         LIMIT :limit OFFSET :offset
     """
 
@@ -661,6 +662,7 @@ async def query_rhel_systems(
         "host_groups": list(host_groups),
         "limit": limit,
         "offset": offset,
+        "sort_order": sort_order.value,
         **lifecycle_params,
     }
     if search:

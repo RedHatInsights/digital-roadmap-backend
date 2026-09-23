@@ -365,23 +365,39 @@ def _build_host_inventory_query(
 
     # An empty "host_groups" implies unrestricted access, so no group filter is
     # added in that case.
+    #
+    # A None in "host_groups" is the special case described in
+    # "get_allowed_host_groups": it means the caller is permitted to see the
+    # "ungrouped" group. That group is not identified by an id like the others
+    # are, but by its "ungrouped" field being true, so it needs its own filter.
     if host_groups:
         if None not in host_groups:
+            # Group ids only.
             statements.append(_GROUPED_FILTER)
         elif len(host_groups) > 1:
-            # Accept either a group id match or ungrouped = true.
+            # The ungrouped group plus at least one group id, so accept either
+            # a group id match or ungrouped = true.
             statements.append(_UNGROUPED_OR_GROUPED_FILTER)
         else:
+            # The ungrouped group is the only thing the caller may see.
             statements.append(_UNGROUPED_FILTER)
 
     return "".join(statements)
 
 
 def host_inventory_query(include_packages: bool = True) -> t.Callable[..., AsyncGenerator[AsyncResult[t.Any]]]:
-    """Create a dependency that queries the Hosts database for this org's hosts.
+    """Build a FastAPI dependency that reads this org's hosts.
+
+    This returns a function. It does not run a query; nothing touches the
+    database until FastAPI resolves the returned dependency while handling a
+    request.
 
     Pass include_packages=False for callers that do not read installed packages
     or dnf modules, so those columns are not read from the database.
+
+    The flag is an argument here rather than a parameter of the dependency
+    itself so that FastAPI does not expose it as a query parameter on every
+    endpoint that uses it.
 
     """
 
@@ -436,10 +452,15 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
     return query_host_inventory
 
 
-# Default dependency: includes installed packages and dnf modules.
+# The two dependencies endpoints can depend on. Building them at import time
+# only creates the two functions; neither runs a query until a request is
+# handled. Which one an endpoint depends on decides whether that endpoint's
+# query reads the package columns.
+#
+# Default: includes installed packages and dnf modules.
 query_host_inventory = host_inventory_query()
 
-# Slim dependency for callers that only need OS version and installed products.
+# Slim: for callers that only need the OS version and the installed products.
 query_host_inventory_without_packages = host_inventory_query(include_packages=False)
 
 

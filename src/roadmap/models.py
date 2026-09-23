@@ -70,6 +70,8 @@ class Meta(BaseModel):
 
 
 class SortOrder(StrEnum):
+    """Sort direction for paginated endpoint results."""
+
     asc = "asc"
     desc = "desc"
 

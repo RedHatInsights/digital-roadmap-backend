@@ -66,13 +66,18 @@ async def get_app_streams_systems_v2(
     optional display-name search.
     """
     matching_systems: set[SystemInfo] = set()
+    wildcard_systems: set[SystemInfo] = set()
     for key, systems in systems_by_stream.items():
         if key.name != name or key.app_stream_entity.os_major != os_major:
             continue
         entity_minor = key.app_stream_entity.os_minor
-        if entity_minor is None or os_minor is None or entity_minor == os_minor:
+        if entity_minor is not None and os_minor is not None and entity_minor == os_minor:
             matching_systems = systems
             break
+        if entity_minor is None or os_minor is None:
+            wildcard_systems = systems
+    if not matching_systems:
+        matching_systems = wildcard_systems
 
     filtered = sorted(
         matching_systems,

@@ -13,6 +13,7 @@ from sqlalchemy.exc import DBAPIError
 
 from roadmap.common import _allowed_host_groups_kessel
 from roadmap.common import _allowed_host_groups_v1
+from roadmap.common import _build_host_inventory_query
 from roadmap.common import _get_group_list_from_resource_definition
 from roadmap.common import _normalize_version
 from roadmap.common import decode_header
@@ -20,6 +21,7 @@ from roadmap.common import ensure_date
 from roadmap.common import get_allowed_host_groups
 from roadmap.common import get_lifecycle_type
 from roadmap.common import query_host_inventory
+from roadmap.common import query_host_inventory_without_packages
 from roadmap.common import query_rbac
 from roadmap.common import rhel_major_minor
 from roadmap.common import sort_attrs
@@ -127,6 +129,103 @@ async def test_query_host_inventory_database_error(base_args, mocker):
 
     with pytest.raises(HTTPException, match="Error querying host inventory"):
         await anext(query_host_inventory(**base_args))
+
+
+def test_build_host_inventory_query_includes_packages_by_default():
+    query = _build_host_inventory_query()
+
+    assert "installed_packages" in query
+    assert "dnf_modules" in query
+    assert "installed_products" in query
+
+
+def test_build_host_inventory_query_without_packages():
+    """The slim query drops the package columns but keeps installed products,
+    which is required to determine the lifecycle type."""
+    query = _build_host_inventory_query(include_packages=False)
+
+    assert "installed_packages" not in query
+    assert "dnf_modules" not in query
+    assert "installed_products" in query
+
+
+@pytest.mark.parametrize("include_packages", (True, False))
+def test_build_host_inventory_query_version_filters(include_packages):
+    query = _build_host_inventory_query(major=9, minor=1, include_packages=include_packages)
+
+    assert ":major" in query
+    assert ":minor" in query
+
+
+@pytest.mark.parametrize("include_packages", (True, False))
+@pytest.mark.parametrize(
+    ("host_groups", "expected"),
+    (
+        ({"aec18a86-3593-11f0-8426-5e43c8b8aa2f"}, (":host_groups",)),
+        ({None}, ("ungrouped",)),
+        ({None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"}, ("ungrouped", ":host_groups")),
+    ),
+)
+def test_build_host_inventory_query_host_group_filters(host_groups, expected, include_packages):
+    """Group filtering is applied the same way with and without package columns."""
+    query = _build_host_inventory_query(host_groups=host_groups, include_packages=include_packages)
+
+    for item in expected:
+        assert item in query
+
+
+async def test_query_host_inventory_without_packages(base_args):
+    records = await anext(query_host_inventory_without_packages(**base_args))
+    results = [item async for item in records.mappings()]
+    expected = {
+        "id",
+        "display_name",
+        "os_name",
+        "os_minor",
+        "os_major",
+        "os_release",
+        "products",
+    }
+
+    assert len(results) > 1
+    assert expected.issubset(results[0])
+    assert not {"packages", "dnf_modules"} & results[0].keys(), "Package columns should not be queried"
+
+
+async def test_query_host_inventory_without_packages_returns_same_hosts(base_args):
+    """Omitting the package columns must not change which hosts are returned."""
+    full = await anext(query_host_inventory(**base_args))
+    full_ids = {record["id"] async for record in full.mappings()}
+
+    slim = await anext(query_host_inventory_without_packages(**base_args))
+    slim_ids = {record["id"] async for record in slim.mappings()}
+
+    assert slim_ids == full_ids
+
+
+@pytest.mark.parametrize(
+    "host_groups",
+    (
+        {"aec18a86-3593-11f0-8426-5e43c8b8aa2f"},
+        {None},
+        {None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"},
+    ),
+)
+async def test_query_host_inventory_without_packages_host_groups(base_args, host_groups):
+    """Group based filtering still applies when the package columns are omitted."""
+    args = base_args | {"host_groups": host_groups}
+    full = await anext(query_host_inventory(**args))
+    full_ids = {record["id"] async for record in full.mappings()}
+
+    slim = await anext(query_host_inventory_without_packages(**args))
+    slim_ids = {record["id"] async for record in slim.mappings()}
+
+    unrestricted = await anext(query_host_inventory_without_packages(**base_args))
+    unrestricted_ids = {record["id"] async for record in unrestricted.mappings()}
+
+    assert slim_ids == full_ids
+    assert slim_ids, "Expected at least one host for the permitted groups"
+    assert slim_ids < unrestricted_ids, "Group filtering should return a subset of all hosts"
 
 
 @pytest.mark.parametrize("date_string", ("20250101", "2025-01-01"))

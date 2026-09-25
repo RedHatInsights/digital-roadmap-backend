@@ -7,6 +7,7 @@ from fastapi import Query
 from roadmap.config import Settings
 from roadmap.models import Meta
 from roadmap.models import PaginatedSystemsResponse
+from roadmap.models import SortOrder
 from roadmap.models import SystemInfo
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
 from roadmap.v1.upcoming import get_upcoming_relevant
@@ -71,6 +72,7 @@ async def get_upcoming_systems_v2(
     offset: t.Annotated[int, Query(ge=0)] = 0,
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
+    sort_order: SortOrder = SortOrder.asc,
 ) -> PaginatedSystemsResponse:
     """Return paginated host details for a specific upcoming change.
 
@@ -98,7 +100,11 @@ async def get_upcoming_systems_v2(
             if target.packages.intersection(packages):
                 matching_systems.add(system)
 
-    filtered = sorted(matching_systems, key=lambda s: (s.display_name, str(s.id)))
+    filtered = sorted(
+        matching_systems,
+        key=lambda s: (s.display_name, str(s.id)),
+        reverse=(sort_order == SortOrder.desc),
+    )
 
     if search:
         search_lower = search.lower()

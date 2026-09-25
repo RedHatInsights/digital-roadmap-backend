@@ -249,3 +249,55 @@ class TestV2UpcomingSystems:
             params={"name": "test", "release": "9.0", "offset": -1},
         )
         assert response.status_code == 422
+
+    def test_v2_upcoming_systems_sort_order_asc(self, client, v2_prefix):
+        """Verify sort_order=asc returns systems sorted ascending."""
+        _apply_auth_overrides(client)
+        first = self._get_first_upcoming_with_systems(client, v2_prefix)
+        if first is None:
+            pytest.skip("No upcoming changes with affected systems found in test data")
+
+        response = client.get(
+            f"{v2_prefix}/relevant/upcoming-changes/systems",
+            params={
+                "name": first["name"],
+                "release": first["release"],
+                "limit": 100,
+                "sort_order": "asc",
+            },
+        )
+        assert response.status_code == 200
+        names = [s["display_name"] for s in response.json()["data"]]
+        if len(names) > 1:
+            assert names == sorted(names), "Systems should be sorted ascending by display_name"
+
+    def test_v2_upcoming_systems_sort_order_desc(self, client, v2_prefix):
+        """Verify sort_order=desc returns systems sorted descending."""
+        _apply_auth_overrides(client)
+        first = self._get_first_upcoming_with_systems(client, v2_prefix)
+        if first is None:
+            pytest.skip("No upcoming changes with affected systems found in test data")
+
+        response = client.get(
+            f"{v2_prefix}/relevant/upcoming-changes/systems",
+            params={
+                "name": first["name"],
+                "release": first["release"],
+                "limit": 100,
+                "sort_order": "desc",
+            },
+        )
+        assert response.status_code == 200
+        names = [s["display_name"] for s in response.json()["data"]]
+        if len(names) > 1:
+            assert names == sorted(names, reverse=True), "Systems should be sorted descending by display_name"
+
+    def test_v2_upcoming_systems_sort_order_invalid(self, client, v2_prefix):
+        """Verify invalid sort_order value is rejected by validation."""
+        _apply_auth_overrides(client)
+
+        response = client.get(
+            f"{v2_prefix}/relevant/upcoming-changes/systems",
+            params={"name": "test", "release": "9.0", "sort_order": "invalid"},
+        )
+        assert response.status_code == 422

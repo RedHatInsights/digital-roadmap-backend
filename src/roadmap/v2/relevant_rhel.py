@@ -15,6 +15,7 @@ from roadmap.config import Settings
 from roadmap.database import get_db
 from roadmap.models import LifecycleType
 from roadmap.models import PaginatedSystemsResponse
+from roadmap.models import SortOrder
 from roadmap.v1.lifecycle.rhel import get_relevant_systems
 from roadmap.v1.lifecycle.rhel import RelevantSystemsResponse
 
@@ -66,6 +67,7 @@ async def get_rhel_systems_v2(
     offset: t.Annotated[int, Query(ge=0)] = 0,
     limit: t.Annotated[int, Query(ge=1, le=100)] = 10,
     search: str | None = None,
+    sort_order: SortOrder = SortOrder.asc,
 ) -> PaginatedSystemsResponse:
     """Return paginated host details for a specific RHEL major.minor version.
 
@@ -83,4 +85,5 @@ async def get_rhel_systems_v2(
         offset=offset,
         limit=limit,
         search=search,
+        sort_order=sort_order,
     )

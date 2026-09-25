@@ -30,6 +30,7 @@ from roadmap.database import get_db
 from roadmap.models import LifecycleType
 from roadmap.models import Meta
 from roadmap.models import PaginatedSystemsResponse
+from roadmap.models import SortOrder
 from roadmap.models import SystemInfo
 
 
@@ -567,6 +568,7 @@ async def query_rhel_systems(
     offset: int = 0,
     limit: int = 10,
     search: str | None = None,
+    sort_order: SortOrder = SortOrder.asc,
 ) -> PaginatedSystemsResponse:
     """Query paginated host details for a specific RHEL version and lifecycle type."""
     if settings.dev:
@@ -633,6 +635,7 @@ async def query_rhel_systems(
     """
 
     count_query = f"SELECT COUNT(*) {base_from} {base_where}"
+    # Bound :sort_order selects which CASE arm sorts; ASC/DESC keywords stay static.
     data_query = f"""
         SELECT h.id, h.display_name,
                COALESCE(
@@ -645,7 +648,10 @@ async def query_rhel_systems(
                ) AS os_minor
         {base_from}
         {base_where}
-        ORDER BY h.display_name ASC, h.id ASC
+        ORDER BY
+            CASE WHEN :sort_order = 'asc' THEN h.display_name END ASC,
+            CASE WHEN :sort_order = 'desc' THEN h.display_name END DESC,
+            h.id ASC
         LIMIT :limit OFFSET :offset
     """
 
@@ -656,6 +662,7 @@ async def query_rhel_systems(
         "host_groups": list(host_groups),
         "limit": limit,
         "offset": offset,
+        "sort_order": sort_order.value,
         **lifecycle_params,
     }
     if search:

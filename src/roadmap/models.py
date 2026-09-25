@@ -69,6 +69,13 @@ class Meta(BaseModel):
     total: int | None = None
 
 
+class SortOrder(StrEnum):
+    """Sort direction for paginated endpoint results."""
+
+    asc = "asc"
+    desc = "desc"
+
+
 class LifecycleType(StrEnum):
     mainline = "mainline"
     eus = "EUS"

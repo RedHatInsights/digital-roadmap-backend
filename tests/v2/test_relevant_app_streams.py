@@ -277,15 +277,35 @@ class TestV2AppStreamsSystems:
             f"expected {target['count']} but got {r1.json()['meta']['total']}"
         )
 
-        # Case 2: send os_minor=99 (a value with no exact entry) — should fallback to os_minor=None
+        # Case 2: send a minor version that definitely doesn't exist for this stream
+        # Find all existing minor versions for this stream
+        existing_minors = set()
+        for item in data:
+            if (
+                item.get("name") == target["name"]
+                and item.get("os_major") == target["os_major"]
+                and item.get("os_minor") is not None
+            ):
+                existing_minors.add(item["os_minor"])
+
+        # Select a minor version that doesn't exist
+        nonexistent_minor = 0
+        while nonexistent_minor in existing_minors:
+            nonexistent_minor += 1
+
         r2 = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={"name": target["name"], "os_major": target["os_major"], "os_minor": 99, "limit": 1},
+            params={
+                "name": target["name"],
+                "os_major": target["os_major"],
+                "os_minor": nonexistent_minor,
+                "limit": 1,
+            },
         )
         assert r2.status_code == 200
         assert r2.json()["meta"]["total"] == target["count"], (
-            f"Sending os_minor=99 (no exact match) should fallback to os_minor=None entity, "
-            f"expected {target['count']} but got {r2.json()['meta']['total']}"
+            f"Sending os_minor={nonexistent_minor} (no exact match) should fallback to "
+            f"os_minor=None entity, expected {target['count']} but got {r2.json()['meta']['total']}"
         )
 
     def test_v2_app_streams_systems_no_rbac_access(self, client, v2_prefix):

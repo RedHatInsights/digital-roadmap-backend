@@ -195,6 +195,56 @@ class TestV2AppStreamsSystems:
         assert response.json()["data"] == []
         assert response.json()["meta"]["total"] == 0
 
+    def test_v2_app_streams_systems_exact_match_precedence(self, client, v2_prefix):
+        """Verify exact os_minor match takes precedence over wildcard.
+
+        When both a wildcard (os_minor=None) and exact match (os_minor=<value>)
+        exist for the same name+os_major, querying with the specific minor version
+        should return systems from the exact match, not the wildcard.
+        """
+        _apply_auth_overrides(client)
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
+        data = response.json()["data"]
+
+        # Find a stream with both wildcard (os_minor=None) and exact match (os_minor=<int>)
+        wildcard_entry = None
+        exact_entry = None
+
+        for item in data:
+            if item.get("os_minor") is None and item.get("count", 0) > 0:
+                # Found a wildcard entry, look for exact match with same name+os_major
+                for other in data:
+                    if (
+                        other.get("name") == item.get("name")
+                        and other.get("os_major") == item.get("os_major")
+                        and other.get("os_minor") is not None
+                        and other.get("count", 0) > 0
+                    ):
+                        wildcard_entry = item
+                        exact_entry = other
+                        break
+            if exact_entry:
+                break
+
+        if not exact_entry:
+            pytest.skip("No app streams with both wildcard and exact minor version in test data")
+        # Query with exact os_minor — should match the exact entry, not the wildcard
+        r = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={
+                "name": exact_entry["name"],
+                "os_major": exact_entry["os_major"],
+                "os_minor": exact_entry["os_minor"],
+                "limit": 1,
+            },
+        )
+        assert r.status_code == 200
+        assert r.json()["meta"]["total"] == exact_entry["count"], (
+            f"Query with os_minor={exact_entry['os_minor']} should match exact entry "
+            f"({exact_entry['count']} systems), not wildcard ({wildcard_entry['count']} systems). "
+            f"Got {r.json()['meta']['total']}"
+        )
+
     def test_v2_app_streams_systems_os_minor_none_match(self, client, v2_prefix):
         """Verify systems are found for app streams whose entity has os_minor=None.
 
@@ -227,14 +277,14 @@ class TestV2AppStreamsSystems:
             f"expected {target['count']} but got {r1.json()['meta']['total']}"
         )
 
-        # Case 2: send os_minor=0 — should still match (entity is version-agnostic)
+        # Case 2: send os_minor=99 (a value with no exact entry) — should fallback to os_minor=None
         r2 = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={"name": target["name"], "os_major": target["os_major"], "os_minor": 0, "limit": 1},
+            params={"name": target["name"], "os_major": target["os_major"], "os_minor": 99, "limit": 1},
         )
         assert r2.status_code == 200
         assert r2.json()["meta"]["total"] == target["count"], (
-            f"Sending os_minor=0 should match os_minor=None entity, "
+            f"Sending os_minor=99 (no exact match) should fallback to os_minor=None entity, "
             f"expected {target['count']} but got {r2.json()['meta']['total']}"
         )
 

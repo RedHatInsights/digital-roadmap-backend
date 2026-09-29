@@ -1,9 +1,16 @@
+from uuid import UUID
+
 import pytest
 
 from fastapi import HTTPException
 
 from roadmap.common import decode_header
 from roadmap.common import get_allowed_host_groups
+from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.models import SystemInfo
+from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
 
 def _apply_auth_overrides(client):
@@ -203,47 +210,50 @@ class TestV2AppStreamsSystems:
         should return systems from the exact match, not the wildcard.
         """
         _apply_auth_overrides(client)
-        response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
-        data = response.json()["data"]
 
-        # Find a stream with both wildcard (os_minor=None) and exact match (os_minor=<int>)
-        wildcard_entry = None
-        exact_entry = None
+        wildcard_entity = AppStreamEntity(
+            name="controlled-stream",
+            display_name="Controlled stream wildcard",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=None,
+        )
+        exact_entity = AppStreamEntity(
+            name="controlled-stream",
+            display_name="Controlled stream exact",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=1,
+        )
+        wildcard_key = AppStreamKey(name="controlled-stream", app_stream_entity=wildcard_entity)
+        exact_key = AppStreamKey(name="controlled-stream", app_stream_entity=exact_entity)
+        wildcard_systems = {SystemInfo(id=UUID(int=3), display_name="Wildcard host", os_major=9, os_minor=0)}
+        exact_systems = {
+            SystemInfo(id=UUID(int=1), display_name="Exact host 1", os_major=9, os_minor=1),
+            SystemInfo(id=UUID(int=2), display_name="Exact host 2", os_major=9, os_minor=1),
+        }
 
-        for item in data:
-            if item.get("os_minor") is None and item.get("count", 0) > 0:
-                # Found a wildcard entry, look for exact match with same name+os_major
-                for other in data:
-                    if (
-                        other.get("name") == item.get("name")
-                        and other.get("os_major") == item.get("os_major")
-                        and other.get("os_minor") is not None
-                        and other.get("count", 0) > 0
-                    ):
-                        wildcard_entry = item
-                        exact_entry = other
-                        break
-            if exact_entry:
-                break
+        async def controlled_systems_by_app_stream():
+            return {wildcard_key: wildcard_systems, exact_key: exact_systems}
 
-        if not exact_entry:
-            pytest.skip("No app streams with both wildcard and exact minor version in test data")
-        # Query with exact os_minor — should match the exact entry, not the wildcard
+        client.app.dependency_overrides[systems_by_app_stream] = controlled_systems_by_app_stream
+
         r = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
             params={
-                "name": exact_entry["name"],
-                "os_major": exact_entry["os_major"],
-                "os_minor": exact_entry["os_minor"],
-                "limit": 1,
+                "name": "controlled-stream",
+                "os_major": 9,
+                "os_minor": 1,
             },
         )
         assert r.status_code == 200
-        assert r.json()["meta"]["total"] == exact_entry["count"], (
-            f"Query with os_minor={exact_entry['os_minor']} should match exact entry "
-            f"({exact_entry['count']} systems), not wildcard ({wildcard_entry['count']} systems). "
-            f"Got {r.json()['meta']['total']}"
-        )
+        response = r.json()
+        returned_ids = {system["id"] for system in response["data"]}
+        exact_ids = {str(system.id) for system in exact_systems}
+        assert response["meta"]["total"] == len(exact_ids)
+        assert returned_ids == exact_ids
 
     def test_v2_app_streams_systems_os_minor_none_match(self, client, v2_prefix):
         """Verify systems are found for app streams whose entity has os_minor=None.

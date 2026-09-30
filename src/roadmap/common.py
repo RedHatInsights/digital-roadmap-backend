@@ -74,13 +74,16 @@ async def query_rbac(
     }
 
     headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
+    if settings.rbac_v2_authenticated and not x_rh_identity:
+        logger.warning("V2 RBAC endpoint requires authentication but no X-RH-Identity header was provided")
     if not settings.rbac_url:
         return [{}]
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        verify: str | bool = settings.rbac_ca_cert if settings.rbac_ca_cert else True
+        async with httpx.AsyncClient(timeout=30, verify=verify) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             data = response.json()

@@ -2,7 +2,7 @@ aiokafka==0.14.0
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
-app-common-python==0.2.9
+app-common-python==0.3.0
 asgi-correlation-id==5.0.1
 async-timeout==5.0.1
 bytecode==0.19.0

@@ -1,15 +1,21 @@
+import logging
 import os
 
 from functools import lru_cache
 from pathlib import Path
 
+from app_common_python import get_v2_dependency_endpoint  # pyright: ignore[reportAttributeAccessIssue]
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
+from pydantic import field_validator
 from pydantic import FilePath
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class Settings(BaseSettings):
@@ -30,6 +36,27 @@ class Settings(BaseSettings):
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
+    rbac_url_v2: str = ""  # Complete V2 URI (scheme://host:port), bypasses hostname+port
+    rbac_ca_cert: str = ""  # V2 CA certificate filesystem path
+    rbac_v2_authenticated: bool = False  # V2 endpoint requires workload authentication
+
+    @field_validator("rbac_url_v2")
+    @classmethod
+    def _validate_rbac_url_v2(cls, v: str) -> str:
+        if v and not v.startswith(("http://", "https://")):
+            raise ValueError("rbac_url_v2 must be an HTTP(S) URL")
+        return v
+
+    @field_validator("rbac_ca_cert")
+    @classmethod
+    def _validate_rbac_ca_cert(cls, v: str) -> str:
+        if v:
+            p = Path(v)
+            if not p.is_file():
+                logger.warning("rbac_ca_cert path does not exist or is not readable: %s", v)
+            elif not os.access(v, os.R_OK):
+                logger.warning("rbac_ca_cert path is not readable: %s", v)
+        return v
 
     env_name: str = "stage"
     log_level: str = "info"
@@ -55,6 +82,9 @@ class Settings(BaseSettings):
 
     @property
     def rbac_url(self) -> str:
+        if self.rbac_url_v2:
+            return self.rbac_url_v2
+
         if not self.rbac_hostname:
             return ""
 
@@ -83,16 +113,27 @@ class Settings(BaseSettings):
             db = LoadedConfig.database
             endpoints = LoadedConfig.endpoints
 
-            # FIXME: Make RBAC setting in the environment override the clowder
-            #        config file for consistency
-            rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
+            # V2-first RBAC discovery: try the structured V2 dependency
+            # endpoint, falling back to the legacy V1 flat endpoint list.
             rbac_kwargs = {}
-            if rbac:
-                rbac = rbac.pop()
+            v2_ep = get_v2_dependency_endpoint("rbac", "service")
+            if v2_ep is not None and v2_ep.uri:
                 rbac_kwargs = {
-                    "rbac_hostname": rbac.hostname,
-                    "rbac_port": rbac.port,
+                    "rbac_url_v2": v2_ep.uri,
+                    "rbac_v2_authenticated": bool(getattr(v2_ep, "authenticated", False)),
                 }
+                if v2_ep.ca_certificate:
+                    rbac_kwargs["rbac_ca_cert"] = v2_ep.ca_certificate
+            else:
+                # FIXME: Make RBAC setting in the environment override the
+                #        clowder config file for consistency
+                rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
+                if rbac:
+                    rbac = rbac.pop()
+                    rbac_kwargs = {
+                        "rbac_hostname": rbac.hostname,
+                        "rbac_port": rbac.port,
+                    }
 
             db_kwargs = (
                 {

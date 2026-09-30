@@ -1,0 +1,90 @@
+# IoP container build and publish
+#
+# Required GitLab CI/CD variables (masked; protect if only protected branches should push):
+#   QUAY_IOP_BUILD_USERNAME
+#   QUAY_IOP_BUILD_PASSWORD
+#
+# Also enable "Trigger pipelines for mirror updates" if this project pull-mirrors.
+
+stages:
+  - build
+
+variables:
+  REGISTRY: quay.io
+  IMAGE_NAME: iop/roadmap-backend
+  STORAGE_DRIVER: vfs
+  BUILDAH_FORMAT: docker
+  BUILDAH_ISOLATION: chroot
+  FF_NETWORK_PER_BUILD: "true"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ /^foreman-/
+
+container-publish:
+  stage: build
+  image: quay.io/buildah/stable:v1.39.3
+  tags:
+    - itup-alm-x86
+  interruptible: true
+  resource_group: $CI_PROJECT_PATH-$CI_COMMIT_REF_SLUG
+  timeout: 1h
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ /^foreman-/
+  script:
+    - |
+      set -euo pipefail
+
+      IMAGE="${REGISTRY}/${IMAGE_NAME}"
+      SOURCE_DATE_EPOCH="$(git log -1 --pretty=%ct)"
+      SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
+
+      TAGS=("${IMAGE}:${CI_COMMIT_REF_NAME}" "${IMAGE}:sha-${SHORT_SHA}")
+      if [ "${CI_COMMIT_BRANCH:-}" = "${CI_DEFAULT_BRANCH}" ]; then
+        TAGS+=("${IMAGE}:latest")
+      fi
+
+      echo "Building ${IMAGE} (SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH})"
+      echo "Tags: ${TAGS[*]}"
+
+      BUILD_TAGS=()
+      for tag in "${TAGS[@]}"; do
+        BUILD_TAGS+=(-t "${tag}")
+      done
+
+      # --network=host so Containerfile can ADD roadmap_jira.json from gitlab.cee
+      buildah bud \
+        --network=host \
+        --platform=linux/amd64 \
+        --format=docker \
+        --isolation="${BUILDAH_ISOLATION}" \
+        --build-arg "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}" \
+        -f Containerfile \
+        "${BUILD_TAGS[@]}" \
+        .
+
+      if [ "${CI_PIPELINE_SOURCE}" = "merge_request_event" ]; then
+        echo "Merge request pipeline — image built, not pushed"
+        exit 0
+      fi
+
+      if [ -z "${QUAY_IOP_BUILD_USERNAME:-}" ] || [ -z "${QUAY_IOP_BUILD_PASSWORD:-}" ]; then
+        echo "Missing QUAY_IOP_BUILD_USERNAME / QUAY_IOP_BUILD_PASSWORD GitLab CI/CD variables"
+        exit 1
+      fi
+
+      echo "${QUAY_IOP_BUILD_PASSWORD}" | buildah login \
+        --username "${QUAY_IOP_BUILD_USERNAME}" \
+        --password-stdin \
+        "${REGISTRY}"
+
+      for tag in "${TAGS[@]}"; do
+        echo "Pushing ${tag}"
+        buildah push "${tag}"
+      done

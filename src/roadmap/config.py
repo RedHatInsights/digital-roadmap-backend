@@ -4,7 +4,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from app_common_python import get_v2_dependency_endpoint
+from app_common_python import get_v2_dependency_endpoint  # pyright: ignore[reportAttributeAccessIssue]
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
 from pydantic import field_validator

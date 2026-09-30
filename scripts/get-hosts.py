@@ -132,12 +132,10 @@ def main():  # noqa: C901
     offset = 0
     remaining = total_limit
     results = []
-    # Columns from the split profile tables (system_profiles_static, system_profiles_dynamic)
+    # Columns from the split profile tables (system_profiles_static, system_profiles_dynamic).
+    # os_release is a plain varchar; every other profile column is JSONB and needs json.loads().
     profile_fields = {"operating_system", "os_release", "dnf_modules", "installed_packages", "installed_products"}
-    # JSONB columns need json.loads(); os_release is a plain varchar and does not
-    jsonb_fields = {"operating_system", "dnf_modules", "installed_packages", "installed_products"}
-    # When scrubbing, only keep these profile fields in the output
-    profile_keys_to_keep = {"dnf_modules", "installed_packages", "os_release", "operating_system"}
+    jsonb_fields = profile_fields - {"os_release"}
 
     while remaining > 0:
         query_limit = 100
@@ -161,8 +159,7 @@ def main():  # noqa: C901
                 if field in profile_fields:
                     if data and field in jsonb_fields:
                         data = json.loads(data)
-                    if not scrub or field in profile_keys_to_keep:
-                        system_profile[field] = data
+                    system_profile[field] = data
 
                 # Host-level fields: anonymize id and strip display_name when scrubbing
                 else:

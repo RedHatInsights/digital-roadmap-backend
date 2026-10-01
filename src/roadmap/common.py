@@ -348,6 +348,8 @@ def _build_host_inventory_query(
     minor: int | None = None,
     host_groups: t.Collection[str | None] = (),
     include_packages: bool = True,
+    module_names: t.Collection[str] = (),
+    package_names: t.Collection[str] = (),
 ) -> str:
     """Select the SQL used to read this org's hosts from the Hosts database.
 
@@ -374,6 +376,31 @@ def _build_host_inventory_query(
     # "get_allowed_host_groups": it means the caller is permitted to see the
     # "ungrouped" group. That group is not identified by an id like the others
     # are, but by its "ungrouped" field being true, so it needs its own filter.
+
+    candidate_filters = []
+    if module_names:
+        candidate_filters.append(
+            """
+            EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements(COALESCE(sps.dnf_modules, '[]'::jsonb)) AS module_obj
+                WHERE module_obj->>'name' = ANY(CAST(:module_names AS text[]))
+            )
+            """
+        )
+    if package_names:
+        candidate_filters.append(
+            """
+            EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements_text(COALESCE(spd.installed_packages, '[]'::jsonb)) AS package_name
+                WHERE package_name LIKE ANY(CAST(:package_patterns AS text[]))
+            )
+            """
+        )
+    if candidate_filters:
+        statements.append(f" AND ({' OR '.join(candidate_filters)})")
+
     if host_groups:
         if None not in host_groups:
             # Group ids only.
@@ -387,6 +414,49 @@ def _build_host_inventory_query(
             statements.append(_UNGROUPED_FILTER)
 
     return "".join(statements)
+
+
+async def _query_host_inventory(
+    *,
+    org_id: str,
+    session: AsyncSession,
+    settings: Settings,
+    host_groups: set[str | None],
+    major: int | None = None,
+    minor: int | None = None,
+    include_packages: bool = True,
+    module_names: t.Collection[str] = (),
+    package_names: t.Collection[str] = (),
+) -> AsyncGenerator[AsyncResult[t.Any]]:
+    """Stream host inventory rows using the selected HBI candidate filters."""
+    if settings.dev:
+        org_id = "1234"
+
+    query = _build_host_inventory_query(
+        major=major,
+        minor=minor,
+        host_groups=host_groups,
+        include_packages=include_packages,
+        module_names=module_names,
+        package_names=package_names,
+    )
+
+    try:
+        result = await session.stream(
+            text(textwrap.dedent(query)),
+            params={
+                "org_id": org_id,
+                "major": str(major),
+                "minor": str(minor),
+                "host_groups": list(host_groups),
+                "module_names": list(module_names),
+                "package_patterns": [f"{name}-%" for name in package_names],
+            },
+        )
+        yield result
+    except (DBAPIError, SQLAlchemyError) as err:
+        logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
 def host_inventory_query(include_packages: bool = True) -> t.Callable[..., AsyncGenerator[AsyncResult[t.Any]]]:
@@ -431,29 +501,43 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
         if settings.dev:
             org_id = "1234"
 
-        query = _build_host_inventory_query(
+        async for result in _query_host_inventory(
+            org_id=org_id,
+            session=session,
+            settings=settings,
+            host_groups=host_groups,
             major=major,
             minor=minor,
-            host_groups=host_groups,
             include_packages=include_packages,
-        )
-
-        try:
-            result = await session.stream(
-                text(textwrap.dedent(query)),
-                params={
-                    "org_id": org_id,
-                    "major": str(major),
-                    "minor": str(minor),
-                    "host_groups": list(host_groups),
-                },
-            )
+        ):
             yield result
-        except (DBAPIError, SQLAlchemyError) as err:
-            logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Error querying host inventory")
 
     return query_host_inventory
+
+
+async def query_filtered_host_inventory(
+    *,
+    org_id: str,
+    session: AsyncSession,
+    settings: Settings,
+    host_groups: set[str | None],
+    major: int | None = None,
+    minor: int | None = None,
+    module_names: set[str] | None = None,
+    package_names: set[str] | None = None,
+) -> AsyncGenerator[AsyncResult[t.Any]]:
+    """Query HBI inventory with conservative module/package candidate filters."""
+    async for result in _query_host_inventory(
+        org_id=org_id,
+        session=session,
+        settings=settings,
+        host_groups=host_groups,
+        major=major,
+        minor=minor,
+        module_names=module_names or (),
+        package_names=package_names or (),
+    ):
+        yield result
 
 
 # The two dependencies endpoints can depend on. Building them at import time

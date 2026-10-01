@@ -1,3 +1,4 @@
+from collections import defaultdict
 from uuid import UUID
 
 import pytest
@@ -6,11 +7,15 @@ from fastapi import HTTPException
 
 from roadmap.common import decode_header
 from roadmap.common import get_allowed_host_groups
+from roadmap.common import query_filtered_host_inventory
+from roadmap.common import query_host_inventory
+from roadmap.config import Settings
 from roadmap.data.app_streams import AppStreamEntity
 from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.database import get_db
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
-from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
+from roadmap.v2 import relevant_app_streams as v2_app_streams
 
 
 def _apply_auth_overrides(client):
@@ -80,6 +85,137 @@ class TestV2AppStreamsRelevantWrapper:
 
 
 class TestV2AppStreamsSystems:
+    def test_candidate_names_are_scoped_for_target_stream(self):
+        module_names, package_names = v2_app_streams._candidate_names("nodejs", 9)
+
+        assert module_names == {"nodejs"}
+        assert {"nodejs", "nodejs-docs", "nodejs-libs", "npm"} <= package_names
+        assert all(name for name in module_names | package_names)
+
+    def test_package_only_nodejs_evidence_is_matchable_without_a_module_profile(self):
+        system = {
+            "os_major": 9,
+            "os_minor": 4,
+            "packages": ["npm-8.3.1-1.el9.x86_64"],
+            "dnf_modules": [],
+        }
+
+        result = v2_app_streams._host_matches(system, {})
+
+        assert result is not None
+        assert {key.name for key in result[2]} == {"Node.js 16"}
+
+    def test_host_matching_deduplicates_module_and_package_matches(self):
+        system = {
+            "os_major": 9,
+            "os_minor": 4,
+            "packages": [
+                "nodejs-20.17.0-1.module+el9.4.0+22000.x86_64",
+                "nodejs-20.17.0-1.module+el9.4.0+22000.x86_64",
+                "npm-10.8.2-1.module+el9.4.0+22000.x86_64",
+            ],
+            "dnf_modules": [
+                {"name": "nodejs", "stream": "20", "status": ["enabled", "installed"]},
+            ],
+        }
+
+        result = v2_app_streams._host_matches(system, {})
+
+        assert result is not None
+        assert len(result[2]) == 1
+        assert next(iter(result[2])).name == "nodejs"
+
+    @staticmethod
+    async def _inventory_rows(inventory):
+        result = await anext(inventory)
+        return [row async for row in result.mappings()]
+
+    @staticmethod
+    def _matches_by_stream(rows):
+        matches = defaultdict(set)
+        for system in rows:
+            result = v2_app_streams._host_matches(system, {})
+            if result is None:
+                continue
+            for key in result[2]:
+                matches[key].add(system["id"])
+        return matches
+
+    async def test_candidate_filter_preserves_real_list_matches(self, requires_db):
+        """The HBI candidate filter must not remove any actual App Stream match."""
+        settings = Settings.create()
+        session = await anext(get_db())
+        base_args = {
+            "org_id": "1234",
+            "session": session,
+            "settings": settings,
+            "host_groups": set(),
+        }
+
+        unfiltered_rows = await self._inventory_rows(query_host_inventory(**base_args))
+        module_names, package_names = v2_app_streams._candidate_names(None, None)
+        filtered_rows = await self._inventory_rows(
+            query_filtered_host_inventory(
+                **base_args,
+                module_names=module_names,
+                package_names=package_names,
+            )
+        )
+
+        expected = self._matches_by_stream(unfiltered_rows)
+        actual = self._matches_by_stream(filtered_rows)
+
+        assert expected
+        for stream, system_ids in expected.items():
+            assert system_ids <= actual[stream], (
+                f"Candidate filtering removed real matches for {stream.name}/"
+                f"{stream.app_stream_entity.application_stream_name}"
+            )
+
+    async def test_target_candidate_filter_preserves_real_matches(self, requires_db):
+        """A target filter preserves matches for each evidence type present in the fixture."""
+        settings = Settings.create()
+        session = await anext(get_db())
+        base_args = {
+            "org_id": "1234",
+            "session": session,
+            "settings": settings,
+            "host_groups": set(),
+        }
+
+        rows = await self._inventory_rows(query_host_inventory(**base_args))
+        expected = self._matches_by_stream(rows)
+        targets = []
+        implementations = set()
+        for stream in expected:
+            implementation = stream.app_stream_entity.impl
+            if implementation not in implementations:
+                targets.append(stream)
+                implementations.add(implementation)
+            if len(implementations) == 2:
+                break
+
+        if not targets:
+            pytest.skip("The local inventory does not contain any App Stream matches")
+
+        for stream in targets:
+            module_names, package_names = v2_app_streams._candidate_names(
+                stream.name, stream.app_stream_entity.os_major
+            )
+            filtered_rows = await self._inventory_rows(
+                query_filtered_host_inventory(
+                    **base_args,
+                    major=stream.app_stream_entity.os_major,
+                    module_names=module_names,
+                    package_names=package_names,
+                )
+            )
+            actual = self._matches_by_stream(filtered_rows)
+            assert expected[stream] <= actual[stream], (
+                f"Target filtering removed real matches for {stream.name}/"
+                f"{stream.app_stream_entity.application_stream_name}"
+            )
+
     """Tests for the v2 App Streams systems paginated endpoint."""
 
     def _get_first_app_stream(self, client, v2_prefix):
@@ -202,7 +338,7 @@ class TestV2AppStreamsSystems:
         assert response.json()["data"] == []
         assert response.json()["meta"]["total"] == 0
 
-    def test_v2_app_streams_systems_exact_match_precedence(self, client, v2_prefix):
+    def test_v2_app_streams_systems_exact_match_precedence(self, client, v2_prefix, monkeypatch):
         """Verify exact os_minor match takes precedence over wildcard.
 
         When both a wildcard (os_minor=None) and exact match (os_minor=<value>)
@@ -235,10 +371,34 @@ class TestV2AppStreamsSystems:
             SystemInfo(id=UUID(int=2), display_name="Exact host 2", os_major=9, os_minor=1),
         }
 
-        async def controlled_systems_by_app_stream():
-            return {wildcard_key: wildcard_systems, exact_key: exact_systems}
+        rows = [
+            {"id": system.id, "display_name": system.display_name, "minor": system.os_minor}
+            for system in (*wildcard_systems, *exact_systems)
+        ]
 
-        client.app.dependency_overrides[systems_by_app_stream] = controlled_systems_by_app_stream
+        class FakeResult:
+            def yield_per(self, _size):
+                return self
+
+            def mappings(self):
+                return self
+
+            def __aiter__(self):
+                async def iterator():
+                    for row in rows:
+                        yield row
+
+                return iterator()
+
+        async def query_override():
+            return FakeResult()
+
+        def host_match_override(system, _module_cache):
+            key = exact_key if system["minor"] == 1 else wildcard_key
+            return 9, system["minor"], {key}
+
+        client.app.dependency_overrides[v2_app_streams.query_v2_target_app_stream_inventory] = query_override
+        monkeypatch.setattr(v2_app_streams, "_host_matches", host_match_override)
 
         r = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",

@@ -1,4 +1,6 @@
 from uuid import UUID
+from datetime import date
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,6 +13,25 @@ from roadmap.data.app_streams import AppStreamImplementation
 from roadmap.models import SystemInfo
 from roadmap.v1.lifecycle.app_streams import AppStreamKey
 from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
+from roadmap.common import query_host_inventory
+from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.models import SupportStatus
+from roadmap.v1.lifecycle import app_streams
+from roadmap.v2.relevant_app_streams import get_relevant_app_streams_v2
+from roadmap.v2.relevant_app_streams import RelevantAppStreamV2
+from roadmap.v2.relevant_app_streams import system_counts_by_app_stream
+from tests.utils import SUPPORT_STATUS_TEST_CASES
+
+
+@pytest.fixture
+def inventory_result():
+    def _result(rows):
+        result = MagicMock()
+        result.yield_per.return_value.mappings.return_value.__aiter__.return_value = rows
+        return result
+
+    return _result
 
 
 def _apply_auth_overrides(client):
@@ -25,10 +46,10 @@ def _apply_auth_overrides(client):
     client.app.dependency_overrides[decode_header] = decode_header_override
 
 
-class TestV2AppStreamsRelevantWrapper:
-    """Tests for the v2 App Streams relevant list wrapper endpoint."""
+class TestV2AppStreamsRelevant:
+    """Tests for the count-only v2 App Streams relevant list endpoint."""
 
-    def test_v2_app_streams_relevant_returns_empty_systems(self, client, v2_prefix):
+    def test_v2_app_streams_relevant_omits_systems(self, client, v2_prefix):
         _apply_auth_overrides(client)
 
         response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
@@ -37,24 +58,28 @@ class TestV2AppStreamsRelevantWrapper:
         assert response.status_code == 200
         assert len(data) > 0
         for item in data:
-            assert item["systems"] == [], f"v2 should return empty systems for {item['display_name']}"
-            assert item["systems_detail"] == [], f"v2 should return empty systems_detail for {item['display_name']}"
+            assert "systems" not in item
+            assert "systems_detail" not in item
 
-    def test_v2_app_streams_relevant_counts_match_v1(self, client, v1_prefix, v2_prefix):
+    @pytest.mark.parametrize("related", [False, True])
+    @pytest.mark.parametrize("host_groups", [set(), {None}, {"aec18a86-3593-11f0-8426-5e43c8b8aa2f"}])
+    def test_v2_app_streams_relevant_matches_v1(self, client, v1_prefix, v2_prefix, related, host_groups):
         _apply_auth_overrides(client)
 
-        v1_response = client.get(f"{v1_prefix}/relevant/lifecycle/app-streams")
-        v2_response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
+        async def get_allowed_host_groups_override():
+            return host_groups
 
-        v1_data = v1_response.json()["data"]
-        v2_data = v2_response.json()["data"]
+        client.app.dependency_overrides[get_allowed_host_groups] = get_allowed_host_groups_override
+        v1_response = client.get(f"{v1_prefix}/relevant/lifecycle/app-streams", params={"related": related})
+        v2_response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams", params={"related": related})
 
-        assert len(v1_data) == len(v2_data), "v1 and v2 should return the same number of items"
+        assert v1_response.status_code == v2_response.status_code == 200
+        expected = v1_response.json()
+        for item in expected["data"]:
+            del item["systems"]
+            del item["systems_detail"]
 
-        v1_counts = {(item["name"], item["os_major"], item.get("os_minor")): item["count"] for item in v1_data}
-        v2_counts = {(item["name"], item["os_major"], item.get("os_minor")): item["count"] for item in v2_data}
-
-        assert v1_counts == v2_counts, "v1 and v2 counts must match for all items"
+        assert v2_response.json() == expected
 
     def test_v2_app_streams_relevant_related(self, client, v2_prefix):
         _apply_auth_overrides(client)
@@ -64,9 +89,53 @@ class TestV2AppStreamsRelevantWrapper:
 
         assert response.status_code == 200
         assert len(data) > 0
+        assert any(item["related"] for item in data)
         for item in data:
-            assert item["systems"] == []
-            assert item["systems_detail"] == []
+            assert "systems" not in item
+            assert "systems_detail" not in item
+            assert not item["rolling"]
+            if item["related"]:
+                assert item["count"] == 0
+                assert item["support_status"] == SupportStatus.not_installed
+
+    @pytest.mark.parametrize("related", [False, True])
+    def test_empty_inventory(self, client, v2_prefix, inventory_result, related):
+        """Related suggestions come from installed streams, so an empty inventory stays empty in both modes."""
+        _apply_auth_overrides(client)
+
+        async def query_override():
+            return inventory_result([])
+
+        client.app.dependency_overrides[query_host_inventory] = query_override
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams", params={"related": related})
+
+        assert response.status_code == 200
+        assert response.json() == {"meta": {"count": 0, "total": 0}, "data": []}
+
+    def test_openapi_omits_system_fields(self, client, v2_prefix):
+        """The published list schema is counts only. Host lists live on the paginated systems endpoint."""
+        schema = client.app.openapi()
+        response_schema = schema["paths"][f"{v2_prefix}/relevant/lifecycle/app-streams"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
+        response_model = schema["components"]["schemas"][response_schema["$ref"].rsplit("/", 1)[1]]
+        item_ref = response_model["properties"]["data"]["items"]["$ref"]
+        item_model = schema["components"]["schemas"][item_ref.rsplit("/", 1)[1]]
+
+        assert set(item_model["properties"]) == {
+            "name",
+            "application_stream_name",
+            "application_stream_type",
+            "display_name",
+            "os_major",
+            "os_minor",
+            "start_date",
+            "end_date",
+            "count",
+            "rolling",
+            "support_status",
+            "related",
+        }
 
     def test_v2_app_streams_relevant_auth(self, client, v2_prefix):
         async def get_allowed_host_groups_override():
@@ -77,6 +146,200 @@ class TestV2AppStreamsRelevantWrapper:
 
         result = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
         assert result.status_code == 403
+
+
+class TestAppStreamCounts:
+    """Per-host stream counts, without keeping host records."""
+
+    async def test_packages_count_once_per_host_without_host_details(self, inventory_result):
+        """Several NEVRAs and architectures of one stream on a host count as one system; a second host counts again."""
+        host = {
+            "os_major": 9,
+            "os_minor": 4,
+            "dnf_modules": None,
+            "packages": [
+                "nodejs-1:16.20.2-8.el9_4.x86_64",
+                "nodejs-1:16.20.2-8.el9_4.i686",
+                "nodejs-1:16.14.0-5.el9.x86_64",
+                "nodejs-1:16.14.0-5.el9.x86_64",
+            ],
+        }
+        counts = await system_counts_by_app_stream("test-org", inventory_result([host, host.copy()]))
+
+        assert {(key.name, key.app_stream_entity.os_major): count for key, count in counts.items()} == {
+            ("Node.js 16", 9): 2
+        }
+
+    @pytest.mark.parametrize("packages_first", [False, True])
+    async def test_module_package_overlap_preserves_module_name(self, inventory_result, monkeypatch, packages_first):
+        """A module and its packages are one stream, kept under the module name.
+
+        Related streams copy that name. It stays the module name whichever host is seen first.
+        """
+        entity = AppStreamEntity(
+            name="nodejs",
+            stream="16",
+            application_stream_name="Node.js 16",
+            os_major=9,
+            start_date=date(2022, 5, 17),
+            impl=AppStreamImplementation.module,
+        )
+        monkeypatch.setitem(app_streams.APP_STREAM_MODULES_BY_KEY, ("nodejs", 9, "16"), entity)
+        package_key = app_streams.AppStreamKey(name="Node.js 16", app_stream_entity=entity)
+        monkeypatch.setattr("roadmap.v2.relevant_app_streams.app_stream_from_package", lambda *args: package_key)
+        host = {
+            "os_major": 9,
+            "os_minor": 4,
+            "dnf_modules": [
+                {"name": "nodejs", "stream": "16", "status": ["installed"]},
+                {"name": "nodejs", "stream": "16", "status": ["installed"]},
+            ],
+            "packages": ["nodejs-1:16.20.2-8.el9_4.x86_64"],
+        }
+        hosts = [host, {**host, "dnf_modules": []}]
+        if packages_first:
+            hosts.reverse()
+
+        counts = await system_counts_by_app_stream("test-org", inventory_result(hosts))
+
+        assert [(key.name, count) for key, count in counts.items()] == [("nodejs", 2)]
+
+    @pytest.mark.parametrize("packages_first", [False, True])
+    async def test_related_streams_inherit_module_name(self, inventory_result, monkeypatch, packages_first):
+        """A newer stream suggested from a module install keeps the module name and a zero count.
+
+        Node.js 18 (module) and Node.js 16 (package) are one family, so Node.js 26
+        appears once as nodejs / not installed, even when the package host is seen first.
+        """
+        candidate = AppStreamEntity(
+            name="nodejs",
+            stream="26",
+            application_stream_name="Node.js 26",
+            os_major=10,
+            start_date=date(2026, 5, 1),
+            end_date=date(2050, 5, 1),
+            impl=AppStreamImplementation.package,
+        )
+        monkeypatch.setattr(app_streams, "APP_STREAM_MODULES_PACKAGES", [candidate])
+        hosts = [
+            {
+                "os_major": 8,
+                "os_minor": 10,
+                "dnf_modules": [{"name": "nodejs", "stream": "18", "status": ["installed"]}],
+                "packages": None,
+            },
+            {
+                "os_major": 9,
+                "os_minor": 4,
+                "dnf_modules": None,
+                "packages": ["nodejs-1:16.20.2-8.el9_4.x86_64"],
+            },
+        ]
+        if packages_first:
+            hosts.reverse()
+        counts = await system_counts_by_app_stream("test-org", inventory_result(hosts))
+        response = await get_relevant_app_streams_v2(counts, related=True)
+
+        related = [item for item in response.data if item.related]
+        assert [(item.name, item.application_stream_name, item.count) for item in related] == [
+            ("nodejs", "Node.js 26", 0)
+        ]
+        assert related[0].support_status == SupportStatus.not_installed
+
+    @pytest.mark.parametrize(
+        "module, stream, status, packages, expected",
+        [
+            ("python36", "3.6", ["default"], [], False),  # RHEL 8 lists unused modules; default is not installed
+            ("python36", "3.6", ["installed"], [], True),  # installed status counts without a package check
+            ("python36", "3.6", ["enabled"], ["python36-3.6.8-1.el8.x86_64"], True),  # own package confirms it
+            # enabled requires a matching package; bash does not belong to nodejs
+            ("nodejs", "18", ["enabled", "installed"], ["bash-4.4.20-1.el8.x86_64"], False),
+            ("scala", "2.10", ["enabled"], ["jansi-1.17.1-1.el8.noarch"], False),  # jansi is shared with maven
+            # maven's own package confirms it; the shared jansi package does not
+            ("maven", "3.5", ["enabled"], ["maven-3.5.4-1.el8.noarch", "jansi-1.17.1-1.el8.noarch"], True),
+            ("php", "8.2", ["enabled", "installed"], ["php-cli-0:8.2.31-1.el8.x86_64"], True),  # php-cli matches php
+        ],
+    )
+    async def test_module_verification(self, inventory_result, module, stream, status, packages, expected):
+        """An enabled module counts only when that host's packages confirm the install.
+
+        Installed status counts on its own. The extra host has no packages, so an enabled match does not carry over.
+        """
+        host = {
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [{"name": module, "stream": stream, "status": status}],
+            "packages": packages,
+        }
+        counts = await system_counts_by_app_stream("test-org", inventory_result([host, {**host, "packages": None}]))
+
+        if expected:
+            expected_count = 2 if status == ["installed"] else 1
+            assert [(key.name, count) for key, count in counts.items()] == [(module, expected_count)]
+        else:
+            assert counts == {}
+
+    async def test_enabled_module_without_package_mapping(self, inventory_result, monkeypatch):
+        """Skip an enabled module when there is no package list to confirm it with."""
+        monkeypatch.setattr(app_streams, "MODULE_PACKAGES", {})
+        host = {
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [{"name": "python36", "stream": "3.6", "status": ["enabled"]}],
+            "packages": ["python36-3.6.8-1.el8.x86_64"],
+        }
+        assert await system_counts_by_app_stream("test-org", inventory_result([host])) == {}
+
+    async def test_missing_inventory_data(self, inventory_result):
+        """Skip hosts with no RHEL version. A host identified only by os_release still counts."""
+        hosts = [
+            {"dnf_modules": None, "packages": None},
+            {"os_major": 8, "os_minor": 10, "dnf_modules": None, "packages": None},
+            {
+                "os_release": "9.4",
+                "dnf_modules": None,
+                "packages": ["nodejs-1:16.20.2-8.el9_4.x86_64"],
+            },
+        ]
+        counts = await system_counts_by_app_stream("test-org", inventory_result(hosts))
+        assert [(key.name, count) for key, count in counts.items()] == [("Node.js 16", 1)]
+
+    async def test_rolling_streams_excluded(self, inventory_result):
+        """Rolling streams such as container-tools are detected, then omitted from the list, same as v1."""
+        host = {
+            "os_major": 8,
+            "os_minor": 10,
+            "dnf_modules": [{"name": "container-tools", "stream": "rhel8", "status": ["enabled"]}],
+            "packages": ["podman-4.9.4-1.el8.x86_64", "buildah-1.33.7-1.el8.x86_64"],
+        }
+        counts = await system_counts_by_app_stream("test-org", inventory_result([host]))
+        assert [(key.name, count) for key, count in counts.items()] == [("container-tools", 1)]
+
+        response = await get_relevant_app_streams_v2(counts)
+        assert response.model_dump() == {"meta": {"count": 0, "total": 0}, "data": []}
+
+
+@pytest.mark.parametrize(
+    "current_date, start_date, end_date, expected_status",
+    SUPPORT_STATUS_TEST_CASES
+    # Ends within six months: app streams are near retirement inside that window.
+    + ((date(2027, 6, 15), date(2020, 1, 1), date(2027, 12, 1), SupportStatus.near_retirement),),
+)
+def test_v2_support_status(mocker, current_date, start_date, end_date, expected_status):
+    """Installed v2 streams use the shared support-status dates, including the six-month near-retirement window."""
+    mock_date = mocker.patch("roadmap.v2.relevant_app_streams.date", wraps=date)
+    mock_date.today.return_value = current_date
+    stream = RelevantAppStreamV2(
+        name="test",
+        application_stream_name="Test 1",
+        display_name="Test 1",
+        os_major=9,
+        start_date=start_date,
+        end_date=end_date,
+        count=1,
+    )
+
+    assert stream.support_status == expected_status
 
 
 class TestV2AppStreamsSystems:

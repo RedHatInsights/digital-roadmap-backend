@@ -17,7 +17,10 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import bindparam
 from sqlalchemy import RowMapping
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult
@@ -342,18 +345,68 @@ _UNGROUPED_OR_GROUPED_FILTER = """
                 WHERE group_obj->>'id' = ANY(:host_groups)))
 """
 
+# Restricts the inventory read to an explicit set of host ids. The ids stay a
+# single bound uuid array (:host_ids); they are never written into the SQL.
+# An empty array matches no rows. This narrows the group filter. It does not
+# replace it.
+_HOST_IDS_FILTER = """
+     AND h.id = ANY(:host_ids)
+"""
+
+# Ids only. Callers that need the operating system, packages, or products use
+# the host queries above. This statement does not join the system profile
+# tables, so those large JSON columns are never read.
+_HOST_UUIDS_QUERY = """
+    SELECT h.id
+    FROM hbi.hosts h
+    WHERE h.org_id = :org_id
+"""
+
+_HOST_UUIDS_ORDER = " ORDER BY h.id"
+
+
+def _host_groups_filter(host_groups: t.Collection[str | None]) -> str:
+    """Return the SQL fragment that limits hosts to the groups the caller may read.
+
+    An empty collection means unrestricted access, so no filter is added.
+
+    A None in the collection is the special case described in
+    get_allowed_host_groups: the caller may see the "ungrouped" group. That
+    group is not identified by an id. It is identified by its "ungrouped"
+    field being true, so it needs its own filter. When both None and at least
+    one group id are present, a host matches if either condition is true.
+    """
+    if not host_groups:
+        return ""
+
+    if None not in host_groups:
+        # Group ids only.
+        return _GROUPED_FILTER
+
+    if len(host_groups) > 1:
+        # The ungrouped group plus at least one group id.
+        return _UNGROUPED_OR_GROUPED_FILTER
+
+    # The ungrouped group is the only thing the caller may see.
+    return _UNGROUPED_FILTER
+
 
 def _build_host_inventory_query(
     major: int | None = None,
     minor: int | None = None,
     host_groups: t.Collection[str | None] = (),
     include_packages: bool = True,
+    host_ids: t.Collection[UUID] | None = None,
 ) -> str:
     """Select the SQL used to read this org's hosts from the Hosts database.
 
     The statement is assembled by choosing among the literal fragments above
     based on which filters apply. No caller supplied value is interpolated into
     the SQL; they are all bound parameters.
+
+    host_ids None leaves the id filter off, which is the unscoped inventory
+    read. Any collection, including an empty one, adds the id filter. An empty
+    array matches no hosts.
 
     """
     if include_packages:
@@ -367,26 +420,23 @@ def _build_host_inventory_query(
     if minor is not None:
         statements.append(_MINOR_FILTER)
 
-    # An empty "host_groups" implies unrestricted access, so no group filter is
-    # added in that case.
-    #
-    # A None in "host_groups" is the special case described in
-    # "get_allowed_host_groups": it means the caller is permitted to see the
-    # "ungrouped" group. That group is not identified by an id like the others
-    # are, but by its "ungrouped" field being true, so it needs its own filter.
-    if host_groups:
-        if None not in host_groups:
-            # Group ids only.
-            statements.append(_GROUPED_FILTER)
-        elif len(host_groups) > 1:
-            # The ungrouped group plus at least one group id, so accept either
-            # a group id match or ungrouped = true.
-            statements.append(_UNGROUPED_OR_GROUPED_FILTER)
-        else:
-            # The ungrouped group is the only thing the caller may see.
-            statements.append(_UNGROUPED_FILTER)
+    # Same group rules as the id-only query. See _host_groups_filter.
+    statements.append(_host_groups_filter(host_groups))
+
+    if host_ids is not None:
+        statements.append(_HOST_IDS_FILTER)
 
     return "".join(statements)
+
+
+def _build_host_uuids_query(host_groups: t.Collection[str | None] = ()) -> str:
+    """Select the SQL used to list host ids the caller may read.
+
+    Uses the same group filter as the full host inventory query, without the
+    profile joins or the version filters. No caller supplied value is
+    interpolated into the SQL; org_id and host_groups are bound parameters.
+    """
+    return _HOST_UUIDS_QUERY + _host_groups_filter(host_groups) + _HOST_UUIDS_ORDER
 
 
 def host_inventory_query(include_packages: bool = True) -> t.Callable[..., AsyncGenerator[AsyncResult[t.Any]]]:
@@ -466,6 +516,83 @@ query_host_inventory = host_inventory_query()
 
 # Slim: for callers that only need the OS version and the installed products.
 query_host_inventory_without_packages = host_inventory_query(include_packages=False)
+
+
+async def query_host_inventory_by_ids(
+    org_id: str,
+    session: AsyncSession,
+    settings: Settings,
+    host_groups: t.Collection[str | None],
+    host_ids: t.Collection[UUID],
+) -> AsyncResult[t.Any]:
+    """Read inventory rows for these host ids, still limited to permitted groups.
+
+    host_groups comes from get_allowed_host_groups (RBAC v1 or Kessel). An empty
+    set means the caller may read every host in the org. The id list narrows
+    that set further. A requested id in another org, or outside the permitted
+    groups, is not returned. Duplicate ids are ignored.
+
+    The id list is one bound uuid array, including when it contains thousands
+    of values. In dev mode the query reads the local fixture org.
+    """
+    if settings.dev:
+        org_id = "1234"
+
+    unique_host_ids = list(dict.fromkeys(host_ids))
+    query = _build_host_inventory_query(host_groups=host_groups, host_ids=unique_host_ids)
+    statement = text(textwrap.dedent(query)).bindparams(bindparam("host_ids", type_=ARRAY(PG_UUID(as_uuid=True))))
+
+    try:
+        return await session.stream(
+            statement,
+            params={
+                "org_id": org_id,
+                "major": None,
+                "minor": None,
+                "host_groups": list(host_groups),
+                "host_ids": unique_host_ids,
+            },
+        )
+    except (DBAPIError, SQLAlchemyError) as err:
+        logger.error(f"Database error querying host inventory for org_id {org_id}: {err}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error querying host inventory")
+
+
+async def query_accessible_host_uuids(
+    org_id: t.Annotated[str, Depends(decode_header)],
+    session: t.Annotated[AsyncSession, Depends(get_db)],
+    settings: t.Annotated[Settings, Depends(Settings.create)],
+    host_groups: t.Annotated[set[str | None], Depends(get_allowed_host_groups)],
+) -> AsyncGenerator[AsyncResult[t.Any]]:
+    """List host ids from the Hosts database that this caller may read.
+
+    get_allowed_host_groups runs first. It raises 403 when the caller has no
+    inventory access, and otherwise returns the groups to filter on. An empty
+    set means unrestricted access to the org's hosts. In dev mode that check
+    skips the RBAC and Kessel calls (see query_rbac and
+    _allowed_host_groups_kessel) and this query reads the local fixture org.
+
+    Only h.id is selected. System profile columns are not read.
+    """
+    if settings.dev:
+        # Local fixture data is loaded under this org. Ignore the identity
+        # header so a request without one still returns hosts.
+        org_id = "1234"
+
+    query = _build_host_uuids_query(host_groups)
+
+    try:
+        result = await session.stream(
+            text(textwrap.dedent(query)),
+            params={
+                "org_id": org_id,
+                "host_groups": list(host_groups),
+            },
+        )
+        yield result
+    except (DBAPIError, SQLAlchemyError) as err:
+        logger.error(f"Database error listing host UUIDs for org_id {org_id}: {err}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error querying host inventory")
 
 
 # Product IDs for lifecycle type classification.

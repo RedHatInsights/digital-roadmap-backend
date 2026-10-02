@@ -344,12 +344,10 @@ def related_app_streams(app_streams: t.Iterable[AppStreamKey]) -> set[AppStreamK
     return relateds.difference(app_streams)
 
 
-def _verify_pending_modules(
+def verified_app_streams_from_modules(
     modules_pending_verification: dict[tuple[str, int, str], tuple[AppStreamKey, set[str]]],
     installed_package_names: set[str],
-    system_info: SystemInfo,
-    systems_by_stream: defaultdict[AppStreamKey, set[SystemInfo]],
-) -> None:
+) -> t.Iterator[AppStreamKey]:
     """Verify enabled-only modules by checking if expected packages are installed."""
     for cache_key, (app_stream_key, expected_packages) in modules_pending_verification.items():
         module_name, os_major, _stream = cache_key
@@ -365,11 +363,8 @@ def _verify_pending_modules(
         shared_package_names = SHARED_PACKAGE_NAMES_BY_OS_MAJOR.get(os_major, set())
         unambiguous_matches = matched_packages - shared_package_names
         if unambiguous_matches or module_name in installed_package_names:
-            systems_by_stream[app_stream_key].add(system_info)
-            logger.debug(
-                f"Verified module {app_stream_key.name} on system {system_info.display_name}: "
-                f"{len(matched_packages)} packages installed"
-            )
+            logger.debug(f"Verified module {app_stream_key.name}: {len(matched_packages)} packages installed")
+            yield app_stream_key
 
 
 async def systems_by_app_stream(
@@ -417,7 +412,8 @@ async def systems_by_app_stream(
         for app_stream in module_app_streams:
             systems_by_stream[app_stream].add(system_info)
 
-        _verify_pending_modules(modules_pending_verification, installed_package_names, system_info, systems_by_stream)
+        for app_stream in verified_app_streams_from_modules(modules_pending_verification, installed_package_names):
+            systems_by_stream[app_stream].add(system_info)
 
     # Now process the packages outside of the host record loop
     for args, systems_info in package_data.items():

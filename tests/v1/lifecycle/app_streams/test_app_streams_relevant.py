@@ -563,14 +563,9 @@ def test_related_app_streams_with_empty_stream(mocker):
 
 def test_app_stream_from_package_os_major_mismatch():
     """Test app_stream_from_package when package os_major doesn't match lookup key."""
-    import importlib
-
-    from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-    # Reload the module to clear functools.cache
-    importlib.reload(app_streams_module)
-
     from roadmap.v1.lifecycle.app_streams import app_stream_from_package
+
+    app_stream_from_package.cache_clear()
 
     # Create a mock package with mismatched os_major
     mock_package = AppStreamEntity(
@@ -599,8 +594,7 @@ def test_app_stream_from_package_os_major_mismatch():
         # Clean up
         if "testpkg" in APP_STREAM_PACKAGES.get(9, {}):
             del APP_STREAM_PACKAGES[9]["testpkg"]
-        # Reload again to clear cache
-        importlib.reload(app_streams_module)
+        app_stream_from_package.cache_clear()
 
 
 def test_related_app_streams_with_none_start_date():
@@ -852,64 +846,44 @@ class TestAppStreamFromPackageBaseStreams:
 
     def test_nodejs_16_base_stream_updated_minor(self):
         """Node.js 16 on RHEL 9 should match even when minor version drifts (16.14 -> 16.20)."""
-        import importlib
-
-        from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-        importlib.reload(app_streams_module)
         from roadmap.v1.lifecycle.app_streams import app_stream_from_package
 
+        app_stream_from_package.cache_clear()
         result = app_stream_from_package("nodejs-1:16.20.2-8.el9_4.x86_64", 9)
         assert result is not None
         assert result.name == "Node.js 16"
 
     def test_nodejs_16_base_stream_original_version(self):
         """Node.js 16 on RHEL 9 should also match with the original shipped version."""
-        import importlib
-
-        from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-        importlib.reload(app_streams_module)
         from roadmap.v1.lifecycle.app_streams import app_stream_from_package
 
+        app_stream_from_package.cache_clear()
         result = app_stream_from_package("nodejs-1:16.14.0-5.el9.x86_64", 9)
         assert result is not None
         assert result.name == "Node.js 16"
 
     def test_nodejs_wrong_major_no_match(self):
         """A nodejs package with a completely different major version should not match."""
-        import importlib
-
-        from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-        importlib.reload(app_streams_module)
         from roadmap.v1.lifecycle.app_streams import app_stream_from_package
 
+        app_stream_from_package.cache_clear()
         result = app_stream_from_package("nodejs-999.999-1.el9.x86_64", 9)
         assert result is None
 
     def test_mariadb_depth2_still_works(self):
         """MariaDB 10.5 on RHEL 9 (depth=2) should continue to match as before."""
-        import importlib
-
-        from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-        importlib.reload(app_streams_module)
         from roadmap.v1.lifecycle.app_streams import app_stream_from_package
 
+        app_stream_from_package.cache_clear()
         result = app_stream_from_package("mariadb-3:10.5.29-3.el9_7.x86_64", 9)
         assert result is not None
         assert result.name == "MariaDB 10.5"
 
     def test_nginx_depth2_still_works(self):
         """NGINX 1.20 on RHEL 9 (depth=2) should continue to match as before."""
-        import importlib
-
-        from roadmap.v1.lifecycle import app_streams as app_streams_module
-
-        importlib.reload(app_streams_module)
         from roadmap.v1.lifecycle.app_streams import app_stream_from_package
 
+        app_stream_from_package.cache_clear()
         result = app_stream_from_package("nginx-1:1.20.1-14.el9.x86_64", 9)
         assert result is not None
         assert result.name == "NGINX 1.20"

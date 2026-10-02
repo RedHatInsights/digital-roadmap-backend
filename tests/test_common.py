@@ -4,6 +4,7 @@ from contextlib import nullcontext
 from datetime import date
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
+from uuid import UUID
 
 import httpx
 import pytest
@@ -172,6 +173,52 @@ def test_build_host_inventory_query_host_group_filters(host_groups, expected, in
 
     for item in expected:
         assert item in query
+
+
+def test_build_host_inventory_query_omits_host_ids_by_default():
+    """The unscoped inventory query does not filter on host id."""
+    query = _build_host_inventory_query()
+
+    assert ":host_ids" not in query
+
+
+def test_build_host_inventory_query_host_ids_are_bound():
+    """Requested host ids are a single bound parameter, not SQL text."""
+    host_id = UUID("a77a8458-3593-11f0-8426-5e43c8b8aa2f")
+    query = _build_host_inventory_query(host_ids=[host_id])
+
+    assert "h.id = ANY(:host_ids)" in query
+    assert str(host_id) not in query
+    assert "installed_packages" in query
+
+
+def test_build_host_inventory_query_empty_host_ids_still_filters():
+    """An empty id list matches no hosts. It does not fall back to every host."""
+    query = _build_host_inventory_query(host_ids=[])
+
+    assert ":host_ids" in query
+
+
+@pytest.mark.parametrize(
+    ("host_groups", "expected"),
+    (
+        ({"aec18a86-3593-11f0-8426-5e43c8b8aa2f"}, (":host_groups",)),
+        ({None}, ("ungrouped",)),
+        ({None, "aec18a86-3593-11f0-8426-5e43c8b8aa2f"}, ("ungrouped", ":host_groups")),
+    ),
+)
+def test_build_host_inventory_query_host_ids_keep_group_filter(host_groups, expected):
+    """The id filter is added beside the group filter. It does not replace it."""
+    host_id = UUID("a77a8458-3593-11f0-8426-5e43c8b8aa2f")
+    query = _build_host_inventory_query(host_groups=host_groups, host_ids=[host_id])
+
+    assert ":host_ids" in query
+    assert str(host_id) not in query
+    for item in expected:
+        assert item in query
+    for group_id in host_groups:
+        if group_id is not None:
+            assert group_id not in query
 
 
 async def test_query_host_inventory_without_packages(base_args):

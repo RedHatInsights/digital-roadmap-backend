@@ -72,9 +72,26 @@ async def query_rbac(
         "limit": 1000,
     }
 
-    headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
-    if settings.rbac_v2_authenticated and not x_rh_identity:
-        logger.warning("V2 RBAC endpoint requires authentication but no X-RH-Identity header was provided")
+    headers: dict[str, str] = {}
+    if settings.rbac_v2_authenticated:
+        # V2 authenticated endpoint: use service account OAuth2 Bearer token
+        # with x-rh-rbac-org-id header, matching the RBAC V2 auth contract.
+        token = kessel.get_service_account_token(settings)
+        if token:
+            identity = _decode_identity(x_rh_identity)
+            org_id = identity.get("org_id", "")
+            headers["Authorization"] = f"Bearer {token}"
+            if org_id:
+                headers["x-rh-rbac-org-id"] = org_id
+        else:
+            logger.warning(
+                "V2 RBAC endpoint requires s2s authentication but service "
+                "account credentials are unavailable; falling back to x-rh-identity"
+            )
+            if x_rh_identity:
+                headers["X-RH-Identity"] = x_rh_identity
+    elif x_rh_identity:
+        headers["X-RH-Identity"] = x_rh_identity
     if not settings.rbac_url:
         return [{}]
 

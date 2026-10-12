@@ -107,6 +107,68 @@ Unzip and modify the existing file or create your own. The file does not have to
 ROADMAP_HOST_DATA_FILE=path/to/file.json make load-host-data
 ```
 
+#### Generating a large local inventory
+
+The host generator needs an HBI response containing a JSON array of hosts with
+system profiles. Source data can be retrieved through Gabi with `get-hosts.py`.
+This requires configured Gabi access and a valid OpenShift token for the chosen
+environment.
+
+```shell
+python scripts/get-hosts.py --org-id ORG_ID --environment stage --scrub
+```
+
+The response is written to `scratch/hosts-ORG_ID.json`. The `--scrub` option
+removes identifying host data while preserving the system profiles used by the
+roadmap service.
+
+Existing compressed HBI data can be used instead. Uncompress it while keeping
+the original archive:
+
+```shell
+gzip --decompress --keep scratch/hosts-ORG_ID.json.gz
+```
+
+Generate the required number of hosts from the source profiles. Each generated
+host receives a unique UUID and display name while retaining a source system
+profile. Source hosts with missing or empty system profiles are skipped.
+Profiles are reused when the requested count exceeds the usable source host
+count.
+
+```shell
+python scripts/generate_hosts.py \
+  --input scratch/hosts-ORG_ID.json \
+  --output scratch/generated-hosts-20000.json \
+  --count 20000
+```
+
+Both compressed and uncompressed input files are supported. Generation is
+streamed, but the output can still be large. Its size depends on the source
+system profiles, particularly their installed package lists.
+
+Start the local database and load the generated data with the streaming loader.
+It inserts 100 hosts per transaction by default and does not enable SQLAlchemy
+SQL logging.
+
+```shell
+make start-db
+PYTHONPATH=src python scripts/load_host_data_streaming.py \
+  --input scratch/generated-hosts-20000.json
+```
+
+With the application running locally, measure the relevant AppStreams and RHEL
+endpoints with:
+
+```shell
+curl -sS -o /dev/null \
+  -w 'AppStreams: HTTP %{http_code}, first byte %{time_starttransfer}s, total %{time_total}s\n' \
+  http://127.0.0.1:8000/api/roadmap/v1/relevant/lifecycle/app-streams
+
+curl -sS -o /dev/null \
+  -w 'RHEL: HTTP %{http_code}, first byte %{time_starttransfer}s, total %{time_total}s\n' \
+  http://127.0.0.1:8000/api/roadmap/v2/relevant/lifecycle/rhel
+```
+
 ### Database ###
 
 The database runs in a container and contains data already. To specify a different container image, set `DB_IMAGE`.

@@ -4,6 +4,9 @@ import pytest
 
 from sentry_sdk.utils import BadDsn
 
+from roadmap import common
+from roadmap.main import app
+
 
 def test_ping(client):
     response = client.get("/api/roadmap/v1/ping")
@@ -59,6 +62,29 @@ def test_openapi_docs_v2(client):
     assert not any(path.startswith("/api/roadmap") for path in paths)
     assert data["components"]["securitySchemes"]["Authorization"]["type"] == "apiKey"
     assert data["security"] == [{"Authorization": []}]
+
+
+def test_openapi_schema_is_built_once_per_prefix(client, monkeypatch):
+    """Each schema is generated once and served from cache thereafter."""
+    app.openapi_schema = None
+    app.state.openapi_schema_by_prefix = {}
+
+    calls = []
+    real_get_openapi = common.get_openapi
+
+    def counting_get_openapi(**kwargs):
+        calls.append(kwargs)
+        return real_get_openapi(**kwargs)
+
+    monkeypatch.setattr(common, "get_openapi", counting_get_openapi)
+
+    for url in ("/openapi.json", "/api/roadmap/v1/openapi.json"):
+        first = client.get(url)
+        second = client.get(url)
+        assert first.status_code == second.status_code == 200
+        assert first.json() == second.json()
+
+    assert len(calls) == 2  # one build per schema, not four
 
 
 def test_sentry_sdk_init(monkeypatch):

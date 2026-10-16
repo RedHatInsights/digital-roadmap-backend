@@ -735,10 +735,25 @@ def rhel_major_minor(system: RowMapping) -> tuple[int, int | None]:
     raise ValueError
 
 
-def extend_openapi(app: FastAPI):
+def extend_openapi(app: FastAPI, path_prefix: str | None = None):
+    """Build an OpenAPI schema, optionally scoped to one API version prefix.
+
+    When ``path_prefix`` is None, returns the unfiltered schema with absolute
+    path keys (used by root ``/openapi.json`` / local ``/docs``).
+
+    When ``path_prefix`` is set (e.g. ``/api/roadmap/v1``), keeps only paths
+    under that prefix and rewrites keys to be relative to it so Console API
+    Docs does not double-prepend the server base.
+    """
+
     def _extend_openapi() -> dict[str, t.Any]:
-        if app.openapi_schema:
-            return app.openapi_schema
+        if path_prefix is None:
+            if app.openapi_schema:
+                return app.openapi_schema
+        else:
+            cache: dict[str, dict[str, t.Any]] | None = getattr(app.state, "openapi_schema_by_prefix", None)
+            if cache is not None and path_prefix in cache:
+                return cache[path_prefix]
 
         schema = get_openapi(
             title=app.title,
@@ -756,6 +771,15 @@ def extend_openapi(app: FastAPI):
             separate_input_output_schemas=app.separate_input_output_schemas,
         )
 
+        if path_prefix is not None:
+            filtered_paths: dict[str, t.Any] = {}
+            for path, item in schema.get("paths", {}).items():
+                if path.startswith(path_prefix):
+                    relative = path.removeprefix(path_prefix) or "/"
+                    filtered_paths[relative] = item
+            schema["paths"] = filtered_paths
+            schema["servers"] = [{"url": path_prefix}]
+
         schema["components"]["securitySchemes"] = {
             "Authorization": {
                 "in": "header",
@@ -766,8 +790,16 @@ def extend_openapi(app: FastAPI):
         # Set the default API security scheme
         schema["security"] = [{"Authorization": []}]
 
-        app.openapi_schema = schema
-        return app.openapi_schema
+        if path_prefix is None:
+            app.openapi_schema = schema
+            return app.openapi_schema
+
+        cache = getattr(app.state, "openapi_schema_by_prefix", None)
+        if cache is None:
+            cache = {}
+            app.state.openapi_schema_by_prefix = cache
+        cache[path_prefix] = schema
+        return schema
 
     return _extend_openapi
 

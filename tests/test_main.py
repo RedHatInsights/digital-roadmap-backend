@@ -78,13 +78,17 @@ def test_openapi_schema_is_built_once_per_prefix(client, monkeypatch):
 
     monkeypatch.setattr(common, "get_openapi", counting_get_openapi)
 
-    for url in ("/openapi.json", "/api/roadmap/v1/openapi.json"):
+    for url in (
+        "/openapi.json",
+        "/api/roadmap/v1/openapi.json",
+        "/api/roadmap/v2/openapi.json",
+    ):
         first = client.get(url)
         second = client.get(url)
         assert first.status_code == second.status_code == 200
         assert first.json() == second.json()
 
-    assert len(calls) == 2  # one build per schema, not four
+    assert len(calls) == 3  # one build per schema, not six
 
 
 def test_sentry_sdk_init(monkeypatch):

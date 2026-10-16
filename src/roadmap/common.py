@@ -449,7 +449,7 @@ class _DatabaseErrorTrace(Exception):
     """
 
 
-def _log_database_error(message: str) -> None:
+def log_database_error(message: str) -> None:
     """Log a database failure and its stack, without SQL or parameter values."""
     exc = sys.exception()
     if exc is None:
@@ -529,7 +529,7 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
             )
             yield result
         except (DBAPIError, SQLAlchemyError):
-            _log_database_error("Database error querying host inventory")
+            log_database_error("Database error querying host inventory")
             raise HTTPException(status_code=500, detail="Error querying host inventory") from None
 
     return query_host_inventory
@@ -591,7 +591,7 @@ async def query_host_inventory_by_ids(
             },
         )
     except (DBAPIError, SQLAlchemyError):
-        _log_database_error("Database error querying host inventory")
+        log_database_error("Database error querying host inventory")
         raise HTTPException(status_code=500, detail="Error querying host inventory") from None
 
 
@@ -628,7 +628,7 @@ async def query_accessible_host_uuids(
         )
         yield result
     except (DBAPIError, SQLAlchemyError):
-        _log_database_error("Database error listing host UUIDs")
+        log_database_error("Database error listing host UUIDs")
         raise HTTPException(status_code=500, detail="Error querying host inventory") from None
 
 
@@ -940,7 +940,7 @@ async def query_rhel_systems(
         data_result = await session.execute(text(data_query), params)
         rows = data_result.mappings().all()
     except (DBAPIError, SQLAlchemyError):
-        _log_database_error("Database error querying RHEL systems")
+        log_database_error("Database error querying RHEL systems")
         raise HTTPException(status_code=500, detail="Error querying host inventory") from None
 
     systems = [

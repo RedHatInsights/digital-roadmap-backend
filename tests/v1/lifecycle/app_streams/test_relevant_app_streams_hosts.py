@@ -222,6 +222,52 @@ def test_relevant_app_streams_for_hosts_database_error(api_prefix, client):
     session.stream.assert_awaited_once()
 
 
+def test_relevant_app_streams_for_hosts_database_error_while_fetching(api_prefix, client):
+    """A failure while reading rows, after stream() has returned, is still a safe 500."""
+    _allow(client, set())
+
+    class _Rows:
+        def __init__(self):
+            self._sent = False
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if not self._sent:
+                self._sent = True
+                return {
+                    "id": UNGROUPED_HOST,
+                    "display_name": "ungrouped-host",
+                    "os_major": 9,
+                    "os_minor": 4,
+                    "os_release": "9.4",
+                    "dnf_modules": [],
+                    "packages": [],
+                    "products": [],
+                }
+            raise DBAPIError("SELECT secret_inventory WHERE org_id = :org_id", {"org_id": "sensitive-org"}, None)
+
+    class _Result:
+        def yield_per(self, batch_size):
+            return self
+
+        def mappings(self):
+            return _Rows()
+
+    session = AsyncMock()
+    session.stream = AsyncMock(return_value=_Result())
+    client.app.dependency_overrides[get_db] = lambda: session
+
+    result = _post(client, api_prefix, [UNGROUPED_HOST])
+
+    assert result.status_code == 500
+    assert result.json() == {"detail": "Error querying host inventory"}
+    assert "secret_inventory" not in result.text
+    assert "sensitive-org" not in result.text
+    session.stream.assert_awaited_once()
+
+
 def test_relevant_app_streams_for_hosts_error_building_response(api_prefix, client, mocker):
     _allow(client, {None})
     mocker.patch("roadmap.v1.lifecycle.app_streams.RelevantAppStream", side_effect=ValueError("Raised intentionally"))

@@ -113,8 +113,9 @@ class Settings(BaseSettings):
             db = LoadedConfig.database
             endpoints = LoadedConfig.endpoints
 
-            # V2-first RBAC discovery: try the structured V2 dependency
-            # endpoint, falling back to the legacy V1 flat endpoint list.
+            # V2 RBAC discovery via the structured dependency endpoint.
+            # No V1 fallback — once Clowder provides V2, it is the only
+            # valid path; the legacy V1 flat endpoint list is not used.
             rbac_kwargs = {}
             v2_ep = get_v2_dependency_endpoint("rbac", "service")
             if v2_ep is not None and v2_ep.uri:
@@ -124,16 +125,6 @@ class Settings(BaseSettings):
                 }
                 if v2_ep.ca_certificate:
                     rbac_kwargs["rbac_ca_cert"] = v2_ep.ca_certificate
-            else:
-                # FIXME: Make RBAC setting in the environment override the
-                #        clowder config file for consistency
-                rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
-                if rbac:
-                    rbac = rbac.pop()
-                    rbac_kwargs = {
-                        "rbac_hostname": rbac.hostname,
-                        "rbac_port": rbac.port,
-                    }
 
             db_kwargs = (
                 {

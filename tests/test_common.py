@@ -459,9 +459,11 @@ async def test_query_rbac_generic_exception(mocker):
         await query_rbac(settings)
 
 
-async def test_query_rbac_v2_ca_cert(mocker, read_fixture_file):
+async def test_query_rbac_v2_ca_cert(mocker, read_fixture_file, tmp_path):
     """When rbac_ca_cert is set, httpx.AsyncClient uses it for TLS verification."""
-    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_ca_cert="/certs/ca.crt")
+    cert = tmp_path / "ca.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n")
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_ca_cert=str(cert))
     fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
     mock_response = MagicMock()
     mock_response.json.return_value = fixture_data
@@ -474,7 +476,7 @@ async def test_query_rbac_v2_ca_cert(mocker, read_fixture_file):
 
     await query_rbac(settings)
 
-    mock_async_client.assert_called_once_with(timeout=30, verify="/certs/ca.crt")
+    mock_async_client.assert_called_once_with(timeout=30, verify=str(cert))
 
 
 async def test_query_rbac_v2_no_ca_cert(mocker, read_fixture_file):

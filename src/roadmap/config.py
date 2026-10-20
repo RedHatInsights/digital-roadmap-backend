@@ -3,6 +3,7 @@ import os
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
 from app_common_python import get_v2_dependency_endpoint  # pyright: ignore[reportAttributeAccessIssue]
 from app_common_python import isClowderEnabled
@@ -43,19 +44,25 @@ class Settings(BaseSettings):
     @field_validator("rbac_url_v2")
     @classmethod
     def _validate_rbac_url_v2(cls, v: str) -> str:
-        if v and not v.startswith(("http://", "https://")):
-            raise ValueError("rbac_url_v2 must be an HTTP(S) URL")
+        """Validate that rbac_url_v2 is a well-formed HTTP(S) URL with a hostname."""
+        if v:
+            parsed = urlparse(v)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError("rbac_url_v2 must be an HTTP(S) URL")
+            if not parsed.hostname:
+                raise ValueError("rbac_url_v2 must include a hostname")
         return v
 
     @field_validator("rbac_ca_cert")
     @classmethod
     def _validate_rbac_ca_cert(cls, v: str) -> str:
+        """Validate that rbac_ca_cert points to a readable file when set."""
         if v:
             p = Path(v)
             if not p.is_file():
-                logger.warning("rbac_ca_cert path does not exist or is not readable: %s", v)
-            elif not os.access(v, os.R_OK):
-                logger.warning("rbac_ca_cert path is not readable: %s", v)
+                raise ValueError(f"rbac_ca_cert path does not exist or is not a file: {v}")
+            if not os.access(v, os.R_OK):
+                raise ValueError(f"rbac_ca_cert path is not readable: {v}")
         return v
 
     env_name: str = "stage"

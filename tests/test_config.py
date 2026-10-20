@@ -150,8 +150,11 @@ def test_v2_rbac_endpoint_resolution(monkeypatch, mocker):
     assert settings.rbac_port == 8000
 
 
-def test_v2_rbac_endpoint_with_ca_cert(monkeypatch, mocker):
+def test_v2_rbac_endpoint_with_ca_cert(monkeypatch, mocker, tmp_path):
     """V2 endpoint with CA certificate path stores it for TLS verification."""
+    cert = tmp_path / "rbac-ca.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n")
+
     monkeypatch.setenv("ACG_CONFIG", "yes")
     mocker.patch(
         "roadmap.config.LoadedConfig",
@@ -161,14 +164,14 @@ def test_v2_rbac_endpoint_with_ca_cert(monkeypatch, mocker):
         "roadmap.config.get_v2_dependency_endpoint",
         return_value=_mock_v2_endpoint(
             "https://rbac-service.svc:8443",
-            ca_certificate="/cdapp/certs/rbac-ca.crt",
+            ca_certificate=str(cert),
         ),
     )
 
     settings = Settings.create()
 
     assert settings.rbac_url == "https://rbac-service.svc:8443"
-    assert settings.rbac_ca_cert == "/cdapp/certs/rbac-ca.crt"
+    assert settings.rbac_ca_cert == str(cert)
 
 
 def test_v2_rbac_endpoint_no_ca_cert(monkeypatch, mocker):
@@ -263,6 +266,12 @@ def test_rbac_url_v2_invalid_scheme():
         Settings(rbac_url_v2="ftp://rbac.svc:21")
 
 
+def test_rbac_url_v2_scheme_only_no_hostname():
+    """A URL with a scheme but no hostname is rejected."""
+    with pytest.raises(ValueError, match="hostname"):
+        Settings(rbac_url_v2="https://")
+
+
 def test_rbac_ca_cert_empty_accepted():
     """Empty rbac_ca_cert is accepted (system trust)."""
     settings = Settings(rbac_ca_cert="")
@@ -280,13 +289,10 @@ def test_rbac_ca_cert_valid_path(tmp_path):
     assert settings.rbac_ca_cert == str(cert)
 
 
-def test_rbac_ca_cert_missing_path_warns(caplog):
-    """Non-existent CA cert path logs a warning but does not reject."""
-    with caplog.at_level("WARNING"):
-        settings = Settings(rbac_ca_cert="/nonexistent/ca.crt")
-
-    assert settings.rbac_ca_cert == "/nonexistent/ca.crt"
-    assert "does not exist" in caplog.text
+def test_rbac_ca_cert_missing_path_raises():
+    """Non-existent CA cert path raises ValueError."""
+    with pytest.raises(ValueError, match="does not exist"):
+        Settings(rbac_ca_cert="/nonexistent/ca.crt")
 
 
 def test_v2_authenticated_preserved(monkeypatch, mocker):

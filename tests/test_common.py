@@ -495,25 +495,15 @@ async def test_query_rbac_v2_no_ca_cert(mocker, read_fixture_file):
     mock_async_client.assert_called_once_with(timeout=30, verify=True)
 
 
-async def test_query_rbac_v2_authenticated_no_creds_warning(caplog, mocker, read_fixture_file):
-    """Authenticated V2 endpoint without service account creds logs a warning and falls back to x-rh-identity."""
+async def test_query_rbac_v2_authenticated_no_creds_raises(mocker):
+    """Authenticated V2 endpoint without service account creds raises HTTPException."""
     settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
-    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
-    mock_response = MagicMock()
-    mock_response.json.return_value = fixture_data
-    mock_response.raise_for_status = MagicMock()
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
     mocker.patch("roadmap.common.kessel.get_service_account_token", return_value=None)
 
-    with caplog.at_level("WARNING"):
+    with pytest.raises(HTTPException, match="credentials are not configured") as exc_info:
         await query_rbac(settings, x_rh_identity=None)
 
-    assert "s2s authentication" in caplog.text
-    assert "unavailable" in caplog.text
+    assert exc_info.value.status_code == 502
 
 
 async def test_query_rbac_v2_authenticated_bearer(mocker, read_fixture_file):
@@ -541,28 +531,19 @@ async def test_query_rbac_v2_authenticated_bearer(mocker, read_fixture_file):
     assert "X-RH-Identity" not in call_headers
 
 
-async def test_query_rbac_v2_authenticated_fallback_identity(mocker, read_fixture_file):
-    """When token unavailable, authenticated V2 falls back to x-rh-identity."""
+async def test_query_rbac_v2_authenticated_no_creds_with_identity_raises(mocker):
+    """When token unavailable, authenticated V2 raises even if x-rh-identity is present."""
     import base64
 
     settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
-    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
-    mock_response = MagicMock()
-    mock_response.json.return_value = fixture_data
-    mock_response.raise_for_status = MagicMock()
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
     mocker.patch("roadmap.common.kessel.get_service_account_token", return_value=None)
 
     identity = base64.b64encode(json.dumps({"identity": {"org_id": "12345"}}).encode()).decode()
-    await query_rbac(settings, x_rh_identity=identity)
 
-    call_headers = mock_client.get.call_args[1]["headers"]
-    assert call_headers["X-RH-Identity"] == identity
-    assert "Authorization" not in call_headers
+    with pytest.raises(HTTPException, match="credentials are not configured") as exc_info:
+        await query_rbac(settings, x_rh_identity=identity)
+
+    assert exc_info.value.status_code == 502
 
 
 async def test_query_rbac_non_authenticated_uses_identity(mocker, read_fixture_file):

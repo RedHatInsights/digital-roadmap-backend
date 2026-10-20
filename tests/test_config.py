@@ -189,8 +189,8 @@ def test_v2_rbac_endpoint_no_ca_cert(monkeypatch, mocker):
     assert settings.rbac_ca_cert == ""
 
 
-def test_v2_fallback_to_v1(monkeypatch, mocker):
-    """V2 returns None: falls back to V1 flat endpoint list."""
+def test_v2_not_available_no_fallback(monkeypatch, mocker):
+    """V2 returns None: no V1 fallback, RBAC stays unconfigured."""
     monkeypatch.setenv("ACG_CONFIG", "yes")
     mocker.patch(
         "roadmap.config.LoadedConfig",
@@ -200,14 +200,13 @@ def test_v2_fallback_to_v1(monkeypatch, mocker):
 
     settings = Settings.create()
 
-    assert settings.rbac_url == "http://rbac-service.svc:8123"
-    assert settings.rbac_hostname == "rbac-service.svc"
-    assert settings.rbac_port == 8123
+    assert settings.rbac_url == ""
     assert settings.rbac_url_v2 == ""
+    assert settings.rbac_hostname == ""
 
 
-def test_v2_empty_uri_fallback_to_v1(monkeypatch, mocker):
-    """V2 returns endpoint with empty URI: falls back to V1."""
+def test_v2_empty_uri_no_fallback(monkeypatch, mocker):
+    """V2 returns endpoint with empty URI: no V1 fallback, RBAC stays unconfigured."""
     monkeypatch.setenv("ACG_CONFIG", "yes")
     mocker.patch(
         "roadmap.config.LoadedConfig",
@@ -220,8 +219,8 @@ def test_v2_empty_uri_fallback_to_v1(monkeypatch, mocker):
 
     settings = Settings.create()
 
-    assert settings.rbac_url == "http://rbac-service.svc:8123"
-    assert settings.rbac_hostname == "rbac-service.svc"
+    assert settings.rbac_url == ""
+    assert settings.rbac_hostname == ""
 
 
 def test_v2_no_clowder_defaults():
@@ -324,8 +323,8 @@ def test_v2_unauthenticated_preserved(monkeypatch, mocker):
     assert settings.rbac_v2_authenticated is False
 
 
-def test_v2_fallback_authenticated_defaults_false(monkeypatch, mocker):
-    """When V2 returns None and V1 fallback is used, authenticated stays False."""
+def test_v2_not_available_authenticated_defaults_false(monkeypatch, mocker):
+    """When V2 returns None (no fallback), authenticated stays False."""
     monkeypatch.setenv("ACG_CONFIG", "yes")
     mocker.patch(
         "roadmap.config.LoadedConfig",

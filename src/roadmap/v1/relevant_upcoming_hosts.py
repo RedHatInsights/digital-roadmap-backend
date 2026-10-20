@@ -51,11 +51,17 @@ async def get_relevant_upcoming_for_hosts(
     are returned. An item that matches only a host left out of the request is
     absent. With all=true, every known item is returned, and affected systems
     are still only hosts from this request. To match one request for all
-    accessible hosts when processing batches, merge rows that share a name and
-    release, union the affected systems, and count each host once. Drop a row
-    that has no affected systems when all=false, then recalculate metadata.
-    Concatenating responses is not enough. Item names stay the same across
-    batches because they come from the upcoming file.
+    accessible hosts when processing batches, merge rows that are the same
+    roadmap record, union the affected systems, and count each host once.
+    Name and release are not enough to identify a record: an addition and a
+    deprecation can share both. Match name, type, release, date, the sorted
+    package list (or the single package when that list is absent), and the
+    detail fields summary, architecture, training ticket, deployed date, last
+    modified, date added, and detail format. Leave the affected-system lists
+    and their count out of that match. Drop a row that has no affected systems
+    when all=false, then recalculate metadata. Concatenating responses is not
+    enough. Item names stay the same across batches because they come from the
+    upcoming file.
     """
     systems = await query_host_inventory_by_ids(
         org_id=org_id,

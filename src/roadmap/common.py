@@ -44,7 +44,13 @@ MinorVersion = t.Annotated[int, Query(description="Minor version number", ge=0, 
 
 
 def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
-    # https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
+    """Decode a base64-encoded x-rh-identity header into its identity dict.
+
+    Returns the ``identity`` sub-object from the decoded JSON, or an empty
+    dict when the header is absent.
+
+    See https://github.com/RedHatInsights/identity-schemas/blob/main/3scale/identities/basic.json
+    """
     if x_rh_identity is None:
         return {}
 
@@ -56,6 +62,10 @@ def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
 async def decode_header(
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> str:
+    """Extract the org_id from the x-rh-identity header.
+
+    Returns an empty string when the header is absent or contains no org_id.
+    """
     return _decode_identity(x_rh_identity).get("org_id", "")
 
 
@@ -63,6 +73,18 @@ async def query_rbac(
     settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> list[dict[t.Any, t.Any]]:
+    """Query RBAC for the caller's inventory access permissions.
+
+    When the V2 endpoint has ``authenticated=True``, authenticates with an
+    OAuth2 Bearer token obtained from the Kessel service account credentials
+    and passes the caller's org_id via the ``x-rh-rbac-org-id`` header.
+    Raises ``HTTPException(502)`` if service account credentials are
+    unavailable — there is no fallback to ``x-rh-identity`` for authenticated
+    V2 endpoints.
+
+    For non-authenticated endpoints (V2 with ``authenticated=False`` or
+    legacy V1), the original ``x-rh-identity`` header is forwarded.
+    """
     if settings.dev:
         return [
             {

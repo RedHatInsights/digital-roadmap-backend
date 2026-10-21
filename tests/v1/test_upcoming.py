@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from datetime import date
@@ -8,6 +9,7 @@ from roadmap.common import get_allowed_host_groups
 from roadmap.config import Settings
 from roadmap.models import SystemInfo
 from roadmap.v1.upcoming import get_upcoming_data_with_hosts
+from roadmap.v1.upcoming import packages_by_system
 from roadmap.v1.upcoming import UpcomingOutputDetails
 
 
@@ -108,6 +110,59 @@ def test_get_relevant_upcoming_changes(client, api_prefix):
     assert all(major_release == os_majors for major_release, os_majors in releases), (
         "Affected system versions do not match release version. Look at 'releases'."
     )
+
+
+class _InventoryRows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def yield_per(self, _batch_size):
+        return self
+
+    def mappings(self):
+        return self
+
+    async def __aiter__(self):
+        for row in self._rows:
+            yield row
+
+
+async def test_packages_by_system_logs_omit_customer_data(caplog):
+    """Inventory matching logs counts only, never the tenant id or host name."""
+    org_id = "sensitive-org"
+    display_name = "secret-host-name"
+    rows = _InventoryRows(
+        [
+            {
+                "id": uuid.UUID("11111111-1111-1111-1111-111111111111"),
+                "display_name": display_name,
+                "packages": None,
+            },
+            {
+                "id": uuid.UUID("22222222-2222-2222-2222-222222222222"),
+                "display_name": display_name,
+                "os_major": 9,
+                "os_minor": 4,
+                "packages": [],
+            },
+            {
+                "id": uuid.UUID("33333333-3333-3333-3333-333333333333"),
+                "display_name": display_name,
+                "os_major": 9,
+                "os_minor": 4,
+                "packages": ["bash-5.1.8-9.el9.x86_64"],
+            },
+        ]
+    )
+
+    with caplog.at_level(logging.INFO, logger="uvicorn.error"):
+        result = await packages_by_system(org_id, rows)
+
+    assert len(result) == 1
+    assert org_id not in caplog.text
+    assert display_name not in caplog.text
+    assert "Getting packages by system" in caplog.text
+    assert "Missing os_version: 1, packages: 1 while getting packages by system" in caplog.text
 
 
 def test_get_upcoming_data_with_hosts():

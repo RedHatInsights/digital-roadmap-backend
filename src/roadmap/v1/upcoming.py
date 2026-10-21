@@ -158,7 +158,7 @@ async def packages_by_system(
     org_id: t.Annotated[str, Depends(decode_header)],
     systems: t.Annotated[t.Any, Depends(query_host_inventory)],
 ) -> dict[SystemInfo, set[str]]:
-    logger.info(f"Getting packages by system for {org_id or 'UNKNOWN'}")
+    logger.info("Getting packages by system")
 
     missing = defaultdict(int)
     packages_by_system = defaultdict(set)
@@ -188,7 +188,7 @@ async def packages_by_system(
 
     if missing:
         missing_items = ", ".join(f"{key}: {value}" for key, value in missing.items())
-        logger.info(f"Missing {missing_items} for org {org_id or 'UNKNOWN'}")
+        logger.info(f"Missing {missing_items} while getting packages by system")
 
     return packages_by_system
 

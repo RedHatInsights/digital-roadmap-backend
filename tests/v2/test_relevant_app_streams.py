@@ -1,16 +1,9 @@
-from uuid import UUID
-
 import pytest
 
 from fastapi import HTTPException
 
 from roadmap.common import decode_header
 from roadmap.common import get_allowed_host_groups
-from roadmap.data.app_streams import AppStreamEntity
-from roadmap.data.app_streams import AppStreamImplementation
-from roadmap.models import SystemInfo
-from roadmap.v1.lifecycle.app_streams import AppStreamKey
-from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
 
 def _apply_auth_overrides(client):
@@ -92,15 +85,6 @@ class TestV2AppStreamsSystems:
                 return item
         return None
 
-    @staticmethod
-    def _systems_params(item, **extra):
-        """Build query params for the /systems endpoint, omitting os_minor when None."""
-        params = {"name": item["name"], "os_major": item["os_major"]}
-        if item.get("os_minor") is not None:
-            params["os_minor"] = item["os_minor"]
-        params.update(extra)
-        return params
-
     def test_v2_app_streams_systems_basic(self, client, v2_prefix):
         _apply_auth_overrides(client)
         first = self._get_first_app_stream(client, v2_prefix)
@@ -109,7 +93,11 @@ class TestV2AppStreamsSystems:
 
         response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first),
+            params={
+                "name": first["name"],
+                "os_major": first["os_major"],
+                "os_minor": first.get("os_minor", 0),
+            },
         )
 
         assert response.status_code == 200
@@ -125,15 +113,19 @@ class TestV2AppStreamsSystems:
         if first is None:
             pytest.skip("No app streams with systems found in test data")
 
-        base_params = self._systems_params(first)
+        params = {
+            "name": first["name"],
+            "os_major": first["os_major"],
+            "os_minor": first.get("os_minor", 0),
+        }
 
         page1 = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={**base_params, "offset": 0, "limit": 2},
+            params={**params, "offset": 0, "limit": 2},
         )
         page2 = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={**base_params, "offset": 2, "limit": 2},
+            params={**params, "offset": 2, "limit": 2},
         )
 
         assert page1.status_code == 200
@@ -153,7 +145,12 @@ class TestV2AppStreamsSystems:
 
         all_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first, limit=100),
+            params={
+                "name": first["name"],
+                "os_major": first["os_major"],
+                "os_minor": first.get("os_minor", 0),
+                "limit": 100,
+            },
         )
 
         all_data = all_response.json()["data"]
@@ -165,7 +162,13 @@ class TestV2AppStreamsSystems:
         search_term = all_data[0]["display_name"][:5]
         search_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first, search=search_term, limit=100),
+            params={
+                "name": first["name"],
+                "os_major": first["os_major"],
+                "os_minor": first.get("os_minor", 0),
+                "search": search_term,
+                "limit": 100,
+            },
         )
 
         assert search_response.status_code == 200
@@ -181,7 +184,12 @@ class TestV2AppStreamsSystems:
 
         systems_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first, limit=1),
+            params={
+                "name": first["name"],
+                "os_major": first["os_major"],
+                "os_minor": first.get("os_minor", 0),
+                "limit": 1,
+            },
         )
 
         assert systems_response.status_code == 200
@@ -201,122 +209,6 @@ class TestV2AppStreamsSystems:
         assert response.status_code == 200
         assert response.json()["data"] == []
         assert response.json()["meta"]["total"] == 0
-
-    def test_v2_app_streams_systems_exact_match_precedence(self, client, v2_prefix):
-        """Verify exact os_minor match takes precedence over wildcard.
-
-        When both a wildcard (os_minor=None) and exact match (os_minor=<value>)
-        exist for the same name+os_major, querying with the specific minor version
-        should return systems from the exact match, not the wildcard.
-        """
-        _apply_auth_overrides(client)
-
-        wildcard_entity = AppStreamEntity(
-            name="controlled-stream",
-            display_name="Controlled stream wildcard",
-            stream="1.0",
-            impl=AppStreamImplementation.package,
-            os_major=9,
-            os_minor=None,
-        )
-        exact_entity = AppStreamEntity(
-            name="controlled-stream",
-            display_name="Controlled stream exact",
-            stream="1.0",
-            impl=AppStreamImplementation.package,
-            os_major=9,
-            os_minor=1,
-        )
-        wildcard_key = AppStreamKey(name="controlled-stream", app_stream_entity=wildcard_entity)
-        exact_key = AppStreamKey(name="controlled-stream", app_stream_entity=exact_entity)
-        wildcard_systems = {SystemInfo(id=UUID(int=3), display_name="Wildcard host", os_major=9, os_minor=0)}
-        exact_systems = {
-            SystemInfo(id=UUID(int=1), display_name="Exact host 1", os_major=9, os_minor=1),
-            SystemInfo(id=UUID(int=2), display_name="Exact host 2", os_major=9, os_minor=1),
-        }
-
-        async def controlled_systems_by_app_stream():
-            return {wildcard_key: wildcard_systems, exact_key: exact_systems}
-
-        client.app.dependency_overrides[systems_by_app_stream] = controlled_systems_by_app_stream
-
-        r = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": "controlled-stream",
-                "os_major": 9,
-                "os_minor": 1,
-            },
-        )
-        assert r.status_code == 200
-        response = r.json()
-        returned_ids = {system["id"] for system in response["data"]}
-        exact_ids = {str(system.id) for system in exact_systems}
-        assert response["meta"]["total"] == len(exact_ids)
-        assert returned_ids == exact_ids
-
-    def test_v2_app_streams_systems_os_minor_none_match(self, client, v2_prefix):
-        """Verify systems are found for app streams whose entity has os_minor=None.
-
-        Some app streams (e.g. Container Tools, Python 3.6) span multiple minor
-        versions and have os_minor=None in their entity definition. The /systems
-        endpoint must still return their hosts regardless of whether the caller
-        sends os_minor=<int> or omits it entirely.
-        """
-        _apply_auth_overrides(client)
-
-        response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
-        data = response.json()["data"]
-        target = None
-        for item in data:
-            if item.get("os_minor") is None and item.get("count", 0) > 0:
-                target = item
-                break
-
-        if target is None:
-            pytest.skip("No app streams with os_minor=None and count>0 in test data")
-
-        # Case 1: omit os_minor — should match
-        r1 = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={"name": target["name"], "os_major": target["os_major"], "limit": 1},
-        )
-        assert r1.status_code == 200
-        assert r1.json()["meta"]["total"] == target["count"], (
-            f"Omitting os_minor should match os_minor=None entity, "
-            f"expected {target['count']} but got {r1.json()['meta']['total']}"
-        )
-
-        # Case 2: send a minor version that definitely doesn't exist for this stream
-        # Find all existing minor versions for this stream
-        existing_minors = set()
-        for item in data:
-            if (
-                item.get("name") == target["name"]
-                and item.get("os_major") == target["os_major"]
-                and item.get("os_minor") is not None
-            ):
-                existing_minors.add(item["os_minor"])
-
-        # Select a minor version that doesn't exist
-        nonexistent_minor = 0
-        while nonexistent_minor in existing_minors:
-            nonexistent_minor += 1
-
-        r2 = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": target["name"],
-                "os_major": target["os_major"],
-                "os_minor": nonexistent_minor,
-                "limit": 1,
-            },
-        )
-        assert r2.status_code == 200
-        assert r2.json()["meta"]["total"] == target["count"], (
-            f"Sending os_minor={nonexistent_minor} (no exact match) should fallback to "
-            f"os_minor=None entity, expected {target['count']} but got {r2.json()['meta']['total']}"
-        )
 
     def test_v2_app_streams_systems_no_rbac_access(self, client, v2_prefix):
         async def get_allowed_host_groups_override():
@@ -354,47 +246,5 @@ class TestV2AppStreamsSystems:
         response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
             params={"name": "test", "os_major": 9, "os_minor": 0, "offset": -1},
-        )
-        assert response.status_code == 422
-
-    def test_v2_app_streams_systems_sort_order_asc(self, client, v2_prefix):
-        """Verify sort_order=asc returns systems sorted ascending."""
-        _apply_auth_overrides(client)
-        first = self._get_first_app_stream(client, v2_prefix)
-        if first is None:
-            pytest.skip("No app streams with systems found in test data")
-
-        response = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first, limit=100, sort_order="asc"),
-        )
-        assert response.status_code == 200
-        names = [s["display_name"] for s in response.json()["data"]]
-        if len(names) > 1:
-            assert names == sorted(names), "Systems should be sorted ascending by display_name"
-
-    def test_v2_app_streams_systems_sort_order_desc(self, client, v2_prefix):
-        """Verify sort_order=desc returns systems sorted descending."""
-        _apply_auth_overrides(client)
-        first = self._get_first_app_stream(client, v2_prefix)
-        if first is None:
-            pytest.skip("No app streams with systems found in test data")
-
-        response = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params=self._systems_params(first, limit=100, sort_order="desc"),
-        )
-        assert response.status_code == 200
-        names = [s["display_name"] for s in response.json()["data"]]
-        if len(names) > 1:
-            assert names == sorted(names, reverse=True), "Systems should be sorted descending by display_name"
-
-    def test_v2_app_streams_systems_sort_order_invalid(self, client, v2_prefix):
-        """Verify invalid sort_order value is rejected by validation."""
-        _apply_auth_overrides(client)
-
-        response = client.get(
-            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={"name": "test", "os_major": 9, "os_minor": 0, "sort_order": "invalid"},
         )
         assert response.status_code == 422

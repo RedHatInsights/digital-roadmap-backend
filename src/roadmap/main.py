@@ -23,6 +23,7 @@ from roadmap.common import extend_openapi
 from roadmap.config import Settings
 from roadmap.custom_logging import setup_logging
 from roadmap.sentry_config import before_send
+from roadmap.v2.openapi import annotate_v2_openapi
 
 
 if os.getenv("SENTRY_DSN"):
@@ -122,11 +123,16 @@ roadmap.v1.router.add_api_route(
     extend_openapi(app, path_prefix="/api/roadmap/v1"),
     include_in_schema=False,
 )
-roadmap.v2.router.add_api_route(
-    "/openapi.json",
-    extend_openapi(app, path_prefix="/api/roadmap/v2"),
-    include_in_schema=False,
-)
+# v2 reuses several v1 routers. Annotate the filtered v2 schema instead of
+# mutating shared route metadata, which would leak the notice into v1/root docs.
+_v2_openapi = extend_openapi(app, path_prefix="/api/roadmap/v2")
+
+
+def get_v2_openapi():
+    return annotate_v2_openapi(_v2_openapi())
+
+
+roadmap.v2.router.add_api_route("/openapi.json", get_v2_openapi, include_in_schema=False)
 
 # Include individual service routers under the main API router
 api_router.include_router(roadmap.v1.router)

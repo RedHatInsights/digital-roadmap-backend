@@ -118,7 +118,6 @@ class Settings(BaseSettings):
         # True if env var ACG_CONFIG is set.
         if isClowderEnabled() and LoadedConfig:
             db = LoadedConfig.database
-            endpoints = LoadedConfig.endpoints
 
             # V2 RBAC discovery via the structured dependency endpoint.
             # No V1 fallback — once Clowder provides V2, it is the only

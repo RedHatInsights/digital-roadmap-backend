@@ -36,6 +36,10 @@ def test_setting_from_clowder(monkeypatch, mocker):
         "roadmap.config.LoadedConfig",
         loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
     )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("http://rbac-service.svc:8123"),
+    )
 
     settings = Settings.create()
 

@@ -105,10 +105,7 @@ async def query_rbac(
         # No fallback to x-rh-identity — V2 is the only valid path.
         token = kessel.get_service_account_token(settings)
         if not token:
-            logger.error(
-                "V2 RBAC endpoint requires s2s authentication but service "
-                "account credentials are unavailable"
-            )
+            logger.error("V2 RBAC endpoint requires s2s authentication but service account credentials are unavailable")
             raise HTTPException(
                 status_code=502,
                 detail="RBAC service requires authentication but credentials are not configured",

@@ -1,9 +1,16 @@
+from uuid import UUID
+
 import pytest
 
 from fastapi import HTTPException
 
 from roadmap.common import decode_header
 from roadmap.common import get_allowed_host_groups
+from roadmap.data.app_streams import AppStreamEntity
+from roadmap.data.app_streams import AppStreamImplementation
+from roadmap.models import SystemInfo
+from roadmap.v1.lifecycle.app_streams import AppStreamKey
+from roadmap.v1.lifecycle.app_streams import systems_by_app_stream
 
 
 def _apply_auth_overrides(client):
@@ -85,6 +92,22 @@ class TestV2AppStreamsSystems:
                 return item
         return None
 
+    @staticmethod
+    def _systems_params(item, **extra):
+        """Build /systems params without sending an empty os_minor query value."""
+        params = {"name": item["name"], "os_major": item["os_major"]}
+        if item.get("os_minor") is not None:
+            params["os_minor"] = item["os_minor"]
+        params.update(extra)
+        return params
+
+    @staticmethod
+    def _override_systems(client, systems_by_stream):
+        async def controlled_systems_by_app_stream():
+            return systems_by_stream
+
+        client.app.dependency_overrides[systems_by_app_stream] = controlled_systems_by_app_stream
+
     def test_v2_app_streams_systems_basic(self, client, v2_prefix):
         _apply_auth_overrides(client)
         first = self._get_first_app_stream(client, v2_prefix)
@@ -93,11 +116,7 @@ class TestV2AppStreamsSystems:
 
         response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": first["name"],
-                "os_major": first["os_major"],
-                "os_minor": first.get("os_minor", 0),
-            },
+            params=self._systems_params(first),
         )
 
         assert response.status_code == 200
@@ -113,11 +132,7 @@ class TestV2AppStreamsSystems:
         if first is None:
             pytest.skip("No app streams with systems found in test data")
 
-        params = {
-            "name": first["name"],
-            "os_major": first["os_major"],
-            "os_minor": first.get("os_minor", 0),
-        }
+        params = self._systems_params(first)
 
         page1 = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
@@ -145,12 +160,7 @@ class TestV2AppStreamsSystems:
 
         all_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": first["name"],
-                "os_major": first["os_major"],
-                "os_minor": first.get("os_minor", 0),
-                "limit": 100,
-            },
+            params=self._systems_params(first, limit=100),
         )
 
         all_data = all_response.json()["data"]
@@ -162,13 +172,7 @@ class TestV2AppStreamsSystems:
         search_term = all_data[0]["display_name"][:5]
         search_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": first["name"],
-                "os_major": first["os_major"],
-                "os_minor": first.get("os_minor", 0),
-                "search": search_term,
-                "limit": 100,
-            },
+            params=self._systems_params(first, search=search_term, limit=100),
         )
 
         assert search_response.status_code == 200
@@ -176,20 +180,30 @@ class TestV2AppStreamsSystems:
             assert search_term.lower() in system["display_name"].lower()
 
     def test_v2_app_streams_systems_count_consistency(self, client, v2_prefix):
-        """Verify list endpoint count matches systems endpoint total."""
+        """Verify count consistency when one exact AppStreamKey matches the query."""
         _apply_auth_overrides(client)
-        first = self._get_first_app_stream(client, v2_prefix)
-        if first is None:
-            pytest.skip("No app streams with systems found in test data")
+        entity = AppStreamEntity(
+            name="count-stream",
+            application_stream_name="Count stream 1",
+            display_name="Count stream 1",
+            stream="1",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=1,
+        )
+        systems = {
+            SystemInfo(id=UUID(int=30), display_name="Count host 1", os_major=9, os_minor=1),
+            SystemInfo(id=UUID(int=31), display_name="Count host 2", os_major=9, os_minor=1),
+        }
+        self._override_systems(client, {AppStreamKey(name="count-stream", app_stream_entity=entity): systems})
+
+        response = client.get(f"{v2_prefix}/relevant/lifecycle/app-streams")
+        assert response.status_code == 200
+        first = next(item for item in response.json()["data"] if item["count"] > 0)
 
         systems_response = client.get(
             f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
-            params={
-                "name": first["name"],
-                "os_major": first["os_major"],
-                "os_minor": first.get("os_minor", 0),
-                "limit": 1,
-            },
+            params=self._systems_params(first, limit=1),
         )
 
         assert systems_response.status_code == 200
@@ -197,6 +211,216 @@ class TestV2AppStreamsSystems:
             f"List count ({first['count']}) does not match systems total "
             f"({systems_response.json()['meta']['total']}) for {first['name']}"
         )
+
+    def test_v2_app_streams_systems_os_minor_none_match(self, client, v2_prefix):
+        """An entity with no minor matches both omitted and unmatched minor queries."""
+        _apply_auth_overrides(client)
+
+        entity = AppStreamEntity(
+            name="wildcard-stream",
+            display_name="Wildcard stream",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=None,
+        )
+        systems = {
+            SystemInfo(id=UUID(int=1), display_name="Wildcard host", os_major=9, os_minor=2),
+        }
+        self._override_systems(client, {AppStreamKey(name="wildcard-stream", app_stream_entity=entity): systems})
+
+        omitted = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "wildcard-stream", "os_major": 9},
+        )
+        unmatched = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "wildcard-stream", "os_major": 9, "os_minor": 7},
+        )
+
+        assert omitted.status_code == 200
+        assert unmatched.status_code == 200
+        assert omitted.json()["meta"]["total"] == len(systems)
+        assert unmatched.json()["meta"]["total"] == len(systems)
+
+    def test_v2_app_streams_systems_exact_match_precedence(self, client, v2_prefix):
+        """An exact minor match wins over an entity-level wildcard."""
+        _apply_auth_overrides(client)
+
+        wildcard_entity = AppStreamEntity(
+            name="controlled-stream",
+            display_name="Controlled stream wildcard",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=None,
+        )
+        exact_entity = AppStreamEntity(
+            name="controlled-stream",
+            display_name="Controlled stream exact",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=1,
+        )
+        second_exact_entity = AppStreamEntity(
+            name="controlled-stream",
+            application_stream_name="Controlled stream exact 2",
+            display_name="Controlled stream exact 2",
+            stream="1.1",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=1,
+        )
+        wildcard_systems = {SystemInfo(id=UUID(int=3), display_name="Wildcard host", os_major=9, os_minor=0)}
+        exact_systems = {
+            SystemInfo(id=UUID(int=1), display_name="Exact host 1", os_major=9, os_minor=1),
+            SystemInfo(id=UUID(int=2), display_name="Exact host 2", os_major=9, os_minor=1),
+        }
+        second_exact_systems = {
+            SystemInfo(id=UUID(int=4), display_name="Exact host 3", os_major=9, os_minor=1),
+        }
+        self._override_systems(
+            client,
+            {
+                AppStreamKey(name="controlled-stream", app_stream_entity=wildcard_entity): wildcard_systems,
+                AppStreamKey(name="controlled-stream", app_stream_entity=exact_entity): exact_systems,
+                AppStreamKey(name="controlled-stream", app_stream_entity=second_exact_entity): second_exact_systems,
+            },
+        )
+
+        exact = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "controlled-stream", "os_major": 9, "os_minor": 1},
+        )
+        fallback = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "controlled-stream", "os_major": 9, "os_minor": 7},
+        )
+
+        assert exact.status_code == 200
+        assert fallback.status_code == 200
+        assert {system["id"] for system in exact.json()["data"]} == {
+            str(system.id) for system in exact_systems | second_exact_systems
+        }
+        assert {system["id"] for system in fallback.json()["data"]} == {str(system.id) for system in wildcard_systems}
+
+    def test_v2_app_streams_systems_ignores_other_os_major(self, client, v2_prefix):
+        """A matching name with another OS major does not contribute systems."""
+        _apply_auth_overrides(client)
+
+        entity = AppStreamEntity(
+            name="major-scoped-stream",
+            display_name="Major-scoped stream",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=8,
+            os_minor=1,
+        )
+        systems = {SystemInfo(id=UUID(int=5), display_name="RHEL 8 host", os_major=8, os_minor=1)}
+        self._override_systems(client, {AppStreamKey(name="major-scoped-stream", app_stream_entity=entity): systems})
+
+        response = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "major-scoped-stream", "os_major": 9, "os_minor": 1},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["data"] == []
+        assert response.json()["meta"]["total"] == 0
+
+    def test_v2_app_streams_systems_omit_minor_unions_integer_minors(self, client, v2_prefix):
+        """Omitting os_minor returns all matching integer-minor keys, not empty."""
+        _apply_auth_overrides(client)
+
+        minor_zero = AppStreamEntity(
+            name="union-stream",
+            display_name="Union stream 0",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=0,
+        )
+        minor_three = AppStreamEntity(
+            name="union-stream",
+            display_name="Union stream 3",
+            stream="1.0",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=3,
+        )
+        systems_zero = {SystemInfo(id=UUID(int=10), display_name="RHEL 9.0", os_major=9, os_minor=0)}
+        systems_three = {
+            SystemInfo(id=UUID(int=11), display_name="RHEL 9.3", os_major=9, os_minor=3),
+            SystemInfo(id=UUID(int=12), display_name="RHEL 9.3 second", os_major=9, os_minor=3),
+        }
+        self._override_systems(
+            client,
+            {
+                AppStreamKey(name="union-stream", app_stream_entity=minor_zero): systems_zero,
+                AppStreamKey(name="union-stream", app_stream_entity=minor_three): systems_three,
+            },
+        )
+
+        response = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "union-stream", "os_major": 9},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["meta"]["total"] == 3
+        assert {system["id"] for system in response.json()["data"]} == {
+            str(system.id) for system in systems_zero | systems_three
+        }
+
+    def test_v2_app_streams_systems_accepts_short_name(self, client, v2_prefix):
+        """Short entity names match package keys whose list name includes a stream version."""
+        _apply_auth_overrides(client)
+
+        package_entity = AppStreamEntity(
+            name="redis",
+            application_stream_name="Redis 6",
+            display_name="Redis 6",
+            stream="6",
+            impl=AppStreamImplementation.package,
+            os_major=9,
+            os_minor=0,
+        )
+        systems = {SystemInfo(id=UUID(int=20), display_name="Redis host", os_major=9, os_minor=0)}
+        self._override_systems(client, {AppStreamKey(name="Redis 6", app_stream_entity=package_entity): systems})
+
+        short_name = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "ReDiS", "os_major": 9},
+        )
+        list_name = client.get(
+            f"{v2_prefix}/relevant/lifecycle/app-streams/systems",
+            params={"name": "rEdIs 6", "os_major": 9, "os_minor": 0},
+        )
+
+        assert short_name.status_code == 200
+        assert list_name.status_code == 200
+        assert short_name.json()["meta"]["total"] == len(systems)
+        assert {system["id"] for system in short_name.json()["data"]} == {
+            system["id"] for system in list_name.json()["data"]
+        }
+
+    def test_v2_app_streams_systems_openapi_documents_minor_contract(self, client, v2_prefix):
+        response = client.get(f"{v2_prefix}/openapi.json")
+
+        assert response.status_code == 200
+        operation = response.json()["paths"]["/relevant/lifecycle/app-streams/systems"]["get"]
+        assert "union" in operation["description"]
+        assert "parent" in operation["description"]
+        assert "cannot be isolated" in operation["description"]
+        assert "does not necessarily identify a single parent row" in operation["description"]
+        minor_parameter = next(parameter for parameter in operation["parameters"] if parameter["name"] == "os_minor")
+        assert "union" in minor_parameter["description"]
+        assert "concrete OS minor" in minor_parameter["description"]
+        assert "multiple app streams" in minor_parameter["description"]
+        assert "may combine parent rows" in minor_parameter["description"]
+        assert "null-minor parent row" in minor_parameter["description"]
+        assert "cannot be isolated" in minor_parameter["description"]
 
     def test_v2_app_streams_systems_not_found(self, client, v2_prefix):
         _apply_auth_overrides(client)

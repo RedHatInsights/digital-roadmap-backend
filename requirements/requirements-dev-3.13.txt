@@ -2,19 +2,19 @@
 -r requirements-test-3.13.txt
 asttokens==3.0.2
 decorator==5.3.1
-executing==2.2.1
+executing==2.3.0
 ipdb==0.13.13
-ipython==9.16.1
+ipython==9.17.1
 ipython_pygments_lexers==1.1.1
-jedi==0.20.0
+jedi==0.20.1
 matplotlib-inline==0.2.2
 parso==0.8.7
 pexpect==4.9.0
 prompt_toolkit==3.0.53
 psutil==7.2.2
 ptyprocess==0.7.0
-pure_eval==0.2.3
+pure_eval==0.2.4
 Pygments==2.21.0
 stack-data==0.6.3
 traitlets==5.16.1
-wcwidth==0.8.2
+wcwidth==0.9.3

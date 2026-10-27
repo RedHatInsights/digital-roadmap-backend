@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 
@@ -10,13 +9,18 @@ import httpx
 import pytest
 
 from notificator.notificator_config import LIFECYCLE_SUBSCRIPTION
+from notificator.notificator_config import NotificatorSettings
 from notificator.notificator_config import SubscriptionType
 from notificator.subscriptions import fetch_subscribed_org_ids
 from notificator.subscriptions import get_org_ids
+from roadmap.egress import AuditedTransport
 
 
 def _make_settings(*, dev=False, subscriptions_url="https://example.com/subscriptions"):
-    return SimpleNamespace(
+    # A real settings object rather than a stand-in: the outbound call goes
+    # through roadmap.egress, which reads the whole settings shape to build the
+    # egress allow list.
+    return NotificatorSettings(
         subscriptions_url=subscriptions_url,
         tls_cert_path="/some/path/cert.pem",
         tls_key_path="/some/path/key.pem",
@@ -156,7 +160,13 @@ class TestFetchSubscribedOrgIds:
 
         ssl_create.assert_called_once()
         ssl_ctx.load_cert_chain.assert_called_once_with(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
-        mock_cls.assert_called_once_with(verify=ssl_ctx, timeout=180)
+
+        # The client is built by roadmap.egress so the call is logged and
+        # allow-listed, which means the mTLS context is carried by the
+        # transport: a client-level verify is ignored once a transport is set.
+        kwargs = mock_cls.call_args.kwargs
+        assert kwargs["timeout"] == 180
+        assert isinstance(kwargs["transport"], AuditedTransport)
 
     async def test_different_subscription_uses_correct_key_and_path(self, mocker, settings):
         other = SubscriptionType("other-app", "some-other-event")

@@ -82,9 +82,11 @@ def get_service_account_token(settings: Settings) -> str | None:
         return None
 
     try:
-        if _credentials is None:
-            _credentials = _build_credentials(settings)
-        token_response = _credentials.get_token()
+        creds = _credentials
+        if creds is None:
+            creds = _build_credentials(settings)
+            _credentials = creds
+        token_response = creds.get_token()
         return token_response.access_token
     except Exception as err:
         logger.warning("Failed to fetch service account token: %s", err)

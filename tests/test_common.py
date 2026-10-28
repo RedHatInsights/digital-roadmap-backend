@@ -509,7 +509,7 @@ async def test_query_rbac_v2_authenticated_no_creds_raises(mocker):
 
 
 async def test_query_rbac_v2_authenticated_bearer(mocker, read_fixture_file):
-    """Authenticated V2 endpoint with service account creds sends Bearer + x-rh-rbac-org-id."""
+    """Authenticated V2 endpoint sends Bearer token and passes x-rh-identity through."""
     import base64
 
     settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
@@ -529,8 +529,8 @@ async def test_query_rbac_v2_authenticated_bearer(mocker, read_fixture_file):
 
     call_headers = mock_client.get.call_args[1]["headers"]
     assert call_headers["Authorization"] == "Bearer test-bearer-token"
-    assert call_headers["x-rh-rbac-org-id"] == "12345"
-    assert "X-RH-Identity" not in call_headers
+    assert call_headers["X-RH-Identity"] == identity
+    assert "x-rh-rbac-org-id" not in call_headers
 
 
 async def test_query_rbac_v2_authenticated_no_creds_with_identity_raises(mocker):

@@ -174,10 +174,9 @@ def test_get_service_account_token_no_creds():
     kessel.reset_caches()
 
 
-def test_get_service_account_token_fetches_and_caches(mocker):
-    """Valid credentials → fetches token from OIDC endpoint and caches it."""
+def test_get_service_account_token_fetches_via_sdk(mocker):
+    """Valid credentials → delegates to OAuth2ClientCredentials.get_token()."""
     from roadmap.config import Settings
-    from unittest.mock import MagicMock
 
     kessel.reset_caches()
     settings = Settings(
@@ -186,41 +185,25 @@ def test_get_service_account_token_fetches_and_caches(mocker):
         kessel_auth_client_secret="my-secret",
         kessel_auth_oidc_issuer="https://sso.example.com/realms/redhat",
     )
-    mocker.patch(
-        "roadmap.kessel.fetch_oidc_discovery",
-        return_value=mocker.Mock(token_endpoint="https://sso.example.com/token"),
-    )
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"access_token": "tok-123", "expires_in": 300}
-    mock_response.raise_for_status = MagicMock()
-    mock_http_client = MagicMock()
-    mock_http_client.post.return_value = mock_response
-    mock_http_client.__enter__ = MagicMock(return_value=mock_http_client)
-    mock_http_client.__exit__ = MagicMock(return_value=False)
-    mocker.patch("roadmap.kessel.httpx.Client", return_value=mock_http_client)
+    mock_creds = mocker.Mock()
+    mock_creds.get_token.return_value = mocker.Mock(access_token="tok-123")
+    mocker.patch("roadmap.kessel._build_credentials", return_value=mock_creds)
 
     token = kessel.get_service_account_token(settings)
 
     assert token == "tok-123"
-    mock_http_client.post.assert_called_once_with(
-        "https://sso.example.com/token",
-        data={
-            "grant_type": "client_credentials",
-            "client_id": "my-client",
-            "client_secret": "my-secret",
-        },
-    )
+    mock_creds.get_token.assert_called_once()
 
-    # Second call uses cached token (no new HTTP call).
+    # Second call reuses cached credentials instance (no rebuild).
     token2 = kessel.get_service_account_token(settings)
     assert token2 == "tok-123"
-    mock_http_client.post.assert_called_once()
+    assert mock_creds.get_token.call_count == 2
 
     kessel.reset_caches()
 
 
 def test_get_service_account_token_error_returns_none(mocker, caplog):
-    """Token endpoint failure → returns None with warning."""
+    """Token fetch failure → returns None with warning."""
     from roadmap.config import Settings
 
     kessel.reset_caches()
@@ -231,7 +214,7 @@ def test_get_service_account_token_error_returns_none(mocker, caplog):
         kessel_auth_oidc_issuer="https://sso.example.com/realms/redhat",
     )
     mocker.patch(
-        "roadmap.kessel.fetch_oidc_discovery",
+        "roadmap.kessel._build_credentials",
         side_effect=Exception("OIDC unreachable"),
     )
 

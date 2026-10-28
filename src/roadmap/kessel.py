@@ -46,15 +46,51 @@ _USER_ID_FIELD = {
     "ServiceAccount": "service_account",
 }
 
-# Module-level cache. The gRPC channel is expensive to build, so the client is
+# Module-level caches. The gRPC channel is expensive to build, so the client is
 # memoized for the process lifetime. Cleared by reset_caches() in tests.
 _client: t.Any = None
+
+# Cached OAuth2ClientCredentials instance for s2s HTTP auth (RBAC, etc.).
+# The SDK handles token caching, refresh, and retries internally.
+_credentials: OAuth2ClientCredentials | None = None
 
 
 def reset_caches() -> None:
     """Reset module-level caches. Intended for use in tests."""
-    global _client
+    global _client, _credentials
     _client = None
+    _credentials = None
+
+
+def get_service_account_token(settings: Settings) -> str | None:
+    """Return an OAuth2 Bearer token for service-to-service authentication.
+
+    Uses the Kessel SDK's ``OAuth2ClientCredentials`` which handles token
+    caching, automatic refresh, and retries internally.
+
+    Returns ``None`` when Kessel auth is disabled or credentials are
+    unavailable so callers can fall back to x-rh-identity passthrough.
+    """
+    global _credentials
+
+    if not settings.kessel_auth_enabled:
+        return None
+
+    client_id = settings.kessel_auth_client_id
+    client_secret = settings.kessel_auth_client_secret.get_secret_value()
+    if not client_id or not client_secret:
+        return None
+
+    try:
+        creds = _credentials
+        if creds is None:
+            creds = _build_credentials(settings)
+            _credentials = creds
+        token_response = creds.get_token()
+        return token_response.access_token
+    except Exception as err:
+        logger.warning("Failed to fetch service account token: %s", err)
+        return None
 
 
 def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:

@@ -76,14 +76,26 @@ async def query_rbac(
         "limit": 1000,
     }
 
-    headers = {"X-RH-Identity": x_rh_identity} if x_rh_identity else {}
+    headers: dict[str, str] = {}
+    if settings.rbac_v2_authenticated:
+        token = kessel.get_service_account_token(settings)
+        if not token:
+            logger.error("V2 RBAC endpoint requires s2s authentication but service account credentials are unavailable")
+            raise HTTPException(
+                status_code=502,
+                detail="RBAC service requires authentication but credentials are not configured",
+            )
+        headers["Authorization"] = f"Bearer {token}"
+    if x_rh_identity:
+        headers["X-RH-Identity"] = x_rh_identity
     if not settings.rbac_url:
         return [{}]
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        verify: str | bool = settings.rbac_ca_cert if settings.rbac_ca_cert else True
+        async with httpx.AsyncClient(timeout=30, verify=verify) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             data = response.json()

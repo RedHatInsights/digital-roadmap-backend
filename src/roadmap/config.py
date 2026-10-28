@@ -1,15 +1,22 @@
+import logging
 import os
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
+from app_common_python import get_v2_dependency_endpoint  # pyright: ignore[reportAttributeAccessIssue]
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
+from pydantic import field_validator
 from pydantic import FilePath
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class Settings(BaseSettings):
@@ -30,6 +37,33 @@ class Settings(BaseSettings):
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
+    rbac_url_v2: str = ""  # Complete V2 URI (scheme://host:port), bypasses hostname+port
+    rbac_ca_cert: str = ""  # V2 CA certificate filesystem path
+    rbac_v2_authenticated: bool = False  # V2 endpoint requires workload authentication
+
+    @field_validator("rbac_url_v2")
+    @classmethod
+    def _validate_rbac_url_v2(cls, v: str) -> str:
+        """Validate that rbac_url_v2 is a well-formed HTTP(S) URL with a hostname."""
+        if v:
+            parsed = urlparse(v)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError("rbac_url_v2 must be an HTTP(S) URL")
+            if not parsed.hostname:
+                raise ValueError("rbac_url_v2 must include a hostname")
+        return v
+
+    @field_validator("rbac_ca_cert")
+    @classmethod
+    def _validate_rbac_ca_cert(cls, v: str) -> str:
+        """Validate that rbac_ca_cert points to a readable file when set."""
+        if v:
+            p = Path(v)
+            if not p.is_file():
+                raise ValueError(f"rbac_ca_cert path does not exist or is not a file: {v}")
+            if not os.access(v, os.R_OK):
+                raise ValueError(f"rbac_ca_cert path is not readable: {v}")
+        return v
 
     env_name: str = "stage"
     log_level: str = "info"
@@ -55,6 +89,9 @@ class Settings(BaseSettings):
 
     @property
     def rbac_url(self) -> str:
+        if self.rbac_url_v2:
+            return self.rbac_url_v2
+
         if not self.rbac_hostname:
             return ""
 
@@ -81,18 +118,19 @@ class Settings(BaseSettings):
         # True if env var ACG_CONFIG is set.
         if isClowderEnabled() and LoadedConfig:
             db = LoadedConfig.database
-            endpoints = LoadedConfig.endpoints
 
-            # FIXME: Make RBAC setting in the environment override the clowder
-            #        config file for consistency
-            rbac = [endpoint for endpoint in endpoints if endpoint.app == "rbac"]
+            # V2 RBAC discovery via the structured dependency endpoint.
+            # No V1 fallback — once Clowder provides V2, it is the only
+            # valid path; the legacy V1 flat endpoint list is not used.
             rbac_kwargs = {}
-            if rbac:
-                rbac = rbac.pop()
+            v2_ep = get_v2_dependency_endpoint("rbac", "service")
+            if v2_ep is not None and v2_ep.uri:
                 rbac_kwargs = {
-                    "rbac_hostname": rbac.hostname,
-                    "rbac_port": rbac.port,
+                    "rbac_url_v2": v2_ep.uri,
+                    "rbac_v2_authenticated": v2_ep.authenticated,
                 }
+                if v2_ep.ca_certificate:
+                    rbac_kwargs["rbac_ca_cert"] = v2_ep.ca_certificate
 
             db_kwargs = (
                 {

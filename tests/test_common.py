@@ -459,6 +459,138 @@ async def test_query_rbac_generic_exception(mocker):
         await query_rbac(settings)
 
 
+async def test_query_rbac_v2_ca_cert(mocker, read_fixture_file, tmp_path):
+    """When rbac_ca_cert is set, httpx.AsyncClient uses it for TLS verification."""
+    cert = tmp_path / "ca.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n")
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_ca_cert=str(cert))
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_async_client = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    await query_rbac(settings)
+
+    mock_async_client.assert_called_once_with(timeout=30, verify=str(cert))
+
+
+async def test_query_rbac_v2_no_ca_cert(mocker, read_fixture_file):
+    """When rbac_ca_cert is empty, httpx.AsyncClient uses system trust (verify=True)."""
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443")
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_async_client = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    await query_rbac(settings)
+
+    mock_async_client.assert_called_once_with(timeout=30, verify=True)
+
+
+async def test_query_rbac_v2_authenticated_no_creds_raises(mocker):
+    """Authenticated V2 endpoint without service account creds raises HTTPException."""
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
+    mocker.patch("roadmap.common.kessel.get_service_account_token", return_value=None)
+
+    with pytest.raises(HTTPException, match="credentials are not configured") as exc_info:
+        await query_rbac(settings, x_rh_identity=None)
+
+    assert exc_info.value.status_code == 502
+
+
+async def test_query_rbac_v2_authenticated_bearer(mocker, read_fixture_file):
+    """Authenticated V2 endpoint sends Bearer token and passes x-rh-identity through."""
+    import base64
+
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    mocker.patch("roadmap.common.kessel.get_service_account_token", return_value="test-bearer-token")
+
+    identity = base64.b64encode(json.dumps({"identity": {"org_id": "12345"}}).encode()).decode()
+    await query_rbac(settings, x_rh_identity=identity)
+
+    call_headers = mock_client.get.call_args[1]["headers"]
+    assert call_headers["Authorization"] == "Bearer test-bearer-token"
+    assert call_headers["X-RH-Identity"] == identity
+    assert "x-rh-rbac-org-id" not in call_headers
+
+
+async def test_query_rbac_v2_authenticated_no_creds_with_identity_raises(mocker):
+    """When token unavailable, authenticated V2 raises even if x-rh-identity is present."""
+    import base64
+
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=True)
+    mocker.patch("roadmap.common.kessel.get_service_account_token", return_value=None)
+
+    identity = base64.b64encode(json.dumps({"identity": {"org_id": "12345"}}).encode()).decode()
+
+    with pytest.raises(HTTPException, match="credentials are not configured") as exc_info:
+        await query_rbac(settings, x_rh_identity=identity)
+
+    assert exc_info.value.status_code == 502
+
+
+async def test_query_rbac_non_authenticated_uses_identity(mocker, read_fixture_file):
+    """Non-authenticated V2 endpoint still uses X-RH-Identity (no service account auth)."""
+    import base64
+
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443", rbac_v2_authenticated=False)
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    identity = base64.b64encode(json.dumps({"identity": {"org_id": "12345"}}).encode()).decode()
+    await query_rbac(settings, x_rh_identity=identity)
+
+    call_headers = mock_client.get.call_args[1]["headers"]
+    assert call_headers["X-RH-Identity"] == identity
+    assert "Authorization" not in call_headers
+
+
+async def test_query_rbac_v2_url_construction(mocker, read_fixture_file):
+    """V2 URI is used directly as base URL; path append unchanged."""
+    settings = Settings(rbac_url_v2="https://rbac.svc:8443")
+    fixture_data = json.loads(read_fixture_file("rbac_response.json", mode="rb"))
+    mock_response = MagicMock()
+    mock_response.json.return_value = fixture_data
+    mock_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+
+    await query_rbac(settings)
+
+    called_url = mock_client.get.call_args[0][0]
+    assert called_url.startswith("https://rbac.svc:8443/api/rbac/v1/access/")
+    assert "application=inventory" in called_url
+
+
 @pytest.mark.parametrize(
     ("resource_definition", "expected"),
     (

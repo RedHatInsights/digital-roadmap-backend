@@ -1,6 +1,8 @@
 import json
 import pathlib
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from app_common_python import loadConfig
@@ -33,6 +35,10 @@ def test_setting_from_clowder(monkeypatch, mocker):
     mocker.patch(
         "roadmap.config.LoadedConfig",
         loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("http://rbac-service.svc:8123"),
     )
 
     settings = Settings.create()
@@ -112,3 +118,230 @@ def test_rbac_config_env_partial_override_clowder(monkeypatch):
         settings.database_url.encoded_string()
         == "postgresql+psycopg://thelma:postgres@localhost:5432/roadtrip-db"  # notsecret
     )
+
+
+# --- Clowder V2 dependency endpoint tests ---
+
+
+def _mock_v2_endpoint(uri, ca_certificate=None, authenticated=True):
+    """Create a mock V2 dependency endpoint object."""
+    ep = MagicMock()
+    ep.uri = uri
+    ep.ca_certificate = ca_certificate
+    ep.authenticated = authenticated
+    return ep
+
+
+def test_v2_rbac_endpoint_resolution(monkeypatch, mocker):
+    """V2 endpoint available: rbac_url uses complete V2 URI."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("https://rbac-service.svc:8443"),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == "https://rbac-service.svc:8443"
+    assert settings.rbac_url_v2 == "https://rbac-service.svc:8443"
+    assert settings.rbac_v2_authenticated is True
+    # V1 fields should not be populated when V2 resolves
+    assert settings.rbac_hostname == ""
+    assert settings.rbac_port == 8000
+
+
+def test_v2_rbac_endpoint_with_ca_cert(monkeypatch, mocker, tmp_path):
+    """V2 endpoint with CA certificate path stores it for TLS verification."""
+    cert = tmp_path / "rbac-ca.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n")
+
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint(
+            "https://rbac-service.svc:8443",
+            ca_certificate=str(cert),
+        ),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == "https://rbac-service.svc:8443"
+    assert settings.rbac_ca_cert == str(cert)
+
+
+def test_v2_rbac_endpoint_no_ca_cert(monkeypatch, mocker):
+    """V2 endpoint without CA cert: rbac_ca_cert stays empty (system trust)."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("https://rbac-service.svc:8443"),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == "https://rbac-service.svc:8443"
+    assert settings.rbac_ca_cert == ""
+
+
+def test_v2_not_available_no_fallback(monkeypatch, mocker):
+    """V2 returns None: no V1 fallback, RBAC stays unconfigured."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch("roadmap.config.get_v2_dependency_endpoint", return_value=None)
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == ""
+    assert settings.rbac_url_v2 == ""
+    assert settings.rbac_hostname == ""
+
+
+def test_v2_empty_uri_no_fallback(monkeypatch, mocker):
+    """V2 returns endpoint with empty URI: no V1 fallback, RBAC stays unconfigured."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint(""),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == ""
+    assert settings.rbac_hostname == ""
+
+
+def test_v2_no_clowder_defaults():
+    """Without Clowder, V2 fields stay at defaults."""
+    settings = Settings.create()
+
+    assert settings.rbac_url_v2 == ""
+    assert settings.rbac_ca_cert == ""
+    assert settings.rbac_url == ""
+
+
+def test_rbac_url_v2_property_precedence():
+    """rbac_url property returns V2 URI when set, even if hostname is populated."""
+    settings = Settings(
+        rbac_hostname="old-host.svc",
+        rbac_port=9999,
+        rbac_url_v2="https://new-rbac.svc:8443",
+    )
+
+    assert settings.rbac_url == "https://new-rbac.svc:8443"
+
+
+# --- V2 field validation tests ---
+
+
+@pytest.mark.parametrize(
+    "url",
+    ("http://rbac.svc:8080", "https://rbac.svc:8443", ""),
+)
+def test_rbac_url_v2_valid(url):
+    """Valid HTTP(S) URLs and empty string are accepted."""
+    settings = Settings(rbac_url_v2=url)
+
+    assert settings.rbac_url_v2 == url
+
+
+def test_rbac_url_v2_invalid_scheme():
+    """Non-HTTP(S) URLs are rejected by the validator."""
+    with pytest.raises(ValueError, match="HTTP\\(S\\) URL"):
+        Settings(rbac_url_v2="ftp://rbac.svc:21")
+
+
+def test_rbac_url_v2_scheme_only_no_hostname():
+    """A URL with a scheme but no hostname is rejected."""
+    with pytest.raises(ValueError, match="hostname"):
+        Settings(rbac_url_v2="https://")
+
+
+def test_rbac_ca_cert_empty_accepted():
+    """Empty rbac_ca_cert is accepted (system trust)."""
+    settings = Settings(rbac_ca_cert="")
+
+    assert settings.rbac_ca_cert == ""
+
+
+def test_rbac_ca_cert_valid_path(tmp_path):
+    """Readable CA cert file path is accepted."""
+    cert = tmp_path / "ca.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n")
+
+    settings = Settings(rbac_ca_cert=str(cert))
+
+    assert settings.rbac_ca_cert == str(cert)
+
+
+def test_rbac_ca_cert_missing_path_raises():
+    """Non-existent CA cert path raises ValueError."""
+    with pytest.raises(ValueError, match="does not exist"):
+        Settings(rbac_ca_cert="/nonexistent/ca.crt")
+
+
+def test_v2_authenticated_preserved(monkeypatch, mocker):
+    """V2 endpoint authenticated flag is stored in settings."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("https://rbac.svc:8443", authenticated=True),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_v2_authenticated is True
+
+
+def test_v2_unauthenticated_preserved(monkeypatch, mocker):
+    """V2 endpoint with authenticated=False stores False."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch(
+        "roadmap.config.get_v2_dependency_endpoint",
+        return_value=_mock_v2_endpoint("https://rbac.svc:8443", authenticated=False),
+    )
+
+    settings = Settings.create()
+
+    assert settings.rbac_v2_authenticated is False
+
+
+def test_v2_not_available_authenticated_defaults_false(monkeypatch, mocker):
+    """When V2 returns None (no fallback), authenticated stays False."""
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch(
+        "roadmap.config.LoadedConfig",
+        loadConfig(pathlib.Path(__file__).parent / "fixtures" / "clowder_config.json"),
+    )
+    mocker.patch("roadmap.config.get_v2_dependency_endpoint", return_value=None)
+
+    settings = Settings.create()
+
+    assert settings.rbac_v2_authenticated is False

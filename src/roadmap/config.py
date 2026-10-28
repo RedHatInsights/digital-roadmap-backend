@@ -127,7 +127,7 @@ class Settings(BaseSettings):
             if v2_ep is not None and v2_ep.uri:
                 rbac_kwargs = {
                     "rbac_url_v2": v2_ep.uri,
-                    "rbac_v2_authenticated": bool(getattr(v2_ep, "authenticated", False)),
+                    "rbac_v2_authenticated": v2_ep.authenticated,
                 }
                 if v2_ep.ca_certificate:
                     rbac_kwargs["rbac_ca_cert"] = v2_ep.ca_certificate

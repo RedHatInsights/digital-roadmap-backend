@@ -22,10 +22,8 @@ Reference implementations:
 # pyright: reportMissingImports=false
 
 import logging
-import time
 import typing as t
 
-import httpx
 from fastapi import HTTPException
 from kessel.auth import fetch_oidc_discovery
 from kessel.auth import OAuth2ClientCredentials
@@ -52,31 +50,28 @@ _USER_ID_FIELD = {
 # memoized for the process lifetime. Cleared by reset_caches() in tests.
 _client: t.Any = None
 
-# Service account OAuth2 token cache for s2s HTTP auth (RBAC, etc.).
-_sa_token: str | None = None
-_sa_token_expires_at: float = 0
+# Cached OAuth2ClientCredentials instance for s2s HTTP auth (RBAC, etc.).
+# The SDK handles token caching, refresh, and retries internally.
+_credentials: OAuth2ClientCredentials | None = None
 
 
 def reset_caches() -> None:
     """Reset module-level caches. Intended for use in tests."""
-    global _client, _sa_token, _sa_token_expires_at
+    global _client, _credentials
     _client = None
-    _sa_token = None
-    _sa_token_expires_at = 0
+    _credentials = None
 
 
 def get_service_account_token(settings: Settings) -> str | None:
-    """Fetch an OAuth2 Bearer token for service-to-service authentication.
+    """Return an OAuth2 Bearer token for service-to-service authentication.
 
-    Uses the Kessel service account credentials (client_id / client_secret)
-    to perform an OAuth2 client-credentials grant against the OIDC token
-    endpoint.  Tokens are cached in-process and refreshed 30 s before
-    expiry.
+    Uses the Kessel SDK's ``OAuth2ClientCredentials`` which handles token
+    caching, automatic refresh, and retries internally.
 
     Returns ``None`` when Kessel auth is disabled or credentials are
     unavailable so callers can fall back to x-rh-identity passthrough.
     """
-    global _sa_token, _sa_token_expires_at
+    global _credentials
 
     if not settings.kessel_auth_enabled:
         return None
@@ -86,25 +81,11 @@ def get_service_account_token(settings: Settings) -> str | None:
     if not client_id or not client_secret:
         return None
 
-    if _sa_token and time.time() < _sa_token_expires_at:
-        return _sa_token
-
     try:
-        discovery = fetch_oidc_discovery(settings.kessel_auth_oidc_issuer)
-        with httpx.Client(timeout=10) as client:
-            response = client.post(
-                discovery.token_endpoint,
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                },
-            )
-            response.raise_for_status()
-            token_data = response.json()
-            _sa_token = token_data["access_token"]
-            _sa_token_expires_at = time.time() + token_data.get("expires_in", 300) - 30
-            return _sa_token
+        if _credentials is None:
+            _credentials = _build_credentials(settings)
+        token_response = _credentials.get_token()
+        return token_response.access_token
     except Exception as err:
         logger.warning("Failed to fetch service account token: %s", err)
         return None

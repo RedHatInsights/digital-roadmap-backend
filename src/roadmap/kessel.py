@@ -62,44 +62,23 @@ def reset_caches() -> None:
     _credentials = None
 
 
-def get_service_account_token(settings: Settings) -> str | None:
-    """Return an OAuth2 Bearer token for service-to-service authentication.
+def _get_credentials(settings: Settings) -> OAuth2ClientCredentials:
+    """Return cached OAuth2ClientCredentials, building on first use.
 
-    Uses the Kessel SDK's ``OAuth2ClientCredentials`` which handles token
-    caching, automatic refresh, and retries internally.
-
-    Returns ``None`` when Kessel auth is disabled or credentials are
-    unavailable so callers can fall back to x-rh-identity passthrough.
+    Shared by both the gRPC client (``get_client``) and the HTTP token
+    path (``get_service_account_token``). The SDK handles token caching,
+    refresh, and retries internally.
     """
     global _credentials
-
-    if not settings.kessel_auth_enabled:
-        return None
-
-    client_id = settings.kessel_auth_client_id
-    client_secret = settings.kessel_auth_client_secret.get_secret_value()
-    if not client_id or not client_secret:
-        return None
-
-    try:
-        creds = _credentials
-        if creds is None:
-            creds = _build_credentials(settings)
-            _credentials = creds
-        token_response = creds.get_token()
-        return token_response.access_token
-    except Exception as err:
-        logger.warning("Failed to fetch service account token: %s", err)
-        return None
-
-
-def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:
+    if _credentials is not None:
+        return _credentials
     discovery = fetch_oidc_discovery(settings.kessel_auth_oidc_issuer)
-    return OAuth2ClientCredentials(
+    _credentials = OAuth2ClientCredentials(
         client_id=settings.kessel_auth_client_id,
         client_secret=settings.kessel_auth_client_secret.get_secret_value(),
         token_endpoint=discovery.token_endpoint,
     )
+    return _credentials
 
 
 def get_client(settings: Settings) -> t.Any:
@@ -112,7 +91,7 @@ def get_client(settings: Settings) -> t.Any:
     if settings.kessel_insecure:
         builder.insecure()
     elif settings.kessel_auth_enabled:
-        builder.oauth2_client_authenticated(_build_credentials(settings))
+        builder.oauth2_client_authenticated(_get_credentials(settings))
     else:
         builder.unauthenticated()
 
@@ -123,6 +102,30 @@ def get_client(settings: Settings) -> t.Any:
     _client, _ = builder.build_async()
     logger.info("Built Kessel client (async)")
     return _client
+
+
+def get_service_account_token(settings: Settings) -> str | None:
+    """Return an OAuth2 Bearer token for service-to-service authentication.
+
+    Delegates to ``_get_credentials`` which is shared with ``get_client``,
+    so only one ``OAuth2ClientCredentials`` instance exists per process.
+
+    Returns ``None`` when Kessel auth is disabled or credentials are
+    unavailable so callers can fall back to x-rh-identity passthrough.
+    """
+    if not settings.kessel_auth_enabled:
+        return None
+
+    client_id = settings.kessel_auth_client_id
+    client_secret = settings.kessel_auth_client_secret.get_secret_value()
+    if not client_id or not client_secret:
+        return None
+
+    try:
+        return _get_credentials(settings).get_token().access_token
+    except Exception as err:
+        logger.warning("Failed to fetch service account token: %s", err)
+        return None
 
 
 def subject_from_identity(identity: dict[str, t.Any], domain: str) -> t.Any:

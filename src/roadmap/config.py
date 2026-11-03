@@ -14,7 +14,7 @@ from pydantic_settings import SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True)
+    model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True, hide_input_in_errors=True)
 
     db_name: str = "digital_roadmap"
     db_user: str = "postgres"

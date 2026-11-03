@@ -89,6 +89,15 @@ def test_rbac_authenticated_requires_https(uri):
         Settings(rbac_uri=uri, rbac_authenticated=True)
 
 
+def test_validation_error_hides_secrets():
+    with pytest.raises(ValueError) as exc_info:
+        Settings(
+            rbac_uri="http://x", rbac_authenticated=True, kessel_auth_client_secret="SENTINEL", db_password="SENTINEL"
+        )
+
+    assert "SENTINEL" not in str(exc_info.value)
+
+
 def test_rbac_config_defaults(monkeypatch):
     monkeypatch.delenv("ROADMAP_RBAC_HOSTNAME", raising=False)
     monkeypatch.delenv("ROADMAP_RBAC_PORT", raising=False)

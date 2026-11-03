@@ -56,6 +56,33 @@ def test_setting_from_clowder_no_rbac(monkeypatch, mocker, tmp_path, read_json_f
     assert settings.rbac_url == ""
 
 
+@pytest.mark.parametrize("authenticated", (True, False))
+def test_setting_from_clowder_rbac_v2(monkeypatch, mocker, tmp_path, read_json_fixture, authenticated):
+    clowder_config = read_json_fixture("clowder_config.json")
+    clowder_config["dependencyEndpoints"] = {
+        "v2": {
+            "rbac": {
+                "service": {
+                    "uri": "https://rbac-service.svc:8443",
+                    "authenticated": authenticated,
+                    "ca_certificate": "/cdapp/certs/service-ca.crt",
+                }
+            }
+        }
+    }
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps(clowder_config))
+
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch("roadmap.config.LoadedConfig", loadConfig(str(config)))
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == "https://rbac-service.svc:8443"
+    assert settings.rbac_authenticated is authenticated
+    assert settings.rbac_ca_cert == "/cdapp/certs/service-ca.crt"
+
+
 def test_rbac_config_defaults(monkeypatch):
     monkeypatch.delenv("ROADMAP_RBAC_HOSTNAME", raising=False)
     monkeypatch.delenv("ROADMAP_RBAC_PORT", raising=False)

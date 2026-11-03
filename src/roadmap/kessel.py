@@ -49,21 +49,44 @@ _USER_ID_FIELD = {
 # Module-level cache. The gRPC channel is expensive to build, so the client is
 # memoized for the process lifetime. Cleared by reset_caches() in tests.
 _client: t.Any = None
+# Shared by the gRPC client and RBAC HTTP calls so both use one token cache.
+_credentials: OAuth2ClientCredentials | None = None
 
 
 def reset_caches() -> None:
     """Reset module-level caches. Intended for use in tests."""
-    global _client
+    global _client, _credentials
     _client = None
+    _credentials = None
 
 
 def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:
+    if not (
+        settings.kessel_auth_oidc_issuer
+        and settings.kessel_auth_client_id
+        and settings.kessel_auth_client_secret.get_secret_value()
+    ):
+        raise ValueError("Kessel OAuth2 credentials are not configured")
+
     discovery = fetch_oidc_discovery(settings.kessel_auth_oidc_issuer)
     return OAuth2ClientCredentials(
         client_id=settings.kessel_auth_client_id,
         client_secret=settings.kessel_auth_client_secret.get_secret_value(),
         token_endpoint=discovery.token_endpoint,
     )
+
+
+def get_credentials(settings: Settings) -> OAuth2ClientCredentials:
+    """Return the cached Kessel OAuth2 credentials, building them on first use."""
+    global _credentials
+    if _credentials is None:
+        _credentials = _build_credentials(settings)
+    return _credentials
+
+
+def get_bearer_token(settings: Settings) -> str:
+    """Return a valid access token from the shared credentials. Blocking; may call SSO."""
+    return get_credentials(settings).get_token().access_token
 
 
 def get_client(settings: Settings) -> t.Any:
@@ -76,7 +99,7 @@ def get_client(settings: Settings) -> t.Any:
     if settings.kessel_insecure:
         builder.insecure()
     elif settings.kessel_auth_enabled:
-        builder.oauth2_client_authenticated(_build_credentials(settings))
+        builder.oauth2_client_authenticated(get_credentials(settings))
     else:
         builder.unauthenticated()
 

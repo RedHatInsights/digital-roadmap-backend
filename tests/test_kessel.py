@@ -124,6 +124,34 @@ def test_get_client_unauthenticated(mocker):
     kessel.reset_caches()
 
 
+def test_get_bearer_token_reuses_credentials(mocker):
+    from roadmap.config import Settings
+
+    kessel.reset_caches()
+    settings = Settings()
+    creds = mocker.Mock()
+    creds.get_token.return_value.access_token = "tok"
+    build_creds = mocker.patch("roadmap.kessel._build_credentials", return_value=creds)
+    builder = mocker.Mock()
+    builder.build_async.return_value = (mocker.Mock(), mocker.Mock())
+    mocker.patch("roadmap.kessel.ClientBuilder", return_value=builder)
+
+    kessel.get_client(Settings(kessel_url="kessel:443", kessel_auth_enabled=True))
+
+    assert kessel.get_bearer_token(settings) == "tok"
+    build_creds.assert_called_once()
+    builder.oauth2_client_authenticated.assert_called_once_with(creds)
+
+    kessel.reset_caches()
+
+
+def test_build_credentials_missing_config():
+    from roadmap.config import Settings
+
+    with pytest.raises(ValueError, match="not configured"):
+        kessel._build_credentials(Settings(kessel_auth_client_id="my-client"))
+
+
 def test_build_credentials(mocker):
     from roadmap.config import Settings
 

@@ -125,15 +125,15 @@ objects:
               - name: ROADMAP_KESSEL_AUTH_CLIENT_ID
                 valueFrom:
                   secretKeyRef:
-                    name: client-id
-                    key: kessel-authentication
+                    name: kessel-auth-secret
+                    key: client-id
                     optional: true
 
               - name: ROADMAP_KESSEL_AUTH_CLIENT_SECRET
                 valueFrom:
                   secretKeyRef:
-                    name: client-secret
-                    key: kessel-authentication
+                    name: kessel-auth-secret
+                    key: client-secret
                     optional: true
 
             resources:

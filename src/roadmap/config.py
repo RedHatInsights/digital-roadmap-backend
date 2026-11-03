@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
+    # Clowder v2 endpoint. When rbac_uri is set it takes precedence over hostname/port.
+    rbac_uri: str = ""
+    rbac_authenticated: bool = False
+    rbac_ca_cert: str = ""
 
     env_name: str = "stage"
     log_level: str = "info"
@@ -55,6 +59,9 @@ class Settings(BaseSettings):
 
     @property
     def rbac_url(self) -> str:
+        if self.rbac_uri:
+            return self.rbac_uri.rstrip("/")
+
         if not self.rbac_hostname:
             return ""
 
@@ -93,6 +100,16 @@ class Settings(BaseSettings):
                     "rbac_hostname": rbac.hostname,
                     "rbac_port": rbac.port,
                 }
+
+            rbac_v2 = (LoadedConfig.dependencyEndpoints or {}).get("rbac", {}).get("service")
+            if rbac_v2 and rbac_v2.uri:
+                rbac_kwargs.update(
+                    {
+                        "rbac_uri": rbac_v2.uri,
+                        "rbac_authenticated": bool(rbac_v2.authenticated),
+                        "rbac_ca_cert": rbac_v2.ca_certificate or "",
+                    }
+                )
 
             db_kwargs = (
                 {

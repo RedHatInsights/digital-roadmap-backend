@@ -3,6 +3,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
+from app_common_python import get_v2_dependency_endpoint
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
 from pydantic import FilePath
@@ -108,7 +109,7 @@ class Settings(BaseSettings):
                     "rbac_port": rbac.port,
                 }
 
-            rbac_v2 = (LoadedConfig.dependencyEndpoints or {}).get("rbac", {}).get("service")
+            rbac_v2 = get_v2_dependency_endpoint("rbac", "service")
             if rbac_v2 and rbac_v2.uri:
                 rbac_kwargs.update(
                     {

@@ -73,8 +73,11 @@ def test_setting_from_clowder_rbac_v2(monkeypatch, mocker, tmp_path, read_json_f
     config = tmp_path / "config.json"
     config.write_text(json.dumps(clowder_config))
 
+    loaded = loadConfig(str(config))
     monkeypatch.setenv("ACG_CONFIG", "yes")
-    mocker.patch("roadmap.config.LoadedConfig", loadConfig(str(config)))
+    mocker.patch("roadmap.config.LoadedConfig", loaded)
+    # The helper reads a module global captured at import, so point it at the test config.
+    mocker.patch("app_common_python.DependencyEndpointsV2", loaded.dependencyEndpoints)
 
     settings = Settings.create()
 

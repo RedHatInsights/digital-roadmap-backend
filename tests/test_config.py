@@ -83,6 +83,12 @@ def test_setting_from_clowder_rbac_v2(monkeypatch, mocker, tmp_path, read_json_f
     assert settings.rbac_ca_cert == "/cdapp/certs/service-ca.crt"
 
 
+@pytest.mark.parametrize("uri", ("http://rbac.svc:8000", ""))
+def test_rbac_authenticated_requires_https(uri):
+    with pytest.raises(ValueError, match="requires an https"):
+        Settings(rbac_uri=uri, rbac_authenticated=True)
+
+
 def test_rbac_config_defaults(monkeypatch):
     monkeypatch.delenv("ROADMAP_RBAC_HOSTNAME", raising=False)
     monkeypatch.delenv("ROADMAP_RBAC_PORT", raising=False)

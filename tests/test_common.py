@@ -442,6 +442,17 @@ async def test_query_rbac_v2_token_failure(mocker):
     client_cls.assert_not_called()
 
 
+async def test_query_rbac_v2_bad_ca_cert(mocker):
+    settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_ca_cert="/does/not/exist.crt")
+    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient")
+
+    with pytest.raises(HTTPException, match="Error communicating with RBAC service") as exc_info:
+        await query_rbac(settings, x_rh_identity="identity")
+
+    assert exc_info.value.status_code == 502
+    client_cls.assert_not_called()
+
+
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     error_response = httpx.Response(401)

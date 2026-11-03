@@ -84,9 +84,6 @@ async def query_rbac(
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
-    verify: ssl.SSLContext | bool = (
-        ssl.create_default_context(cafile=settings.rbac_ca_cert) if settings.rbac_ca_cert else True
-    )
     if settings.rbac_authenticated:
         # The token only gets us through the gateway; RBAC itself still uses X-RH-Identity.
         try:
@@ -97,6 +94,9 @@ async def query_rbac(
         headers["Authorization"] = f"Bearer {token}"
 
     try:
+        verify: ssl.SSLContext | bool = (
+            ssl.create_default_context(cafile=settings.rbac_ca_cert) if settings.rbac_ca_cert else True
+        )
         async with httpx.AsyncClient(timeout=30, verify=verify) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()

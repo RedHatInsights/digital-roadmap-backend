@@ -6,6 +6,7 @@ from pathlib import Path
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
 from pydantic import FilePath
+from pydantic import model_validator
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -50,6 +51,12 @@ class Settings(BaseSettings):
     kessel_auth_client_secret: SecretStr = SecretStr("")
     kessel_auth_oidc_issuer: str = ""
     kessel_principal_domain: str = "redhat"
+
+    @model_validator(mode="after")
+    def _no_bearer_over_plaintext(self) -> "Settings":
+        if self.rbac_authenticated and not self.rbac_url.startswith("https://"):
+            raise ValueError("rbac_authenticated requires an https:// rbac_uri")
+        return self
 
     @property
     def database_url(self) -> PostgresDsn:

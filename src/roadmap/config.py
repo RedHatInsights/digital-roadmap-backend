@@ -3,9 +3,11 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
+from app_common_python import get_v2_dependency_endpoint
 from app_common_python import isClowderEnabled
 from app_common_python import LoadedConfig
 from pydantic import FilePath
+from pydantic import model_validator
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -13,7 +15,7 @@ from pydantic_settings import SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True)
+    model_config = SettingsConfigDict(env_prefix="ROADMAP_", env_ignore_empty=True, hide_input_in_errors=True)
 
     db_name: str = "digital_roadmap"
     db_user: str = "postgres"
@@ -30,6 +32,10 @@ class Settings(BaseSettings):
     test: bool = False
     rbac_hostname: str = ""
     rbac_port: int = 8000
+    # Clowder v2 endpoint. When rbac_uri is set it takes precedence over hostname/port.
+    rbac_uri: str = ""
+    rbac_authenticated: bool = False
+    rbac_ca_cert: str = ""
 
     env_name: str = "stage"
     log_level: str = "info"
@@ -47,6 +53,12 @@ class Settings(BaseSettings):
     kessel_auth_oidc_issuer: str = ""
     kessel_principal_domain: str = "redhat"
 
+    @model_validator(mode="after")
+    def _no_bearer_over_plaintext(self) -> "Settings":
+        if self.rbac_authenticated and not self.rbac_url.startswith("https://"):
+            raise ValueError("rbac_authenticated requires an https:// rbac_uri")
+        return self
+
     @property
     def database_url(self) -> PostgresDsn:
         return PostgresDsn(
@@ -55,6 +67,9 @@ class Settings(BaseSettings):
 
     @property
     def rbac_url(self) -> str:
+        if self.rbac_uri:
+            return self.rbac_uri.rstrip("/")
+
         if not self.rbac_hostname:
             return ""
 
@@ -93,6 +108,16 @@ class Settings(BaseSettings):
                     "rbac_hostname": rbac.hostname,
                     "rbac_port": rbac.port,
                 }
+
+            rbac_v2 = get_v2_dependency_endpoint("rbac", "service")
+            if rbac_v2 and rbac_v2.uri:
+                rbac_kwargs.update(
+                    {
+                        "rbac_uri": rbac_v2.uri,
+                        "rbac_authenticated": bool(rbac_v2.authenticated),
+                        "rbac_ca_cert": rbac_v2.ca_certificate or "",
+                    }
+                )
 
             db_kwargs = (
                 {

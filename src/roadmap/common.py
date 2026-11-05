@@ -1,6 +1,8 @@
+import asyncio
 import base64
 import json
 import logging
+import ssl
 import sys
 import textwrap
 import typing as t
@@ -82,8 +84,20 @@ async def query_rbac(
 
     url = f"{settings.rbac_url}/api/rbac/v1/access/?{urllib.parse.urlencode(params, doseq=True)}"
 
+    if settings.rbac_authenticated:
+        # The token only gets us through the gateway; RBAC itself still uses X-RH-Identity.
+        try:
+            token = await asyncio.to_thread(kessel.get_bearer_token, settings)
+        except Exception as err:
+            logger.error(f"Unable to get bearer token for RBAC: {err}", exc_info=True)
+            raise HTTPException(status_code=502, detail="Unable to authenticate to RBAC service")
+        headers["Authorization"] = f"Bearer {token}"
+
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        verify: ssl.SSLContext | bool = (
+            ssl.create_default_context(cafile=settings.rbac_ca_cert) if settings.rbac_ca_cert else True
+        )
+        async with httpx.AsyncClient(timeout=30, verify=verify) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             data = response.json()

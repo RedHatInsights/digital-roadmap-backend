@@ -385,6 +385,74 @@ async def test_query_rbac(mocker, read_fixture_file):
     assert result == [{"permission": "inventory:*:*:foo", "resourceDefinitions": []}]
 
 
+async def test_query_rbac_v2_authenticated(mocker):
+    settings = Settings(
+        rbac_uri="https://rbac.svc:8443/", rbac_authenticated=True, rbac_ca_cert="/cdapp/certs/service-ca.crt"
+    )
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"data": [{"permission": "inventory:*:*"}]}
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    ssl_ctx = mocker.patch("roadmap.common.ssl.create_default_context", return_value="ctx")
+    get_token = mocker.patch("roadmap.common.kessel.get_bearer_token", return_value="tok")
+
+    result = await query_rbac(settings, x_rh_identity="identity")
+
+    assert result == [{"permission": "inventory:*:*"}]
+    get_token.assert_called_once_with(settings)
+    ssl_ctx.assert_called_once_with(cafile="/cdapp/certs/service-ca.crt")
+    assert client_cls.call_args.kwargs["verify"] == "ctx"
+    url = mock_client.get.call_args.args[0]
+    assert url.startswith("https://rbac.svc:8443/api/rbac/v1/access/?")
+    assert mock_client.get.call_args.kwargs["headers"] == {"X-RH-Identity": "identity", "Authorization": "Bearer tok"}
+
+
+async def test_query_rbac_v2_unauthenticated(mocker):
+    settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_ca_cert="/cdapp/certs/service-ca.crt")
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"data": []}
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    mocker.patch("roadmap.common.ssl.create_default_context", return_value="ctx")
+    get_token = mocker.patch("roadmap.common.kessel.get_bearer_token")
+
+    await query_rbac(settings, x_rh_identity="identity")
+
+    get_token.assert_not_called()
+    assert client_cls.call_args.kwargs["verify"] == "ctx"
+    assert mock_client.get.call_args.args[0].startswith("https://rbac.svc:8443/api/rbac/v1/access/?")
+    assert mock_client.get.call_args.kwargs["headers"] == {"X-RH-Identity": "identity"}
+
+
+async def test_query_rbac_v2_token_failure(mocker):
+    settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_authenticated=True)
+    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient")
+    mocker.patch("roadmap.common.kessel.get_bearer_token", side_effect=ValueError("not configured"))
+
+    with pytest.raises(HTTPException, match="Unable to authenticate to RBAC service") as exc_info:
+        await query_rbac(settings, x_rh_identity="identity")
+
+    assert exc_info.value.status_code == 502
+    client_cls.assert_not_called()
+
+
+async def test_query_rbac_v2_bad_ca_cert(mocker):
+    settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_ca_cert="/does/not/exist.crt")
+    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient")
+
+    with pytest.raises(HTTPException, match="Error communicating with RBAC service") as exc_info:
+        await query_rbac(settings, x_rh_identity="identity")
+
+    assert exc_info.value.status_code == 502
+    client_cls.assert_not_called()
+
+
 async def test_query_rbac_error(mocker):
     settings = Settings(rbac_hostname="example.com")
     error_response = httpx.Response(401)

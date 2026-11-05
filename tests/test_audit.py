@@ -351,16 +351,8 @@ class TestLifespanEvents:
 class TestAdminAuditEvents:
     """The /admin routes are the privileged surface, so every outcome is recorded."""
 
-    @pytest.fixture(autouse=True)
-    def _force_prod(self, monkeypatch):
-        """The internal-user check only runs in prod."""
-        monkeypatch.setenv("ROADMAP_ENV_NAME", "prod")
-        Settings.create.cache_clear()
-        yield
-        Settings.create.cache_clear()
-
-    def test_missing_identity_is_an_authentication_failure(self, client, capture_events):
-        response = client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+    def test_missing_identity_is_an_authentication_failure(self, anonymous_client, capture_events):
+        response = anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
         assert response.status_code == 401
         (event,) = audit_events(capture_events)
@@ -404,17 +396,32 @@ class TestAdminAuditEvents:
         assert event["authorization"] == "internal-user"
         assert event["endpoint"] == f"POST {LIFECYCLE_CUSTOM_URL}"
 
-    def test_non_prod_records_that_the_check_was_skipped(self, client, capture_events, monkeypatch, mocker):
+    def test_disabled_guard_records_that_the_check_was_skipped(
+        self, anonymous_client, capture_events, monkeypatch, mocker
+    ):
         """A skipped check must not look like a verified admin action."""
         mocker.patch("roadmap.admin.notifications.lifecycle.kind.send", new_callable=mocker.AsyncMock)
-        monkeypatch.setenv("ROADMAP_ENV_NAME", "stage")
+        monkeypatch.setenv("ROADMAP_ADMIN_AUTH_REQUIRED", "false")
         Settings.create.cache_clear()
 
-        client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+        anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
         event = audit_events(capture_events)[0]
         assert event["action"] == ACTION_ADMIN
-        assert event["authorization"] == "skipped-non-prod"
+        assert event["authorization"] == "skipped-auth-disabled"
+
+    @pytest.mark.parametrize("env_name", ("stage", "perf", "insights-prod"))
+    def test_non_prod_environments_do_not_skip_the_check(self, anonymous_client, capture_events, monkeypatch, env_name):
+        """The guard must not key off the environment's name."""
+        monkeypatch.setenv("ROADMAP_ENV_NAME", env_name)
+        Settings.create.cache_clear()
+
+        response = anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 401
+        (event,) = audit_events(capture_events)
+        assert event["action"] == ACTION_AUTHN
+        assert event["reason"] == "missing-identity"
 
 
 class TestAuthorizationFailureEvents:

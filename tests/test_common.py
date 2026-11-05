@@ -1,3 +1,4 @@
+import base64
 import json
 import traceback
 
@@ -355,17 +356,71 @@ def test_ensure_date_error(date_string):
         ensure_date(date_string)
 
 
+async def test_decode_header():
+    result = await decode_header(
+        Settings(),
+        b"eyJpZGVudGl0eSI6IHsib3JnX2lkIjogIjMxNDE1OTcifX0=",
+    )
+
+    assert result == "3141597"
+
+
+async def test_decode_header_dev_mode_allows_missing_identity():
+    """Dev mode keeps working without a header; the fixture org is substituted later."""
+    result = await decode_header(Settings(dev=True), None)
+
+    assert result == ""
+
+
 @pytest.mark.parametrize(
-    ("value", "expected"),
+    "value",
     (
-        (None, ""),
-        (b"eyJpZGVudGl0eSI6IHsib3JnX2lkIjogIjMxNDE1OTcifX0=", "3141597"),
+        pytest.param(None, id="absent"),
+        pytest.param("", id="empty"),
+        pytest.param(base64.b64encode(json.dumps({"identity": {}}).encode()), id="no-org-id"),
     ),
 )
-async def test_decode_header(value, expected):
-    result = await decode_header(value)
+async def test_decode_header_without_org_id_is_rejected(value):
+    """Fail closed: no org_id must not silently scope the query to org ''."""
+    with pytest.raises(HTTPException) as exc_info:
+        await decode_header(Settings(), value)
 
-    assert result == expected
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        pytest.param("!!!!not-base64!!!!", id="not-base64"),
+        pytest.param(base64.b64encode(b"not json"), id="not-json"),
+        pytest.param(base64.b64encode(b"[]"), id="json-array"),
+        pytest.param(base64.b64encode(json.dumps({"identity": []}).encode()), id="identity-not-object"),
+    ),
+)
+async def test_decode_header_malformed_returns_401_not_500(value):
+    """A client-controlled header must not raise out of the dependency as a 500."""
+    with pytest.raises(HTTPException) as exc_info:
+        await decode_header(Settings(), value)
+
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.parametrize(
+    "org_id",
+    (
+        pytest.param(1234, id="int"),
+        pytest.param(["1234"], id="list"),
+        pytest.param({"a": 1}, id="object"),
+    ),
+)
+async def test_decode_header_non_string_org_id_is_rejected(org_id):
+    """org_id is bound into every tenant query; it must be a string."""
+    value = base64.b64encode(json.dumps({"identity": {"org_id": org_id}}).encode())
+
+    with pytest.raises(HTTPException) as exc_info:
+        await decode_header(Settings(), value)
+
+    assert exc_info.value.status_code == 401
 
 
 async def test_query_rbac(mocker, read_fixture_file):

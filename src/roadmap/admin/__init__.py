@@ -9,6 +9,8 @@ import base64
 import json
 import typing as t
 
+import structlog
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
@@ -27,6 +29,9 @@ from .notifications import lifecycle
 from .notifications import roadmap
 
 
+logger = structlog.get_logger(__name__)
+
+
 async def require_internal_user(
     request: Request,
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
@@ -35,11 +40,20 @@ async def require_internal_user(
     """Reject requests that do not come from a Red Hat internal user.
 
     The ``x-rh-identity`` header is injected by 3scale and contains a
-    base64-encoded JSON blob.  We check
-    ``identity.user.is_internal == True`` to restrict access to Red Hat
-    associates only.
+    base64-encoded JSON blob. We check ``identity.user.is_internal == True``
+    to restrict access to Red Hat associates only.
 
-    In non-production environments the check is skipped.
+    The check is always on unless ``admin_auth_required`` is explicitly set to
+    False. It used to be skipped whenever ``env_name != "prod"``. app-interface
+    passes ENV_NAME per target, so it ran in production but not in stage, perf
+    or ephemeral, where these routes answered unauthenticated requests. Tying
+    an authorization decision to an environment's name also leaves it one
+    app-interface edit away from switching off in production.
+
+    ``is_internal`` is asserted by the caller-supplied header, so this guard is
+    only as strong as the edge that overwrites that header. It is a defence in
+    depth measure, not the trust boundary: the service must not be reachable
+    without traversing the gateway.
 
     Every outcome is recorded as an event of interest. These routes are the
     privileged surface of the service, so Infosec wants both the administrative
@@ -49,10 +63,14 @@ async def require_internal_user(
     # distinguishes one admin event from another in Splunk.
     endpoint = f"{request.method} {request.url.path}"
 
-    if settings.env_name != "prod":
-        # The internal-user check does not run outside production, so say so in
+    if not settings.admin_auth_required:
+        # The internal-user check has been deliberately disabled, so say so in
         # the record rather than letting it look like a verified admin action.
-        log_audit_event(ACTION_ADMIN, RESULT_SUCCESS, endpoint=endpoint, authorization="skipped-non-prod")
+        logger.warning(
+            "Admin authorization is disabled; /admin is open to any caller that reaches this service",
+            env_name=settings.env_name,
+        )
+        log_audit_event(ACTION_ADMIN, RESULT_SUCCESS, endpoint=endpoint, authorization="skipped-auth-disabled")
         return
 
     if x_rh_identity is None:

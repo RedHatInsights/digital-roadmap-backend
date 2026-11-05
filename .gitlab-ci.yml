@@ -42,7 +42,8 @@ container-publish:
       set -euo pipefail
 
       IMAGE="${REGISTRY}/${IMAGE_NAME}"
-      SOURCE_DATE_EPOCH="$(git log -1 --pretty=%ct)"
+      # CI_COMMIT_TIMESTAMP is the committer time.
+      SOURCE_DATE_EPOCH="$(date -u -d "${CI_COMMIT_TIMESTAMP}" +%s)"
       SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
 
       TAGS=("${IMAGE}:${CI_COMMIT_REF_NAME}" "${IMAGE}:sha-${SHORT_SHA}")

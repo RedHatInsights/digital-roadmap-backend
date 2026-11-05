@@ -1,3 +1,4 @@
+import base64
 import gzip
 import json
 
@@ -15,8 +16,37 @@ from roadmap.main import app
 from roadmap.models import SystemInfo
 
 
+#: Fixture host data is loaded under this org.
+TEST_ORG_ID = "1234"
+
+
+def encode_identity(org_id: str = TEST_ORG_ID, **user) -> str:
+    """Build an x-rh-identity header value the way 3scale would."""
+    payload = {"identity": {"org_id": org_id, "type": "User", "user": user}}
+    return base64.b64encode(json.dumps(payload).encode()).decode()
+
+
 @pytest.fixture(scope="function")
-def client():
+def identity_headers():
+    return {"x-rh-identity": encode_identity()}
+
+
+@pytest.fixture(scope="function")
+def client(identity_headers):
+    """TestClient that carries an identity header, as 3scale injects in production.
+
+    decode_header rejects a request with no usable org_id, so a client without
+    this header exercises the authentication failure rather than whatever the
+    test means to cover. Use ``anonymous_client`` to test that rejection.
+    """
+    c = TestClient(app)
+    c.headers.update(identity_headers)
+    return c
+
+
+@pytest.fixture(scope="function")
+def anonymous_client():
+    """TestClient that sends no identity header."""
     return TestClient(app)
 
 

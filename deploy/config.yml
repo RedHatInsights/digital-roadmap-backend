@@ -98,6 +98,14 @@ objects:
               - name: ROADMAP_ENV_NAME
                 value: ${ENV_NAME}
 
+              # Guards the /admin notification triggers, which send real email
+              # to every subscribed org. Keep "true" everywhere. The previous
+              # guard compared ENV_NAME to the literal string "prod" and so
+              # disabled itself in every Clowder environment (insights-prod,
+              # insights-stage, ...), leaving those routes unauthenticated.
+              - name: ROADMAP_ADMIN_AUTH_REQUIRED
+                value: ${ADMIN_AUTH_REQUIRED}
+
               # Kessel / RBAC v2 authorization. Off by default; set the
               # KESSEL_ENABLED parameter to "true" per environment to use the
               # Kessel gRPC Inventory API instead of the legacy RBAC v1 path.
@@ -271,6 +279,12 @@ parameters:
 
   - name: ENV_NAME
     required: true
+
+  # Set to "false" only for a local or ephemeral environment that must reach
+  # the admin notification triggers without an internal identity header. Never
+  # set it to "false" in stage or prod: those routes dispatch real email.
+  - name: ADMIN_AUTH_REQUIRED
+    value: "true"
 
   - name: MIN_REPLICAS
     description: Replica count for backend service

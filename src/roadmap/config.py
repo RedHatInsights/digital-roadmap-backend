@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     log_level: str = "info"
     json_logging: bool = False
 
+    # Whether /admin routes require an internal-user identity. This must stay
+    # True by default: the guard previously keyed off env_name == "prod", which
+    # silently disabled itself in every environment whose name was not exactly
+    # "prod" (Clowder environments are named "insights-prod", "insights-stage",
+    # and so on). Disabling admin auth is now an explicit, deliberate act.
+    admin_auth_required: bool = True
+
     # Kessel / RBAC v2 authorization. When kessel_enabled is False (the default),
     # host authorization uses the legacy RBAC v1 /access/ path. When True, host
     # groups are determined via the Kessel gRPC Inventory API instead.

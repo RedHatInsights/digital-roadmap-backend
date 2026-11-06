@@ -48,15 +48,47 @@ def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:
     if x_rh_identity is None:
         return {}
 
-    decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
-    id_header = json.loads(decoded_id_header)
-    return id_header.get("identity", {})
+    # A header the client controls must not be able to raise out of a
+    # dependency. Undecodable base64, non-JSON content, or JSON that is not an
+    # object all used to surface as HTTP 500 (and one Sentry event each).
+    try:
+        decoded_id_header = base64.b64decode(x_rh_identity).decode("utf-8")
+        id_header = json.loads(decoded_id_header)
+        identity = id_header.get("identity", {})
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid x-rh-identity header") from exc
+
+    if not isinstance(identity, dict):
+        raise HTTPException(status_code=401, detail="Invalid x-rh-identity header")
+
+    return identity
 
 
 async def decode_header(
+    settings: t.Annotated[Settings, Depends(Settings.create)],
     x_rh_identity: t.Annotated[str | None, Header(include_in_schema=False)] = None,
 ) -> str:
-    return _decode_identity(x_rh_identity).get("org_id", "")
+    """Return the caller's org_id, rejecting requests that do not carry one.
+
+    Every tenant-scoped query binds this value as :org_id, so an absent or
+    unusable identity must fail closed. Returning "" instead, as this did
+    before, ran the query against an org that matches no rows and answered
+    HTTP 200 with an empty result -- indistinguishable from "you have no
+    systems", and silent if the edge that injects the header is misconfigured.
+
+    Dev mode keeps the permissive behaviour: the inventory dependencies
+    substitute the local fixture org, so a request without a header still
+    works against local data.
+    """
+    org_id = _decode_identity(x_rh_identity).get("org_id", "")
+
+    if not isinstance(org_id, str):
+        raise HTTPException(status_code=401, detail="Invalid x-rh-identity header")
+
+    if not org_id and not settings.dev:
+        raise HTTPException(status_code=401, detail="Missing or invalid x-rh-identity header")
+
+    return org_id
 
 
 async def query_rbac(

@@ -1,6 +1,8 @@
 import os
 import time
 
+from contextlib import asynccontextmanager
+
 import sentry_sdk
 import structlog
 
@@ -19,9 +21,16 @@ import roadmap.admin
 import roadmap.v1
 import roadmap.v2
 
+from roadmap.audit import ACTION_SHUTDOWN
+from roadmap.audit import ACTION_STARTUP
+from roadmap.audit import client_network
+from roadmap.audit import log_audit_event
+from roadmap.audit import principal
+from roadmap.audit import RESULT_SUCCESS
 from roadmap.common import extend_openapi
 from roadmap.config import Settings
 from roadmap.custom_logging import setup_logging
+from roadmap.egress import allowed_hosts
 from roadmap.sentry_config import before_send
 from roadmap.v2.openapi import annotate_v2_openapi
 
@@ -52,11 +61,37 @@ setup_logging(
 access_logger = structlog.stdlib.get_logger("api.access")
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Record application startup and shutdown as events of interest.
+
+    Infosec treats process start/stop as an event of interest because a
+    restart is both an availability signal and a way to interrupt logging, so
+    the gap in an otherwise continuous log stream needs to be explained.
+    """
+    log_audit_event(
+        ACTION_STARTUP,
+        RESULT_SUCCESS,
+        env_name=settings.env_name,
+        app_name=os.getenv("APP_NAME"),
+        # SEC-NET-REQ-5: record the egress allow list this pod came up with, so
+        # Splunk holds evidence of what it was permitted to reach and a later
+        # network.egress.denied event can be read against it.
+        egress_allow_list=sorted(allowed_hosts(settings)),
+        egress_enforce=settings.egress_enforce,
+    )
+    try:
+        yield
+    finally:
+        log_audit_event(ACTION_SHUTDOWN, RESULT_SUCCESS, env_name=settings.env_name, app_name=os.getenv("APP_NAME"))
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Insights for RHEL Planning",
     summary="Major RHEL roadmap items as well as lifecycle data for RHEL and app streams.",
     redirect_slashes=False,
+    lifespan=lifespan,
 )
 app.openapi = extend_openapi(app)
 
@@ -67,7 +102,15 @@ async def logging_middleware(request: Request, call_next) -> Response:
     structlog.contextvars.clear_contextvars()
     # These context vars will be added to all log entries emitted during the request
     request_id = correlation_id.get()
-    structlog.contextvars.bind_contextvars(request_id=request_id)
+    # Bind who the caller is and where they came from, so that both the access
+    # log below and any security event raised while handling this request carry
+    # the user identification and IP address Infosec requires, without the call
+    # sites needing the Request object.
+    structlog.contextvars.bind_contextvars(
+        request_id=request_id,
+        **principal(request.headers.get("x-rh-identity")),
+        **client_network(request.headers, peer_ip=getattr(request.client, "host", None)),
+    )
 
     start_time = time.perf_counter_ns()
     # If the call_next raises an error, we still want to return our own 500 response,

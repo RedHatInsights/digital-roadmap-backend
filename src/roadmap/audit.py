@@ -80,11 +80,23 @@ def log_audit_event(
     """Emit one event of interest.
 
     ``action`` is used as both the log message and the ``action`` field, so a
-    Splunk search can match the field rather than parse free text. Pass
+    Splunk search can match the field rather than parse free text.
+
+    ``level`` selects which logger method to call; it is not passed through as
+    a field. It still reaches the record, because ``structlog.stdlib``'s
+    ``add_log_level`` processor adds it -- see ``roadmap.custom_logging``. Pass
     ``level="warning"`` for failures and ``level="error"`` for the errors the
     guidelines ask us to raise alongside an event of interest.
     """
-    getattr(audit_logger, level)(action, action=action, result=result, **fields)
+    # getattr with a caller-supplied name would raise on a typo, and this
+    # module must never raise -- an event of interest that is lost because its
+    # level was misspelled is the one failure mode worth designing out.
+    emit = getattr(audit_logger, level, None)
+    if emit is None:
+        emit = audit_logger.error
+        fields["audit_level_invalid"] = level
+
+    emit(action, action=action, result=result, **fields)
 
 
 def _decode_identity(x_rh_identity: str | None) -> dict[str, t.Any]:

@@ -569,11 +569,25 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
                     "host_groups": list(host_groups),
                 },
             )
-            log_audit_event(ACTION_DATA_ACCESS, RESULT_SUCCESS, **access_fields)
+            # phase says what has actually happened at this point. The rows
+            # are streamed, so the query succeeding only means the stream was
+            # opened -- the endpoint consumes it after this returns, and a
+            # database error during consumption comes back to the except
+            # below. Without phase, one access that failed halfway would
+            # record an unqualified success and an unqualified failure, and
+            # neither would be wrong enough to discard.
+            log_audit_event(ACTION_DATA_ACCESS, RESULT_SUCCESS, phase="stream-created", **access_fields)
             yield result
         except (DBAPIError, SQLAlchemyError):
             log_database_error("Database error querying host inventory")
-            log_audit_event(ACTION_DATA_ACCESS, RESULT_FAILURE, level="error", error_code=500, **access_fields)
+            log_audit_event(
+                ACTION_DATA_ACCESS,
+                RESULT_FAILURE,
+                level="error",
+                error_code=500,
+                phase="stream-consumed",
+                **access_fields,
+            )
             raise HTTPException(status_code=500, detail="Error querying host inventory") from None
 
     return query_host_inventory

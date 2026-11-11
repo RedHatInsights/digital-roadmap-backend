@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import json
@@ -10,6 +11,7 @@ from roadmap.audit import ACTION_ADMIN
 from roadmap.audit import ACTION_AUTHN
 from roadmap.audit import ACTION_AUTHZ
 from roadmap.audit import ACTION_DATA_ACCESS
+from roadmap.audit import ACTION_SHUTDOWN
 from roadmap.audit import audit_logger
 from roadmap.audit import AUDIT_LOGGER_NAME
 from roadmap.audit import client_network
@@ -257,6 +259,18 @@ class TestLogAuditEvent:
         assert event["result"] == RESULT_FAILURE
         assert event["log_level"] == "error"
 
+    def test_an_unknown_level_still_emits_the_event(self, capture_events):
+        """Audit logging must never raise. A misspelled level previously took
+        an AttributeError out of getattr, losing the event entirely -- the one
+        failure mode a compliance record cannot have."""
+        log_audit_event(ACTION_DATA_ACCESS, RESULT_FAILURE, level="eror", error_code=500)
+
+        (event,) = capture_events
+        assert event["action"] == ACTION_DATA_ACCESS
+        assert event["result"] == RESULT_FAILURE
+        assert event["log_level"] == "error"
+        assert event["audit_level_invalid"] == "eror"
+
     def test_bound_context_is_included(self, configured_logging):
         """User and IP are bound per request, so call sites do not pass them.
 
@@ -292,6 +306,46 @@ def test_audit_logger_survives_a_raised_log_level(configured_logging_at):
     configured_logging_at("critical")
 
     assert logging.getLogger(AUDIT_LOGGER_NAME).isEnabledFor(logging.INFO)
+
+
+class TestLifespanEvents:
+    """Process start and stop, as recorded by the API's lifespan."""
+
+    async def test_clean_shutdown_is_a_success(self, capture_events):
+        from roadmap.main import lifespan
+
+        async with lifespan(None):
+            pass
+
+        (shutdown,) = [event for event in audit_events(capture_events) if event["action"] == ACTION_SHUTDOWN]
+        assert shutdown["result"] == RESULT_SUCCESS
+
+    async def test_failed_shutdown_is_recorded_as_a_failure(self, capture_events):
+        """A clean record for a stop that failed makes the gap in the log
+        stream look explained when it is not."""
+        from roadmap.main import lifespan
+
+        with pytest.raises(RuntimeError):
+            async with lifespan(None):
+                raise RuntimeError("boom")
+
+        (shutdown,) = [event for event in audit_events(capture_events) if event["action"] == ACTION_SHUTDOWN]
+        assert shutdown["result"] == RESULT_FAILURE
+        assert shutdown["log_level"] == "error"
+        assert shutdown["reason"] == "RuntimeError"
+
+    async def test_cancellation_is_recorded(self, capture_events):
+        """Cancellation during shutdown does not derive from Exception, which
+        is why the handler catches BaseException."""
+        from roadmap.main import lifespan
+
+        with pytest.raises(asyncio.CancelledError):
+            async with lifespan(None):
+                raise asyncio.CancelledError()
+
+        (shutdown,) = [event for event in audit_events(capture_events) if event["action"] == ACTION_SHUTDOWN]
+        assert shutdown["result"] == RESULT_FAILURE
+        assert shutdown["reason"] == "CancelledError"
 
 
 class TestAdminAuditEvents:

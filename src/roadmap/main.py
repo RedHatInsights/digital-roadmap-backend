@@ -26,6 +26,7 @@ from roadmap.audit import ACTION_STARTUP
 from roadmap.audit import client_network
 from roadmap.audit import log_audit_event
 from roadmap.audit import principal
+from roadmap.audit import RESULT_FAILURE
 from roadmap.audit import RESULT_SUCCESS
 from roadmap.common import extend_openapi
 from roadmap.config import Settings
@@ -82,7 +83,22 @@ async def lifespan(_: FastAPI):
     )
     try:
         yield
-    finally:
+    except BaseException as err:
+        # A clean shutdown record for a shutdown that failed is worse than no
+        # record: the gap in the log stream then looks explained when it is
+        # not. BaseException rather than Exception because cancellation during
+        # shutdown is the likeliest way this path is reached. The notificator
+        # records its own shutdown the same way.
+        log_audit_event(
+            ACTION_SHUTDOWN,
+            RESULT_FAILURE,
+            level="error",
+            env_name=settings.env_name,
+            app_name=os.getenv("APP_NAME"),
+            reason=type(err).__name__,
+        )
+        raise
+    else:
         log_audit_event(ACTION_SHUTDOWN, RESULT_SUCCESS, env_name=settings.env_name, app_name=os.getenv("APP_NAME"))
 
 

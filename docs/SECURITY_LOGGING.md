@@ -141,12 +141,30 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 | `host_group_count` | Number of host groups the caller was limited to. |
 | `record_count` | Number of records returned, where known. |
 | `authz_backend` | `rbac_v1` or `kessel`, i.e. which authorization service decided. |
+| `phase` | What actually completed, where "the event succeeded" would be ambiguous. See [Phases](#phases) below. |
 | `authorization` | On admin events: `internal-user`, or `skipped-non-prod`. |
 | `os_major`, `os_minor` | RHEL version the inventory read was filtered to, if any. |
 | `lifecycle_type` | Lifecycle filter applied: `mainline`, `EUS`, `ELS`, `E4S`. |
 | `searched` | `true` if the caller supplied a search term. The term itself is not logged. |
 | `includes_packages` | `true` if the read included installed packages and dnf modules. |
 | `env_name`, `app_name`, `component` | On startup/shutdown: which environment and which process (`notificator` for the scheduled job). |
+| `audit_level_invalid` | Diagnostic. Present only if a caller passed an unrecognised log level; the event is still emitted, at `error`. Should never appear. |
+
+### Phases
+
+Some operations are not a single moment, so `result` alone would overstate what
+happened. Where that is true the event carries a `phase`:
+
+| `phase` | On | Means |
+|---|---|---|
+| `stream-created` | `data.access` | The query ran and the row stream was opened. The endpoint reads the rows *after* this record is written. |
+| `stream-consumed` | `data.access` | A database error occurred while the rows were being read. |
+| `channel-created` | `network.egress` (Kessel) | The gRPC channel object was built. gRPC connects lazily, so nothing has been dialled yet. |
+
+One read that fails part-way therefore emits two records — a `stream-created`
+success and a `stream-consumed` failure. That is deliberate: both are true, and the
+pair is what shows an access began and then broke. Count distinct `request_id`
+values, not events, when counting accesses.
 
 ---
 
@@ -161,7 +179,7 @@ Search for security events with `logger="roadmap.security"`, or on `action`.
 | `authorization` | Authorization failure | Caller denied access to host inventory (403), denied an admin route (403), or the authorization service itself failed | `failure` |
 | `authentication` | Invalid login attempt | Admin route reached with a missing or unreadable identity header (401) | `failure` |
 | `application.startup` | Process startup | API process starts; notificator job starts | `success` |
-| `application.shutdown` | Process shutdown | API process stops; notificator job finishes or aborts | `success` / `failure` |
+| `application.shutdown` | Process shutdown | API process stops; notificator job finishes or aborts | `success`, or `failure` at `error` with `reason` set to the exception class if the stop itself failed |
 | `network.egress` | Outbound connection (SEC-NET-REQ-5) | Any connection this service makes to an external dependency | `success`, or `failure` on an error response or transport error |
 | `network.egress.denied` | Outbound connection to an unlisted destination | Destination host is not in the egress allow list | `failure` |
 

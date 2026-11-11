@@ -160,6 +160,13 @@ enforcement point is the egress proxy or network policy described below; the val
 the in-process check is that it catches an accidental new dependency at review and
 deploy time, close to where someone would introduce one.
 
+Because that proxy is the primary control, `egress_client` is careful not to break it.
+httpx only builds its proxy map when no transport is passed to the client constructor
+(`allow_env_proxies = trust_env and transport is None`), so the client is constructed
+first and its transports wrapped afterwards. `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`
+keep working, and requests routed through a proxy mount are wrapped too, so using a
+proxy does not take traffic out of the audit trail.
+
 ---
 
 ## 5. Deny lists (requirement 2)
@@ -205,6 +212,7 @@ to the schema in [SECURITY_LOGGING.md](SECURITY_LOGGING.md).
 | `reason` | `not-in-allow-list` on a denial, or the exception class name on a transport failure (`ConnectError`, `ConnectTimeout`, …). |
 | `enforced` | On a denial: whether the connection was blocked or only recorded. |
 | `allow_listed` | On gRPC and OIDC events: whether the destination was on the list. |
+| `phase` | `channel-created` on the Kessel event. gRPC connects lazily, so the channel existing is not yet a connection — see [SECURITY_LOGGING.md](SECURITY_LOGGING.md) §3. |
 
 Every event also carries the per-request user and network context bound by the logging
 middleware, so an outbound call can be attributed to the caller who caused it — join on

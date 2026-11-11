@@ -7,6 +7,7 @@ from roadmap.audit import ACTION_EGRESS_DENIED
 from roadmap.audit import RESULT_FAILURE
 from roadmap.audit import RESULT_SUCCESS
 from roadmap.config import Settings
+from roadmap.egress import _split_host_port
 from roadmap.egress import allowed_hosts
 from roadmap.egress import AuditedTransport
 from roadmap.egress import destinations
@@ -84,6 +85,23 @@ class TestDestinations:
         (oidc,) = [dest for dest in destinations(settings) if dest.host == "sso.example.com"]
         assert oidc.internet is True
         assert oidc.port == 443
+
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("kessel-inventory-api:9000", ("kessel-inventory-api", 9000)),
+            ("//kessel-inventory-api:9000", ("kessel-inventory-api", 9000)),
+            ("https://sso.example.com/realms/redhat", ("sso.example.com", None)),
+            # A doubled slash later in the value must not be mistaken for a
+            # leading authority; testing for "//" anywhere loses the host.
+            ("kessel-inventory-api:9000/a//b", ("kessel-inventory-api", 9000)),
+            ("", (None, None)),
+            ("   ", (None, None)),
+            (None, (None, None)),
+        ],
+    )
+    def test_host_and_port_are_parsed(self, value, expected):
+        assert _split_host_port(value) == expected
 
 
 class TestEgressLogging:
@@ -182,13 +200,52 @@ class TestEgressClient:
 
         assert egress_client(PURPOSE_RBAC, settings)._transport._enforce is True
 
-    def test_verify_is_passed_to_the_transport(self):
-        """A client-level verify is ignored once a custom transport is given,
-        so the mTLS context from the notificator has to reach the transport."""
+    def test_verify_reaches_the_underlying_transport(self):
+        """The notificator's mTLS context has to reach the real transport.
+
+        Asserted against the connection pool rather than a mock: if verify
+        stops being forwarded, the call silently falls back to default
+        verification and sends no client certificate, which a mock asserting
+        its own call arguments would not notice.
+        """
         import ssl
 
-        settings = Settings()
         ctx = ssl.create_default_context()
 
-        client = egress_client(PURPOSE_SUBSCRIPTIONS, settings, verify=ctx, timeout=180)
+        client = egress_client(PURPOSE_SUBSCRIPTIONS, Settings(), verify=ctx, timeout=180)
+
         assert isinstance(client._transport, AuditedTransport)
+        assert client._transport._wrapped._pool._ssl_context is ctx
+        assert client.timeout.connect == 180
+
+    def test_environment_proxy_is_honoured(self, monkeypatch):
+        """httpx only builds env proxy mounts when no transport is passed to
+        the constructor, so building the client first is what keeps
+        HTTPS_PROXY working. The egress proxy is the control's real
+        enforcement point, so losing this would matter."""
+        monkeypatch.setenv("HTTPS_PROXY", "http://proxy.example:3128")
+
+        client = egress_client(PURPOSE_RBAC, Settings(rbac_hostname="rbac.svc"))
+
+        assert client._mounts, "environment proxy was dropped"
+
+    def test_proxied_requests_are_still_audited(self, monkeypatch):
+        """A request routed through a proxy mount must not skip the audit
+        trail just because it did not use the default transport."""
+        monkeypatch.setenv("HTTPS_PROXY", "http://proxy.example:3128")
+
+        client = egress_client(PURPOSE_RBAC, Settings(rbac_hostname="rbac.svc"))
+
+        assert all(
+            transport is None or isinstance(transport, AuditedTransport) for transport in client._mounts.values()
+        )
+
+    def test_no_proxy_bypass_is_preserved(self, monkeypatch):
+        """NO_PROXY entries become None mounts, meaning "use the default
+        transport" -- which is audited, so the bypass stays auditable."""
+        monkeypatch.setenv("HTTPS_PROXY", "http://proxy.example:3128")
+        monkeypatch.setenv("NO_PROXY", "rbac.svc")
+
+        client = egress_client(PURPOSE_RBAC, Settings(rbac_hostname="rbac.svc"))
+
+        assert None in client._mounts.values()

@@ -13,7 +13,7 @@ from notificator.notificator_config import NotificatorSettings
 from notificator.notificator_config import SubscriptionType
 from notificator.subscriptions import fetch_subscribed_org_ids
 from notificator.subscriptions import get_org_ids
-from roadmap.egress import AuditedTransport
+from roadmap.egress import PURPOSE_SUBSCRIPTIONS
 
 
 def _make_settings(*, dev=False, subscriptions_url="https://example.com/subscriptions"):
@@ -29,7 +29,13 @@ def _make_settings(*, dev=False, subscriptions_url="https://example.com/subscrip
 
 
 def _mock_client(mocker, *, status_code=200, json_data=None):
-    """Patch httpx.AsyncClient and ssl to return canned responses without I/O."""
+    """Patch the client factory and ssl to return canned responses without I/O.
+
+    Patched at ``egress_client`` rather than at ``httpx.AsyncClient``: the
+    factory now inspects the client it builds in order to wrap its transports,
+    so replacing the httpx constructor hands it a mock to introspect. The
+    factory is also the seam this module actually depends on.
+    """
     response = MagicMock(spec=httpx.Response)
     response.status_code = status_code
     response.json.return_value = json_data if json_data is not None else {}
@@ -48,7 +54,7 @@ def _mock_client(mocker, *, status_code=200, json_data=None):
     mock_client.__aenter__.return_value = mock_client
     mock_client.__aexit__.return_value = False
 
-    mock_cls = mocker.patch("notificator.subscriptions.httpx.AsyncClient", return_value=mock_client)
+    mock_cls = mocker.patch("notificator.subscriptions.egress_client", return_value=mock_client)
 
     ssl_ctx = MagicMock()
     ssl_create = mocker.patch(
@@ -162,11 +168,12 @@ class TestFetchSubscribedOrgIds:
         ssl_ctx.load_cert_chain.assert_called_once_with(certfile=settings.tls_cert_path, keyfile=settings.tls_key_path)
 
         # The client is built by roadmap.egress so the call is logged and
-        # allow-listed, which means the mTLS context is carried by the
-        # transport: a client-level verify is ignored once a transport is set.
+        # allow-listed. That the mTLS context then reaches the real transport
+        # is asserted in tests/test_egress.py against the connection pool.
         kwargs = mock_cls.call_args.kwargs
         assert kwargs["timeout"] == 180
-        assert isinstance(kwargs["transport"], AuditedTransport)
+        assert kwargs["verify"] is ssl_ctx
+        assert mock_cls.call_args.args[0] == PURPOSE_SUBSCRIPTIONS
 
     async def test_different_subscription_uses_correct_key_and_path(self, mocker, settings):
         other = SubscriptionType("other-app", "some-other-event")
@@ -204,7 +211,7 @@ class TestFetchSubscribedOrgIds:
         mock_client.__aenter__.return_value = mock_client
         mock_client.__aexit__.return_value = False
 
-        mocker.patch("notificator.subscriptions.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch("notificator.subscriptions.egress_client", return_value=mock_client)
         mocker.patch("notificator.subscriptions.ssl.create_default_context")
         mocker.patch("notificator.subscriptions.asyncio.sleep", new_callable=AsyncMock)
 

@@ -89,7 +89,11 @@ def _split_host_port(value: str | None) -> tuple[str | None, int | None]:
         return None, None
 
     value = value.strip()
-    if "//" not in value:
+    # Test for a scheme or a leading authority, not for "//" anywhere: a bare
+    # host:port whose path happens to contain a doubled slash would satisfy
+    # the looser test, skip the prefix, and then parse as a path with no
+    # hostname at all.
+    if "://" not in value and not value.startswith("//"):
         value = f"//{value}"
 
     try:
@@ -272,21 +276,40 @@ def egress_client(purpose: str, settings: Settings, **client_kwargs: t.Any) -> h
     """Return an ``httpx.AsyncClient`` that logs and allow-lists its requests.
 
     Use this instead of constructing ``httpx.AsyncClient`` directly, so that no
-    outbound call escapes the audit trail. ``verify`` is forwarded to the
-    transport rather than the client, because a client-level ``verify`` is
-    ignored once a custom transport is supplied.
-    """
-    verify = client_kwargs.pop("verify", True)
+    outbound call escapes the audit trail.
 
-    return httpx.AsyncClient(
-        transport=AuditedTransport(
+    The client is built first and its transports wrapped afterwards, rather
+    than passing ``transport=`` to the constructor. httpx decides whether to
+    honour ``HTTP_PROXY``/``HTTPS_PROXY``/``NO_PROXY`` with
+    ``allow_env_proxies = trust_env and transport is None``, so supplying a
+    transport up front silently discards the environment's proxy map -- and
+    the egress proxy is the control's real enforcement point, so a client that
+    cannot route through one is the wrong thing to ship. Building first also
+    means ``verify``, ``cert``, ``limits``, ``http2`` and an explicit ``proxy``
+    reach the transport httpx builds, instead of having to be forwarded by
+    hand one argument at a time.
+    """
+    client = httpx.AsyncClient(**client_kwargs)
+
+    def audited(transport: httpx.AsyncBaseTransport) -> AuditedTransport:
+        return AuditedTransport(
             purpose,
             allowed=allowed_hosts(settings),
             enforce=settings.egress_enforce,
-            verify=verify,
-        ),
-        **client_kwargs,
-    )
+            wrapped=transport,
+        )
+
+    # Every transport the client might select has to be wrapped, not just the
+    # default one: with a proxy configured, a request matching a mount goes
+    # through that mount instead and would otherwise skip the audit trail.
+    # A ``None`` mount means "no proxy for this pattern", which httpx routes
+    # back to the default transport -- already wrapped above.
+    client._transport = audited(client._transport)
+    client._mounts = {
+        pattern: None if transport is None else audited(transport) for pattern, transport in client._mounts.items()
+    }
+
+    return client
 
 
 def log_egress(purpose: str, settings: Settings, target: str, result: str, **fields: t.Any) -> None:

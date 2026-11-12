@@ -158,11 +158,18 @@ def principal(x_rh_identity: str | None) -> dict[str, t.Any]:
 def client_network(headers: t.Mapping[str, str], peer_ip: str | None = None) -> dict[str, t.Any]:
     """Return the caller's network identification.
 
-    ``peer_ip`` (``request.client.host``) is the OpenShift router, not the user,
-    because every request reaches the pod through the edge and 3scale. The
-    user's address has to come from the forwarding headers, so those are what
-    ``src_ip`` is taken from; the peer address is kept separately as
-    ``peer_ip`` for infrastructure correlation.
+    Every value here is caller-supplied and none of it is verified.
+
+    ``peer_ip`` is ``request.client.host``, which is *not* the TCP peer. The
+    container runs uvicorn with ``--forwarded-allow-ips=*``, so its
+    ProxyHeadersMiddleware trusts any connecting host and overwrites
+    ``scope["client"]`` with the left-most ``X-Forwarded-For`` entry. Only a
+    request with no such header leaves the real peer in place. ``peer_ip``
+    therefore usually equals ``src_ip`` and is not independent of it -- see
+    ``docs/SECURITY_LOGGING.md`` §3 before using either as attribution.
+
+    It is kept anyway: it is what the ASGI scope actually carried, and on a
+    request without forwarding headers it is the only address there is.
 
     ``edge_request_id`` is the Akamai/edge identifier, which is what lets an
     event here be joined to the edge logs for the same request.

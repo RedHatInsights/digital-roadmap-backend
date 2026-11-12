@@ -119,12 +119,11 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 | `src_ip` | **The user's IP address, as reported by the request headers.** Taken from `true-client-ip` when present, else the left-most entry of `x-forwarded-for`, else the peer address. **Not verified** — see the caveat below. |
 | `true_client_ip` | Akamai `True-Client-IP` header, verbatim. |
 | `x_forwarded_for` | `X-Forwarded-For` header, verbatim — the full hop list. |
-| `peer_ip` | The TCP peer, which is the OpenShift router, **not** the user. Kept for infrastructure correlation only. |
+| `peer_ip` | `request.client.host`. **Not the TCP peer and not the router.** Uvicorn runs with `--forwarded-allow-ips=*`, so its proxy-headers middleware overwrites the client address with the left-most `X-Forwarded-For` entry — the same value `src_ip` usually holds, from the same caller-supplied header. Only when no `X-Forwarded-For` is present does this fall back to the real peer. Do not use it as independent corroboration of `src_ip`. |
 | `edge_request_id` | Akamai/edge request identifier (`x-rh-edge-request-id`). Joins this event to the edge logs. |
 | `user_agent` | Caller's `User-Agent`. |
 
-> `src_ip` is the field to use for "where did this user come from". `peer_ip` will be an
-> internal cluster address on every record and is not the user.
+> `src_ip` is the field to use for "where did this user come from".
 
 > **`src_ip` is an assertion, not a verified fact.** It is derived entirely from request
 > headers, and the container runs uvicorn with `--forwarded-allow-ips=*`, so the
@@ -138,7 +137,19 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 > application. **Do not treat `src_ip` as verified attribution in an investigation
 > without confirming the ingress path for the request in question** — join to
 > `edge_request_id` and the edge logs, which are produced by something the caller cannot
-> set. `peer_ip` is not forgeable, but it is the OpenShift router, not the user.
+> set.
+>
+> **`peer_ip` is not a second opinion.** It is `request.client.host`, and
+> `--forwarded-allow-ips=*` means uvicorn has already overwritten that with the
+> left-most `X-Forwarded-For` entry before the application sees it. On a request
+> carrying that header, `src_ip` and `peer_ip` are the same caller-supplied value
+> reached by two routes. Two fields agreeing is not corroboration when both derive from
+> the same header.
+>
+> Restricting `--forwarded-allow-ips` to the router's address range is what would make
+> these fields trustworthy at the application. That is a deployment change, tracked
+> separately; this note exists so nobody reads the records as stronger than they are in
+> the meantime.
 
 ### Security event fields
 

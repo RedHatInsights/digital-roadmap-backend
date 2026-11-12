@@ -8,6 +8,8 @@ from ddtrace.trace import tracer
 from structlog.types import EventDict
 from structlog.types import Processor
 
+from roadmap.audit import AUDIT_LOGGER_NAME
+
 
 def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
     """
@@ -112,6 +114,20 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level.upper())
+
+    # Security events of interest are an audit requirement, not debugging aid,
+    # so they must be emitted even when the root level is raised to WARNING or
+    # above. Pinning the level here is enough: the record still propagates to
+    # the root handler, whose own level is NOTSET.
+    logging.getLogger(AUDIT_LOGGER_NAME).setLevel(logging.INFO)
+
+    # httpx logs every request at INFO as free text containing the full URL,
+    # query string included. That duplicates the structured network.egress
+    # event from roadmap.egress with less detail, and the query string is the
+    # usual place for a token to leak into a log, so the egress event
+    # deliberately omits it. Silence httpx below WARNING so the structured
+    # event is the only record of an outbound call.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     for _log in ["uvicorn", "uvicorn.error"]:
         # Clear the log handlers for uvicorn loggers, and enable propagation

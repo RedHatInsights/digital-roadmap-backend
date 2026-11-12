@@ -103,6 +103,18 @@ class TestDestinations:
     def test_host_and_port_are_parsed(self, value, expected):
         assert _split_host_port(value) == expected
 
+    @pytest.mark.parametrize("bad", ["http://[::1", "://nonsense", "   "])
+    def test_a_malformed_setting_is_omitted_rather_than_raising(self, bad):
+        """A destination that cannot be identified must not reach the allow
+        list, and must not break request handling on the way. It is omitted,
+        so a connection to it is recorded as a denial -- the right outcome for
+        a host we cannot name."""
+        settings = Settings(kessel_enabled=True, kessel_url=bad)
+
+        hosts = allowed_hosts(settings)
+
+        assert bad not in hosts
+
 
 class TestEgressLogging:
     async def test_successful_request_is_logged(self, capture_events):

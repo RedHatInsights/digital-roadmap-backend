@@ -14,7 +14,7 @@ and need no separate onboarding.
 
 | # | Requirement | Status |
 |---|---|---|
-| 1 | Log connection details, send to the central log store | **Done in the application.** Every outbound connection emits a `network.egress` event on the `roadmap.security` logger. Delivery to Sumo Logic depends on the forwarder in the companion document. |
+| 1 | Log connection details, send to the central log store | **Done in the application, with one exception.** HTTP(S) through `egress_client`, the Kessel gRPC channel and the SSO discovery call each emit a `network.egress` event on the `roadmap.security` logger. **Sentry does not** — it connects through the SDK's own transport and is not instrumented; see [Section 4](#what-enforcement-does-not-reach). Delivery to Sumo Logic depends on the forwarder in the companion document. |
 | 2 | Consume Infosec deny lists (DNS RBL etc.) | **Not an application control.** Belongs to the cluster's egress proxy and DNS resolvers. See [Section 5](#5-deny-lists-requirement-2). |
 | 3 | Enforce an allow list of internet destinations | **List provided in [Section 3](#3-the-allow-list); enforcement implemented and currently in log-only mode.** See [Section 4](#4-enforcement). |
 

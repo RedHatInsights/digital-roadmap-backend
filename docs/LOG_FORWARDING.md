@@ -176,16 +176,19 @@ path the rest of the Insights platform uses (see §2 on what was ruled out).
 store, so `tls.ca` is mandatory and `insecureSkipVerify` is not an acceptable
 substitute for a Restricted (+PII) stream.
 
-Rather than pin a CA certificate in git — where it would silently expire — the manifest
-creates a ConfigMap labelled `config.openshift.io/inject-trusted-cabundle: "true"`.
-OpenShift's Cluster Network Operator populates `ca-bundle.crt` with the cluster's
-trusted CAs and keeps it current, so this needs nothing from app-sre.
+Rather than pin a CA certificate in git — where it would silently expire — `tls.ca`
+should reference a ConfigMap labelled
+`config.openshift.io/inject-trusted-cabundle: "true"`. OpenShift's Cluster Network
+Operator populates `ca-bundle.crt` with the cluster's trusted CAs and keeps it current.
+The cluster-wide forwarder already sends to this endpoint for other services, so such a
+ConfigMap most likely exists in `openshift-logging` already and should be reused rather
+than duplicated — confirm with app-sre when raising the MR.
 
 That works only if the cluster's trust bundle actually carries the internal CA. Verify
-once the ConfigMap exists:
+against whichever ConfigMap `tls.ca` points at:
 
 ```sh
-oc -n roadmap-prod get cm roadmap-trusted-ca \
+oc -n openshift-logging get cm <trusted-ca-configmap> \
   -o jsonpath='{.data.ca-bundle\.crt}' \
   | openssl crl2pkcs7 -nocrl -certfile /dev/stdin \
   | openssl pkcs7 -print_certs -noout | grep -i RHCSv2
@@ -202,14 +205,19 @@ separate Cribl endpoint, these are it.
 
 ### Probe
 
+Against the **internal** endpoint — the public one returns `403 Invalid token`, as
+recorded above, so probing it proves nothing. Its certificate is issued by the internal
+CA, so point `--cacert` at a bundle containing it:
+
 ```sh
 curl -i -X POST \
+  --cacert "${INTERNAL_CA_BUNDLE}" \
   -H "Authorization: Splunk ${HEC_TOKEN}" \
   -H 'Content-Type: application/json' \
   --data '{"event":{"probe":"roadmap-forwarding-test"},
            "index":"rh_DRM-001",
            "source":"http:rh_DRM-001"}' \
-  https://splunk-hec.redhat.com:8088/services/collector/event
+  https://splunk-hec.corp.redhat.com:8088/services/collector/event
 ```
 
 `{"text":"Success","code":0}` is what you want. `{"text":"Invalid token","code":4}`
@@ -345,17 +353,28 @@ access is granted.
 
 Once app-sre has applied the forwarder:
 
+The forwarder and its collector live in `openshift-logging`, not in this service's
+namespace — it is the cluster-wide one (§1), so the resource names are its own, not
+`roadmap`. Get them from the cluster rather than assuming:
+
 ```sh
+# The cluster-wide forwarder and its name
+oc -n openshift-logging get clusterlogforwarder
+
 # Forwarder accepted the config and is Managed
-oc -n roadmap-prod get clusterlogforwarder roadmap -o yaml | yq '.status.conditions'
+CLF=$(oc -n openshift-logging get clusterlogforwarder -o jsonpath='{.items[0].metadata.name}')
+oc -n openshift-logging get clusterlogforwarder "${CLF}" -o yaml | yq '.status.conditions'
 
 # Collector pods are up
-oc -n roadmap-prod get pods -l app.kubernetes.io/component=collector
+oc -n openshift-logging get pods -l app.kubernetes.io/component=collector
 
 # The generated Vector config — confirms index/source/sourcetype actually
-# rendered the way the CR intended
-oc -n roadmap-prod extract secret/collector-config --to=- 2>/dev/null | grep -A 15 'sinks.output_cribl_hec'
+# rendered the way the CR intended. The secret is named after the forwarder.
+oc -n openshift-logging extract "secret/${CLF}-config" --to=- 2>/dev/null | grep -A 15 'rh_DRM-001'
 ```
+
+The roadmap pipeline is one entry among many in that config, so grep for the index
+rather than expecting a sink named after this service.
 
 Then, against the collector's metrics endpoint:
 
@@ -402,8 +421,10 @@ stopped sending. Worth knowing when one fires.
 - [x] **Identify the protocol** — Cribl HEC, not Sumo Logic's native HTTP source.
 - [x] **Confirm the endpoint** — `https://splunk-hec.corp.redhat.com:8088`. Internal
       only, by design; the public LB is not a fallback.
-- [x] **Resolve the CA bundle** — operator-injected via the `roadmap-trusted-ca`
-      ConfigMap, so it needs nothing from app-sre (§4).
+- [ ] **Resolve the CA bundle** — `tls.ca` needs an injected-trust-bundle ConfigMap in
+      `openshift-logging`. One probably already exists for the other services sending
+      to this endpoint; confirm with app-sre and reuse it rather than adding another
+      (§4).
 - [ ] **Confirm the probe landed in Sumo Logic.** A 200 from Cribl means accepted at
       that hop, not delivered. Search for marker `roadmap-hec-verify-1792609226`.
 - [x] **Ship `ROADMAP_JSON_LOGGING`** in `deploy/config.yml` — set to `"true"` for both

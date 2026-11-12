@@ -559,6 +559,14 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
         # The yield stays inside the try: this is a dependency with yield, so an
         # error raised while the endpoint consumes the stream is thrown back in
         # here and has to keep being turned into a 500.
+        #
+        # That makes the except block serve two different failures, which is
+        # why it has to know which one it is handling. The rows are streamed,
+        # so opening the stream and reading it are separate events: a query
+        # that fails outright never reached any data, while one that fails
+        # part-way did. Recording both as the same phase would say an access
+        # began when it never did.
+        opened = False
         try:
             result = await session.stream(
                 text(textwrap.dedent(query)),
@@ -569,13 +577,7 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
                     "host_groups": list(host_groups),
                 },
             )
-            # phase says what has actually happened at this point. The rows
-            # are streamed, so the query succeeding only means the stream was
-            # opened -- the endpoint consumes it after this returns, and a
-            # database error during consumption comes back to the except
-            # below. Without phase, one access that failed halfway would
-            # record an unqualified success and an unqualified failure, and
-            # neither would be wrong enough to discard.
+            opened = True
             log_audit_event(ACTION_DATA_ACCESS, RESULT_SUCCESS, phase="stream-created", **access_fields)
             yield result
         except (DBAPIError, SQLAlchemyError):
@@ -585,7 +587,7 @@ def host_inventory_query(include_packages: bool = True) -> t.Callable[..., Async
                 RESULT_FAILURE,
                 level="error",
                 error_code=500,
-                phase="stream-consumed",
+                phase="stream-consumed" if opened else "stream-open-failed",
                 **access_fields,
             )
             raise HTTPException(status_code=500, detail="Error querying host inventory") from None

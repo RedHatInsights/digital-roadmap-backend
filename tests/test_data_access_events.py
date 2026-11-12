@@ -64,7 +64,9 @@ class TestDataAccessEvent:
         assert event["resource"] == "host_inventory"
         assert event["data_classification"] == "red-hat-restricted"
 
-    async def test_failure_opening_the_stream_is_recorded(self, capture_events):
+    async def test_failure_opening_the_stream_is_not_called_a_consumption_failure(self, capture_events):
+        """A query that fails outright never reached any data. Recording it as
+        a consumption failure would say an access began when it never did."""
         session = FakeSession(error=DBAPIError("SELECT 1", {}, Exception("boom")))
 
         with pytest.raises(Exception):
@@ -72,8 +74,17 @@ class TestDataAccessEvent:
 
         (event,) = access_events(capture_events)
         assert event["result"] == RESULT_FAILURE
-        assert event["phase"] == "stream-consumed"
+        assert event["phase"] == "stream-open-failed"
         assert event["error_code"] == 500
+
+    async def test_no_success_is_recorded_when_the_stream_never_opened(self, capture_events):
+        """The success record must not be emitted at all on an open failure."""
+        session = FakeSession(error=DBAPIError("SELECT 1", {}, Exception("boom")))
+
+        with pytest.raises(Exception):
+            await read_inventory(session)
+
+        assert [event["result"] for event in access_events(capture_events)] == [RESULT_FAILURE]
 
     async def test_phase_distinguishes_the_two_records(self, capture_events):
         """One access that fails part-way emits both a success and a failure.

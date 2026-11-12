@@ -116,7 +116,7 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 
 | Field | Description |
 |---|---|
-| `src_ip` | **The user's IP address.** Taken from `true-client-ip` when present, else the left-most entry of `x-forwarded-for`, else the peer address. |
+| `src_ip` | **The user's IP address, as reported by the request headers.** Taken from `true-client-ip` when present, else the left-most entry of `x-forwarded-for`, else the peer address. **Not verified** — see the caveat below. |
 | `true_client_ip` | Akamai `True-Client-IP` header, verbatim. |
 | `x_forwarded_for` | `X-Forwarded-For` header, verbatim — the full hop list. |
 | `peer_ip` | The TCP peer, which is the OpenShift router, **not** the user. Kept for infrastructure correlation only. |
@@ -125,6 +125,20 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 
 > `src_ip` is the field to use for "where did this user come from". `peer_ip` will be an
 > internal cluster address on every record and is not the user.
+
+> **`src_ip` is an assertion, not a verified fact.** It is derived entirely from request
+> headers, and the container runs uvicorn with `--forwarded-allow-ips=*`, so the
+> application accepts `X-Forwarded-For` and `True-Client-IP` from any peer that can
+> reach it rather than from a trusted proxy list. A caller able to reach the pod
+> directly can therefore set `src_ip` to any value.
+>
+> In practice the edge and the namespace network policy are what make the value
+> trustworthy: ingress is restricted to the gateway namespaces, and the edge overwrites
+> these headers. The field is only as good as that, and the guarantee lives outside this
+> application. **Do not treat `src_ip` as verified attribution in an investigation
+> without confirming the ingress path for the request in question** — join to
+> `edge_request_id` and the edge logs, which are produced by something the caller cannot
+> set. `peer_ip` is not forgeable, but it is the OpenShift router, not the user.
 
 ### Security event fields
 

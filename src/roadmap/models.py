@@ -211,11 +211,31 @@ class PaginatedSystemsResponse(BaseModel):
     data: list[SystemInfo]
 
 
+#: Largest host_ids list a single request may carry.
+#:
+#: The console UI already splits its reads into batches before posting them:
+#: 5000 ids for the RHEL endpoint and 1000 for upcoming and app streams (see
+#: BATCH_SIZE in the frontend's relevant*Loader.ts). This cap sits at twice the
+#: largest of those, so every batch the UI sends today passes with headroom
+#: while a request is still bounded.
+#:
+#: Without a bound, one request could carry an arbitrarily long list. Each id
+#: becomes a parsed UUID and an element of a bound Postgres array, so the
+#: memory cost is set by the caller rather than by the service, on pods limited
+#: to a few GiB.
+MAX_HOST_IDS = 10_000
+
+
 class HostIdsRequest(BaseModel):
-    """Host ids to read. The caller chooses how many and must be permitted to see them."""
+    """Host ids to read. The caller must be permitted to see them."""
 
     host_ids: list[UUID] = Field(
-        description="Host UUIDs to include. Any number of ids is accepted, including none.",
+        max_length=MAX_HOST_IDS,
+        description=(
+            f"Host UUIDs to include, at most {MAX_HOST_IDS} per request. "
+            "An empty list is accepted and matches no hosts. Split larger "
+            "reads into several requests."
+        ),
     )
 
 

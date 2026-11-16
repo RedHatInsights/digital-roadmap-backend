@@ -126,7 +126,7 @@ def test_accessible_host_uuids_rbac_error(api_prefix, client, mocker):
     mock_client.get.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    mocker.patch("roadmap.common.egress_client", return_value=mock_client)
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[Settings.create] = settings_override
@@ -143,7 +143,7 @@ def test_accessible_host_uuids_dev_mode_skips_rbac(api_prefix, client, mocker, r
     def settings_override():
         return Settings(dev=True, rbac_hostname="example.com")
 
-    mocker.patch("roadmap.common.httpx.AsyncClient", side_effect=AssertionError("RBAC should not be called"))
+    mocker.patch("roadmap.common.egress_client", side_effect=AssertionError("RBAC should not be called"))
 
     client.app.dependency_overrides = {}
     client.app.dependency_overrides[Settings.create] = settings_override

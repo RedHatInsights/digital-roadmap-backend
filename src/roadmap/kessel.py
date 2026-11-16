@@ -31,7 +31,12 @@ from kessel.inventory.v1beta2 import ClientBuilder
 from kessel.rbac.v2 import list_workspaces_async
 from kessel.rbac.v2 import principal_subject
 
+from roadmap.audit import RESULT_FAILURE
+from roadmap.audit import RESULT_SUCCESS
 from roadmap.config import Settings
+from roadmap.egress import log_egress
+from roadmap.egress import PURPOSE_KESSEL
+from roadmap.egress import PURPOSE_KESSEL_OIDC
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -58,7 +63,22 @@ def reset_caches() -> None:
 
 
 def _build_credentials(settings: Settings) -> OAuth2ClientCredentials:
-    discovery = fetch_oidc_discovery(settings.kessel_auth_oidc_issuer)
+    # SEC-NET-REQ-5: OIDC discovery is an outbound call to SSO made by the
+    # kessel-sdk, which takes no httpx transport, so it is recorded here.
+    try:
+        discovery = fetch_oidc_discovery(settings.kessel_auth_oidc_issuer)
+    except Exception as err:
+        log_egress(
+            PURPOSE_KESSEL_OIDC,
+            settings,
+            settings.kessel_auth_oidc_issuer,
+            RESULT_FAILURE,
+            reason=type(err).__name__,
+        )
+        raise
+
+    log_egress(PURPOSE_KESSEL_OIDC, settings, settings.kessel_auth_oidc_issuer, RESULT_SUCCESS)
+
     return OAuth2ClientCredentials(
         client_id=settings.kessel_auth_client_id,
         client_secret=settings.kessel_auth_client_secret.get_secret_value(),
@@ -85,6 +105,21 @@ def get_client(settings: Settings) -> t.Any:
     # SingleThreadedUnaryStream which deadlocks when the calling thread is
     # the asyncio event loop (FastAPI runs async handlers on the loop).
     _client, _ = builder.build_async()
+    # One long-lived gRPC channel serves every later RPC, so the channel is
+    # the connection the control asks us to record; per-RPC events would add
+    # volume without saying anything more about the connection.
+    #
+    # phase says what actually succeeded. gRPC connects lazily, so at this
+    # point the channel exists but nothing has been dialled -- recording a
+    # bare success here would assert a connection that has not happened.
+    log_egress(
+        PURPOSE_KESSEL,
+        settings,
+        settings.kessel_url,
+        RESULT_SUCCESS,
+        protocol="grpc",
+        phase="channel-created",
+    )
     logger.info("Built Kessel client (async)")
     return _client
 

@@ -98,6 +98,26 @@ objects:
               - name: ROADMAP_ENV_NAME
                 value: ${ENV_NAME}
 
+              # Security logging and monitoring (SEC-MON-REQ-1). Logs go to
+              # stdout and the cluster log forwarder ships them to Splunk, so
+              # they have to be JSON for Splunk to extract fields from them.
+              # The default in Settings is false, which gives human-readable
+              # console output for local development only.
+              - name: ROADMAP_JSON_LOGGING
+                value: ${ROADMAP_JSON_LOGGING}
+
+              # Events of interest are emitted at INFO. Raising this above INFO
+              # would drop ordinary application logs but NOT the audit events:
+              # the roadmap.security logger is pinned to INFO in custom_logging.
+              - name: ROADMAP_LOG_LEVEL
+                value: ${ROADMAP_LOG_LEVEL}
+
+              # Egress monitoring (SEC-NET-REQ-5). Outbound connections are
+              # always logged; this only controls whether a destination
+              # outside the allow list is also blocked.
+              - name: ROADMAP_EGRESS_ENFORCE
+                value: ${ROADMAP_EGRESS_ENFORCE}
+
               # Kessel / RBAC v2 authorization. Off by default; set the
               # KESSEL_ENABLED parameter to "true" per environment to use the
               # Kessel gRPC Inventory API instead of the legacy RBAC v1 path.
@@ -238,6 +258,19 @@ objects:
               - name: SENTRY_ENVIRONMENT
                 value: ${ENV_NAME}
 
+              - name: ROADMAP_ENV_NAME
+                value: ${ENV_NAME}
+
+              # See the api deployment above.
+              - name: ROADMAP_JSON_LOGGING
+                value: ${ROADMAP_JSON_LOGGING}
+
+              - name: ROADMAP_LOG_LEVEL
+                value: ${ROADMAP_LOG_LEVEL}
+
+              - name: ROADMAP_EGRESS_ENFORCE
+                value: ${ROADMAP_EGRESS_ENFORCE}
+
             resources:
               limits:
                 cpu: ${CPU_LIMIT_NOTIFICATOR}
@@ -312,6 +345,22 @@ parameters:
     value: ""
 
   - name: ROADMAP_HOST_INVENTORY_URL
+
+  # Security logging and monitoring (SEC-MON-REQ-1). Every deployed
+  # environment logs JSON so the Splunk field extractions work; leave this
+  # "true" unless you are debugging a deployment by eye.
+  - name: ROADMAP_JSON_LOGGING
+    value: "true"
+
+  - name: ROADMAP_LOG_LEVEL
+    value: "info"
+
+  # Egress monitoring (SEC-NET-REQ-5). Left "false" until the allow list has
+  # been validated against real traffic in Splunk; see docs/EGRESS_MONITORING.md.
+  # Denials are logged either way, so flipping this does not change visibility,
+  # only whether an unlisted destination is blocked.
+  - name: ROADMAP_EGRESS_ENFORCE
+    value: "false"
 
   - name: NOTIFICATOR_SCHEDULE
     value: "0 6 1 * *"

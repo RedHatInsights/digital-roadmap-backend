@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     log_level: str = "info"
     json_logging: bool = False
 
+    # Egress allow list (SEC-NET-REQ-5). Outbound connections are always logged
+    # and a destination outside the allow list is always recorded as a denial.
+    # This setting only controls whether such a connection is also blocked, so
+    # the list can be validated against real traffic in Splunk before enforcing.
+    egress_enforce: bool = False
+
     # Kessel / RBAC v2 authorization. When kessel_enabled is False (the default),
     # host authorization uses the legacy RBAC v1 /access/ path. When True, host
     # groups are determined via the Kessel gRPC Inventory API instead.

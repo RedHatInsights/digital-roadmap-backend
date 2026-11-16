@@ -160,12 +160,20 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 >
 > What makes `src_ip` trustworthy is upstream: the edge overwriting the headers, and
 > the namespace network policy restricting who can reach the pod. Neither is in this
-> application. For attribution the caller cannot set, use `edge_request_id`.
+> application.
+>
+> **`edge_request_id` is not an exception to that.** It is `x-rh-edge-request-id` read
+> straight from the request, so a peer that can reach the pod can set it too. It is the
+> most useful field for attribution because it joins to the edge logs — but the join is
+> the evidence, not the value. Confirm the identifier appears in the edge logs for the
+> same request before relying on it; an identifier with no match upstream is a claim,
+> not a corroboration.
 >
 > Three states worth distinguishing, because two of them look like "off": an **absent**
 > variable selects uvicorn's `127.0.0.1,::1` default, an **empty** value trusts no peer
-> at all including the router, and `*` trusts every peer. The image sets it explicitly
-> so the first cannot happen by accident.
+> at all including the router, and `*` trusts every peer. The image sets `*` in the
+> Containerfile, so the absent case needs the variable unset on the deployment *and* in
+> the image.
 
 ### Security event fields
 

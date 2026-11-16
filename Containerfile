@@ -67,9 +67,11 @@ ADD --chmod=0644 \
 USER roady
 WORKDIR /srv/roady
 
-# Which peers may set X-Forwarded-For and True-Client-IP. Uvicorn reads this
-# variable only when --forwarded-allow-ips is absent from the command line, so
-# the flag must stay off for the deployment to be able to override it.
+# Which peers uvicorn believes when it takes the client address from
+# X-Forwarded-For. It does not control who may send that header -- anyone can.
+# Uvicorn reads this variable only when --forwarded-allow-ips is absent from
+# the command line, so the flag must stay off for the deployment to be able to
+# override it.
 #
 # "*" trusts any peer, which is what the hardcoded flag did before. It is kept
 # as the image default so behaviour does not change on upgrade, and so the

@@ -376,9 +376,11 @@ parameters:
   # per environment in app-interface to the OpenShift router's address range;
   # addresses and CIDR blocks are both accepted, comma separated.
   #
-  # Leave it set. An empty value trusts no peer at all, including the router,
-  # and removing the entry falls back to uvicorn's 127.0.0.1,::1 default --
-  # either way the client address stops reflecting the caller.
+  # An empty value trusts no peer at all, including the router, so the client
+  # address stops reflecting the caller. Deleting this entry does not fall
+  # back to uvicorn's 127.0.0.1,::1 default either: the image sets
+  # FORWARDED_ALLOW_IPS="*" itself, so removing it here just restores "*".
+  # Reaching the loopback default would mean unsetting it in both places.
   - name: FORWARDED_ALLOW_IPS
     value: "*"
 

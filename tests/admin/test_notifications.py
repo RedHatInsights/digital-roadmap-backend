@@ -42,9 +42,22 @@ def mock_get_org_ids(mocker):
 
 
 @pytest.fixture()
-def _force_prod(monkeypatch):
-    """Set env_name to 'prod' so the auth guard is active."""
-    monkeypatch.setenv("ROADMAP_ENV_NAME", "prod")
+def _clowder_env_name(monkeypatch):
+    """Use a realistic Clowder environment name.
+
+    Clowder environments are named "insights-prod", "insights-stage" and so
+    on, never the bare string "prod". The guard must not key off this value.
+    """
+    monkeypatch.setenv("ROADMAP_ENV_NAME", "insights-prod")
+    Settings.create.cache_clear()
+    yield
+    Settings.create.cache_clear()
+
+
+@pytest.fixture()
+def _auth_disabled(monkeypatch):
+    """Explicitly turn the admin auth guard off."""
+    monkeypatch.setenv("ROADMAP_ADMIN_AUTH_REQUIRED", "false")
     Settings.create.cache_clear()
     yield
     Settings.create.cache_clear()
@@ -90,15 +103,15 @@ def endpoints(request, mock_lifecycle_send, mock_roadmap_send):
 # -- Auth guard (router-level, tested once with lifecycle endpoints) -----------
 
 
-class TestAdminAuthGuardProd:
-    """In prod, the is_internal check must block unauthenticated and external callers."""
+class TestAdminAuthGuard:
+    """The is_internal check must block unauthenticated and external callers.
 
-    @pytest.fixture(autouse=True)
-    def _prod(self, _force_prod):
-        pass
+    No environment fixture here on purpose: the guard is on by default and
+    must not depend on the value of env_name.
+    """
 
-    def test_no_identity_header_returns_401(self, client):
-        response = client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+    def test_no_identity_header_returns_401(self, anonymous_client):
+        response = anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
         assert response.status_code == 401
         assert "Missing x-rh-identity" in response.json()["detail"]
@@ -134,15 +147,58 @@ class TestAdminAuthGuardProd:
         assert response.status_code == 202
 
 
-class TestAdminAuthGuardStage:
-    """In stage (default), the auth guard is bypassed."""
+class TestAdminAuthGuardIgnoresEnvName:
+    """Regression: a realistic Clowder env name must not disable the guard.
 
-    def test_no_header_allowed_in_stage(self, client):
-        response = client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+    The guard used to run only when env_name was exactly "prod", so deploying
+    with the Clowder environment name "insights-prod" left these routes --
+    which dispatch real email to every subscribed org -- open to any
+    unauthenticated caller.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _env(self, _clowder_env_name):
+        pass
+
+    def test_no_identity_header_still_returns_401(self, anonymous_client):
+        response = anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
+
+        assert response.status_code == 401
+
+    def test_external_user_still_returns_403(self, client, external_headers):
+        response = client.post(
+            LIFECYCLE_CUSTOM_URL,
+            json={"org_ids": 1},
+            headers=external_headers,
+        )
+
+        assert response.status_code == 403
+
+    def test_broadcast_trigger_is_not_dispatched(self, anonymous_client, mock_lifecycle_send):
+        """The unauthenticated mass-email path must never reach the sender."""
+        response = anonymous_client.post(
+            LIFECYCLE_ALL_URL,
+            params={"dryrun": "false"},
+            json={"confirm_all": True},
+        )
+
+        assert response.status_code == 401
+        mock_lifecycle_send.assert_not_awaited()
+
+
+class TestAdminAuthGuardExplicitlyDisabled:
+    """Turning the guard off is possible, but only as a deliberate setting."""
+
+    @pytest.fixture(autouse=True)
+    def _disabled(self, _auth_disabled):
+        pass
+
+    def test_no_header_allowed_when_disabled(self, anonymous_client):
+        response = anonymous_client.post(LIFECYCLE_CUSTOM_URL, json={"org_ids": 1})
 
         assert response.status_code == 202
 
-    def test_external_user_allowed_in_stage(self, client, external_headers):
+    def test_external_user_allowed_when_disabled(self, client, external_headers):
         response = client.post(
             LIFECYCLE_CUSTOM_URL,
             json={"org_ids": 1},

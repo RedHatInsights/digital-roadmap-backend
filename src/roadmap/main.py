@@ -32,6 +32,7 @@ from roadmap.common import extend_openapi
 from roadmap.config import Settings
 from roadmap.custom_logging import setup_logging
 from roadmap.egress import allowed_hosts
+from roadmap.security_headers import security_headers_middleware
 from roadmap.sentry_config import before_send
 from roadmap.v2.openapi import annotate_v2_openapi
 
@@ -166,6 +167,11 @@ async def logging_middleware(request: Request, call_next) -> Response:
 # This middleware must be placed after the logging, to populate the context with the request ID,
 # because middlewares are applied in the reverse order of when they are added.
 app.add_middleware(CorrelationIdMiddleware)
+
+# Added last, so it is the outermost middleware and also covers the error
+# responses generated further in. See roadmap.security_headers for which
+# headers are set here and which are left to the edge.
+app.middleware("http")(security_headers_middleware)
 
 
 # Add Prometheus metrics

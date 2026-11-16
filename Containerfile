@@ -74,13 +74,21 @@ WORKDIR /srv/roady
 # "*" trusts any peer, which is what the hardcoded flag did before. It is kept
 # as the image default so behaviour does not change on upgrade, and so the
 # image still works outside OpenShift. Narrow it per environment by setting
-# FORWARDED_ALLOW_IPS on the deployment to the router's address range: until
-# then src_ip and peer_ip in the audit records are caller-supplied assertions
-# rather than observed facts. See docs/SECURITY_LOGGING.md.
+# FORWARDED_ALLOW_IPS on the deployment to the router's address range; a
+# comma separated list of addresses or CIDR blocks is accepted.
 #
-# Leaving it unset is not the same as omitting it. Uvicorn would then fall back
-# to 127.0.0.1,::1, stop trusting the router, and record every request as
-# coming from the router's own address.
+# What this does and does not control: uvicorn uses the list only to decide
+# whether to rewrite scope["client"] from X-Forwarded-For. It does not strip
+# the headers, and roadmap.audit.client_network reads them directly, so
+# narrowing the list does not stop a peer that can reach the pod from setting
+# src_ip. It fixes peer_ip, and the value src_ip falls back to when no
+# forwarding header is present. See docs/SECURITY_LOGGING.md.
+#
+# Three distinct states, which are easy to confuse:
+#   absent  -> uvicorn defaults to 127.0.0.1,::1 and stops trusting the router
+#   empty   -> no peer is trusted at all, including the router
+#   "*"     -> every peer is trusted
+# The ENV line exists so the first case cannot happen by accident.
 ENV FORWARDED_ALLOW_IPS="*"
 
 CMD ["uvicorn", "roadmap.main:app", "--proxy-headers", "--port", "8000", "--host", "0.0.0.0", "--log-config", "uvicorn_disable_logging.json"]

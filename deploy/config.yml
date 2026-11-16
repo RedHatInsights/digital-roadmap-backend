@@ -371,11 +371,14 @@ parameters:
   - name: ROADMAP_EGRESS_ENFORCE
     value: "false"
 
-  # Peers allowed to set the forwarding headers. "*" preserves the behaviour
-  # the hardcoded uvicorn flag had. Set it per environment in app-interface to
-  # the OpenShift router's address range; an empty value is not valid, because
-  # uvicorn would then fall back to 127.0.0.1 and attribute every request to
-  # the router.
+  # Peers whose X-Forwarded-For uvicorn will believe when setting the client
+  # address. "*" preserves the behaviour the hardcoded uvicorn flag had. Set it
+  # per environment in app-interface to the OpenShift router's address range;
+  # addresses and CIDR blocks are both accepted, comma separated.
+  #
+  # Leave it set. An empty value trusts no peer at all, including the router,
+  # and removing the entry falls back to uvicorn's 127.0.0.1,::1 default --
+  # either way the client address stops reflecting the caller.
   - name: FORWARDED_ALLOW_IPS
     value: "*"
 

@@ -146,15 +146,26 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 > reached by two routes. Two fields agreeing is not corroboration when both derive from
 > the same header.
 >
-> Restricting the trusted peers to the router's address range is what would make these
-> fields trustworthy at the application. That is now a deployment setting rather than a
-> rebuild: `FORWARDED_ALLOW_IPS` on the deployment, exposed as the
-> `FORWARDED_ALLOW_IPS` template parameter. It still defaults to `*`, so until an
-> environment sets a narrower value this caveat continues to apply in full.
+> The trusted peer list is now a deployment setting rather than a rebuild:
+> `FORWARDED_ALLOW_IPS` on the deployment, exposed as the `FORWARDED_ALLOW_IPS`
+> template parameter, accepting addresses or CIDR blocks. It still defaults to `*`.
 >
-> Do not set it to an empty value. Uvicorn falls back to `127.0.0.1,::1` when the
-> variable is unset, which stops it trusting the router and records every request as
-> coming from the router's own address.
+> **Narrowing it does not make `src_ip` trustworthy.** Uvicorn uses the list only to
+> decide whether to rewrite `scope["client"]` from `X-Forwarded-For`. It does not strip
+> or alter the headers themselves, and `client_network()` reads `true-client-ip` and
+> `x-forwarded-for` straight from the request. Any peer that can reach the pod can
+> still set `src_ip` to whatever it likes, whatever the list says. What narrowing fixes
+> is `peer_ip`, and the value `src_ip` falls back to when the caller sends no
+> forwarding header at all.
+>
+> What makes `src_ip` trustworthy is upstream: the edge overwriting the headers, and
+> the namespace network policy restricting who can reach the pod. Neither is in this
+> application. For attribution the caller cannot set, use `edge_request_id`.
+>
+> Three states worth distinguishing, because two of them look like "off": an **absent**
+> variable selects uvicorn's `127.0.0.1,::1` default, an **empty** value trusts no peer
+> at all including the router, and `*` trusts every peer. The image sets it explicitly
+> so the first cannot happen by accident.
 
 ### Security event fields
 

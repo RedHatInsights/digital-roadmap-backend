@@ -118,6 +118,15 @@ objects:
               - name: ROADMAP_EGRESS_ENFORCE
                 value: ${ROADMAP_EGRESS_ENFORCE}
 
+              # Which peers uvicorn will accept X-Forwarded-For and
+              # True-Client-IP from. "*" trusts any peer that can reach the
+              # pod, so src_ip and peer_ip in the audit records are assertions
+              # rather than observed facts. Narrow this to the router's address
+              # range per environment to make them trustworthy at the
+              # application. See docs/SECURITY_LOGGING.md.
+              - name: FORWARDED_ALLOW_IPS
+                value: ${FORWARDED_ALLOW_IPS}
+
               # Kessel / RBAC v2 authorization. Off by default; set the
               # KESSEL_ENABLED parameter to "true" per environment to use the
               # Kessel gRPC Inventory API instead of the legacy RBAC v1 path.
@@ -361,6 +370,18 @@ parameters:
   # only whether an unlisted destination is blocked.
   - name: ROADMAP_EGRESS_ENFORCE
     value: "false"
+
+  # Peers whose X-Forwarded-For uvicorn will believe when setting the client
+  # address. "*" preserves the behaviour the hardcoded uvicorn flag had. Set it
+  # per environment in app-interface to the OpenShift router's address range;
+  # addresses and CIDR blocks are both accepted, comma separated.
+  #
+  # Keep this parameter, and keep it set to a usable value. Anything uvicorn
+  # cannot parse as an address list -- an empty string included -- means no
+  # peer is trusted, the router's forwarded headers are ignored, and the
+  # recorded client address stops reflecting the caller.
+  - name: FORWARDED_ALLOW_IPS
+    value: "*"
 
   - name: NOTIFICATOR_SCHEDULE
     value: "0 6 1 * *"

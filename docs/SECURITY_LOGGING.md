@@ -146,10 +146,34 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 > reached by two routes. Two fields agreeing is not corroboration when both derive from
 > the same header.
 >
-> Restricting `--forwarded-allow-ips` to the router's address range is what would make
-> these fields trustworthy at the application. That is a deployment change, tracked
-> separately; this note exists so nobody reads the records as stronger than they are in
-> the meantime.
+> The trusted peer list is now a deployment setting rather than a rebuild:
+> `FORWARDED_ALLOW_IPS` on the deployment, exposed as the `FORWARDED_ALLOW_IPS`
+> template parameter, accepting addresses or CIDR blocks. It still defaults to `*`.
+>
+> **Narrowing it does not make `src_ip` trustworthy.** Uvicorn uses the list only to
+> decide whether to rewrite `scope["client"]` from `X-Forwarded-For`. It does not strip
+> or alter the headers themselves, and `client_network()` reads `true-client-ip` and
+> `x-forwarded-for` straight from the request. Any peer that can reach the pod can
+> still set `src_ip` to whatever it likes, whatever the list says. What narrowing fixes
+> is `peer_ip`, and the value `src_ip` falls back to when the caller sends no
+> forwarding header at all.
+>
+> What makes `src_ip` trustworthy is upstream: the edge overwriting the headers, and
+> the namespace network policy restricting who can reach the pod. Neither is in this
+> application.
+>
+> **`edge_request_id` is not an exception to that.** It is `x-rh-edge-request-id` read
+> straight from the request, so a peer that can reach the pod can set it too. It is the
+> most useful field for attribution because it joins to the edge logs — but the join is
+> the evidence, not the value. Confirm the identifier appears in the edge logs for the
+> same request before relying on it; an identifier with no match upstream is a claim,
+> not a corroboration.
+>
+> Three states worth distinguishing, because two of them look like "off": an **absent**
+> variable selects uvicorn's `127.0.0.1,::1` default, an **empty** value trusts no peer
+> at all including the router, and `*` trusts every peer. The image sets `*` in the
+> Containerfile, so the absent case needs the variable unset on the deployment *and* in
+> the image.
 
 ### Security event fields
 

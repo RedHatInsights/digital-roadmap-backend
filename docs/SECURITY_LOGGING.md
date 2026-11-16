@@ -146,10 +146,15 @@ These are the join keys to the edge, load balancer and 3scale logs for the same 
 > reached by two routes. Two fields agreeing is not corroboration when both derive from
 > the same header.
 >
-> Restricting `--forwarded-allow-ips` to the router's address range is what would make
-> these fields trustworthy at the application. That is a deployment change, tracked
-> separately; this note exists so nobody reads the records as stronger than they are in
-> the meantime.
+> Restricting the trusted peers to the router's address range is what would make these
+> fields trustworthy at the application. That is now a deployment setting rather than a
+> rebuild: `FORWARDED_ALLOW_IPS` on the deployment, exposed as the
+> `FORWARDED_ALLOW_IPS` template parameter. It still defaults to `*`, so until an
+> environment sets a narrower value this caveat continues to apply in full.
+>
+> Do not set it to an empty value. Uvicorn falls back to `127.0.0.1,::1` when the
+> variable is unset, which stops it trusting the router and records every request as
+> coming from the router's own address.
 
 ### Security event fields
 

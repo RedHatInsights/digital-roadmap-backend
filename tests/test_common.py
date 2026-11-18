@@ -395,7 +395,7 @@ async def test_query_rbac_v2_authenticated(mocker):
     mock_client.get.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
-    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    client_cls = mocker.patch("roadmap.common.egress_client", return_value=mock_client)
     ssl_ctx = mocker.patch("roadmap.common.ssl.create_default_context", return_value="ctx")
     get_token = mocker.patch("roadmap.common.kessel.get_bearer_token", return_value="tok")
 
@@ -418,7 +418,7 @@ async def test_query_rbac_v2_unauthenticated(mocker):
     mock_client.get.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
-    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient", return_value=mock_client)
+    client_cls = mocker.patch("roadmap.common.egress_client", return_value=mock_client)
     mocker.patch("roadmap.common.ssl.create_default_context", return_value="ctx")
     get_token = mocker.patch("roadmap.common.kessel.get_bearer_token")
 
@@ -432,7 +432,7 @@ async def test_query_rbac_v2_unauthenticated(mocker):
 
 async def test_query_rbac_v2_token_failure(mocker):
     settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_authenticated=True)
-    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient")
+    client_cls = mocker.patch("roadmap.common.egress_client")
     mocker.patch("roadmap.common.kessel.get_bearer_token", side_effect=ValueError("not configured"))
 
     with pytest.raises(HTTPException, match="Unable to authenticate to RBAC service") as exc_info:
@@ -444,7 +444,7 @@ async def test_query_rbac_v2_token_failure(mocker):
 
 async def test_query_rbac_v2_bad_ca_cert(mocker):
     settings = Settings(rbac_uri="https://rbac.svc:8443", rbac_ca_cert="/does/not/exist.crt")
-    client_cls = mocker.patch("roadmap.common.httpx.AsyncClient")
+    client_cls = mocker.patch("roadmap.common.egress_client")
 
     with pytest.raises(HTTPException, match="Error communicating with RBAC service") as exc_info:
         await query_rbac(settings, x_rh_identity="identity")

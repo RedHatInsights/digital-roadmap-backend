@@ -14,6 +14,7 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+
 logger = logging.getLogger("uvicorn.error")
 
 

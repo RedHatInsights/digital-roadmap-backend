@@ -120,7 +120,6 @@ class Settings(BaseSettings):
 
             rbac_v2 = get_v2_dependency_endpoint("rbac", "service")
             if rbac_v2 and rbac_v2.uri:
-                logger.info("Using Clowder v2 RBAC endpoint (authenticated=%s)", bool(rbac_v2.authenticated))
                 rbac_kwargs.update(
                     {
                         "rbac_uri": rbac_v2.uri,
@@ -128,8 +127,6 @@ class Settings(BaseSettings):
                         "rbac_ca_cert": rbac_v2.ca_certificate or "",
                     }
                 )
-            else:
-                logger.info("No Clowder v2 RBAC endpoint found; using v1 hostname/port")
 
             db_kwargs = (
                 {
@@ -156,9 +153,11 @@ class Settings(BaseSettings):
                 if os.getenv(v) is not None and k in db_kwargs:
                     db_kwargs.pop(k)
 
-            return cls(
+            settings = cls(
                 **db_kwargs,
                 **rbac_kwargs,
             )
+            logger.info("RBAC endpoint: %s (authenticated=%s)", settings.rbac_url, settings.rbac_authenticated)
+            return settings
 
         return cls()

@@ -96,7 +96,7 @@ async def query_rbac(
         try:
             token = await asyncio.to_thread(kessel.get_bearer_token, settings)
         except Exception as err:
-            logger.error(f"Unable to get bearer token for RBAC: {err}", exc_info=True)
+            logger.error(f"Unable to get bearer token for RBAC: {type(err).__name__}")
             raise HTTPException(status_code=502, detail="Unable to authenticate to RBAC service")
         headers["Authorization"] = f"Bearer {token}"
 

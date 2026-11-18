@@ -1,3 +1,4 @@
+import logging
 import os
 
 from functools import lru_cache
@@ -12,6 +13,8 @@ from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class Settings(BaseSettings):
@@ -117,6 +120,7 @@ class Settings(BaseSettings):
 
             rbac_v2 = get_v2_dependency_endpoint("rbac", "service")
             if rbac_v2 and rbac_v2.uri:
+                logger.info("Using Clowder v2 RBAC endpoint (authenticated=%s)", bool(rbac_v2.authenticated))
                 rbac_kwargs.update(
                     {
                         "rbac_uri": rbac_v2.uri,
@@ -124,6 +128,8 @@ class Settings(BaseSettings):
                         "rbac_ca_cert": rbac_v2.ca_certificate or "",
                     }
                 )
+            else:
+                logger.info("No Clowder v2 RBAC endpoint found; using v1 hostname/port")
 
             db_kwargs = (
                 {

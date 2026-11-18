@@ -1,9 +1,11 @@
 """Kessel / RBAC v2 authorization helpers.
 
 This module wraps the Kessel gRPC Inventory API and the RBAC v2 workspace
-helpers from ``kessel-sdk``. It is only used when ``settings.kessel_enabled`` is
-True; the default authorization path remains RBAC v1 (see
-``roadmap.common.query_rbac``).
+helpers from ``kessel-sdk``. Workspace lookups are only used when
+``settings.kessel_enabled`` is True; the default authorization path remains RBAC
+v1 (see ``roadmap.common.query_rbac``). ``get_bearer_token`` is also used by
+``query_rbac`` when ``settings.rbac_authenticated`` is True, regardless of
+``kessel_enabled``.
 
 The one operation Digital Roadmap needs is enumerating the workspaces a user is
 allowed to view hosts in (relation ``inventory_host_view``). Those workspace ids

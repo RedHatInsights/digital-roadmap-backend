@@ -333,7 +333,8 @@ parameters:
     value: host-inventory-db-readonly
 
   - name: SENTRY_SECRET_NAME
-    value: sentry
+    description: Name of the secret holding the GlitchTip DSN under the key "dsn"
+    value: glitchtip
 
   - name: SUBSCRIPTION_SECRET_NAME
     value: notification-backend-url

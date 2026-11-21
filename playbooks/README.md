@@ -16,7 +16,7 @@ Once you have an offline token, set the token to the `RH_OFFLINE_TOKEN` environm
 
 ```shell
 export RH_OFFLINE_TOKEN=[token]
-ansible-playook rhel-lifecycle-data.yml
+ansible-playbook rhel-lifecycle-data.yml
 ```
 
 By default, the response is only display and not saved. To save the response, set `SAVE_RESPONSE=yes`.

@@ -56,6 +56,51 @@ def test_setting_from_clowder_no_rbac(monkeypatch, mocker, tmp_path, read_json_f
     assert settings.rbac_url == ""
 
 
+@pytest.mark.parametrize("authenticated", (True, False))
+def test_setting_from_clowder_rbac_v2(monkeypatch, mocker, tmp_path, read_json_fixture, authenticated):
+    clowder_config = read_json_fixture("clowder_config.json")
+    clowder_config["dependencyEndpoints"] = {
+        "v2": {
+            "rbac": {
+                "service": {
+                    "uri": "https://rbac-service.svc:8443",
+                    "authenticated": authenticated,
+                    "ca_certificate": "/cdapp/certs/service-ca.crt",
+                }
+            }
+        }
+    }
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps(clowder_config))
+
+    loaded = loadConfig(str(config))
+    monkeypatch.setenv("ACG_CONFIG", "yes")
+    mocker.patch("roadmap.config.LoadedConfig", loaded)
+    # The helper reads a module global captured at import, so point it at the test config.
+    mocker.patch("app_common_python.DependencyEndpointsV2", loaded.dependencyEndpoints)
+
+    settings = Settings.create()
+
+    assert settings.rbac_url == "https://rbac-service.svc:8443"
+    assert settings.rbac_authenticated is authenticated
+    assert settings.rbac_ca_cert == "/cdapp/certs/service-ca.crt"
+
+
+@pytest.mark.parametrize("uri", ("http://rbac.svc:8000", ""))
+def test_rbac_authenticated_requires_https(uri):
+    with pytest.raises(ValueError, match="requires an https"):
+        Settings(rbac_uri=uri, rbac_authenticated=True)
+
+
+def test_validation_error_hides_secrets():
+    with pytest.raises(ValueError) as exc_info:
+        Settings(
+            rbac_uri="http://x", rbac_authenticated=True, kessel_auth_client_secret="SENTINEL", db_password="SENTINEL"
+        )
+
+    assert "SENTINEL" not in str(exc_info.value)
+
+
 def test_rbac_config_defaults(monkeypatch):
     monkeypatch.delenv("ROADMAP_RBAC_HOSTNAME", raising=False)
     monkeypatch.delenv("ROADMAP_RBAC_PORT", raising=False)
